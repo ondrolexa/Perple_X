@@ -220,10 +220,12 @@ c                                 model type
       integer ksmod, kmsol, knsp
       common/ cxt0  /ksmod(h9),kmsol(h9,m4,mst),knsp(m4,h9)
       integer istg, ispg, imdg, poly, pvert, pop1, nsum
-      double precision xmng, xmxg, xncg, xmno, xmxo, reachg
+      double precision xmng, xmxg, xncg, xmno, xmxo, reachg,
+     *                 xmnh, xmxh
       common/ cxt6r /
      *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
-     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9)
+     *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9),
+     *      xmnh(h9,h4,mst,msp),xmxh(h9,h4,mst,msp)
       common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),pop1(h9),nsum(h9),
      *               imdg(ms1,mst,h4,h9),poly(h9),pvert(h9,h4,2)
 

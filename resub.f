@@ -1315,6 +1315,10 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
@@ -1340,6 +1344,10 @@ c                                 check if solution is at an unnatural limit
      *                x(ii,i,j).lt.xmng(ids,ii,i,j)) then
 
                      if (.not.lopt(3)) then
+c                                  error if composition has jumped too far
+                        if (xmnh(ids,ii,i,j)-x(ii,i,j).gt.
+     *                      xncg(ids,ii,i,j).and..not.refine) 
+     *                                  call err993 (ids,ii,i,j,.false.)
 c                                 relax limits according to subdivsion model
 c                                 warn if MEEMUM
                         if (iam.eq.2) call meelim (x(ii,i,j),ids,ii,i,j)
@@ -1377,6 +1385,10 @@ c                                 check if solution is at an unnatural limit
      *                x(ii,i,j).gt.xmxg(ids,ii,i,j)) then
 
                      if (.not.lopt(3)) then
+c                                  error if composition has jumped too far
+                        if (x(ii,i,j)-xmxh(ids,ii,i,j).gt.
+     *                      xncg(ids,ii,i,j).and..not.refine) 
+     *                                   call err993 (ids,ii,i,j,.true.)
 c                                 relax limits according to subdivsion model
 c                                 warn if MEEMUM
                         if (iam.eq.2) call meelim (x(ii,i,j),ids,ii,i,j)

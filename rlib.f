@@ -8659,8 +8659,13 @@ c                                 in the solution model:
 
                end if
 c                                 save solution model values as hard limits
+c                                 xmxo/xmxo is reset to 1/0 if hard limits not
+c                                 set
                xmno(im,ii,i,j) = pxmn(ii,i,j)
                xmxo(im,ii,i,j) = pxmx(ii,i,j)
+c                                 true hard limit record
+               xmnh(im,ii,i,j) = pxmn(ii,i,j)
+               xmxh(im,ii,i,j) = pxmx(ii,i,j)
 
                if (refine) then
 c                                 new values from autorefine file
@@ -9488,7 +9493,7 @@ c                                 set pmod to false if explicit_bulk_modulus is 
 
       if (.not.lopt(3)) then
 c                                 hard limits are off, set limits to 0/1
-         do ii = 1, poly(im)
+         do ii = 1, pop1(im)
             do i = 1, isimp(ii)
                do j = 1, ivert(ii,i) - 1
 
@@ -16909,6 +16914,133 @@ c                                 single site solution or orphan
 
       end
 
+      subroutine err993 (ids,ii,j,k,pos)
+c----------------------------------------------------------------------
+c subroutine to write ver993 error diagnostic.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical pos
+
+      integer ii, ids, j, k
+
+      character char8*8, incre*8, upper*5
+c                                 solution model counter
+      integer isoct
+      common/ cst79 /isoct
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+c                                 endmember pointers
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+c                                 endmember names
+      character names*8
+      common/ cst8  /names(k1)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+c----------------------------------------------------------------------
+
+      if (pos) then 
+         upper = 'upper'
+         incre = 'increase'
+         y(1) = xmxg(ids,ii,j,k) + xncg(ids,ii,j,k)/2d0
+         if (y(1).gt.1d0) y(1) = 1d0
+      else 
+         upper = 'lower'
+         incre = 'decrease'
+         y(1) = xmxg(ids,ii,j,k) - xncg(ids,ii,j,k)/2d0
+         if (y(1).lt.0d0) y(1) = 0d0
+      end if
+
+      if (istg(ids,1).eq.1.and.pop1(ids).eq.1) then
+c                                 single site solution
+         if (ksmod(ids).eq.20) then
+c                                 charge balance model:
+            if (j.lt.ns) then
+               char8 = names(jnd(k))
+            else
+               char8 = aqnam(jnd(k)  - aqst)
+            end if
+
+         else
+
+            char8 = names(jend(ids,2+k))
+
+         end if
+
+         write (*,1020) fname(ids), char8
+         write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+         write (*,1010) incre,upper,y(1)
+
+      else if (pop1(ids).eq.1) then 
+c                                 single polytope
+         write (*,1040) fname(ids),j,k
+         write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+         write (*,1000)
+         write (*,1010) incre,upper,y(1)
+
+      else if (ii.lt.pop1(ids)) then 
+c                                 composite polytope
+         write (*,1050) fname(ids), j, k, poname(ids,ii)
+         write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+         write (*,1000)
+         write (*,1010) incre,upper,y(1)
+
+      else
+
+         write (*,1060) fname(ids), poname(ids,ii)
+         write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+         write (*,1010) incre,upper,y(1)
+
+      end if
+
+      write (*,1070) 'www.perplex.ethz.ch/perplex/faq/warning_'//
+     *               'ver991_relax_solution_model_limits.txt'
+
+      call errpau
+
+1000  format (/,'*NOTE: if this solution model has been reformulated '
+     *       ,'because of missing endmembers',/,'the variable indices ',
+     *        'may not correspond to the indices in the solution model',
+     *        ' file.')
+1010  format (/,'**If computational memory and time are of ',
+     *        'concern, then ignore the indicated current value and',/,
+     *        a,' the ',a,' limit of the range to ',f4.2,
+     *        ' in the solution model file.')
+1020  format (/,'**error ver993** the stable composition of solution: '
+     *       ,a,/'is too far beyond the subdivision range limits for '
+     *       ,'endmember: ',a)
+1030  format ('the original range was: ',
+     *       g12.5,' - ',g12.5,/,'the current** value is: ',g12.5)
+1040  format (/,'**error ver993** the stable composition of solution: '
+     *       ,a,/'is too far beyond the subdivision range limits for '
+     *       ,'composition X(',i1,',',i2')*.')
+1050  format (/,'**error ver993** the stable composition of solution '
+     *       ,a,' is too far beyond',/,'the subdivision range limits of'
+     *       ,' composition X(',i1,',',i2')* of the ',a,' polytope.')
+1060  format (/,'**error ver993** the stable composition of solution: '
+     *       ,a,/'is too far beyond the subdivision range limits for '
+     *       ,'polytope: ',a)
+1070  format (/,'refer to: ',//,a,//'for additional information.',/)
+
+      end
 
       subroutine subst (a,ipvt,n,b,ier)
 c-----------------------------------------------------------------------

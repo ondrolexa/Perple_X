@@ -27,8 +27,8 @@
 
 7) 688 configurational entropy format expanded to include site names for all fractions of 
    all species on a site, and non-mixing sites. Site fraction designation format is 
-   z(site,species) (z can be any character, "site" is optional, but if present it 
-   must occur before the "species" designator).
+   z(species,site) (z can be any character, "site" is optional, but if present it 
+   must occur after the "species" designator).
 
 8) refine_switch added, default does not allow metastable refinement points for stable solutions
    opposite to pre-688 behavior.
@@ -66,8 +66,22 @@ bl478 - updated, use of full amph model does not improve comparison.
 
 kghp - updated, comparison improved, spurious solvi eliminated.
 
+Augite(G) - complete.
+Cpx(JH)   - complete.
+Cpx(HGP)  - complete model provided but simplified by commenting from [M,T][A,C,M] by eliminating the [FeTi][A,C] endmembers, where: T = Al, Fe3, Cr, MTi on M1; C = Ca on M2; M = Mg, Fe; A = Na, K on M2*; *A partially coupled to T by charge balance. 
+Opx(HGP)  - complete model provided but simplified by commenting from [M,T][A,C,M] by eliminating the [FeTi][A,C] endmembers, where: T = Al, Fe3, Cr, MTi on M1; C = Ca on M2; M = Mg, Fe; A = Na on M2*; *A partially coupled to T by charge balance. 
+cAmph(G)  - complete model provided but simplified by commenting from [A][M][M,T,MT][M,C,N] to [A][M][M,T,MAl][M,C,N], where: A = Na, K, V; T = Al, Fe3, Ti*; MT = MAl, MFe3, MTi; C = Ca; M = Mg, Fe; N = Na; *Ti-glaucophane not permitted. 
+cAmph(DP) - simplified from [M][M,T,MT][M,C,N] to [M][M,T,MAl][M,C,N], where: T = Al, Fe3; MT = MAl, MFe3; C = Ca; M = Mg, Fe; N = Na.
+oAmph(DP) - simplified from [M][M,T,MT][M,C,N] to [M][M,T,MAl][M,C,N], where: T = Al, Fe3; MT = MAl, MFe3; C = Ca; M = Mg, Fe; N = Na.
+Chl(W)    - complete, no change.
+Ep(HP11)  - complete, no change.
+Bi(W)     - complete, no change.
+Bio(TCC)  - complete, no change.
+Gt(H)     - complete, no change.
+CFer(H)   - complete, no change.
+feldspar  - complete, no change.
 
 
-
-
-
+13
+		v(1)	15385.3076923077	REAL(8) 
+		v(2)	1073.00000000000  15385.3076923077	REAL(8) 
