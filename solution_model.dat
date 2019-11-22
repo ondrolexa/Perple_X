@@ -297,19 +297,18 @@ full_name    biotite
 688                                | model type: 688 format standard model
  
 2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-                                   | X(2) = 1 - X(1) is [M,T][M,MTi]
-
+                                   | polytope names and composite composition space subdivision schemes 
+[Mn][Mn]  0   .5   .1   0
+[M,T][M]  by difference
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
 
                                    | ----------------------------
                                    | Polytope 2 - 2x4 simplices
-[M,T][M,MTi]                       | polytope name
+[M,T][M]                           | polytope name
 2                                  | number of simplices
 2  4                               | number of vertices on each simplex
                                    | endmembers on the vertices
@@ -318,11 +317,14 @@ sdph      east
 ftbit     tbit
 ann       phl
                                    | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
+X_Mg    0    1   .1  0             | X(1,1) is bulk Fe/M
+X_Fe    by difference
+
                                    | Second 4-simplex
-0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
-0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
-0    1   .1  0                     | X(2,3) is MTi/[M+MTi] on M2, M on M1
+X_FeTs  0    1   .1  0             | X(2,1) is Fe3/[T+M] on M1, M on M2
+X_AlTs  0    1   .1  0             | X(2,2) is Al/[T+M]  on M1, M on M2
+X_TiTs  0    1   .1  0             | X(2,3) is MTi/[M+MTi] on M2, M on M1
+X_MBio  by difference
 
 begin_ordered_endmembers
 obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
@@ -566,16 +568,13 @@ full_name    clinoamphibole
 
 688                                | model type: 688 format standard model
  
-2                                  | number of polytopes, subvision ranges for the first N-1 polytopes:
-
-0   .2   .1  0                     | X(1) = X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
-                                   | X(2) = 1 - X(1) = X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
+2                                  | number of polytopes
+                                   | polytope names and composite composition space subdivision schemes 
+glauc     0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+ACMT-Amph by difference            | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ 
 
                                    | -------------------------------------------
-                                   | Polytope 1 [ ][M][T  ][N] (Glaucophane)
-
-Glaucophane                        | poytope name
-                                    
+                                   | Polytope 1 [ ][M][T  ][N] (glauc)
 2                                  | number of simplices, then for each simplex
 2 2                                | number of vertices on each simplex
  
@@ -594,17 +593,14 @@ mrbG       frb_d                   | Fe3-glaucophane, aka riebeckite
 gl         fgl_d                   | Al-glaucophane
 
                                    | First (1d) simplex
-0    1  .1  0                      | X(1,1) = bulk Mg/M
+X_Mg1   0    1  .1  0              | X(1,1) = bulk Mg/M
+X_Fe1   by difference
                                    | Second (3d) simplex
-0    1  .1  0                      | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
-
+X_rb    0    1  .1  0              | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
+X_gl    by difference
                                    | -------------------------------------------
                                    | Polytope 2 [A][M][M,T,MT][M,C]  
-
-ACMT-Amph                          | poytope name
- 
 3                                  | number of simplices
-
 2 2 6                              | number of vertices on each simplex, change to 2 2 10 for full model. 
 
                                    | Simplex 1 is Mg/M
@@ -645,25 +641,28 @@ cumm       grun                    | M-Ca divalent amphibole
 tr         ftr_d
 
                                    | First (1d) simplex
-.5  .7   .1  0                     | X(1,1) = bulk Mg/M
-
+X_Mg     .5  .7   .1  0            | X(1,1) = bulk Mg/M
+X_Fe     by difference
                                    | Second (1d) simplex
-0   .4   .1  0                     | X(2,1) = M/[Ca + M] on M4
+X_M_M2   0   .4   .1  0            | X(2,1) = M/[Ca + M] on M4
+X_C_M2   by difference
 
                                    | Third simplex 
-0   .45  .1  0                     | X(3,1) = X(Al-Ts)
-0   .7   .1  0                     | X(3,2) = X(Na-Al-Parg)
+X_AlTs   0   .45  .1  0            | X(3,1) = X(Al-Ts)
+X_NaPg   0   .7   .1  0            | X(3,2) = X(Na-Al-Parg)
 
                                    | 0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
                                    | 0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
-                                   
-0   .1   .1  0                     | X(3,5) = X(K-Al-Parg)
+
+X_KPg    0   .1   .1  0             | X(3,5) = X(K-Al-Parg)
 
                                    | 0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
                                    | 0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
                                    
-0   .2   .1  0                     | X(3,8) = X(Ti-Ts)
-0   .35  .1  0                     | X(3,9) = X(Fe3-Ts)
+X_TiTs   0   .2   .1  0            | X(3,8) = X(Ti-Ts)
+X_FeTs   0   .35  .1  0            | X(3,9) = X(Fe3-Ts)
+X_MCamph by difference
+
 
 begin_ordered_endmembers
 a     = 3/7 cumm + 4/7 grun  enthalpy_of_ordering  =   -9486  | = DQF(A) -4/7 DQF(Grun)
@@ -1085,15 +1084,13 @@ full_name    clinopyroxene
 
 688                               | model type: 688 format standard model
 
-2                                 | number of polytopes, subvision range for the composite space
-
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = TM+MC is by difference
+2                                 | number of polytopes
+                                  | polytope names and composite composition space subdivision schemes 
+[T'][A,C]   0    .25  .1  0
+TM+MC       by difference
 
                                   | -------------------------------------------
                                   | Polytope 1 [T'][A,C]
-[T'][A,C]                         | polytope name
-
 2                                 | number of simplices
 3 4                               | number of vertices on each simplex, change to 3 5 for full model
 mkbuf_d   mnbuf_d   mcbuf
@@ -1102,21 +1099,18 @@ kess_d    ness_d    cessh
                                   |fkbuf_d   fnbuf_d   fcbuf_d
 kjdh      jd        cats
                                   | Simplex 1
-0     1  .1  0                    | X(1,1) = Na/[A + Ca] on M2
-0     1  .1  0                    | X(1,2) = K /[A + Ca] on M2
-                                  | X(1,N) = Ca/[A + Ca] on M2 by difference
+X_K    0     1  .1  0             | X(1,1) = Na/[A + Ca] on M2
+X_Na   0     1  .1  0             | X(1,2) = K /[A + Ca] on M2
+X_Ca1  by difference              | X(1,N) = Ca/[A + Ca] on M2 by difference
 
                                   | Simplex 2
-0     1  .1  0                    | X(2,1) = MgTi/T on M1
-0     1  .1  0                    | X(2,2) = Cr/T on M1
-0     1  .1  0                    | X(2,3)  = Fe3+/T on M1
+X_TiTs 0     1  .1  0             | X(2,1) = MgTi/T on M1
+X_CrTs 0     1  .1  0             | X(2,2) = Cr/T on M1
+X_FeTs 0     1  .1  0             | X(2,3)  = Fe3+/T on M1
                                   |0     1  .1  0                    |X(2,4)  = FeTi/T on M1
-                                  | X(2,N) = Al/T on M1 by difference
-
+X_AlTs by difference              | X(2,N) = Al/T on M1 by difference
                                   | -------------------------------------------
                                   | Polytope 2  TM+MC
-TM+MC                             | polytope name
-
 2                                 | number of simplices 
 2 6                               | number of vertices on each simplex
 
@@ -1127,16 +1121,17 @@ fats_d   mats_d
 cfsg     cenjh
 hed_d    di
                                   | Simplex 1
-0  .8  .1  0                      | X(1,1) => Fe/M
-                                  | X(1,N) = Mg/M by difference
+X_Mg 0  .2  .1  0                 | X(1,1) => Fe/M
+X_Fe by difference                | X(1,N) = Mg/M by difference
 
                                   | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-buf(MgTi)
-0  .2  .1  0                      | X(2,2) - M-Cr
-0  .2  .1  0                      | X(2,3) - M-Fe3+
-0  .1  .1  0                      | X(2,4) - M-Ts
-0   1  .1  0                      | X(2,5) - M-M
-                                  | X(2,6) - M-Ca by difference
+X_MTiTs 0  .1  .1  0              | X(2,1) - M-buf(MgTi)
+X_MCrTs 0  .1  .1  0              | X(2,2) - M-Cr
+X_MFeTs 0  .1  .1  0              | X(2,3) - M-Fe3+
+X_MAlTs 0  .2  .1  0              | X(2,4) - M-Ts
+X_MMPx  0   1  .1  0              | X(2,5) - M-M
+X_MCPx  by difference             | X(2,6) - M-Ca by difference
+
 begin_ordered_endmembers
 cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
 end_ordered_endmembers 
@@ -1344,28 +1339,25 @@ full_name    clinopyroxene
 
 688                               | model type: 688 format standard model
 
-2                                 | number of polytopes, subvision range for the composite space
-
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = [M,T][M,C] is by difference
+2                                 | number of polytopes
+                                  | polytope names and composite composition space subdivision schemes 
+[T][N,C] 0    .25  .1  0
+TM+MC    by difference            | = [M,T][M,C]
 
                                   | -------------------------------------------
                                   | Polytope 1 [T][N,C]
-[T][N,C]                          | polytope name
 2                                 | number of simplices 
 2 2                               | number of vertices on each simplex
 acm     cacm_d
 jd      cats
                                   | Simplex 1
-0     1  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
-
+X_Na     0     1  .1  0           | X(1,1) = Na/[Na + Ca] on M2
+X_Ca1    by difference
                                   | Simplex 2
-0     1  .1  0                    | X(2,1) = X(Fe3) on M1
-
+X_FeTs   0     1  .1  0           | X(2,1) = X(Fe3) on M1
+X_AlTs   by difference
                                   | -------------------------------------------
                                   | Polytope 2  TM+MC
-TM+MC                             | polytope name
-
 2                                 | number of simplices 
 2 4                               | number of vertices on each simplex
 macm_d  facm_d
@@ -1373,12 +1365,13 @@ mats_d  fats_d
 cenjh   cfsg
 di      hed_d
                                   | Simplex 1
-.3  .8   .1  0                    | X(1,1) => bulk Mg/M
-
+X_Mg     .3  .8   .1  0           | X(1,1) => bulk Mg/M
+X_Fe     by difference
                                   | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-Fe3+
-0  .1  .1  0                      | X(2,2) - M-Ts
-0  .3  .1  0                      | X(2,3) - M-M
+X_MFeTs  0  .2  .1  0             | X(2,1) - M-Fe3+
+X_MAlTs  0  .1  .1  0             | X(2,2) - M-Ts
+X_MMPx   0  .2  .1  0             | X(2,3) - M-M
+X-MCPx   by difference 
 
 begin_ordered_endmembers
 ocats = 1 cats               enthalpy_of_ordering  =  -3800  + 2.8816 * T  -0.01  * P | this undoes the DQF on cats
@@ -1971,18 +1964,17 @@ full_name    chlorite
 688                               | model type: 688 format standard model
 
 2                                 | number of polytopes
-0   .5   .1   0                   | X(1) is [Mn][Mn]
-
+                                  | polytope names and composite composition space subdivision schemes 
+[Mn][Mn]  0   .5   .1   0         | X(1) is [Mn][Mn]
+[M][M,T]  by difference
                                   | ----------------------------
                                   | Polytope 1 - 1 simplex
-[Mn][Mn][Al]                      | polytope name
 1                                 | number of simplices
 1                                 | number of vertices on each simplex
 mnchl                             | endmembers on the vertices
 
                                   | ----------------------------
                                   | Polytope 2 - 2x4 simplices
-[M,Al][M][M,T]                    | polytope name
 2                                 | number of simplices
 4 2                               | number of vertices on each simplex
                                   | endmembers on the vertices
@@ -1990,12 +1982,13 @@ fames    fafchl   ff3cli   daph
 ames     afchl    f3clin   clin
 
                                   | subdivision model for (quaternary) chemical mixing space
-0  1  .1 0                        | range and resolution of X(M-ames),   imod = 0 -> cartesian subdivision
-0  1  .1 0                        | range and resolution of X(M-afchl),  imod = 0 -> cartesian subdivision
-0  1  .1 0                        | range and resolution of X(M-f3clin), imod = 0 -> cartesian subdivision
-
+X_Mames   0  1  .1 0              | range and resolution of X(M-ames),   imod = 0 -> cartesian subdivision
+X_Mafchl  0  1  .1 0              | range and resolution of X(M-afchl),  imod = 0 -> cartesian subdivision
+X_Mf3clin 0  1  .1 0              | range and resolution of X(M-f3clin), imod = 0 -> cartesian subdivision
+X_Mclin   by difference 
                                   | subdivision model for (ternary) chemical mixing space
-0  1  .1 0                        | range and resolution of X(Fe), imod = 0 -> cartesian subdivision
+X_Mg      0  1  .1 0              | range and resolution of X(Fe), imod = 0 -> cartesian subdivision
+X_Fe      by difference 
 
 begin_ordered_endmembers
 och1 = 1 afchl  - 1 clin   + 1 daph      enthalpy_of_ordering = 3d3
@@ -2214,29 +2207,28 @@ full_name    clinopyroxene
 688                               | model type: 688 format standard model
 
 2                                 | number of polytopes, subvision range for the composite space
-
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = [M,T][M,C] is by difference
+                                  | polytope names and composite composition space subdivision schemes 
+[T][N,C]   0    .25  .1  0
+[M,T][M,C] by difference
 
                                   | -------------------------------------------
                                   | Polytope 1 [T][N,C]
-[T][N,C]                          | polytope name
 2                                 | number of simplices 
 2 3                               | number of vertices on each simplex
 crjd_d    crdi
 ness_d    cess
 jd        cats
                                   | Simplex 1
-0    1   .1  0                    | X(1,1) = Na/[Na + Ca] on M2
+X_Na      0    1   .1  0          | X(1,1) = Na/[Na + Ca] on M2
+X_Ca      by difference
 
                                   | Simplex 2
-0    1   .1  0                    | X(2,1) = X(Cr) on M1
-0    1   .1  0                    | X(2,2) = X(Fe3) on M1
+X_CrTs1   0    1   .1  0          | X(2,1) = X(Cr) on M1
+X_Fe3Ts1  0    1   .1  0          | X(2,2) = X(Fe3) on M1
+X_AlTs1   by difference 
 
                                   | -------------------------------------------
                                   | Polytope 2  [M,T][M,C]
-[M,T][M,C]                        | polytope name
-
 2                                 | number of simplices 
 2 5                               | number of vertices on each simplex
 cren_d    crfs_d
@@ -2245,13 +2237,15 @@ mats_d    fats_d
 cenjh     cfs
 di        hed_d
                                   | Simplex 1
-0  1   .1  0                      | X(1,1) => bulk Mg/M
+X_Mg      0  1   .1  0            | X(1,1) => bulk Mg/M
+X_Fe      by difference
 
                                   | Simplex 2
-0  .1  .1  0                      | X(2,1) - M-Cr
-0  .2  .1  0                      | X(2,2) - M-Fe3+
-0  .1  .1  0                      | X(2,3) - M-Ts
-0  .9  .1  0                      | X(2,4) - M-M
+X_CrTs    0  .1  .1  0            | X(2,1) - M-Cr
+X_Fe3Ts   0  .2  .1  0            | X(2,2) - M-Fe3+
+X_MTs     0  .2  .1  0            | X(2,3) - M-Ts
+X_MM      0  .9  .1  0            | X(2,4) - M-M
+X_MCa     by difference
 
 begin_ordered_endmembers
 cfm   = 1/2 cenjh + 1/2 cfs enthalpy_of_ordering  =  -6.65d3  2.5 - 0.039 | DQF(cfm) - (DQF(ceng) + DQF(cfs))/2
@@ -3228,18 +3222,17 @@ full_name    orthopyroxene
 688                                | model type: 688 format standard model
 
 2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-
+                                   | polytope names and composite composition space subdivision schemes 
+[Mn][Mn]   0   .5   .1   0
+[M,T][M,C] by difference  
                                    | ----------------------------
-                                   | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
+                                   | Polytope 1 
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnopx                              | endmembers on the vertices
 
                                    | ----------------------------
-                                   | Polytope 2 - 2x4 simplices
-[M,T][M,C]                         | polytope name
+                                   | Polytope 2
 2                                  | number of simplices
 2  4                               | number of vertices on each simplex
                                    | endmembers on the vertices
@@ -3248,12 +3241,13 @@ di       fdi_d
 mgts     fets_d
 en       fs
                                   | Simplex 1
-0  1   .1  0                      | X(1,1) => bulk Mg/M
-
+X_Mg    0  1   .1  0              | X(1,1) => bulk Mg/M
+X_Fe    by difference
                                   | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-Fe3+
-0  .2  .1  0                      | X(2,2) - M-Ca
-0  .4  .1  0                      | X(2,3) - M-Ts
+X_FeTs  0  .2  .1  0              | X(2,1) - M-Fe3+
+X_CaPx  0  .2  .1  0              | X(2,2) - M-Ca
+X_AlTs  0  .4  .1  0              | X(2,3) - M-Ts
+X_MPx   by difference 
 
 begin_ordered_endmembers
 opx = 1/2 en + 1/2  fs  Delta(enthalpy) = -6.95d3
@@ -3378,18 +3372,17 @@ full_name    biotite
 688                                | model type: 688 format standard model
 
 2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-
+                                   | polytope names and composite composition space subdivision schemes 
+[Mn][Mn]    0   .5   .1   0
+[M,T][M]    by difference
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
 
                                    | ----------------------------
                                    | Polytope 2 - 2x4 simplices
-[M,T][M]                           | polytope name
 2                                  | number of simplices
 2  4                               | number of vertices on each simplex
                                    | endmembers on the vertices
@@ -3398,11 +3391,13 @@ sdph_d   east
 ftbi_d   tbi
 ann      phl
                                    | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
+X_Mg   0    1   .1  0              | X(1,1) is bulk Fe/M
+X_Fe   by difference
                                    | Second 4-simplex
-0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
-0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
-0    1   .1  0                     | X(2,3) is Ti/[M+T] on M2, M on M1
+X_FeTs 0    1   .1  0              | X(2,1) is Fe3/[T+M] on M1, M on M2
+X_AlTs 0    1   .1  0              | X(2,2) is Al/[T+M]  on M1, M on M2
+X_TiTs 0    1   .1  0              | X(2,3) is Ti/[M+T] on M2, M on M1
+X_MBio by difference
 
 begin_ordered_endmembers
                              | enthalpy corrected from -2d3, May 1, 2019. JADC
@@ -3533,18 +3528,17 @@ full_name    biotite
 688                                | model type: 688 format standard model
 
 2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-
+                                   | polytope names and composite composition space subdivision schemes 
+[Mn][Mn]    0   .5   .1   0
+[M,T][M]    by difference
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
 
                                    | ----------------------------
                                    | Polytope 2 - 2x4 simplices
-[M,T][M]                           | polytope name
 2                                  | number of simplices
 2  4                               | number of vertices on each simplex
                                    | endmembers on the vertices
@@ -3553,11 +3547,13 @@ sdph_i   east
 ftbi_i   tbi
 ann      phl
                                    | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
+X_Mg   0    1   .1  0              | X(1,1) is bulk Fe/M
+X_Fe   by difference
                                    | Second 4-simplex
-0    1   .1  0                     | X(2,1) is Fe3/[T+M] on M1, M on M2
-0    1   .1  0                     | X(2,2) is Al/[T+M]  on M1, M on M2
-0    1   .1  0                     | X(2,3) is MTi/[M+MTi] on M2, M on M1
+X_FeTs 0    1   .1  0              | X(2,1) is Fe3/[T+M] on M1, M on M2
+X_AlTs 0    1   .1  0              | X(2,2) is Al/[T+M]  on M1, M on M2
+X_TiTs 0    1   .1  0              | X(2,3) is Ti/[M+T] on M2, M on M1
+X_MBio by difference
 
 begin_ordered_endmembers
                              | enthalpy corrected from -2d3, May 1, 2019. JADC
@@ -8992,6 +8988,8 @@ full_name    biotite
 688                                | model type: 688 format standard model
 
 2                                  | number of polytopes
+                                   | polytope names and composite composition space subdivision schemes 
+
 0   .5   .1   0                    | X(1) is [Mn][Mn]
 
                                    | ----------------------------
@@ -13508,8 +13506,8 @@ full_name    orthopyroxene
 
 688                               | model type: 688 format standard model
 
-2                                 | number of polytopes, subvision range for the composite space
-
+2                                 | number of polytopes
+                                  | polytope names and subdivision schemes for the composite composition space
 0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
                                   | X(2) = 1 - X(1) = TM+MC is by difference
 
@@ -13551,15 +13549,15 @@ hed_d    odi
 fs       en
 
                                   | Simplex 1
-0  .8  .1  0                      | X(1,1) => Fe/M
+0  .2  .1  0                      | X(1,1) => Fe/M
                                   | X(1,N) = Mg/M by difference
 
                                   | Simplex 2
 0  .2  .1  0                      | X(2,1) - M-MTi
-0  .2  .1  0                      | X(2,2) - M-Cr
-0  .2  .1  0                      | X(2,3) - M-Fe3+
-0  .1  .1  0                      | X(2,4) - M-Ts
-0  .5  .1  0                      | X(2,5) - M-Ca
+0  .1  .1  0                      | X(2,2) - M-Cr
+0  .1  .1  0                      | X(2,3) - M-Fe3+
+0  .2  .1  0                      | X(2,4) - M-Ts
+0   1  .1  0                      | X(2,5) - M-Ca
                                   | X(2,6) - M-M by difference
 
 begin_ordered_endmembers

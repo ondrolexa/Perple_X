@@ -212,7 +212,7 @@ c                                 model type
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
 
       character poname*10
-      common/ cxt47 /poname(h9,h4)
+      common/ cxt47 /poname(h9,h4,mst,msp)
 
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)

@@ -5633,7 +5633,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       if (jsmod.eq.20) then
@@ -5778,7 +5778,7 @@ c                                 local input variables
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       itic = 0
@@ -5881,7 +5881,7 @@ c                                 local input variables
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6299,7 +6299,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                 count the number of species
 c                                 missing on site
@@ -6343,7 +6343,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6832,7 +6832,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
       mdep = 0
       norder = 0
@@ -6860,7 +6860,7 @@ c                             initialize strings
       tn2 = 'unclassified'
 c                             for 1-polytope models use the solution name
 c                             for the polytope.
-      pname(1) = tname
+      pname(1,1,1) = tname
 c                             next look for optional abbreviation and full_name
       do
          call redcd1 (n9,i,key,val,nval1,nval2,nval3,strg,strg1)
@@ -7150,7 +7150,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -8476,7 +8476,7 @@ c                                 parameters for autorefine
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -8564,13 +8564,22 @@ c                                 number of polytopes:
       poly(im) = ipoly
 
       if (ipoly.gt.1) then
+
          pop1(im) = ipoly + 1
-         do i = 1, ipoly
-            poname(im,i) = pname(i)
+
+         do i = 1, pop1(im)
+            do j = 1, isimp(i)
+               do k = 1, ivert(i,j)
+                  poname(im,i,j,k) = pname(i,j,k)
+               end do
+            end do
          end do
+
       else
+
          pop1(im) = ipoly
          ipvert(1) = mstot(im)
+
       end if
 
       k = 0
@@ -16768,7 +16777,7 @@ c                                 composite polytope
 c                                  polytope weights:
          do ii = 1, poly(i)
 
-            write (lun,1170) poname(i,ii), xlo(ii,1,ipop,i), 
+            write (lun,1170) poname(i,pop1(i),1,ii), xlo(ii,1,ipop,i), 
      *                                     xhi(ii,1,ipop,i)
 
          end do
@@ -16777,13 +16786,14 @@ c                                  individual polytope compositions
 
             if (istg(i,ii).gt.1) then
 c                                  polytope
-               write (lun,'(/,a)') ' '//poname(i,ii)//' polytope'
+               write (lun,'(/,a)') ' '//poname(i,pop1(i),1,ii)//
+     *                             ' polytope'
 
                do j = 1, istg(i,ii)
 
                   if (ispg(i,ii,j).eq.1) then
-                     write (lun,'(/,a)') 
-     *               ' Polytope '//poname(i,ii)//' is 0-dimensional'
+                     write (lun,'(/,a)') ' Polytope '//
+     *                     poname(i,pop1(i),1,ii)//' is 0-dimensional'
                      cycle
                   end if 
 
@@ -16798,12 +16808,13 @@ c                                  polytope
             else
 c                                  simplex
                if (ispg(i,ii,1).eq.1) then
-                  write (lun,'(/,a)')
-     *               ' Polytope '//poname(i,ii)//' is 0-dimensional'
+                  write (lun,'(/,a)') ' Polytope '
+     *                     //poname(i,pop1(i),1,ii)//' is 0-dimensional'
                   cycle
                end if
 
-               write (lun,'(/,a)') ' '//poname(i,ii)//' polytope'
+               write (lun,'(/,a)') ' '//poname(i,pop1(i),1,ii)//
+     *                             ' polytope'
 
                write (lun,1050) j,' '
 
@@ -16998,14 +17009,14 @@ c                                 single polytope
 
       else if (ii.lt.pop1(ids)) then 
 c                                 composite polytope
-         write (*,1050) fname(ids), j, k, poname(ids,ii)
+         write (*,1050) fname(ids), j, k, poname(ids,pop1(ids),1,ii)
          write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
          write (*,1000)
          write (*,1010) incre,upper,y(1)
 
       else
 
-         write (*,1060) fname(ids), poname(ids,ii)
+         write (*,1060) fname(ids), poname(ids,pop1(ids),1,ii)
          write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
          write (*,1010) incre,upper,y(1)
 
@@ -19333,7 +19344,7 @@ c               to its polytope vertex
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                read number of sub-polytopes
       call readda (rnums,1,tname)
@@ -19343,16 +19354,12 @@ c                                read number of sub-polytopes
      *    'h4 (maximum number of sub-polytopes for solution model: '
      *     //tname//')')
 c                                read subdivision ranges for the polytopes
-      do i = 1, ipoly - 1
+      if (ipoly.gt.1) then 
+         call redsub (ipoly+1,tname)
+      else
+         pname(1,1,1) = tname
+      end if 
 
-         call readda (rnums,4,tname)
-
-         pxmn(ipoly+1,1,i) = rnums(1)
-         pxmx(ipoly+1,1,i) = rnums(2)
-         pxnc(ipoly+1,1,i) = rnums(3)
-         pimd(ipoly+1,1,i) = idint(rnums(4))
-
-      end do
 c                                compositional simplex
       isimp(ipoly+1) = 1
       ivert(ipoly+1,1) = ipoly
@@ -19360,18 +19367,6 @@ c                                initialize total number of polyyope vertices
       istot = 0 
 c                                read data for each polytope
       do i = 1, ipoly
-
-         if (ipoly.gt.1) then 
-c                                sub-polytope name
-            call redcd1 (n9,ier,key,val,nval1,nval2,nval3,strg,strg1)
-
-            pname(i) = key
-
-         else 
-
-            pname(i) = tname
-
-         end if 
 c                                number of simplices
          call readda (rnums,1,tname)
 
@@ -19402,17 +19397,7 @@ c                                number of vertices in the sub-polytope
 c                                read vertex names into mname
          call readn (istot,ipvert(i),tname)
 c                               read subdivision data for each sub-polytope
-         do j = 1, isimp(i)
-            do k = 1, ivert(i,j) - 1
-               call readda (rnums,4,tname)
-
-               pxmn(i,j,k) = rnums(1)
-               pxmx(i,j,k) = rnums(2)
-               pxnc(i,j,k) = rnums(3)
-               pimd(i,j,k) = idint(rnums(4))
-
-            end do
-         end do
+         call redsub (i,tname)
 c                               create pointer from the endmember l to its
 c                               polytope vertex
          do j = 2, isimp(i)
@@ -19741,7 +19726,7 @@ c---------------------------------------------------------------------
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       do ii = 1, ipoly
@@ -19862,7 +19847,7 @@ c                                 has been identified.
                dedpol(ii) = .true.
 
                if (first) call warn (100,0d0,101,
-     *                    'eliminated polytope '//pname(ii)/
+     *                    'eliminated polytope '//pname(ipoly+1,1,ii)/
      *                   /'during reformulation of model '//sname//
      *                    ' due to missing endmembers.')
                exit
@@ -19873,7 +19858,7 @@ c                                 has been identified.
 
          if (ipvert(ii).gt.0.and.killed.and.first) 
      *      call warn (100,0d0,102,
-     *                    'reformulated polytope '//pname(ii)/
+     *                    'reformulated polytope '//pname(ipoly+1,1,ii)/
      *                   /' of model '//sname//
      *                    ' due to missing endmembers.')
 c                                 next polytope
@@ -19918,10 +19903,10 @@ c                                 for the composition space down
                pxmx(ipoly+1,1,jpoly) = pxmx(ipoly+1,1,ii)
                pxnc(ipoly+1,1,jpoly) = pxnc(ipoly+1,1,ii)
                pimd(ipoly+1,1,jpoly) = pimd(ipoly+1,1,ii)
+               pname(ipoly+1,1,jpoly) = pname(ipoly+1,1,ii)
 
             end if
 c                                 shift all polytopes down
-            pname(jpoly) = pname(ii)
             ipvert(jpoly) = ipvert(ii)
             isimp(jpoly) = isimp(ii)
 
@@ -19934,7 +19919,10 @@ c                                 shift all polytopes down
                   pxmx(jpoly,j,k) = pxmx(ii,j,k)
                   pxnc(jpoly,j,k) = pxnc(ii,j,k)
                   pimd(jpoly,j,k) = pimd(ii,j,k)
+                  pname(jpoly,j,k) = pname(ii,j,k)
                end do
+
+               pname(jpoly,j,k) = pname(ii,j,k)
 
             end do
 
@@ -19961,6 +19949,7 @@ c                                shift composition space subdivision ranges left
             pxmx(jpoly+1,1,j) = pxmx(ipoly+1,1,ii)
             pxnc(jpoly+1,1,j) = pxnc(ipoly+1,1,ii)
             pimd(jpoly+1,1,j) = pimd(ipoly+1,1,ii)
+            pname(jpoly+1,1,j) = pname(ipoly+1,1,ii)
 
          end do
 
@@ -19994,7 +19983,10 @@ c                                 eliminate redundant simplicies from polytopes
                      pxmx(ii,jsimp,k) = pxmx(ii,j,k)
                      pxnc(ii,jsimp,k) = pxnc(ii,j,k)
                      pimd(ii,jsimp,k) = pimd(ii,j,k)
+                     pname(ii,jsimp,k) = pname(ii,j,k)
                   end do
+
+                  pname(ii,jsimp,k) = pname(ii,j,k)
 
                end do
 
@@ -20064,7 +20056,7 @@ c                                 local input variables
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4)
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       do i = 1, isimp(pkill)
@@ -25918,3 +25910,74 @@ c----------------------------------------------------------------------
 1100  format (/,'No such entity as ',a,', try again: ')
 
       end
+
+      subroutine redsub (jpoly,tname)
+c----------------------------------------------------------------------
+c subroutine to read polytope/subdivision ranges for polytope jpoly
+c of a 688 solution model.
+c----------------------------------------------------------------------    
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ier, jpoly, j, k
+
+      character key*22, values*80, strg*80, tname*10
+
+      double precision rnums(m4)
+
+      character pname*10
+      integer ipoly, isimp, ipvert, ivert, pimd
+      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
+     *                pimd(h4,mst,msp),pname(h4,mst,msp)
+c----------------------------------------------------------------------
+      if (ipoly.gt.1.or.isimp(jpoly).gt.1) then
+
+         ier = 0
+c                              reading a composite model or a polytope, 
+c                              a name is associated with each subdivision range
+         do j = 1, isimp(jpoly)
+
+            do k = 1, ivert(jpoly,j) - 1
+
+               call redcd0 (n9,ier,key,values,strg)
+
+               if (ier.ne.0) exit 
+
+               pname(jpoly,j,k) = key
+               read (values,*,iostat=ier) pxmn(jpoly,j,k), 
+     *              pxmx(jpoly,j,k), pxnc(jpoly,j,k), pimd(jpoly,j,k)
+
+               if (ier.ne.0) exit
+
+            end do
+
+            if (ier.ne.0) exit 
+
+            call redcd0 (n9,ier,key,values,strg)
+
+            pname(jpoly,j,k) = key
+
+         end do
+
+         if (ier.ne.0) call error (99,k,0d0,'error while reading polyto'
+     *                     //'pe/subdivision data for solution '//tname)
+
+      else
+c                              reading a simplicial model no names are
+c                              read with the subdivision scheme
+         do j = 1, isimp(jpoly)
+            do k = 1, ivert(jpoly,j) - 1
+               call readda (rnums,4,tname)
+
+               pxmn(jpoly,j,k) = rnums(1)
+               pxmx(jpoly,j,k) = rnums(2)
+               pxnc(jpoly,j,k) = rnums(3)
+               pimd(jpoly,j,k) = idint(rnums(4))
+
+            end do
+         end do
+
+      end if
+
+      end 
