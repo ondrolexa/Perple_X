@@ -8989,30 +8989,28 @@ full_name    biotite
 
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-
-0   .5   .1   0                    | X(1) is [Mn][Mn]
-
+[Mn][Mn]  0   .5   .1   0
+[M,T][M]  by difference
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
-[Mn][Mn]                           | polytope name
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
 
                                    | ----------------------------
                                    | Polytope 2 - 2x3 simplices
-[M,T][M]                           | polytope name
 2                                  | number of simplices
 2  3                               | number of vertices on each simplex
                                    | endmembers on the vertices
 ftbi_i   tbi
 sdph_i   east
 ann      phl
-                                   | First 2-simplex
-0    1   .1  0                     | X(1,1) is bulk Fe/M
+X_Mg    0    1   .1  0             | X(1,1) is bulk Fe/M
+X_Fe    by difference
                                    | Second 3-simplex
-0    1   .1  0                     | X(2,1) is Ti/[M+T] on M1
-0    1   .1  0                     | X(2,2) is Al/[T+M] on M1
+X_TiTs  0    1   .1  0             | X(2,1) is Ti/[M+T] on M1
+X_AlTs  0    1   .1  0             | X(2,2) is Al/[T+M] on M1
+X_MBio  by difference
 
 begin_ordered_endmembers
                              | model types 6 and 8 require data defining the
@@ -9539,16 +9537,13 @@ full_name    clinoamphibole
 
 688                                | model type: 688 format standard model
 
-2                                  | number of polytopes, subvision ranges for the first N-1 polytopes:
-
-0   .2   .1  0                     | X(1) = X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
-                                   | X(2) = 1 - X(1) = X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
+2                                  | number of polytopes
+                                   | polytope names and composite composition space subdivision schemes 
+glauc     0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+ACMT-Amph by difference            | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
 
                                    | -------------------------------------------
                                    | Polytope 1 [ ][M][T  ][N] (generalized glaucophane)
-
-Glaucophane                        | poytope name
-                                    
 2                                  | number of simplices
 2 2                                | number of vertices on each simplex
  
@@ -9567,15 +9562,13 @@ mrb        frb_d                   | Fe3-glaucophane, aka riebeckite
 gl_dqf     fgl_d                   | Al-glaucophane
 
                                    | First (1d) simplex
-0    1  .1  0                      | X(1,1) = bulk Mg/M
+X_Mg1   0    1  .1  0              | X(1,1) = bulk Mg/M
+X_Fe1   by difference
                                    | Second (3d) simplex
-0    1  .1  0                      | X(2,1) = Fe3/T on M2
-
+X_rb    0    1  .1  0              | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
+X_gl    by difference
                                    | -------------------------------------------
-                                   | Polytope 2 [A][M][M,T,MT][M,C]  
-
-ACMT-Amph                          | poytope name
- 
+                                   | Polytope 2 [A][M][M,T,MT][M,C]
 3                                  | number of simplices
 2 2 4                              | number of vertices on each simplex
 
@@ -9597,17 +9590,17 @@ mgrk_d     fgrk_d
 
 cumm_dqf   grun_dqf                | M-Ca divalent amphibole
 tr         ftr_d
-
                                    | First (1d) simplex
-0    1   .1  0                     | X(1,1) = bulk Mg/M
-
+X_Mg     0    1   .1  0            | X(1,1) = bulk Mg/M
+X_Fe     by difference
                                    | Second (1d) simplex
-0    1   .1  0                     | X(2,1) = M/[Ca + M] on M4
-
+X_M_M2   0    1   .1  0            | X(2,1) = M/[Ca + M] on M4
+X_C_M2   by difference
                                    | Third simplex 
-0    1   .1  0                     | X(3,1) = X(Al-Ts)
-0    1   .1  0                     | X(3,2) = X(Na-Al-Parg)
-0    1   .1  0                     | X(3,3) = X(Fe3-Ts)
+X_AlTs   0    1   .1  0            | X(3,1) = X(Al-Ts)
+X_NaPg   0    1   .1  0            | X(3,2) = X(Na-Al-Parg)
+X_FeTs   0    1   .1  0            | X(3,9) = X(Fe3-Ts)
+X_MCamph by difference
 
 begin_ordered_endmembers
 
