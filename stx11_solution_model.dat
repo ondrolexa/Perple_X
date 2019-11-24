@@ -122,7 +122,7 @@ z(B,fe) = 1/8 herc
 3 4.                                  3 species, site multiplicity = 4.
 z(B,mg) = 3/4 sp
 z(B,fe) = 3/4 herc
-end_of_model                             
+end_of_model
                       --------------------------------------------------------
 begin_model                
                                   | olivine solution
@@ -357,29 +357,28 @@ Gt_maj
 688                                | model type: 688 format standard model
 
 2                                  | number of polytopes
-0   .5   .1   0                    | X(1) is [jmaj]
-                                   | X(2) = 1 - X(1) is [M][Al,MgSi], M = Mg,Fe,Ca
-
+                                   | polytope names and composite composition space subdivision schemes 
+[jmaj]   0    1   .1  0            | subdivision range for X(1) = M-free
+[~jmaj]  by difference             | = [M][Al,MgSi], M = Mg,Fe,Ca
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
-[jmaj]                             | polytope name
 1                                  | number of simplices, [Na2/3Al1/3][AlSi]
 1                                  | number of vertices on each simplex
 jmaj                               | endmembers on the vertices
-
                                    | ----------------------------
                                    | Polytope 2 - 3x2 simplices
-[M][Al,MgSi]                       | polytope name
 2                                  | number of simplices
 3  2                               | number of vertices on each simplex
                                    | endmembers on the vertices
 cmaj   fmaj   maj
 gr     alm    py
                                    | First 3-simplex
-0. 1. .1   0                       | range and resolution for X(Ca,A), imod = 0 -> cartesian subdivision
-0. 1. .1   0                       | range and resolution for X(Fe,A), imod = 0 -> cartesian subdivision
+X_Ca,A    0. 1. .1   0             | range and resolution for X(Ca,A), imod = 0 -> cartesian subdivision
+X_Fe,A    0. 1. .1   0             | range and resolution for X(Fe,A), imod = 0 -> cartesian subdivision
+X_Mg,A    by difference 
                                    | Second 2-simplex
-0. 1. .1   0                       | range and resolution for X(1-Ts,B), imod = 0 -> cartesian subdivision
+X_MgSi,B  0. 1. .1   0             | range and resolution for X(1-Ts,B), imod = 0 -> cartesian subdivision
+X_AlAl,B  by difference
 
 begin_dependent_endmembers
 fmaj = 1 maj + 1 alm - 1 py

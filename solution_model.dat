@@ -305,10 +305,8 @@ full_name    biotite
 1                                  | number of simplices, [Mn][Mn]
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
-
                                    | ----------------------------
                                    | Polytope 2 - 2x4 simplices
-[M,T][M]                           | polytope name
 2                                  | number of simplices
 2  4                               | number of vertices on each simplex
                                    | endmembers on the vertices
@@ -1101,14 +1099,14 @@ kjdh      jd        cats
                                   | Simplex 1
 X_K    0     1  .1  0             | X(1,1) = Na/[A + Ca] on M2
 X_Na   0     1  .1  0             | X(1,2) = K /[A + Ca] on M2
-X_Ca1  by difference              | X(1,N) = Ca/[A + Ca] on M2 by difference
+X_Ca   by difference              | X(1,N) = Ca/[A + Ca] on M2 
 
                                   | Simplex 2
 X_TiTs 0     1  .1  0             | X(2,1) = MgTi/T on M1
 X_CrTs 0     1  .1  0             | X(2,2) = Cr/T on M1
 X_FeTs 0     1  .1  0             | X(2,3)  = Fe3+/T on M1
                                   |0     1  .1  0                    |X(2,4)  = FeTi/T on M1
-X_AlTs by difference              | X(2,N) = Al/T on M1 by difference
+X_AlTs by difference              | X(2,N) = Al/T on M1 
                                   | -------------------------------------------
                                   | Polytope 2  TM+MC
 2                                 | number of simplices 
@@ -1121,8 +1119,8 @@ fats_d   mats_d
 cfsg     cenjh
 hed_d    di
                                   | Simplex 1
-X_Mg 0  .2  .1  0                 | X(1,1) => Fe/M
-X_Fe by difference                | X(1,N) = Mg/M by difference
+X_Fe 0  .2  .1  0                 | X(1,1) => Fe/M
+X_Mg by difference                | X(1,N) = Mg/M
 
                                   | Simplex 2
 X_MTiTs 0  .1  .1  0              | X(2,1) - M-buf(MgTi)
@@ -1130,7 +1128,7 @@ X_MCrTs 0  .1  .1  0              | X(2,2) - M-Cr
 X_MFeTs 0  .1  .1  0              | X(2,3) - M-Fe3+
 X_MAlTs 0  .2  .1  0              | X(2,4) - M-Ts
 X_MMPx  0   1  .1  0              | X(2,5) - M-M
-X_MCPx  by difference             | X(2,6) - M-Ca by difference
+X_MCPx  by difference             | X(2,6) - M-Ca
 
 begin_ordered_endmembers
 cfm   = 1/2 cenjh + 1/2 cfsg enthalpy_of_ordering  =  -4400 | DQF(cfm) - (DQF(ceng) + DQF(cfsg))/2
@@ -1972,15 +1970,13 @@ full_name    chlorite
 1                                 | number of simplices
 1                                 | number of vertices on each simplex
 mnchl                             | endmembers on the vertices
-
                                   | ----------------------------
-                                  | Polytope 2 - 2x4 simplices
+                                  | Polytope 2 - 4x2 simplices
 2                                 | number of simplices
 4 2                               | number of vertices on each simplex
                                   | endmembers on the vertices
 fames    fafchl   ff3cli   daph
 ames     afchl    f3clin   clin
-
                                   | subdivision model for (quaternary) chemical mixing space
 X_Mames   0  1  .1 0              | range and resolution of X(M-ames),   imod = 0 -> cartesian subdivision
 X_Mafchl  0  1  .1 0              | range and resolution of X(M-afchl),  imod = 0 -> cartesian subdivision
@@ -9854,16 +9850,13 @@ full_name    orthoamphibole
 
 688                                | model type: 688 format standard model
 
-2                                  | number of polytopes, subvision ranges for the first N-1 polytopes:
-
-0   .2   .1  0                     | X(1) = X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
-                                   | X(2) = 1 - X(1) = X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
+2                                  | number of polytopes
+                                   | polytope names and composite composition space subdivision schemes 
+glauc     0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+ACMT-Amph by difference            | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
 
                                    | -------------------------------------------
                                    | Polytope 1 [ ][M][T  ][N] (Glaucophane)
-
-Glaucophane                        | poytope name
-                                    
 2                                  | number of simplices
 2 2                                | number of vertices on each simplex
  
@@ -9882,15 +9875,13 @@ omrb_dqf   frb_d                   | Fe3-glaucophane, aka riebeckite
 ogl_dqf    fgl_d                   | Al-glaucophane
 
                                    | First (1d) simplex
-0    1  .1  0                      | X(1,1) = bulk Mg/M
+X_Mg1   0    1  .1  0              | X(1,1) = bulk Mg/M
+X_Fe1   by difference
                                    | Second (3d) simplex
-0    1  .1  0                      | X(2,1) = Fe3/T on M2
-
+X_rb    0    1  .1  0              | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
+X_gl    by difference
                                    | -------------------------------------------
                                    | Polytope 2 [A][M][M,T,MT][M,C]  
-
-ACMT-Amph                          | poytope name
- 
 3                                  | number of simplices, then for each simplex
 2 2 4                              | number of vertices on each simplex
 
@@ -9913,15 +9904,16 @@ tr            ftr_d
 anth          fanth_dq             | M-Ca divalent amphibole
 
                                    | First (1d) simplex
-0    1   .1  0                     | X(1,1) = bulk Mg/M
-
+X_Mg     0    1   .1  0            | X(1,1) = bulk Mg/M
+X_Fe     by difference
                                    | Second (1d) simplex
-0    1   .1  0                     | X(2,1) = C/[Ca + M] on M4
-
+X_C_M2   0    1   .1  0            | X(2,1) = Ca/[Ca + M] on M4
+X_M_M2   by difference
                                    | Third simplex 
-0    1   .1  0                     | X(3,1) = X(Al-Ts)
-0    1   .1  0                     | X(3,2) = X(Na-Al-Parg)
-0    1   .1  0                     | X(3,3) = X(Fe3-Ts)
+X_AlTs   0    1   .1  0            | X(3,1) = X(Al-Ts)
+X_NaPg   0    1   .1  0            | X(3,2) = X(Na-Al-Parg)
+X_FeTs   0    1   .1  0            | X(3,9) = X(Fe3-Ts)
+X_MCamph by difference
 
 begin_ordered_endmembers
 ammo1 = 3/7 anth + 4/7 fanth_dq  enthalpy_of_ordering = -9.5d3
@@ -11433,31 +11425,6 @@ begin_model
         
         * Reformulated as a 2-polytope 688 format model. JADC, 9/19
 
-                                                      M1           M2
-                                                     ____________
-
-                                      Multiplicity    3            2
-                                                     ___________________
-
-                                        nagt          Mg2/3Na1/3   AlSi   independent
-                                        fnagt         Fe2/3Na1/3   AlSi   dependent
-                                        cnagt         Ca2/3Na1/3   AlSi   dependent
-
-                                        py            Mg           AlAl   independent
-                                        alm           Fe           AlAl   independent
-                                        gr            Ca           AlAl   independent
-
-                                        fmaj_d        Fe           FeSi   dependent
-                                        cmaj_d        Ca           MgSi   dependent
-                                        cfmaj_d       Ca           FeSi   dependent
-                                                     ___________________
-
-                         Orphan         maj           Mg           MgSi   independent
-                                                     ___________________
-
-                                     13 gfm           Mg           FeSi   ordered (same as gfm_d, above)
-
-           alternative dual prism 5d target formulation =>
                                                      ___________________
                            Prism I    5 maj           Mg           MgSi   independent
                                       7 cmaj_d        Ca           MgSi   dependent
@@ -11478,35 +11445,41 @@ begin_model
 
 Gt(H)
 abbreviation Gt
-full_name    High pressure garnet
+full_name    garnet
 
 688                               | model type: 688 format standard model
 
-2                                 | number of polytopes, subvision range for the composite space
-
-0    1   .1  0                    | subdivision range for X(1) = X(mg-maj)
-
+2                                 | number of polytopes
+                                  | polytope names and composite composition space subdivision schemes 
+[maj]      0    1   .1  0 
+[~maj]     by difference 
                                   | -------------------------------------------
                                   | Polytope 1
-[maj]                             | polytope name
-1                                 | number of simplices 
-1                                 | number of vertices on each simplex
-maj
+2                                 | number of simplices 
+2 2                               | number of vertices on each simplex
+maj      fmaj_d
+cmmaj_d  cfmaj_d
+                                  | First 2-simplex
+X_Mg    0    1   .1  0            | X(1,1) is bulk Fe/M
+X_Fe    by difference
+                                  | Second 2-simplex
+X_Ca    0    1   .1  0            | X(2,1) is Ca/[M+Ca] on M1
+X_M     by difference
                                   | -------------------------------------------
                                   | Polytope 2
-[no-mg-maj]                       | polytope name
-
 2                                 | number of simplices 
-3 3                               | number of vertices on each simplex
+3 2                               | number of vertices on each simplex
+
 cnagt_d  fnagt_d     nagt         | ternary 1
-fmaj_d   cfmaj_d     cmmaj_d      | ternary 2
-gr       alm         py           | ternary 3
+gr       alm         py           | ternary 2
 
-0  1   .1  0                      | range and resolution of X(1,1) => X(Ca) in the ternaries
-0  1   .1  0                      | range and resolution of X(1,2) => X(Fe) in the ternaries
-
-0  1   .1  0                      | range and resolution of X(2,1) => X(M-nagt)
-0  1   .1  0                      | range and resolution of X(2,2) => X(non-Mg-Ts)
+                                  | First 3-simplex
+X_Ca    0  1   .1  0              | range and resolution of X(1,1) => X(Ca) in the ternaries
+X_Fe    0  1   .1  0              | range and resolution of X(1,2) => X(Fe) in the ternaries
+X_Mg    by difference
+                                  | second 2-simplex
+X_NaGt  0  .1   .1  0             | range and resolution of X(2,1) => X(M-nagt)
+X_MGt   by difference
 
 begin_ordered_endmembers
 gfm = 1 maj - 1/3 py + 1/3 alm  enthalpy_of_ordering = -10d3
@@ -11823,28 +11796,31 @@ full_name    Ca-ferrite type
 
 688                               | model type: 688 format standard model
 
-2                                 | number of polytopes, subvision range for the composite space
-
-0    1   .1  0                    | subdivision range for X(1) = M-free
-
+2                                 | number of polytopes
+                                  | polytope names and composite composition space subdivision schemes 
+[~M]   0    1   .1  0             | subdivision range for X(1) = M-free
+[M]    by difference
                                   | -------------------------------------------
-                                  | Polytope 1 [M-free]
-M-free                            | polytope name
+                                  | Polytope 1 [~M]
 1                                 | number of simplices 
-2                                 | number of vertices on each simplex
+2                                 | number of vertices on the simplex
 nacfb   cacf
-0  1   .1  0                      | range and resolution of X(nacfb/[nacfb+cacf])
+
+X_Na   0  1   .1  0               | range and resolution of X(nacfb/[nacfb+cacf])
+X_Ca   by difference
                                   | -------------------------------------------
-                                  | Polytope 2  [MCF]
-MCF                               | polytope name
+                                  | Polytope 2  [M]
 2                                 | number of simplices 
 3 2                               | number of vertices on each simplex
 macf    cscf_d   mscf
 facf_d  cfscf_d  fscf
-0  1   .1  0                      | range and resolution of X(AlAl)
-0  1   .1  0                      | range and resolution of X(CaM)
-
-0  1   .1  0                      | range and resolution of X(Mg)
+                                  | First 3-simplex
+X_Al   0  1   .1  0               | range and resolution of X(AlAl)
+X_Ca   0  1   .1  0               | range and resolution of X(CaM)
+X_M    by difference
+                                  | second 2-simplex
+X_Mg   0  1   .1  0               | range and resolution of X(Mg)
+X_Fe   by difference 
 
 begin_ordered_endmembers
 oscf = 1/2 mscf + 1/2 fscf enthalpy_of_ordering = -3.5d3
@@ -13501,13 +13477,11 @@ full_name    orthopyroxene
 
 2                                 | number of polytopes
                                   | polytope names and subdivision schemes for the composite composition space
-0    .2   .1  0                   | subdivision range for X(1) = X([T][N,C])
-                                  | X(2) = 1 - X(1) = TM+MC is by difference
+[T'][A,C]  0    .2   .1  0        | subdivision range for X(1) = X([T][A,C])
+TM+MC      by difference
 
                                   | -------------------------------------------
                                   | Polytope 1 [T'][A,C]
-                                  
-[T'][A,C]                         | polytope name
 2                                 | number of simplices
 2 3                               | change to 3 5 for full model
 crjd_d   crdi_d
@@ -13517,19 +13491,18 @@ ness_d   cess_d
 ojd      ocats_d
 
                                   | Simplex 1
-0     1  .1  0                    | X(1,1) = Na/[Na + Ca] on M2
-                                  | X(1,N) = Ca/[A + Ca] on M2 by difference
+X_K    0     1  .1  0             | X(1,1) = Na/[Na + Ca] on M2
+X_Ca1  by difference              | X(1,N) = Ca/[Na + Ca] on M2 by difference
 
                                   | Simplex 2
-0     1  .1  0                    | X(2,1) = Cr/T' on M1
-0     1  .1  0                    | X(2,2) = Fe3+/T on M1
+X_CrTs 0     1  .1  0             | X(2,1) = Cr/T on M1
+X_FeTs 0     1  .1  0             | X(2,2) = Fe3+/T on M1
                                   |0     1  .1  0                    | X(2,3) = MgTi/T on M1
                                   |0     1  .1  0                    |X(2,4)  = FeTi/T on M1
-                                  | X(2,N) = Al/T on M1 by difference
+X_AlTs by difference              | X(2,N) = Al/T on M1 by difference
 
                                   | -------------------------------------------
                                   | Polytope 2  TM+MC
-TM+MC                             | polytope name
 
 2                                 | number of simplices 
 2 6                               | number of vertices on each simplex
@@ -13540,18 +13513,17 @@ facm_d   macm
 fts_d    mgts
 hed_d    odi
 fs       en
-
                                   | Simplex 1
-0  .2  .1  0                      | X(1,1) => Fe/M
-                                  | X(1,N) = Mg/M by difference
+X_Fe    0  .2  .1  0              | X(1,1) => Fe/M
+X_Mg    by difference             | X(1,N) = Mg/M by difference
 
                                   | Simplex 2
-0  .2  .1  0                      | X(2,1) - M-MTi
-0  .1  .1  0                      | X(2,2) - M-Cr
-0  .1  .1  0                      | X(2,3) - M-Fe3+
-0  .2  .1  0                      | X(2,4) - M-Ts
-0   1  .1  0                      | X(2,5) - M-Ca
-                                  | X(2,6) - M-M by difference
+X_MTiTs 0  .2  .1  0              | X(2,1) - M-buf(MgTi)
+X_MCrTs 0  .1  .1  0              | X(2,2) - M-Cr
+X_MFeTs 0  .1  .1  0              | X(2,3) - M-Fe3+
+X_MAlTs 0  .2  .1  0              | X(2,4) - M-Ts
+X_MCPx  0   1  .1  0              | X(2,5) - M-Ca
+X_MMPx  by difference
 
 begin_ordered_endmembers
 fm = 1/2 en + 1/2 fs     enthalpy_of_ordering = -6600
