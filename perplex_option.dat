@@ -59,7 +59,7 @@ finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st or
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction
 global_reach_increment    default | [0] >= 0, overridden by reach_factor specified in solution model file
-grid_levels               default | [1 4] exploratory and auto-refine (grid parameters keyword group)
+grid_levels               1 3 default | [1 4] exploratory and auto-refine (grid parameters keyword group)
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
 hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
@@ -111,6 +111,6 @@ T_stop                    default | [0.] equilibration temperature (K) cut off
 variance                  default | [1 99] exploratory and auto-refine; maximum variance of traced equilibria; only relevant for CONVEX
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 warning_ver637            default | [T] F -> warn and cease interpolation in WERAMI when immiscible solutions are present
-x_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
+x_nodes                   10 40 default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                   10 40 default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations

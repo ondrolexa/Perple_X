@@ -5031,7 +5031,9 @@ full_name    fluid
                                   | this file for a list of model types
 
 2                                 | number of endmembers
-
+                           | NOTE: for model type 0, the first endmember listed here, must correspond
+                           | to the second special component in the thermodynamic 
+                           | file, i.e., the endmembers CANNOT be reordered.
 CO2
 H2O
                                   | see commentary in the header of this file for explanation of
@@ -5593,6 +5595,9 @@ full_name    fluid
 
 0                          | model type: Internal EoS
 2
+                           | NOTE: for model type 0, the first endmember listed here, must correspond
+                           | to the second special component in the thermodynamic 
+                           | file, i.e., the endmembers CANNOT be reordered.
 O2       H2
   0  0                                endmember flags
 1d-5 0.999999  .1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
@@ -10333,6 +10338,9 @@ full_name    fluid
 
 0                          | model type: Internal EoS
 2
+                           | NOTE: for model type 0, the first endmember listed here, must correspond
+                           | to the second special component in the thermodynamic 
+                           | file, i.e., the endmembers CANNOT be reordered.
 O        SIO
   0  0                                endmember flags
 0    1   .1       0        | subdivision ranges, imod = 0 -> cartesian subdivision
@@ -11478,7 +11486,7 @@ X_Ca    0  1   .1  0              | range and resolution of X(1,1) => X(Ca) in t
 X_Fe    0  1   .1  0              | range and resolution of X(1,2) => X(Fe) in the ternaries
 X_Mg    by difference
                                   | second 2-simplex
-X_NaGt  0  .1   .1  0             | range and resolution of X(2,1) => X(M-nagt)
+X_NaGt  0  .3   .1  0             | range and resolution of X(2,1) => X(M-nagt)
 X_MGt   by difference
 
 begin_ordered_endmembers
