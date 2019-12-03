@@ -10,7 +10,7 @@
       integer m16,m17,m18
       integer msp,mst,mdim,ms1
       integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,nsp,nx,ny
-      integer memory, k31, k32, k33
+      real k31, k32, k33, memory
 !                                 n0  - starting LUN-1 for fractionation files, these files may 
 !                                       have LUNs from n0+1 up to n0+k23
 !                                 n1  - problem definition file.
@@ -100,18 +100,18 @@
 !                                 An additional array (simp) is used for temporary storage during both dynamic
 !                                 and static subdivision, its dimension k13 should be proportional to, but less than,
 !                                 max(k1,k21) (i.e., it is expected that k33 >= 1)
-!                                    k13 = imax(k1,k21)/k33.
+!                                    k13 = imax(k1,k21)*k33.
 !                                 The memory allocated for compositions is then 
-!                                    memory = (1 + k31 + k32)*(k1 + k21) + imax(k1,k21)/k33
-!                                 or if k1 is taken as the independent variable 
-!                                    k21 = ((memory (-k31 - k32 - 1)*k1) - imax(k1,k21)/ k33) / (1 + k31 + k32).
+!                                    memory = (1 + k31 + k32)*(k1 + k21) + imax(k1,k21)*k33
+!                                 or if k1 is taken as the independent variable and k1 > k21
+!                                    k21 = (memory - (k31 + k32 + k33 + 1)*k1) / (1 + k31 + k32).
 !                                 Experience indicates that for most problems k1>k21, and that k21 approaches
 !                                 k1 for complex (10-d) solutions with the default values of resolution_factor (2)
 !                                 reach_increment (0). For larger resolution_factor or reach_increment the required
 !                                 value for k21 may excede k1, whereas for problems with simple (low-dimension) 
 !                                 solutions k21 may be << k1. The compromise adopted here is to equate k21 and k1
 !                                 in which case 
-!                                    k1 = memory / (2 * k31 + 2 * k32 + 2 + 1 / k33)
+!                                    k1 = memory / (2 * k31 + 2 * k32 + k33 + 2)
 !                                 The value of memory is dependent on the other parameters set here as well as 
 !                                 system/compiler limitations, which typically limit image size to 2 Gb. For the
 !                                 present parameter choices, memory was found by trial and error (i.e., by varying 
@@ -125,10 +125,10 @@
 !     parameter (memory=78000000,k31=2,k32=10,k33=1,k1=3000000)
 !                                 the next two lines make k1 = k21, comment these if the line above is uncommented.
       parameter (memory=78000000,k31=2,k32=10,k33=1)
-      parameter (k1 = memory/(2*k31+2*k32+2+1/k33))
-!                                 set k13 = k21/k13 if k21 > k1
-      parameter (k13=k1/k33)
-      parameter (k21=((memory-(k31+k32+1)*k1)-k13)/(1+k31+k32))
+      parameter (k1 = memory/(2*k31+2*k32+k33+2))
+
+      parameter (k21=(memory-(k31+k32+k33+1)*k1)/(1+k31+k32))
+      parameter (k13=k1*k33)
       parameter (k18=k1*k31, k20=k21*k31, k24=k1*k32, k25=k21*k32)
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2,k17=7,k19=3*k5)

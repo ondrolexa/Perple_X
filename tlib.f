@@ -6617,7 +6617,7 @@ c-----------------------------------------------------------------------
 
          if (stx.and.notstx) write (n8,1010) 
 
-         write (n8,'(/,a)') 'Solution models:'
+         write (n8,'(/,a)') 'Solutions:'
          write (n8,1000)
 
          do i = 1, isoct

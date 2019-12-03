@@ -13946,7 +13946,12 @@ c                                 conformal.
          npairs = npairs + 1
          j = jump + (npairs-1)*ic
 
-         if (j+jsp.gt.k13) call error (180,nlin,lsite,fname(ids))
+         if (j+jsp.gt.k13) then
+            write (*,*) 'k13, k1 = ',k13,k1
+            write (*,*) 'k21, k18, k20, k24, k25'
+            write (*,*) k21, k18, k20, k24, k25
+            call error (180,nlin,lsite,fname(ids))
+         end if
 
          do i = 1, jsp
             simp(j+i) = y(i,ind(i))
