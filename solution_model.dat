@@ -84,7 +84,9 @@
                              it is best to order the solution model endmembers so that the most important end-
                              member is listed last and therefore determined by difference.
 
-                             If the solution model has a prismatic composition space, then a scheme is
+                             If the solution model has a prismatic composition space (in Perple_X a polyhedral 
+                             composition with more vertices than a simplex, e.g., a quadrilateral, is referred
+                             to as a prism), then a subdivision scheme is
                              associated with the S-1 independent compositions of the T simplexes that comprise
                              the prism (as identified in *_auto_refine.txt). Thus for prismatic composition spaces
                              there are T*(S-1) subdivision schemes for the compositional variables X(1..T,1..S-1).
@@ -95,6 +97,13 @@
                              four parameters that are entered as XMIN, XMAX, XINC, IMOD. The significance of these
                              parameters is dicussed below.
 
+                             NOTE 1: 
+                             In solution model type 688 format, if the composition space of the model involves at
+                             least one prism, the subdivision scheme parameters for every independent composition 
+                             include a name for the compositional variable, i.e., NAME, XMIN, XMAX, XINC, IMOD, 
+                             where NAME is an alphanumeric string used to identify the variable in output. 
+
+                             NOTE 2: 
                              For purposes of this discussion XMIN, XMAX, and XINC are described as static variables
                              as is indeed the case for calculations with CONVEX; however, during adaptive optimization
                              calculations in VERTEX and MEEMUM these variables are rescaled to obtain higher resolution,
@@ -568,8 +577,8 @@ full_name    clinoamphibole
  
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-glauc     0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
-ACMT-Amph by difference            | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ 
+GlRb-Amph  0   .2   .1  0          | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+ACMT-Amph  by difference           | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ 
 
                                    | -------------------------------------------
                                    | Polytope 1 [ ][M][T  ][N] (glauc)
@@ -4064,7 +4073,7 @@ z(m2,fe) = 1 ann
 
 2 2.                        | 2 species on T1, 2 site per formula unit.
 
-z(t1,al) = 1/2  + 1/2 east + 1/2 fbi
+z(Al,T1) = 1/2 tbi1 + 1/2 ann + 1/2 phl + 1/2 obi + 1 east + 1 fbi
 
 2 2.                        | 2 species on H, 2 site per formula unit.
 
@@ -8952,9 +8961,6 @@ begin_model
 
                              NOTES:
 
-                             * This model will only function for the MnASH and FASH subsystems
-                               if MGO is also used as a component.
-
                              * Limits added 5/6/2011. JADC.
 
                                                       1       2      3
@@ -8994,7 +9000,7 @@ full_name    biotite
 [M,T][M]  by difference
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex
-1                                  | number of simplices, [Mn][Mn]
+1                                  | number of simplices
 1                                  | number of vertices on each simplex
 mnbi                               | endmembers on the vertices
 
@@ -9089,7 +9095,7 @@ z(Mg,M2)   = needs_to_be_completed
 
 T1                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
-z(t1,al)   = 1/2  + 1/2 east
+z(Al,T1) = 1/2 tbi + 1/2 mnbi + 1/2 ann + 1/2 phl +1/2 obi + 1 east
 z(Si,T1)   = needs_to_be_completed
 
 T2                                  | site name
@@ -9540,7 +9546,7 @@ full_name    clinoamphibole
 
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-glauc     0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+GlRb-Amph 0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
 ACMT-Amph by difference            | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
 
                                    | -------------------------------------------
@@ -9857,7 +9863,7 @@ full_name    orthoamphibole
 
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-glauc     0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+GlRb-Amph 0   .2   .1  0           | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
 ACMT-Amph by difference            | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ "pargasite"
 
                                    | -------------------------------------------
