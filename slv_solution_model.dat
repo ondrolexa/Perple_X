@@ -46,10 +46,14 @@ Si-vapor
 
 2                                     model type: internal, ideal gas
 
-9                                     number of endmembers
+13                                    number of endmembers
                                  
                                     | ENDMEMBER NAMES:                               
-SiO2                                
+H2O
+CO2
+CO
+H2
+CH4
 Fe
 Si
 O2
@@ -59,22 +63,31 @@ Mg
 FeO
 SiO
 
-0 0 0 0 0 0 0 0 0                   | endmember flags.  
+0 0 0 0 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
-0.0 0.1  0.1 0                      | range and resolution of X(SiO2), 0 => cartesian subdivision/1 => asymmetric subdivision   
-0.0 0.1  0.1 0                      | range and resolution of X(Fe)  
-0.0 0.2  0.1 0                      | range and resolution of X(Si)   
-0.0 0.3  0.1 0                      | range and resolution of X(O2)  
-0.0 0.6  0.1 0                      | range and resolution of X(O)   
-0.0 0.2  0.2 0                      | range and resolution of X(MgO)
-0.0 0.4  0.1 0                      | range and resolution of X(Mg)
-0.0 0.1  0.1 0                      | range and resolution of X(FeO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+1e-3 1d-2 0.1 1              | range and resolution of X(MgO)
+1e-3 1d-2 0.1 1                  | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+0.0 1    0.1 0                      | range and resolution of X(MgO)
+
 
 ideal
 
 1                                     1 site entropy model (m)
-9 1                                   2 species on m2, mutiplicity = 2
-z(m,mg) = 1 SiO2
+13 1                                  
+z(m,mg) = 1 H2O
+z(m,mg) = 1 CO2
+z(m,mg) = 1 CO
+z(m,mg) = 1 H2
+z(m,mg) = 1 CH4 
 z(m,mg) = 1 Fe
 z(m,mg) = 1 Si
 z(m,mg) = 1 O2
@@ -91,35 +104,49 @@ Si-melt
 
 2                                    model type: internal
 
-3                                     number of endmembers
+7                                     number of endmembers
                                  
                                     | ENDMEMBER NAMES:                               
 fo8L
 fa8L
+MGCO3L
+FECO3L
+h2oL
+CO2
 q8L
 
-0 0 0                               | endmember flags.  
+
+0 0 0   0    0 0 0 0                          | endmember flags.  
 
 0.0 1.0  0.1 0                      | range and resolution of X(fo), 0 => cartesian subdivision/1 => asymmetric subdivision   
 0.0 1.0  0.1 0                      | range and resolution of X(fa)  
+0.0 1.0  0.1 0                      | range and resolution of X(fo), 0 => cartesian subdivision/1 => asymmetric subdivision   
+0.0 1.0  0.1 0                      | range and resolution of X(fo), 0 => cartesian subdivision/1 => asymmetric subdivision   
+0.0  .1  0.1 0                      | range and resolution of X(fa)  
+0.0  .1  0.1 0                      | range and resolution of X(fo), 0 => cartesian subdivision/1 => asymmetric subdivision   
 
 ideal
 
-2                           | Configurational entropy: two non-temkin sites (Water, Melt)
+3                           | Configurational entropy: two non-temkin sites (Water, Melt)
                             | and one temkin site (olvine). hp assume a fsp = ab + or "molecule""
                             | with mixing on a temkin M site, but the math works out the same as
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped.
 
+2 2                         | non-temkin water
+z(H) = 1 h2oL
+
 2 0                         | temkin olivine site
 n(Mg) = 4 fo8L
 n(Fe) = 4 fa8L
 
-
-2 0                         | silicate species site
-
-z(q)     = 1 q8L
+6 0                         | silicate species site
+n(q)     = 1 q8L
 z(ol)    = 1 fo8L + 1 fa8L
+z(Mg++)  = 1 MGCO3L
+z(Fe++)  = 1 FECO3L
+z(CO3--) = 1 MGCO3L + 1 FECO3L
+z(CO2)   = 1 CO2
 
 end_of_model
                                   --------------------------------------------------------

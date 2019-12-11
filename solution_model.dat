@@ -4224,7 +4224,7 @@ w(py knor) 3d3              | corrected as in erratum to ziberna et al 2013 (201
 end_excess_function
 2                                     2 site entropy model
 3 3.                                  3 species, site multiplicity of 3
-z(Ca) = 1 gr + 1 uv_d
+z(Ca) = 1 gr 
 z(Mg) = 1 py + 1 knor
 2 2.                                  2 species, site multiplicity of 2
 z(Al) = 1 gr + 1 alm + 1 py
@@ -7918,12 +7918,18 @@ begin_model
                                       Corrected    z(m1,al) = 1 jd
                                       to   z(m1,al) = 1 jd + 1 cats
                                       M. Caddick, 5/8/08.
+
+                                      converted to 688 format. JADC, 12/19.
 Cpx(HP)
 abbreviation Cpx
 full_name    clinopyroxene
 
-2                                   | model type
-7                                   | number of endmembers
+688                                | model type: 688 format standard model
+
+1                                  | number of polytopes
+1                                  | number of simplices
+7                                  | number of vertices on each simplex
+
 esn
 ccrts
 cats
@@ -7932,9 +7938,6 @@ acm
 hed
 di
 
-0 0  0  0  0  0  0              | endmember flags
-
-                             | NOTE RESTRICTED RANGES:
 0  1   .1  0                 | range and resolution of X(esn): imod = 1 -> assymmetric stretching
 0  1   .1  0                 | range and resolution of X(ccrts): imod = 1 -> assymmetric stretching
 0  1   .1  0                 | range and resolution of X(cats): imod = 1 -> assymmetric stretching
@@ -7950,19 +7953,35 @@ w(cats di)    7d3
 w(cats hed)   4d3
 end_excess_function
 
-3                             | 3 site (M1, M2, T1) configurational entropy model
+5                             | number of sites in the configurational entropy model
 
-5 1                           | 5 species on M1, 1 site per formula unit.
-z(m1,fe) = 1 hed
-z(m1,al) = 1 jd + 1 cats
-z(m1,fe3+) = 1 acm + 1 esn
-z(m1,cr) = 1 ccrts
+M1                            | site name
+5 1 1                         | number of species, effective multiplicity, true multiplicity.
+z(Fe,M1)   = 1 hed
+z(Al,M1)   = 1 jd + 1 cats
+z(Fe3+,M1) = 1 acm + 1 esn
+z(Cr,M1)   = 1 ccrts
+z(Mg,M1)   = 1 di
 
-2 1                           | 2 species on M2, 1 site per formula unit.
-z(m2,na) = 1 jd + 1 acm
+M2                            | site name
+2 1 1                         | number of species, effective multiplicity, true multiplicity.
+z(Na,M2)   = 1 jd + 1 acm
+z(Ca,M2)   = 1 ccrts + 1 esn + 1 cats + 1 di + 1 hed
 
-2 1                           | 2 species on T1, ccrts not counted intentionally.
-z(t1,al) = 1 cats + 1 esn
+T1                            | site name
+2 1 1                         | number of species, effective multiplicity, true multiplicity.
+                              | ccrts not counted in Al intentionally; 
+                              | this is nonsense, but keeps consistency with Klemme et al 2011.
+z(Al,T1)   = 1 cats + 1 esn
+z(Si,T1)   = 1 ccrts + 1 di + 1 hed + 1 jd + 1 acm
+
+T2                                  | site name
+1 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 6 6                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 reach_increment 0
 

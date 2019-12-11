@@ -8570,20 +8570,21 @@ c                                 number of polytopes:
 
          pop1(im) = ipoly + 1
 
-         do i = 1, pop1(im)
-            do j = 1, isimp(i)
-               do k = 1, ivert(i,j)
-                  poname(im,i,j,k) = pname(i,j,k)
-               end do
-            end do
-         end do
-
       else
 
          pop1(im) = ipoly
          ipvert(1) = mstot(im)
 
       end if
+c                                 polytope and composition 
+c                                 variable names.
+      do i = 1, pop1(im)
+         do j = 1, isimp(i)
+            do k = 1, ivert(i,j)
+               poname(im,i,j,k) = pname(i,j,k)
+            end do
+         end do
+      end do
 
       k = 0
 
@@ -16725,7 +16726,7 @@ c                                 endmember names
 c----------------------------------------------------------------------
       ipop = pop1(i)
 
-      if (istg(i,1).eq.1.and.ipop.eq.1) then
+      if (istg(i,1).eq.1.and.ipop.eq.1.and.ksmod(i).ne.688) then
 c                                 single site solution
          write (lun,1020) fname(i)
 
@@ -16758,7 +16759,7 @@ c                                 charge balance model:
 
       else if (ipop.eq.1) then 
 c                                 single polytope
-         write (lun,1040) 'Single polytope model: '//fname(i)
+         write (lun,1040) 'single-polytope model: '//fname(i)
 
          do j = 1, istg(i,1)
 
@@ -16787,7 +16788,7 @@ c                                 single polytope
 
       else
 c                                 composite polytope
-         write (lun,1160) 'Composite polytope model: '//fname(i)
+         write (lun,1160) 'multi-polytope model: '//fname(i)
 c                                  polytope weights:
          do ii = 1, poly(i)
 
@@ -20091,7 +20092,10 @@ c                              shift subdivision ranges
                pxmx(pkill,i,j) = pxmx(pkill,i,j2oj(j))
                pxnc(pkill,i,j) = pxnc(pkill,i,j2oj(j))
                pimd(pkill,i,j) = pimd(pkill,i,j2oj(j))
+               pname(pkill,i,j) = pname(pkill,i,j2oj(j))
             end do
+
+            pname(pkill,i,j) = pname(pkill,i,j2oj(j))
 
          end if
 
@@ -25930,6 +25934,9 @@ c----------------------------------------------------------------------
 
       double precision rnums(m4)
 
+      character mname*8
+      common/ cst18a /mname(m4)
+
       character pname*10
       integer ipoly, isimp, ipvert, ivert, pimd
       common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
@@ -25969,17 +25976,22 @@ c                              a name is associated with each subdivision range
 
       else
 c                              reading a simplicial model no names are
-c                              read with the subdivision scheme
+c                              read with the subdivision scheme, 
+c                              so why the j-loop?
          do j = 1, isimp(jpoly)
             do k = 1, ivert(jpoly,j) - 1
                call readda (rnums,4,tname)
 
+               pname(jpoly,j,k) = 'X_'//mname(k)
                pxmn(jpoly,j,k) = rnums(1)
                pxmx(jpoly,j,k) = rnums(2)
                pxnc(jpoly,j,k) = rnums(3)
                pimd(jpoly,j,k) = idint(rnums(4))
 
             end do
+
+            pname(jpoly,j,k) = 'X_'//mname(k)
+
          end do
 
       end if
