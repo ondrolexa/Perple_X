@@ -2664,7 +2664,7 @@ end
 
 
 CaCl2,aq EoS = 16 | Gf =  -811696. CaCl(0)  Sverjensky et al. (1997) with new V from the sum of a1 values of ions 
-Ca(1)Cl2(.5) 
+Ca(1)Cl2(1) 
 G0 = -811696  S0 = 25.104  w = -15899.2  
 a1 = 3.334397  a2 = 1382.603  a3 = 8.649583  a4 = -121988.7  c1 = 97.3349  c2 = 126758.5  
 end

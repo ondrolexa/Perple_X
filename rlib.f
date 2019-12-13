@@ -25235,6 +25235,7 @@ c                                 min/max number of phases in an assemblage
       piopt(2) = 0
 
       do i = 1, iasct
+
          read (n4,*,iostat=ier) iavar(1,i),iavar(2,i),iavar(3,i)
          if (ier.ne.0) goto 99
 
@@ -25247,37 +25248,54 @@ c                                 make a cumulative list of stable phases
 c                                 first get the number of occurrences of 
 c                                 each phase in the assemblage
          nph(i) = 0
+
          do j = 1, k5
             idsol(j,i) = 0
             nrep(j,i) = 0
          end do 
 
-         do j = 1, iavar(3,i) 
-
+         do j = 1, iavar(3,i)
+c                                 loop over all phases
             count = .true.
 
             if (j.le.iavar(1,i)) then 
-
+c                                 a solution phase
                do k = 1, nph(i)
+
                   if (idsol(k,i).eq.idasls(j,i)) then 
+c                                 the phase has already been found
+c                                 in the assemblage, count the replicate
                      count = .false.
                      nrep(k,i) = nrep(k,i) + 1
-                     exit 
-                  end if 
+c DEBUG DEBUG DEBUG
+c                     write (*,*) 'phase ',k,' occurs ',nrep(k,i),
+c     *                           'times in assemblage ',i
+
+                     exit
+
+                  end if
+
                end do
  
-            end if 
+            end if
 
             if (count) then
+c                                  the phase as not yet been found in 
+c                                  the assemblage.
                nph(i) = nph(i) + 1
                idsol(nph(i),i) = idasls(j,i)
                nrep(nph(i),i) = 1
+
             end if
 
-         end do  
-c                                 make an array in which each id 
+         end do
+c                                 at this point nph(i) is the number of 
+c                                 unique phases, nrep(i) is the number of
+c                                 time it is repeated.
+
+c                                 make a global array in which each id 
 c                                 occurs only once
-         
+
 c                                 next compare to the existing list
          do k = 1, nph(i)  
 
@@ -25285,20 +25303,28 @@ c                                 next compare to the existing list
 
             do j = 1, istab
 
-               if (idsol(k,i).eq.idstab(j)) then 
+               if (idsol(k,i).eq.idstab(j)) then
+
                   if (nrep(k,i).gt.nstab(j)) nstab(j) = nrep(k,i)
                   count = .false.
+c DEBUG DEBUG DEBUG
+c                     write (*,*) 'phase ',idstab(j),' occurs ',nstab(j),
+c     *                           'times globally'
+c                    write (*,*) 'i, j, k ',i,j,k
                   exit
-               end if 
+
+               end if
 
             end do 
 
-            if (count) then 
+            if (count) then
+
                istab = istab + 1
                if (istab.gt.k10) call error (999,0d0,istab,'ISTAB ')
                nstab(istab) = nrep(k,i)
                idstab(istab) = idsol(k,i)
-            end if 
+
+            end if
 
          end do 
 

@@ -840,8 +840,8 @@ c                                 WERAMI, initialize
                props(16,i) = 0d0
 
                do ii = 1, pop1(ids)
-                  do j = 1, istg(ids,1)
-                     do k = 1, ispg(ids,1,j)
+                  do j = 1, istg(ids,ii)
+                     do k = 1, ispg(ids,ii,j)
                         x3(i,ii,j,k) = 0d0
                      end do 
                   end do 

@@ -148,7 +148,7 @@
 
                              XINC - controls the discretization (resolution) of the compositional variable its exact
                                     significance is dependent on the subdivision scheme or values of the 
-                                     initial_resolution option
+                                    initial_resolution option
 
                                  initial_resolution = [0 0] - XINC is read from the relevant solution model, regardless 
                                             of the value of IMOD.

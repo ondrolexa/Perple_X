@@ -959,6 +959,9 @@ c                                 skip interior points (this is sloppy)
                else if (i.ne.imin.and.i.ne.imax) then 
                    if (j.ne.jmin.and.j.ne.jmax) cycle
                end if 
+c                                 if using interim results, all values
+c                                 of igrd may not be assigned
+               if (igrd(i,j).eq.0) cycle
 c                                 is the point the same assemblage?
                if (iap(igrd(i,j)).ne.ias) cycle
 c                                 pointer to reference node
