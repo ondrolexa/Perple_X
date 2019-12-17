@@ -358,7 +358,7 @@ Gt_maj
 
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-[jmaj]   0    1   .1  0            | subdivision range for X(1) = M-free
+[jmaj]   0  .1  .1    0            | subdivision range for X(1) = M-free
 [~jmaj]  by difference             | = [M][Al,MgSi], M = Mg,Fe,Ca
                                    | ----------------------------
                                    | Polytope 1 - 1 simplex

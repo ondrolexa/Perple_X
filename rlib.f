@@ -12049,7 +12049,7 @@ c                                 accumulate endmember configurational entropy
          esum = esum + pa(h) * scoef(h,im)
 
       end do
-c                                 bulk composition stuff, getscp changes p0a
+c                                 bulk composition stuff
       call getscp (scp,ctot(iphct),im,1,.true.)
 
       do l = 1, icomp
@@ -20482,7 +20482,7 @@ c---------------------------------------------------------------------
       logical resub, simpl
 
       integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
-     *        stind(n4), ipop1, phct
+     *        stind(h4), ipop1, phct
 
       double precision twt
 
@@ -20785,7 +20785,7 @@ c                                 weights
                x(ipop,1,ii) = pwt(ii)
                sum = sum + pwt(ii)
 
-            end do 
+            end do
 
             jpos = icoz(id) + 1
 
@@ -20879,7 +20879,7 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) then 
                   x(ii,1,1) = 1d0
                   cycle
-               end if 
+               end if
 
                sum = 0d0
                pos = jcox(jpos)
@@ -21123,9 +21123,6 @@ c----------------------------------------------------------------------
 c subroutine to convert composite polytopic solution compositions (x/x3)
 c to geometric endmember fractions (y) for solution model ids. 
 
-c xtoy is only called by getcmp.
-
-
 c usex - use x coordinates, otherwise use x3 coordinates (only done 
 c        when called by werami).
 c----------------------------------------------------------------------
@@ -21151,11 +21148,11 @@ c----------------------------------------------------------------------
 
       bad  = .false.
 
-      k = 0
-
       if (usex) then
 
          do ii = 1, poly(ids)
+
+            k = 0
 
             if (pwt(ii).lt.zero) then 
 
@@ -25267,10 +25264,6 @@ c                                 the phase has already been found
 c                                 in the assemblage, count the replicate
                      count = .false.
                      nrep(k,i) = nrep(k,i) + 1
-c DEBUG DEBUG DEBUG
-c                     write (*,*) 'phase ',k,' occurs ',nrep(k,i),
-c     *                           'times in assemblage ',i
-
                      exit
 
                   end if
@@ -25307,10 +25300,6 @@ c                                 next compare to the existing list
 
                   if (nrep(k,i).gt.nstab(j)) nstab(j) = nrep(k,i)
                   count = .false.
-c DEBUG DEBUG DEBUG
-c                     write (*,*) 'phase ',idstab(j),' occurs ',nstab(j),
-c     *                           'times globally'
-c                    write (*,*) 'i, j, k ',i,j,k
                   exit
 
                end if
