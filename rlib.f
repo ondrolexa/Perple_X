@@ -17004,7 +17004,8 @@ c                                 single polytope
             write (*,1000)
          else
             write (*,1080) fname(ids), poname(ids,ii,j,k)
-            write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+            write (*,1035) poname(ids,ii,j,k), xmnh(ids,ii,j,k), 
+     *                     xmxh(ids,ii,j,k), x(ii,j,k)
          end if
 
          write (*,1010) incre,upper,y(1)
@@ -17013,13 +17014,15 @@ c                                 single polytope
 c                                 composite polytope
          write (*,1050) fname(ids), poname(ids,ii,j,k), 
      *                              poname(ids,pop1(ids),1,ii)
-         write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+         write (*,1035) poname(ids,pop1(ids),1,ii), xmnh(ids,ii,j,k), 
+     *                  xmxh(ids,ii,j,k), x(ii,j,k)
          write (*,1010) incre,upper,y(1)
 
       else
 
-         write (*,1060) fname(ids), poname(ids,pop1(ids),1,ii)
-         write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
+         write (*,1060) fname(ids), poname(ids,pop1(ids),1,1)
+         write (*,1035) poname(ids,pop1(ids),1,1),xmnh(ids,ii,j,k),
+     *                  xmxh(ids,ii,j,k), x(ii,j,k)
          write (*,1010) incre,upper,y(1)
 
       end if
@@ -17042,6 +17045,8 @@ c                                 composite polytope
      *       ,'endmember: ',a)
 1030  format ('the original range was: ',
      *       g12.5,' - ',g12.5,/,'the current** value is: ',g12.5)
+1035  format ('the original range of ',a,' was: ',
+     *       g12.5,' - ',g12.5,/,'its current** value is: ',g12.5)
 1040  format (/,'**error ver993** the composition of solution: '
      *       ,a,/'is too far beyond the subdivision range limits for '
      *       ,'composition X(',i1,',',i2')*.')
