@@ -49,7 +49,7 @@ composition_phase         default | [mol] mol or wt (mass) phase compositions in
 composition_system        default | [wt] mol or wt; system composition in WERAMI mode 2-4 output
 console_messages          default | [on] off => suppresses most console messages (warnings, errors, etc)
 cumulative                default | [F] WERAMI, computational mode 3, property choice #36 only!- cumulative component amounts (for fractionation problems)
-dependent_potentials      default | [on] off => compute dependent thermodynamic potentials (usually chemical potentials)
+dependent_potentials      default | [off] on => compute dependent thermodynamic potentials (usually chemical potentials)
 efficiency                default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
 fancy_cumulative_modes    default | [F] T => order cumulative modes to account for univariant reactions (WERAMI, mode 3, property 25)
@@ -65,7 +65,7 @@ hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
-initial_resolution        default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
+initial_resolution        1/4 1/4 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
@@ -92,8 +92,8 @@ refine_endmembers         default | [F] accept endmember compositions as refinem
 reject_negative_sites     default | [T] reject compositions with negative site populations
 resolution_factor         default | [2] >2, controls the change in resolution between iterations during adaptive optimization.
 sample_on_grid            default | [T] F => WERAMI (mode 2) samples on the computational grid used by VERTEX
-seismic_data_file         default | [T] summarize options used for endmembers and solutions
 seismic_output            default | [some] all, some, none
+seismic_data_file         default | [F] summarize options used for endmembers and solutions
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
 solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
 solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor

@@ -90,9 +90,9 @@ c----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       integer jnd
       double precision aqg,q2,rt
@@ -329,10 +329,10 @@ c                                   molar solute
                if (k.eq.1) then 
 
                   write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        (chars(j), j = 1, length)
+     *                                        chars(1:length)
                else 
 
-                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
+                  write (lu,'(19x,400a)') chars(1:length)
 
                end if 
 
@@ -393,10 +393,10 @@ c                                 depend on the solvent properties
                if (k.eq.1) then 
 
                   write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        (chars(j), j = 1, length)
+     *                                        chars(1:length)
                else 
 
-                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
+                  write (lu,'(19x,400a)') chars(1:length)
 
                end if 
 

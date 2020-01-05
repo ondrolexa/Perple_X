@@ -32,7 +32,7 @@ c-----------------------------------------------------------------------
      *          mname(k5)*5, oname(k5)*5, pname(k5)*5, cfname*100,
      *          uname(k0)*5, group*28, aname(i9)*6, amount*5, new*3, 
      *          text*256, dtext*200, title*162, y*1, lname(i9)*22,
-     *          blah*10, sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
+     *          sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
 
       integer i, k, l, iind, im, idum, ivct, iwt, jcth, j, ier, idep, 
      *        gct(i9), gid(i9,i9), ict, idsol, isoct, inames
@@ -43,6 +43,10 @@ c-----------------------------------------------------------------------
 
       character prject*100,tfname*100
       common/ cst228 /prject,tfname
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -85,7 +89,7 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer eos
@@ -447,20 +451,20 @@ c                                 check version compatability
 
          do 
 c                                 read candidates:
-            call rmodel (blah,tn1,tn2)
+            call rmodel (tn1,tn2)
 c                                 istot = 0 = eof
             if (istot.eq.0) exit 
 c                                 don't allow fluid models if 
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifct.gt.0) cycle
 c                                 check for endmembers:
-            call cmodel (im,idsol,blah,first)
+            call cmodel (im,idsol,first)
             if (jstot.eq.0) cycle
       
             ict = ict + 1
             if (ict.gt.i9) call error (24,0d0,i9,'build')
 
-            fname(ict) = blah 
+            fname(ict) = tname
             aname(ict) = tn1
             lname(ict) = tn2
 
@@ -536,26 +540,26 @@ c                                 just one group
             end if 
 
             write (*,1180) 
-c                                 initialize blah, because reading a 
+c                                 initialize tname, because reading a 
 c                                 null record may not do that. 
-            blah = ' '
+            tname  = ' '
 
             do 
 
-               read (*,'(a)') blah
-               if (blah.eq.' ') exit
+               read (*,'(a)') tname
+               if (tname.eq.' ') exit
 c                                 check if same name entered twice
                do i = 1, isoct
-                  if (blah.eq.sname(i)) cycle
+                  if (tname.eq.sname(i)) cycle
                end do 
 c                                 check if name in list
                good = .false.
 
                do i = 1, ict
-                  if (blah.eq.fname(i)) then
+                  if (tname.eq.fname(i)) then
                      isoct = isoct + 1
                      if (isoct.gt.h9) call error (25,0d0,h9,'BUILD') 
-                     sname(isoct) = blah
+                     sname(isoct) = tname
                      good = .true.
                      exit 
                   end if 
@@ -563,7 +567,7 @@ c                                 check if name in list
 
                if (good) cycle
 
-               write (*,2310) blah
+               write (*,2310) tname
 
             end do  
          end if
@@ -1207,7 +1211,7 @@ c---------------------------------------------------------------------------
       character*8 name
       common/ csta6 /name
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character*8 vname, xname

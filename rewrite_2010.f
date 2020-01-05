@@ -166,7 +166,7 @@ c-----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      character*8 names 
+      character names*8 
       common/ cst8   /names(k1)
 
       character*80 com
