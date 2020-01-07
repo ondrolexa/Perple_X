@@ -10,15 +10,16 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18, text*(lchar), tag*1, tag1*29
+      character cprop*18, text*(lchar), tag*1, tag1*29, next(14)*1, 
+     *          znum*5
 
-      logical aqph
+      logical aqph, sol688, zbad
 
       integer i, j, k, l, m, lu, id, inc, ct
 
-      double precision poiss, gcpd
+      double precision poiss, gcpd, zsite(m10,m11), zt
  
-      external gcpd
+      external gcpd, zbad
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -110,10 +111,17 @@ c----------------------------------------------------------------------
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
       integer iam
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
-                                    
+
       write (lu,1000)
 
       if (iam.eq.2) then 
@@ -346,7 +354,84 @@ c                                   molar solute
             write (lu,'(/,1x,400a)') chars(1:length)
          end if 
 
-      end if 
+      end if
+
+      sol688 = .false.
+
+      do l = 1, np 
+c                                 688 format solution model flag
+         if (ksmod(kkp(l)).eq.688) sol688 = .true.
+
+      end do
+
+      if (lopt(51).and.sol688) then 
+c                                 reconstruct structural formulae
+         write (lu,'(/,a,/)') 'Structural formulae for 688 format '//
+     *                        'solution models:'
+         write (lu,'(a,8x,a/)') ' Phase','   Site  Multiplicity  '//
+     *                          'Molar Site Fractions'
+
+         do l = 1, np
+
+            id = kkp(l)
+
+            if (ksmod(id).ne.688) cycle
+
+            write (lu,'(1x,a)') pname(l)
+c                                 load speciation
+            do k = 1, spct(id)
+               pa(k) = ysp(k,l)
+            end do
+c                                 use zbad to convert to site fractions
+            sol688 = zbad(pa,id,zsite)
+
+            do i = 1, msite(id)
+
+               zt = 0d0
+c                                 counter
+               m = 1
+
+               do j = 1, zsp1(id,i)
+
+                  if (zsite(i,j).lt.zero) cycle
+c                                 species name
+                  read (znames(id,i,j),'(3a)') chars(m:m+2)
+                  chars(m+3) = '('
+c                                 trim number
+                  call znmtxt (zsite(i,j),next,ct)
+                  call numtxt (zsite(i,j),next,ct)
+c                                 write the number
+                  chars(m+4:m+4+ct) = next(1:ct)
+                  chars(m+5+ct) = ')'
+                  m = m + 6 + ct
+                  zt = zt + zsite(i,j)
+
+               end do
+
+               write (text,'(400a)') chars(1:m-1)
+               call unblnk (text)
+
+               if (tzmult(id,j).ne.0d0) zt = tzmult(id,j)
+c                                 site multiplicity
+               write (znum,'(f5.2)') zt
+               call znmtxt (zt,next,ct)
+
+               write (lu,'(18x,a,4x,a,7x,(400a))') znames(id,i,0),znum,
+     *                                             chars(1:length)
+
+            end do
+
+            if (zuffix(i).gt.' ') write (lu,'(18x,a)') 
+     *                           'Non-mixing stoichiometry: '//zuffix(i)
+
+         end do
+
+      else if (lopt(51)) then
+
+         write (lu,'(/,a,/)') 'Structural formulae for 688 format '//
+     *                        'solution models: none stable.'
+
+      end if
 
       if (lopt(24).and.np.gt.0) then 
 
@@ -989,7 +1074,13 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer k, id, jd
+      integer i, j, k, id, jd
+
+      logical zbad
+
+      double precision zsite(m10,m11)
+
+      external zbad
 
       integer spct
       double precision ysp
@@ -1053,7 +1144,30 @@ c                                 hardwired binary/pseudo-binary (0)
             ysp(k,jd) = yf(ins(k))
          end do
 
-      end if 
+      end if
+
+      if (ksmod(id).eq.688) then
+
+         if (.not.zbad(pa,id,zsite)) then
+
+            do i = 1, msite(id)
+
+               write (*,'(/,a)') 'Site: '//znames(id,i,0)
+
+               do j = 1, zsp1(id,i)
+c                                 molar site population
+                  write (*,'(a,f6.4)') 'z('//znames(id,i,j)//') = ',
+     *                                    zsite(i,j)
+
+               end do
+
+            end do
+
+            write (*,'(/,a)') 'Suffix: '//zuffix(id)
+
+         end if
+
+      end if
 
       end
 

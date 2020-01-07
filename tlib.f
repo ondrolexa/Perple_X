@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Jan 3, 2020.',
+     *      'Perple_X version 6.8.9, source updated Jan 6, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -415,6 +415,8 @@ c                                 refinement_switch
       lopt(49) = .false.
 c                                 seismic_data_file
       lopt(50) = .true.
+c                                 structural formula options
+      lopt(51) = .true.
 c                                 final resolution, auto-refine stage
       rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
@@ -1438,7 +1440,6 @@ c                                 solvus tolerance text
          else 
 
            call numtxt (nopt(8),text,siz)
-           if (siz.gt.14) siz = 14
            write (nval1,'(14a)') (text(i),i=1,siz)
 
          end if
@@ -1450,7 +1451,6 @@ c                                 solvus tolerance text
          else 
 
            call numtxt (nopt(25),text,siz)
-           if (siz.gt.14) siz = 14
            write (nval2,'(14a)') (text(i),i=1,siz)
 
          end if 
@@ -4682,6 +4682,8 @@ c convert a g14.7e2 number to simplest possible text
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision num
 
       character text(*)*1, strg*14
@@ -4689,12 +4691,15 @@ c----------------------------------------------------------------------
       logical dec
 
       integer i, siz, inum, ier, ibeg, iend, jscnlt, jscan
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       inum = int(num)
-      siz = len(text)
-      if (siz.gt.14) call error (72,0d0,i,'format overflow in numtxt')
 
-      if (num-inum.eq.0d0) then 
+      siz = 14
+
+      if (num-inum.lt.zero) then 
 c                                 the number can be represented as 
 c                                 an integer
          write (strg,'(i14)',iostat=ier) inum
@@ -4788,6 +4793,82 @@ c                                 delete superfluous 0
       end if 
 
       end 
+
+      subroutine znmtxt (num,text,siz)
+c----------------------------------------------------------------------
+c convert a f7.3 number to simplest possible text
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision num
+
+      character text(*)*1, strg*7
+
+      logical dec
+
+      integer i, siz, inum, ier, ibeg, iend, jscnlt, jscan
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+      inum = int(num)
+
+      siz = 7
+
+      if (num-inum.lt.zero) then 
+c                                 the number can be represented as 
+c                                 an integer
+         write (strg,'(i7)',iostat=ier) inum
+
+      else 
+
+         write (strg,'(f7.3)',iostat=ier) num
+
+      end if
+
+      read (strg,'(7a)') text(1:siz)
+
+      ibeg = jscnlt (1,siz,' ',text)
+      iend = jscan (ibeg,siz,' ',text) - 1
+c                                 shift text left
+      siz = 0 
+
+      do i = ibeg, iend
+
+         siz = siz + 1
+         text(siz) = text(i)
+
+      end do 
+c                                 pruning:
+      if (text(1).eq.'0') then
+c                                 cut leading zero/+
+         do i = 1, siz - 1
+            text(i) = text(i + 1)
+         end do
+
+         siz = siz - 1 
+
+      else if (text(1).eq.'-'.and.text(2).eq.'0') then
+c                                 cut leading zero
+         do i = 2, siz - 1
+            text(i) = text(i + 1)
+         end do
+
+         siz = siz - 1
+
+      end if
+
+      do i = siz + 1, 7
+         text(i) = ' '
+      end do
+
+      iend = jscan (1,siz,'.',text)
+c                                reduce len to cut trailing zeroes
+      if (iend.lt.siz) siz = jscnlt (siz,iend,'0',text)
+
+      end
 
       subroutine fopen1 
 c-----------------------------------------------------------------------
@@ -5791,30 +5872,34 @@ c-------------------------------------------------------------------
 c unblnk - subroutine to remove blanks from text
  
 c     text - character string 
-c     jchar - length of unblanked character string, 0 on input 
+c     length - length of unblanked character string, 0 on input 
 c             if unknown.
 c-------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i,ict,nchar
+      integer i, nchar
 
-      character text*(*), bitsy(lchar)*1 
+      character text*(*)
 
+      integer length,com
+      character chars*1
+      common/ cst51 /length,com,chars(lchar)
+c-------------------------------------------------------------------
       nchar = len(text)
  
-      read (text,'(400a)') (bitsy(i), i = 1, nchar)
+      read (text,'(400a)') (chars(i), i = 1, nchar)
 c                                 scan for blanks:
-      ict = 0
+      length = 0
 
       do i = 1, nchar
-         if (bitsy(i).eq.' ') cycle 
-         ict = ict + 1
-         bitsy(ict) = bitsy(i)
+         if (chars(i).eq.' ') cycle 
+         length = length + 1
+         chars(length) = chars(i)
       end do 
 
-      write (text,'(400a)') (bitsy(i), i = 1, ict)
+      write (text,'(400a)') (chars(i), i = 1, length)
 
       end
 

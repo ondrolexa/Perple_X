@@ -775,12 +775,12 @@ A                                   | site name
 3 1 1                               | number of species, effective multiplicity, true multiplicity
 z(Na,A)    = 1 parg
 z(K,A)     = 1 kprg
-z(V,A)     = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts + 1 mrbG
+z(Vac,A)   = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts + 1 mrbG
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
 z(Fe,M1)   = 1 grun + 1 b
-z(Mg,M1)   = 1 cumm + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
+z(Mg,M1)   = 1 cumm + 1 tr + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
 
 M2                                  | site name
 5 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -800,12 +800,12 @@ z(Ca,M4)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
 T1                                  | site name
 2 1 4                               | number of species, effective multiplicity, true multiplicity
 z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg
-z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b
+z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b + 1 cumm
 
 OH                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
 z(O,OH)    = 1 tts
-z(OH,OH)   = 1 cumm + 1 grun + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 b + 1 a
+z(OH,OH)   = 1 cumm + 1 grun + 1 ts + 1 tr + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 b + 1 a
 
 
 [Si4O22]                            | formula suffix, enter "none" for no suffix.
@@ -1425,12 +1425,12 @@ z(Ca)   = 1 di   + 1 cats + 1 ocats
 T1                                  | site name
 2 0.25 1                            | 2 species on T1, effective mult. = 1/4
 z(Al,T1)   = 1/2 cats
-z(Si,T1)   = 1/2 cats + 1 ocats + 1 fmc  + 1 cfsg + 1 acm  + 1 jd + 1 cenjh
+z(Si,T1)   = 1/2 cats + 1 ocats + 1 fmc  + 1 cfsg + 1 acm  + 1 jd + 1 cenjh + 1 di
 
 T2                                  | site name
 2 0.25 1                            | 2 species on T2, effective mult. = 1/4
 z(Al,T2)   = 1/2 cats + 1 ocats
-z(Si,T2)   = 1/2 cats + 1 fmc  + 1 cfsg + 1 acm  + 1 jd + 1 cenjh
+z(Si,T2)   = 1/2 cats + 1 fmc  + 1 cfsg + 1 acm  + 1 jd + 1 cenjh + 1 di
 
 [O6]                                | formula suffix, enter "none" for no suffix.
 
@@ -2041,7 +2041,7 @@ z(Al,M4)    = 1 daph + 1 clin + 1 ames + 1 mnchl
 T2
 2 2 2                             | 2 species on 2 T2 sites
 z(Al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
-z(Si,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
+z(Si,T2)    = 1 afchl + 1 och1 + 1 och2 + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl 
 
 [Si2O10(OH)8]                     | formula suffix, enter "none" for no suffix.
 
@@ -3453,7 +3453,7 @@ z(Mg)   = 1 phl + 1 tbi + 1 obi + 1 fbi + 1 east
 T1                                  | site name
 2 2 2                               | 2 species on T1, 2 site per formula unit.
 z(Si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
-z(Al)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
+z(Al)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi + 1 east + 1 fbi
 
 OH                                  | site name
 2 2 2                               | 2 species on H, 2 site per formula unit.
@@ -9671,8 +9671,8 @@ end_excess_function
 
 A                                   | site name
 2 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,A) =    1 parg_dqf
-z(V,A)  =    1 cumm_dqf + 1 grun_dqf + 1 tr + 1 ts_dqf + 1 gl_dqf + 1 cammo1 + 1 cammo2 
+z(Na,A)   =    1 parg_dqf
+z(Vac,A)  =    1 cumm_dqf + 1 grun_dqf + 1 tr + 1 ts_dqf + 1 gl_dqf + 1 cammo1 + 1 cammo2 
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
@@ -9977,8 +9977,8 @@ end_excess_function
 
 A                                   | site name
 2 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,A) =    1 mpa
-z(V,A)  =    1 anth     + 1 fanth_dq + 1 tr + 1 ged_dqf + 1 ogl_dqf + 1 ammo1 + 1 ammo2 
+z(Na,A)   =    1 mpa
+z(Vac,A)  =    1 anth     + 1 fanth_dq + 1 tr + 1 ged_dqf + 1 ogl_dqf + 1 ammo1 + 1 ammo2 
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity

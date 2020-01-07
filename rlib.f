@@ -7740,7 +7740,7 @@ c                                 for each term:
 
             bad = badz(z(i,j))
 
-         else if (zsp(ids,i).gt.1) then
+         else if (zsp1(ids,i).gt.1) then
 c                                 temkin or 688 model format, all species fractions are available
             do j = 1, zsp1(ids,i)
 c                                 molar site population
@@ -7753,6 +7753,9 @@ c                                 for each term:
 
                end do
 c                                 non-temkin (688)
+               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
+                  write (*,*) 'wtf?'
+               end if 
                if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) call error (72,
      *                       zt,i,'the expression for z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
@@ -8833,6 +8836,8 @@ c                                 configurational entropy models
 c                                 site fractions as a function of bulk
 c                                 y's and dependent species y:
       nloc = 0
+
+      zuffix(im) = zuffix(h0)
 
       do i = 1, msite(h0)
 c                                 eliminate sites with 1 species
