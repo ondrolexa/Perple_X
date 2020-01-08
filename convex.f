@@ -327,7 +327,7 @@ c-------------------------------------------------------------------
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer iff,idss,ifug
@@ -437,7 +437,7 @@ c-----------------------------------------------------------------------
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -566,7 +566,7 @@ c---------------------------------------------------------------------
       common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer h,id
@@ -890,7 +890,7 @@ c-----------------------------------------------------------------------
       common/ csta4  /cname(k5) 
 
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -2195,7 +2195,7 @@ c-----------------------------------------------------------------------
       integer iflag
       common/ cst7 /iflag
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -2333,7 +2333,7 @@ c-----------------------------------------------------------------------
       character cname*5
       common/ csta4  /cname(k5) 
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer iffr,isr
@@ -2588,7 +2588,7 @@ c-----------------------------------------------------------------------
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -3039,7 +3039,7 @@ c----------------------------------------------------------------------
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer icp2
@@ -3137,7 +3137,7 @@ c-----------------------------------------------------------------------
 
       integer i,j,ist,id,iend,jp
 
-      character*8 names
+      character names*8
       common/ cst8  /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -3204,7 +3204,7 @@ c-----------------------------------------------------------------------
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -3428,8 +3428,8 @@ c                                reaction_list.dat
       end if 
 
 1070  format ('the equilibrium extends to invariant point (',i6,')')
-1110  format ('finished with equilibrium (',i6,') ',434a1)
-1120  format (' (',i6,'-',i1,') ',434a1)
+1110  format ('finished with equilibrium (',i6,') ',434a)
+1120  format (' (',i6,'-',i1,') ',434a)
 
       end
 
@@ -3711,7 +3711,7 @@ c----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5 /v(l2),tr,pr,r,ps
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -4265,8 +4265,7 @@ c                                 set the bug flag:
       if (jchk.eq.0) call warn (74,v(ivi),ivi,'SFOL2 ')
       if (io3.eq.0.and.io3p.eq.0) write (n3,1040)
 
-1020  format ('equilibria about invariant point (',i6,'):',//,
-     *        3x,200a1)
+1020  format ('equilibria about invariant point (',i6,'):',//,3x,200a)
 1040  format ('                       ------')
 1050  format (/,'are listed below:',/)
 
@@ -4498,7 +4497,7 @@ c-----------------------------------------------------------------------
 
       logical fail 
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -4825,7 +4824,7 @@ c-----------------------------------------------------------------------
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer iffr,isr
@@ -5005,7 +5004,7 @@ c-----------------------------------------------------------------------
       character cname*5
       common/ csta4  /cname(k5) 
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer iffr,isr
@@ -5922,7 +5921,7 @@ c----------------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp   
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       double precision g

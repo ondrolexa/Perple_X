@@ -252,7 +252,7 @@ c---------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      character*8 names
+      character names*8
       common/ cst8   /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1858,7 +1858,7 @@ c---------------------------------------------------------------------
 
       double precision z(14),smax,t0,qr2,vmax,dt,g1,g2
 
-      character*8 names
+      character names*8
       common/ cst8   /names(k1)
 
       double precision therdi, therlm
@@ -3047,20 +3047,20 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, iend, len, ier, idim, ict, i
+      integer ibeg, iend, ier, idim, ict, i
 
-      character name*8, tname*10
+      character name*8, tname*(*)
 
       character mname*8
       common/ cst18a /mname(m4)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 c----------------------------------------------------------------------
       ier = 0
 
-      call readcd (n9,len,ier,.false.)
+      call readcd (n9,ier,.false.)
       if (ier.ne.0) goto 90
 
       ibeg = 1
@@ -3068,13 +3068,13 @@ c----------------------------------------------------------------------
 
       do while (ict-i.lt.idim)
 c                                 find the name
-         call readnm (ibeg,iend,len,ier,name)
+         call readnm (ibeg,iend,com,ier,name)
          if (ier.ne.0) goto 90
          ict = ict + 1
          mname(ict) = name
 
-         if (ibeg.ge.len.and.ict-i.lt.idim) then
-            call readcd (n9,len,ier,.false.)
+         if (ibeg.ge.com.and.ict-i.lt.idim) then
+            call readcd (n9,ier,.false.)
             ibeg = 1
             if (ier.ne.0) goto 90
          end if
@@ -3083,7 +3083,7 @@ c                                 find the name
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len),name
+90    write (*,1000) tname,chars(1:com),name
 
       call errpau
 
@@ -3104,30 +3104,30 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer len, idim, kdim, jdim, i, isnum, ier
+      integer idim, kdim, jdim, i, isnum, ier
 
       character tname*10, nums*(lchar)
 
       double precision rnums(*)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 c----------------------------------------------------------------------
 c                                 read card scans for non blank data
 c                                 card:
       kdim = 1
       jdim = 0
       isnum = 0
-      len = 0
+      com = 0
       ier = 1
 
       do while (jdim.lt.idim)
 
-         call readcd (n9,len,ier,.true.)
+         call readcd (n9,ier,.true.)
          if (ier.ne.0) exit
 c                                 got data, count how many "numbers"
-         do i = 1, len
+         do i = 1, com
             if (chars(i).ne.' '.and.isnum.eq.0) then
                jdim = jdim + 1
                isnum = 1
@@ -3140,7 +3140,7 @@ c                                 marker there can be more
 c                                 data than anticipated:
          if (jdim.gt.idim) jdim = idim
 c                                 write numbers to string
-         write (nums,*) (chars(i), i = 1, len),' '
+         write (nums,*) chars(1:com),' '
 
          read (nums,*,iostat=ier) (rnums(i), i = kdim, jdim)
          if (ier.ne.0) exit
@@ -3151,7 +3151,7 @@ c                                 write numbers to string
 
       if (ier.gt.0) then
 
-         write (*,1000) tname, (chars(i),i = 1, len)
+         write (*,1000) tname, chars(1:com)
          write (*,1020)
 
          call errpau
@@ -3186,12 +3186,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, jend, len, ier, iscan, lord, imax, match, idim,
+      integer ibeg, jend, ier, iscan, lord, imax, match, idim,
      *        i, j, iscnlt
 
       double precision nums(m3)
 
-      character name*8, begin*5, eod*3, tname*10, values*30, key*22
+      character name*8, begin*5, eod*3, tname*10, values*80, key*22
 
       logical ok
 
@@ -3203,9 +3203,9 @@ c----------------------------------------------------------------------
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
@@ -3215,9 +3215,9 @@ c----------------------------------------------------------------------
       iterm = 0
       iord = 0
 
-      call readcd (n9,len,ier,.true.)
+      call readcd (n9,ier,.true.)
 
-      write (begin,'(5a)') (chars(i),i=1, 5)
+      write (begin,'(5a)') chars(1:5)
 
       if (begin.eq.'ideal') then
          return
@@ -3235,10 +3235,10 @@ c----------------------------------------------------------------------
 
       do while (eod.ne.'end')
 
-         call readcd (n9,len,ier,.true.)
+         call readcd (n9,ier,.true.)
          if (ier.ne.0) goto 90
 
-         write (eod,'(3a)') (chars(i),i=1,3)
+         write (eod,'(3a)') chars(1:3)
 c                                 find expansion type
          if (chars(2).eq.'k'.or.chars(2).eq.'K') then
             xtyp = 1
@@ -3246,10 +3246,10 @@ c                                 find expansion type
             xtyp = 0
          end if
 c                                 find brackets
-         ibeg = iscan (1,len,'(') + 1
-         imax = iscan (1,len,')') - 1
+         ibeg = iscan (1,com,'(') + 1
+         imax = iscan (1,com,')') - 1
 
-         if (ibeg.gt.len.or.imax.gt.len) cycle
+         if (ibeg.gt.com.or.imax.gt.com) cycle
 c                                 data found
          iterm = iterm + 1
          if (iterm.gt.m1) call error (48,wg(1,1),m1,tname)
@@ -3276,7 +3276,7 @@ c                                 data found
 c                                 read standard form margules pt functions
             if (lord.gt.iord) iord = lord
 
-            call redlpt (nums,ibeg,jend,len,ier)
+            call redlpt (nums,ibeg,jend,ier)
 
             if (ier.ne.0) goto 90
 
@@ -3301,8 +3301,10 @@ c                                 rk form, read a new card for each term
 
                ibeg = 1
 c                                 check for end of data
-               call readcd (n9,len,ier,.true.)
-               write (begin,'(3a)') (chars(i), i = 1, 3)
+               call readcd (n9,ier,.true.)
+
+               write (begin,'(3a)') chars(1:3)
+
                if (begin.eq.'end') then
                   return
                else if (begin.eq.'Wk(') then
@@ -3313,21 +3315,21 @@ c                                 we have a data card
 
                do
 c                                 locate end of keyword
-                  if (ibeg.ge.icom) exit
-                  jend = iscan (ibeg,icom,'=') - 1
-                  if (jend.ge.icom) exit
+                  if (ibeg.ge.com) exit
+
+                  jend = iscan (ibeg,com,'=') - 1
+                  if (jend.ge.com) exit
 c                                 write keyword
-                  write (key,'(22a1)',iostat=ier) (chars(i),i=ibeg,jend)
+                  write (key,'(22a)',iostat=ier) chars(ibeg:jend)
                   if (ier.ne.0) call error (23,wg(1,1),ier,key)
 c                                 locate data
-                  ibeg = iscnlt (jend+2,icom,' ')
-                  jend = iscan (ibeg,icom,' ')
+                  ibeg = iscnlt (jend+2,com,' ')
+                  jend = iscan (ibeg,com,' ')
 c                                 write data
-                  write (values,'(80a1)',iostat=ier) (chars(i),
-     *                                                      i=ibeg,jend)
+                  write (values,'(80a)',iostat=ier) chars(ibeg:jend)
                   if (ier.ne.0) call error (23,wg(1,1),ier,key)
 c                                 shift pointer to next key
-                  ibeg = iscnlt(jend,icom,' ')
+                  ibeg = iscnlt(jend,com,' ')
 c                                 assign data
                   ok = .false.
 
@@ -3355,7 +3357,7 @@ c                                 assign data
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len)
+90    write (*,1000) tname,chars(1:com)
       write (*,1010) name
 
       call errpau
@@ -3398,9 +3400,9 @@ c----------------------------------------------------------------------
       character tname*(*), key*22, val*3, nval1*12, nval2*12, nval3*12,
      *          strg*40, strg1*40
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
@@ -3428,7 +3430,7 @@ c----------------------------------------------------------------------
          else if (key.eq.'begin_model ') then
 c                              found new model, current
 c                              model does not of end_of_model keyword
-            write (*,1000) tname,(chars(i),i=1,length)
+            write (*,1000) tname,chars(1:length)
 
             call errpau
 
@@ -3464,7 +3466,7 @@ c                              read dqf data:
 
          else
 
-            write (*,1010) tname,(chars(i),i=1,length)
+            write (*,1010) tname,chars(1:length)
             write (*,1020)
 
             call errpau
@@ -3500,15 +3502,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, len, ier, iscan, imax, match, idim, index
+      integer ibeg, ier, iscan, imax, match, idim, index
 
       character name*8, eod*3, tname*10
 
       double precision nums(m3)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       integer kstot,jend,i,ict
 c----------------------------------------------------------------------
@@ -3519,15 +3521,15 @@ c----------------------------------------------------------------------
 
       do while (eod.ne.'end')
 
-         call readcd (n9,len,ier,.true.)
+         call readcd (n9,ier,.true.)
          if (ier.ne.0) goto 90
 
-         write (eod,'(3a)') (chars(i),i=1,3)
+         write (eod,'(3a)') chars(1:3)
 c                                 find brackets
-         ibeg = iscan (1,len,'(') + 1
-         imax = iscan (1,len,')') - 1
+         ibeg = iscan (1,com,'(') + 1
+         imax = iscan (1,com,')') - 1
 
-         if (ibeg.gt.len.or.imax.gt.len) cycle
+         if (ibeg.gt.com.or.imax.gt.com) cycle
 c                                 data found
          ict = ict + 1
          if (ict.gt.m4) goto 91
@@ -3540,7 +3542,7 @@ c                                 data found
 
          ibeg = imax + 2
 
-         call redlpt (nums,ibeg,jend,len,ier)
+         call redlpt (nums,ibeg,jend,ier)
 
          if (ier.ne.0) goto 90
 
@@ -3554,7 +3556,7 @@ c                                 data found
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len),vlaar(i,index)
+90    write (*,1000) tname,chars(1:com),vlaar(i,index)
       write (*,1001)
       call errpau
 
@@ -3595,15 +3597,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, len, ier, iscan, imax, match, idim
+      integer ibeg, ier, iscan, imax, match, idim
+
+      external iscan, match
 
       character name*8, eod*3, tname*10
 
       double precision nums(m3)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       integer jend,i,idqf,indq
       double precision dqf
@@ -3614,15 +3618,15 @@ c----------------------------------------------------------------------
 
       do while (eod.ne.'end')
 
-         call readcd (n9,len,ier,.true.)
+         call readcd (n9,ier,.true.)
          if (ier.ne.0) goto 90
 
-         write (eod,'(3a)') (chars(i),i=1,3)
+         write (eod,'(3a)') chars(1:3)
 c                                 find brackets
-         ibeg = iscan (1,len,'(') + 1
-         imax = iscan (1,len,')') - 1
+         ibeg = iscan (1,com,'(') + 1
+         imax = iscan (1,com,')') - 1
 
-         if (ibeg.gt.len.or.imax.gt.len) cycle
+         if (ibeg.gt.com.or.imax.gt.com) cycle
 c                                 data found
          idqf = idqf + 1
 
@@ -3634,7 +3638,7 @@ c                                 data found
 
          ibeg = imax + 2
 
-         call redlpt (nums,ibeg,jend,len,ier)
+         call redlpt (nums,ibeg,jend,ier)
          if (ier.ne.0) goto 90
 
          do i = 1, m3
@@ -3645,7 +3649,7 @@ c                                 data found
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len),dqf(i,idqf)
+90    write (*,1000) tname,chars(1:com),dqf(i,idqf)
       write (*,1001)
 
       call errpau
@@ -3677,8 +3681,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, iend, len, ier, iscan, i, nreact, inds(k7),
-     *        idim, match, iscnlt
+      integer ibeg, iend, ier, iscan, nreact, inds(k7),
+     *        idim, match, iscnlt, i
 
       logical eor
 
@@ -3686,23 +3690,23 @@ c----------------------------------------------------------------------
 
       character name*8, tname*10, tag*3
 
-      external iscan, iscnlt
+      external iscan, iscnlt, match
 
       character mname*8
       common/ cst18a /mname(m4)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 c----------------------------------------------------------------------
       ier = 0
 
-      call readcd (n9,len,ier,.true.)
+      call readcd (n9,ier,.true.)
       if (ier.ne.0) goto 90
 
       ibeg = 1
 
-      write (tag,'(3a1)') chars(1:3)
+      write (tag,'(3a)') chars(1:3)
 
       if (tag.eq.'end') then 
          eor = .true.
@@ -3711,7 +3715,7 @@ c----------------------------------------------------------------------
          eor = .false.
       end if 
 c                                 first name
-      call readnm (ibeg,iend,len,ier,name)
+      call readnm (ibeg,iend,com,ier,name)
 
       if (ier.ne.0) goto 90
 
@@ -3728,18 +3732,18 @@ c                                 reciprocal sol, get index
 
       end if
 c                                 find marker '='
-      ibeg = iscan (1,len,'=') + 1
+      ibeg = iscan (1,com,'=') + 1
 
       i = 2
 
       do
 c                                 find a stoichiometric coeff
-         call readfr (rnum,ibeg,iend,len,ier)
+         call readfr (rnum,ibeg,iend,com,ier)
          if (ier.ne.0) exit
 
          coeffs(i) = rnum
 c                                 find the name
-         call readnm (ibeg,iend,len,ier,name)
+         call readnm (ibeg,iend,com,ier,name)
 
          if (ier.ne.0) goto 90
 
@@ -3758,8 +3762,8 @@ c                                 the next coeff+name
       if (nreact.eq.-1) then
 c                                 ordered compound, read
 c                                 enthalpy, find marker '='
-         ibeg = iscan (ibeg,len,'=') + 2
-         call redlpt (enth,ibeg,iend,len,ier)
+         ibeg = iscan (ibeg,com,'=') + 2
+         call redlpt (enth,ibeg,iend,ier)
 
          nreact = i - 2
 
@@ -3778,7 +3782,7 @@ c                                 is unexpected, write error
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len),name,rnum
+90    write (*,1000) tname,chars(1:com),name,rnum
 
       call errpau
 
@@ -3802,16 +3806,18 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ibeg, iend, len, ier, iscan, ict, inds(k7),
-     *        match, idim, i, iscnlt
+      integer ibeg, iend, ier, iscan, ict, inds(k7),
+     *        match, idim, i, iscnlt, jend, jbeg
+
+      external iscan, iscnlt
 
       double precision rnum, coeffs(k7)
 
       character name*8, tname*10, tag*3
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 c----------------------------------------------------------------------
       ict = 0
       do i = 1, k7
@@ -3819,13 +3825,13 @@ c----------------------------------------------------------------------
          coeffs(i) = 0
       end do
 
-      call readcd (n9,len,ier,.true.)
+      call readcd (n9,ier,.true.)
       if (ier.ne.0) goto 90
 c                                 this first segment is only done for
 c                                 the readlm routine:
       ibeg = 1
 c                                 read the fist word
-      call readnm (ibeg,iend,len,ier,name)
+      call readnm (ibeg,iend,com,ier,name)
       read (name,'(a)') tag
 
       if (tag.eq.'end') then
@@ -3846,11 +3852,18 @@ c                                 readlm
          end if
 
       end if
+c                                 extract the species name for 688 models and return it as tag
+      jbeg = iscan(1,iend,'(') 
+      jend = iscan(1,iend,',')
+c                                 if no comma, find right )
+      if (jend.gt.iend) jend = iscan(1,iend,')')
+      if (jend-jbeg.gt.4) jend = jbeg + 4
+      write (tag,'(3a)') chars(jbeg+1:jend-1)
 c                                 find start of data marker '='
-      ibeg = iscan (iend,len,'=') + 1
+      ibeg = iscan (iend,com,'=') + 1
       ict = ibeg
 c                                 find a number
-      call readfr (rnum,ibeg,iend,len,ier)
+      call readfr (rnum,ibeg,iend,com,ier)
       if (ier.ne.0) goto 90
 c                                 find the next non-blank chracter
 c                                 if it's text, then the expression
@@ -3873,19 +3886,19 @@ c                                 consist of coefficients followed
 c                                 by names
       ict = 1
 
-      do while (ibeg.lt.len)
+      do while (ibeg.lt.com)
 c                                 find the number
-         call readfr (rnum,ibeg,iend,len,ier)
+         call readfr (rnum,ibeg,iend,com,ier)
 
          if (ier.ne.0) then
 c                                 if called from readlm may be the
 c                                 legitimate text string "delta"
-            call readnm (ibeg,iend,len,ier,name)
+            call readnm (ibeg,iend,com,ier,name)
 
             if (name.eq.'delta') then
 
-               ibeg = iscan (iend,len,'=') + 1
-               call readfr (rnum,ibeg,iend,len,ier)
+               ibeg = iscan (iend,com,'=') + 1
+               call readfr (rnum,ibeg,iend,com,ier)
                if (ier.ne.0) goto 90
                coeffs(ict+1) = rnum
                exit
@@ -3900,14 +3913,14 @@ c                                 invalid data
 
          if (ier.ne.0) goto 90
 c                                 find the name
-         call readnm (ibeg,iend,len,ier,name)
+         call readnm (ibeg,iend,com,ier,name)
 c                                 for constant bounds, read delta
          if (name.eq.'delta') then
 c                                 the lower bound should be the last number read
             coeffs(ict) = rnum
 c                                 next find the delta
-            ibeg = iscan (iend,len,'=') + 1
-            call readfr (rnum,ibeg,iend,len,ier)
+            ibeg = iscan (iend,com,'=') + 1
+            call readfr (rnum,ibeg,iend,com,ier)
             if (ier.ne.0) goto 90
             coeffs(ict+1) = rnum
 
@@ -3923,7 +3936,7 @@ c                                 next find the delta
          inds(ict) = match(idim,ier,name)
 
          if (ier.ne.0) then
-            write (*,1010) name,tname,(chars(i),i=1,len)
+            write (*,1010) name,tname,chars(1:com)
 
             call errpau
 
@@ -3933,7 +3946,7 @@ c                                 next find the delta
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len),name,rnum
+90    write (*,1000) tname,chars(1:com),name,rnum
 
       call errpau
 
@@ -3943,69 +3956,6 @@ c                                 next find the delta
      *        ' reading solution model: ',a,' data was:',/,400a,/,
      *        'last name read was: ',a,/,
      *        'last number (or real equivalent) was: ',g12.6,/)
-
-      end
-
-      subroutine smodel (tname)
-c-----------------------------------------------------------------
-c smodel reads models for configurational entropy
-c of solutions with dependent site mixing or disordered
-c endmembers, see documentation section 1.3.1, equation (8b)
-c-----------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      character*10 tname
-
-      integer i,j,lnsp,k,l
-
-      integer nsub,nttyp,nterm,nspm1,nsite
-      double precision acoef,smult,a0
-      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
-     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
-     *      nttyp(m10,m11,m0)
-
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
-      double precision wg,wk
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
-     *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
-c-----------------------------------------------------------------
-
-      if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
-c                                 for each site
-      do i = 1, nsite
-c                                 read # of species, and site
-c                                 multiplicty.
-         read (n9,*,err=90) lnsp,smult(i)
-         nspm1(i) = lnsp - 1
-c                                 for each species, read
-c                                 function to define the
-c                                 site fraction of the species:
-         do j = 1, nspm1(i)
-c                                 read # of terms in the
-c                                 site fraction function and a0.
-            read (n9,*,err=90) nterm(i,j), a0(i,j)
-            if (nterm(i,j).gt.m0) call error (33,a0(1,1),m0,tname)
-c                                 for each term:
-            do k = 1, nterm(i,j)
-c                                 read term type:
-               read (n9,*,err=90) nttyp(i,j,k)
-               if (nttyp(i,j,k).lt.m12) then
-                  read (n9,*,err=90) acoef(i,j,k),(nsub(i,j,k,l),
-     *                               l = 1, nttyp(i,j,k))
-               else
-                  call error (29,a0(1,1),nttyp(i,j,k),tname)
-               end if
-            end do
-
-         end do
-      end do
-
-      return
-
-90    call error (20,a0(1,1),i,tname)
 
       end
 
@@ -4050,7 +4000,7 @@ c-----------------------------------------------------------------------
       double precision smu
       common/ cst323 /smu
 
-      character*8 names
+      character names*8
       common/ cst8   /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4487,7 +4437,7 @@ c-----------------------------------------------------------------------
       double precision thermo, uf, us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      character*8 names
+      character names*8
       common/ cst8   /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4616,7 +4566,7 @@ c-----------------------------------------------------------------------
       double precision smu
       common/ cst323 /smu
 
-      character*8 names
+      character names*8
       common/ cst8   /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
@@ -4963,11 +4913,11 @@ c     text - character string
 c-------------------------------------------------------------------
       implicit none
 
-      integer nchar, i, ilen
+      integer nchar, ilen
 
       character text*(*), chars(*)*1
 
-      read (text,1000) (chars(i),i=1,ilen)
+      read (text,1000) chars(1:ilen)
 c                                 scan for blanks:
       do nchar = ilen, 1, -1
          if (chars(nchar).gt.' ') exit
@@ -5611,7 +5561,7 @@ c mstot(i) - istot globally
 c jgsol(i,j,k) - k species indices of endmember j in solution i (jmsol globally)
 c knsp(i=1:mstot,ids) - points to the original (?) index of endmember i in ids
 
-      subroutine reform (sname,im,first)
+      subroutine reform (im,first)
 c---------------------------------------------------------------------
 c reform - counts the number of species that can be respresented for a
 c solution given the present endmembers.
@@ -5620,28 +5570,25 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*10 sname
-
       logical first
 
       integer kill,ikill,jkill,kill1,i,j,kosp(mst,msp),kill2,
      *        k,im,idsp,ksp(mst)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       if (jsmod.eq.20) then
 
-         call reaqus (sname)
+         call reaqus
 
          kstot = jstot
          istot = jstot
@@ -5650,7 +5597,7 @@ c----------------------------------------------------------------------
 
       else if (jsmod.eq.688) then 
 
-         call reforn (sname,im,first)
+         call reforn (im,first)
 
          return
 
@@ -5658,7 +5605,7 @@ c----------------------------------------------------------------------
 
       kill = 1
 
-      if (first.and.isimp(1).gt.1) call warn (50,wg(1,1),isimp(1),sname)
+      if (first.and.isimp(1).gt.1) call warn (50,wg(1,1),isimp(1),tname)
 
       do
 
@@ -5731,7 +5678,7 @@ c                                 check exit conditions
 c                                 failed, rejected too many endmembers
 
             im = im - 1
-            if (first) call warn (25,wg(1,1),jstot,sname)
+            if (first) call warn (25,wg(1,1),jstot,tname)
             jstot = 0
 
             exit
@@ -5777,11 +5724,6 @@ c                                 local input variables
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       itic = 0
@@ -5869,22 +5811,16 @@ c                                 local input variables
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
 
-      integer nsub,nttyp,nterm,nspm1,nsite
-      double precision acoef,smult,a0
-      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
-     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
-     *      nttyp(m10,m11,m0)
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *                nterm(m10,m11),nsub(m10,m11,m0)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -5934,6 +5870,7 @@ c                              now reload
             if (jsp.gt.1) then
 c                              now shift subdivision ranges
                do j = 1, jsp - 1
+
                   pxmn(1,i,j) = pxmn(1,i,j2oj(j))
                   pxmx(1,i,j) = pxmx(1,i,j2oj(j))
                   pxnc(1,i,j) = pxnc(1,i,j2oj(j))
@@ -6166,7 +6103,7 @@ c                                 configurational entropy model
 
 c                                 site fractions as a function of bulk
 c                                 y's and dependent species y:
-      do i = 1, nsite
+      do i = 1, msite(h0)
 c                                 for each species, read function to define
 c                                 the site fraction of the species and eliminate
 c                                 killed species
@@ -6176,17 +6113,15 @@ c                                 and must be decremented before saving the
 c                                 final value:
          jtic = 1
 
-         do j = 1, nspm1(i)
+         do j = 1, zsp(h0,i)
 
             ktic = 0
 c                                 for each term:
             do k = 1, nterm(i,j)
 c                                 macroscopic formulation:
-c                                 note: 4th index (nttyp) is only used
-c                                 for bragg-williams models.
                dead = .false.
                do l = 1, kill
-                  if (nsub(i,j,k,1).eq.ijkill(l)) then
+                  if (nsub(i,j,k).eq.ijkill(l)) then
                      dead = .true.
                      exit
                   end if
@@ -6195,29 +6130,32 @@ c                                 for bragg-williams models.
                if (.not.dead) then
 c                                 the term has survived (and therefore
 c                                 also the species):
-c                                 don't save nttyp since this is always
-c                                 1 for the macroscopic formulation
                   ktic = ktic + 1
 c                                 but my dear peanut brained friend, do
 c                                 not forget to move the pointer:
-                  nsub(i,jtic,ktic,1) = i2ni(nsub(i,j,k,1))
+                  nsub(i,jtic,ktic) = i2ni(nsub(i,j,k))
                   acoef(i,jtic,ktic) = acoef(i,j,k)
+
                end if
+
             end do
 c                                 ktic is the number of terms representing
 c                                 the jth species, we won't count species
 c                                 with no terms because the endmember configurational
 c                                 entropy is assumed to be implicit.
-         if (ktic.gt.0) then
+            if (ktic.gt.0) then
 c                                 increment the species counter
-            nterm(i,jtic) = ktic
-            a0(i,jtic) = a0(i,j)
-            jtic = jtic + 1
-         end if
+               znames(h0,i,jtic) = znames(h0,i,j)
+               nterm(i,jtic) = ktic
+               acoef(i,jtic,0) = acoef(i,j,0)
+               jtic = jtic + 1
 
-      end do
+            end if
 
-      nspm1(i) = jtic - 1
+         end do
+
+         zsp(h0,i) = jtic - 1
+         zsp1(h0,i) = zsp(h0,i)
 
       end do
 c                                 ---------------------------------------
@@ -6298,11 +6236,6 @@ c---------------------------------------------------------------------
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                 count the number of species
 c                                 missing on site
@@ -6324,7 +6257,7 @@ c                                 missing on site
 
       end
 
-      subroutine reaqus (tname)
+      subroutine reaqus
 c---------------------------------------------------------------------
 c reaqus - reformulates aqueous solution models to eliminate missing
 c endmembers and shift ranges.
@@ -6333,20 +6266,17 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*10 tname
-
       integer i, jq, jn, js, lm
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6431,7 +6361,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine cmodel (im,idsol,tname,first)
+      subroutine cmodel (im,idsol,first)
 c---------------------------------------------------------------------
 c cmodel - checks to see if solution models contain valid endmembers.
 c modified to allow saturated phase/component endmembers, 10/25/05.
@@ -6442,12 +6372,16 @@ c---------------------------------------------------------------------
 
       logical first, ok
 
-      character*10 tname, missin(m4)*8
+      character missin(m4)*8
 
       integer imiss, im, idsol, i, j, h, ineg, ipos
 
       integer isoct
       common/ cst79 /isoct
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
@@ -6458,7 +6392,7 @@ c---------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -6781,7 +6715,7 @@ c                                dependent endmember is ok
 
       end
 
-      subroutine rmodel (tname,tn1,tn2)
+      subroutine rmodel (tn1,tn2)
 c---------------------------------------------------------------------
 c rmodel - reads solution models from LUN n9.
 c---------------------------------------------------------------------
@@ -6789,7 +6723,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*10 tname, tn1*6, tn2*22, tag*3, char*1, key*22, val*3,
+      character tn1*6, tn2*22, tag*3, char*1, key*22, val*3,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40,
      *          estrg*80
 
@@ -6801,11 +6735,14 @@ c---------------------------------------------------------------------
 
       integer ijk(mst),inds(k7),ict
 
-      integer nsub,nttyp,nterm,nspm1,nsite
-      double precision acoef,smult,a0
-      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
-     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
-     *      nttyp(m10,m11,m0)
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *                nterm(m10,m11),nsub(m10,m11,m0)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -6831,11 +6768,6 @@ c---------------------------------------------------------------------
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
       mdep = 0
       norder = 0
@@ -6854,7 +6786,7 @@ c                               set logical variables
       do
           read (n9, '(3(a,1x))', iostat = i) tname
           if (i.ne.0) return
-          read (tname,'(a1)') char
+          read (tname,'(a)') char
           if (char.eq.' '.or.char.eq.'|') cycle
           if (tname.ne.'begin_mode') exit
       end do
@@ -6863,7 +6795,7 @@ c                             initialize strings
       tn2 = 'unclassified'
 c                             for 1-polytope models use the solution name
 c                             for the polytope.
-      pname(1,1,1) = tname
+      poname(h0,1,1,1) = tname
 c                             next look for optional abbreviation and full_name
       do
          call redcd1 (n9,i,key,val,nval1,nval2,nval3,strg,strg1)
@@ -6895,14 +6827,14 @@ c                             read jsmod, model type flag
       if (jsmod.eq.20) then
 c                                 aqueous model reads to different
 c                                 arrays
-         call raqmod (tname)
+         call raqmod
          istot = nq + nn + ns
 
          return
 
        else if (jsmod.eq.688) then 
 
-         call rmoden (tname)
+         call rmoden
 
          return
 
@@ -6927,7 +6859,7 @@ c                                 read number of independent sites:
          isimp(1) = 1
       end if
 c                                 this reads pre 6.8.8 format models
-      ipoly = 1
+      poly(h0) = 1
 c                                 total number of endmembers that define the 
 c                                 polytope (does not include ordered endmembers):
       istot = 1
@@ -7075,15 +7007,15 @@ c                                 read excess function
 c                                 expansion for S(configurational)
       call readda (rnums,1,tname)
 
-      nsite = idint(rnums(1))
-      if (nsite.gt.m10) call error (1,a0(1,1),nsite,'m10')
+      msite(h0) = idint(rnums(1))
+      if (msite(h0).gt.m10) call error (1,acoef(1,1,1),msite(h0),'m10')
 c                                 for each site
-      do i = 1, nsite
+      do i = 1, msite(h0)
 c                                 read # of species, and site
 c                                 multiplicty.
          call readda (rnums,2,tname)
 
-         smult(i) = rnums(2)
+         zmult(h0,i) = rnums(2)
 c                                 if multiplicity is 0, the model
 c                                 site has variable multiplicity
 c                                 and molar site population expressions
@@ -7091,36 +7023,40 @@ c                                 are read rather than site fractions
 c                                 in which case we need as many expressions
 c                                 as species. nspm1 is the counter for the
 c                                 number of expressions
-         if (smult(i).gt.0) then
-            nspm1(i) = idint(rnums(1)) - 1
+         zsp1(h0,i) = idint(rnums(1))
+
+         if (zmult(h0,i).gt.0) then
+            zsp(h0,i) = zsp1(h0,i) - 1
+            zsp1(h0,i) = zsp(h0,i)
          else
-            nspm1(i) = idint(rnums(1))
+            zsp(h0,i) = zsp1(h0,i)
          end if
 
-         if (nspm1(i).gt.m11) call error (1,a0(1,1),nspm1(i),'m11')
+         if (zsp(h0,i).gt.m11) call error (1,0d0,zsp(h0,i),'m11')
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
-c
-         do j = 1, nspm1(i)
+         do j = 1, zsp(h0,i)
 c                                 read expression for site
 c                                 fraction of species j on
 c                                 site i.
             call readz (coeffs,inds,ict,idim,tname,tag)
 
-            a0(i,j) = coeffs(1)
+            acoef(i,j,0) = coeffs(1)
             nterm(i,j) = ict - 1
-            if (nterm(i,j).gt.m0) call error (33,a0(1,1),m0,tname)
+            if (nterm(i,j).gt.m0) call error (33,0d0,m0,tname)
 c                                 for each term:
             do k = 2, ict
 c                                 all terms 1 order type, this
 c                                 saved for compatability with
 c                                 old versions:
-               nttyp(i,j,k-1)   = 1
                acoef(i,j,k-1)   = coeffs(k)
-               nsub(i,j,k-1,1) = inds(k)
+               nsub(i,j,k-1)    = inds(k)
+
             end do
+
          end do
+
       end do
 c                                 look for van laar and/or dqf parameters
 c                                 or the end of model marker
@@ -7136,7 +7072,7 @@ c                                 equations of state.
 
       end
 
-      subroutine raqmod (tname)
+      subroutine raqmod
 c---------------------------------------------------------------------
 c raqmod - reads aq electrolyte solution model, jsmod = 20.
 c---------------------------------------------------------------------
@@ -7144,16 +7080,13 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character tname*10
-
       integer i, j
 
       double precision rnums(10)
 
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -7494,13 +7427,8 @@ c                                 working arrays
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -7511,11 +7439,11 @@ c                                 for each site
 
          zt = 0d0
          dd = 0d0
-         q = qmult(i,id)
+         q = zmult(id,i)
 c                                 get site fractions
-         do j = 1, ksp(i,id)
+         do j = 1, zsp(id,i)
 
-            z = d0(j,i,id)
+            z = dcoef(0,j,i,id)
 c                                 for each term:
             do k = 1, lterm(j,i,id)
                z = z + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
@@ -7748,96 +7676,130 @@ c                                 evaluate enthalpies of ordering
 
       end
 
-      logical function zbad (y,ids)
+      logical function zbad (y,ids,z)
 c----------------------------------------------------------------------
-c subroutine to computw site fractions computed from equations entered by
-c user for configurational entropy (macroscopic form).
+c subroutine to compute site fractions computed from equations entered by
+c user for configurational entropy (macroscopic form). with range checks.
+c
+c non-temkin models:
+c     z(i,j) - molar site fraction of species j on site i.
+c temkin models:
+c     z(i,j) - molar amount of species j on site i.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical badz
+      logical badz, bad
 
       external badz
 
-      double precision y(m4),zt,n(m11),z
+      double precision y(m4), zt, z(m10,m11)
 
       integer i,j,k,ids
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c----------------------------------------------------------------------
+      bad = .false.
 c                                 for each site
       do i = 1, msite(ids)
 
          zt = 0d0
 
-         if (qmult(i,ids).ne.0d0) then
+         if (zmult(ids,i).ne.0d0.and.ksmod(ids).ne.688) then
 c                                 get site fractions
-            do j = 1, ksp(i,ids)
+            do j = 1, zsp(ids,i)
 
-               z = d0(j,i,ids)
+               z(i,j) = dcoef(0,j,i,ids)
 c                                 for each term:
                do k = 1, lterm(j,i,ids)
-                  z = z + dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
+
+                  z(i,j) = z(i,j) +
+     *                     dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
+
                end do
 
-               if (badz(z)) goto 90
+               bad = badz(z(i,j))
 
-               zt = zt + z
+               if (bad) exit 
+
+               zt = zt + z(i,j)
 
             end do
 
-            z = 1d0 - zt
+            if (bad) exit
 
-            if (badz(z)) goto 90
+            z(i,j) = 1d0 - zt
 
-         else if (ksp(i,ids).gt.1) then
-c                                 variable multiplicity model
-            do j = 1, ksp(i,ids)
+            bad = badz(z(i,j))
+
+         else if (zsp1(ids,i).gt.1) then
+c                                 temkin or 688 model format, all species fractions are available
+            do j = 1, zsp1(ids,i)
 c                                 molar site population
-               n(j) = d0(j,i,ids)
+               z(i,j) = dcoef(0,j,i,ids)
 c                                 for each term:
                do k = 1, lterm(j,i,ids)
-                  n(j) = n(j) + dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
-               end do
 
-               zt = zt + n(j)
+                  z(i,j) = z(i,j) + 
+     *                     dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
+
+               end do
+c                                 non-temkin (688)
+               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
+                  write (*,*) 'wtf?'
+               end if 
+               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) call error (72,
+     *                       zt,i,'the expression for z('//
+     *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
+     *                       ' in '//fname(ids)//' is incorrect.')
+
+               zt = zt + z(i,j)
 
             end do
 
-            if (zt.gt.0d0) then
-c                                 if site exists, check fractions
-               do j = 1, ksp(i,ids)
+            if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
+c                                 non-temkin, fractions must sum to 1
+               if (dabs(zt-1d0).gt.zero) then
 
-                  if (badz(n(j)/zt)) goto 90
+                  write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
+
+                  call error (72,zt,i,
+     *                       'site fractions on '//znames(ids,i,0)// 
+     *                       ' in '//fname(ids)//' do not sum to 1.')
+
+               end if
+
+            else if (zt.gt.0d0) then
+c                                 temkin, if site exists, check fractions
+               do j = 1, zsp(ids,i)
+
+                  bad = badz(z(i,j)/zt)
+
+                  if (bad) exit
 
                end do
 
             else if (zt.lt.-zero) then
 c                                 negative site?
-               goto 90
+               bad = .true.
 
             end if
 
          end if
 
+         if (bad) exit 
+
       end do
 
-      zbad = .false.
-
-      return
-
-90    zbad = .true.
+      zbad = bad
 
       end
 
@@ -7855,13 +7817,8 @@ c----------------------------------------------------------------------
 
       integer i,j,k,id
 c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       double precision v,tr,pr,r,ps
       common / cst5 /v(l2),tr,pr,r,ps
@@ -7873,11 +7830,12 @@ c                                 for each site
          zt = 0d0
          dlnz = zt
 
-         if (qmult(i,id).ne.0d0) then
+         if (zmult(id,i).ne.0d0) then
 c                                 standard model with fixed site multiplicity
 c                                 get site fractions
-            do j = 1, ksp(i,id)
-               z = d0(j,i,id)
+            do j = 1, zsp(id,i)
+
+               z = dcoef(0,j,i,id)
 c                                 for each term:
                do k = 1, lterm(j,i,id)
                   z = z + dcoef(k,j,i,id) * y(ksub(k,j,i,id))
@@ -7890,13 +7848,14 @@ c                                 for each term:
 
             z = 1d0 - zt
             if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
-            dlnw = dlnw + qmult(i,id)*dlnz
+            dlnw = dlnw + zmult(id,i)*dlnz
 
-         else if (ksp(i,id).gt.1) then
+         else if (zsp(id,i).gt.1) then
 c                                 variable site multiplicities
 c                                 get site fractions
-            do j = 1, ksp(i,id)
-               n(j) = d0(j,i,id)
+            do j = 1, zsp(id,i)
+
+               n(j) = dcoef(0,j,i,id)
 c                                 for each term:
                do k = 1, lterm(j,i,id)
 c                                 n(j) is molar site population
@@ -7909,7 +7868,7 @@ c                                 zt is the multiplicity
 
             if (zt.gt.0d0) then
 c                                 if site has non-zero multiplicity
-               do j = 1, ksp(i,id)
+               do j = 1, zsp(id,i)
 c                                 z is site fraction
                   z = n(j)/zt
                   if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
@@ -7948,17 +7907,13 @@ c------------------------------------------------------------------------
 
       integer h,id,j
 
-      double precision omega
+      double precision omega, zsite(m10,m11)
 
       external omega, zbad
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
 
       integer iam
       common/ cst4 /iam
@@ -7973,7 +7928,7 @@ c                                 zero y-array
 
          y(h) = 1d0
 c                                 check for valid site fractions
-         if (zbad(y,id)) call error (125,z(1),h,tname)
+         if (zbad(y,id,zsite)) call error (125,z(1),h,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,y)
 
@@ -8308,7 +8263,7 @@ c                                 assign polytope weight
 
       end
 
-      subroutine gmodel (im,tname,wham)
+      subroutine gmodel (im,wham)
 c---------------------------------------------------------------------
 c gmodel - stores ALL solution model parameters in global arrays
 c---------------------------------------------------------------------
@@ -8316,7 +8271,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character sname*10, tname*10
+      character sname*10
 
       logical add, wham, zbad, bad
 
@@ -8324,9 +8279,13 @@ c---------------------------------------------------------------------
      *        killct, killid(20), il, ik, kk, jp1
 
       double precision dinc, dzt, dx, gcpd, stinc, getstr, delta,
-     *                 c0(0:20), c1(0:20), zij
+     *                 c0(0:20), c1(0:20), zij, zsite(m10,m11)
 
       external gcpd, zbad, stinc, getstr
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -8344,11 +8303,10 @@ c---------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      integer nsub,nttyp,nterm,nspm1,nsite
-      double precision acoef,smult,a0
-      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
-     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
-     *      nttyp(m10,m11,m0)
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *                nterm(m10,m11),nsub(m10,m11,m0)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -8377,13 +8335,8 @@ c---------------------------------------------------------------------
 c                                 GLOBAL SOLUTION PARAMETERS:
 
 c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
@@ -8424,10 +8377,6 @@ c                                 dqf parameters
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p
 c                                 parameters for autorefine
-      character qname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,qname
-
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
       common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
@@ -8476,11 +8425,6 @@ c                                 parameters for autorefine
       double precision stch
       common/ cst47 /stch(h9,h4,mst,msp,4)
 
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c----------------------------------------------------------------------
@@ -8491,8 +8435,6 @@ c                                 check for consistent auto-refine data
          if (tname.ne.sname) call error (63,r,i,'GMODEL')
 
       end if
-
-      qname = tname
 c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
@@ -8564,15 +8506,15 @@ c                                 site ranges
       nsum(im) = 0
 c                                 composition space:
 c                                 number of polytopes:
-      poly(im) = ipoly
+      poly(im) = poly(h0)
 
-      if (ipoly.gt.1) then
+      if (poly(h0).gt.1) then
 
-         pop1(im) = ipoly + 1
+         pop1(im) = poly(h0) + 1
 
       else
 
-         pop1(im) = ipoly
+         pop1(im) = poly(h0)
          ipvert(1) = mstot(im)
 
       end if
@@ -8581,7 +8523,7 @@ c                                 variable names.
       do i = 1, pop1(im)
          do j = 1, isimp(i)
             do k = 1, ivert(i,j)
-               poname(im,i,j,k) = pname(i,j,k)
+               poname(im,i,j,k) = poname(h0,i,j,k)
             end do
          end do
       end do
@@ -8881,7 +8823,7 @@ c                                 of endmember i in the solution model input:
 c                                 kmsol points to the species on the j'th site
 c                                 of the i'th endmember, used for the xtoy
 c                                 conversion
-       do ii = 1, ipoly
+       do ii = 1, poly(h0)
           do i = pvert(im,ii,1), pvert(im,ii,2)
              do j = 1, istg(im,ii)
                kmsol(im,i,j) = jmsol(i,j)
@@ -8895,32 +8837,44 @@ c                                 site fractions as a function of bulk
 c                                 y's and dependent species y:
       nloc = 0
 
-      do i = 1, nsite
+      zuffix(im) = zuffix(h0)
+
+      do i = 1, msite(h0)
 c                                 eliminate sites with 1 species
-         if (nspm1(i).eq.0) cycle
+         if (zmult(h0,i).gt.0) then 
+c                                 non-temkin
+            if (zsp(h0,i).eq.0) cycle
+         else
+            if (zsp(h0,i).eq.1) cycle
+         end if
 
          nloc = nloc + 1
 c                                 # of species, and site r*multiplicty.
-         qmult(nloc,im) = r*smult(i)
-         ksp(nloc,im) = nspm1(i)
+         zmult(im,nloc) = r*zmult(h0,i)
+         tzmult(im,nloc) = tzmult(h0,i)
+         znames(im,nloc,0) = znames(h0,i,0)
+         zsp1(im,nloc) = zsp1(h0,i)
+         zsp(im,nloc) = zsp(h0,i)
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
-         do j = 1, nspm1(i)
+         do j = 1, zsp1(h0,i)
 c                                 # of terms in the
 c                                 site fraction function and a0.
             lterm(j,nloc,im) = nterm(i,j)
-            d0(j,nloc,im) = a0(i,j)
+            dcoef(0,j,nloc,im) = acoef(i,j,0)
+            znames(im,nloc,j) = znames(h0,nloc,j) 
+          
 c                                 for each term:
             do k = 1, nterm(i,j)
 c                                 term coefficient amd species index:
                dcoef(k,j,nloc,im) = acoef(i,j,k)
-               ksub(k,j,nloc,im) = iy2p(nsub(i,j,k,1))
+               ksub(k,j,nloc,im) = iy2p(nsub(i,j,k))
 
-               if (kdsol(nsub(i,j,k,1)).eq.-2) then
+               if (kdsol(nsub(i,j,k)).eq.-2) then
 
                   call error (72,r,k,'dependent endmember '
-     *              //mname(iorig(nsub(i,j,k,1)))//' in solution '
+     *              //mname(iorig(nsub(i,j,k)))//' in solution '
      *              //tname//' appears in a site fraction expression.')
 
                end if
@@ -8972,7 +8926,7 @@ c                                 save y -> p array
 c                                 check for invalid site fractions, this is only necessary
 c                                 for H&P models that assume equipartition (which is not
 c                                 implemented).
-            if (zbad(pa,im)) then
+            if (zbad(pa,im,zsite)) then
 
                if (iam.lt.3.or.iam.eq.4.or.iam.eq.15)
      *            call warn (59,y(1),i,
@@ -9002,9 +8956,9 @@ c                                 shift pointer from y array to p array
          end do
       end do
 c                                 -------------------------------------
-c                                 if nsite ne 0 get "normalization" constants (endmember
+c                                 if msite(h0) ne 0 get "normalization" constants (endmember
 c                                 configurational entropies) for entropy model:
-      if (nsite.ne.0) call snorm (im,tname)
+      if (msite(h0).ne.0) call snorm (im,tname)
 c                                 -------------------------------------
       if (order) then
 c                                 models with speciation:
@@ -9110,13 +9064,13 @@ c                                 y's and dependent species y:
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
-            if (ksp(i,im)+1.gt.m11) call error (1,dx,ksp(i,im)+1,'m11')
+            if (zsp(im,i)+1.gt.m11) call error (1,dx,zsp(im,i)+1,'m11')
 
             do k = 1, norder
-               sdzdp(k,ksp(i,im)+1,i,im) = 0d0
+               sdzdp(k,zsp(im,i)+1,i,im) = 0d0
             end do
 
-            do j = 1, ksp(i,im)
+            do j = 1, zsp(im,i)
 c                                 # of terms in the
 c                                 site fraction function and a0.
                do l = 1, norder
@@ -9154,11 +9108,11 @@ c                                 multiply each dzdp by qmult (R*site
 c                                 multiplicity) to reduce operation
 c                                 count in evaluating derivatives.
          do k = 1, norder
-            do i = 1, nsite
+            do i = 1, msite(h0)
 
                dzt = 0d0
 
-               do j = 1, ksp(i,im)
+               do j = 1, zsp(im,i)
                   if (dabs(sdzdp(k,j,i,im)).lt.zero)
      *                     sdzdp(k,j,i,im) = 0d0
                   dzt = dzt + sdzdp(k,j,i,im)
@@ -9186,9 +9140,9 @@ c                                 species expression by differnce
          do i = 1, msite(im)
 c                                 qmult = 0, temkin, all expressions are
 c                                 available
-            if (qmult(i,im).eq.0) cycle
+            if (zmult(im,i).eq.0) cycle
 
-            jp1 = ksp(i,im) + 1
+            jp1 = zsp(im,i) + 1
 c                                 initialize the term counter
             lterm(jp1,i,im) = 0
 c                                 cycle through the endmembers to work out
@@ -9208,19 +9162,20 @@ c                                 if it has a non zero fraction
 
          do i = 1, msite(im)
 
-            if (qmult(i,im).eq.0) then
+            if (zmult(im,i).eq.0) then
                jp1 = 0
             else
                jp1 = 1
             end if
 
-            do j = 1, ksp(i,im) + jp1
+            do j = 1, zsp(im,i) + jp1
+
                do k = 1, nord(im)
 
                   c0 = 0d0
                   c1 = 0d0
 
-                  if (d0(j,i,im).ne.0d0) call error (72,c0(0),i,
+                  if (dcoef(0,j,i,im).ne.0d0) call error (72,c0(0),i,
      *           'solution '//tname//': constants not allowed in '//
      *           'O/D model configurational entropy site fraction '//
      *           'expressions')
@@ -10048,13 +10003,8 @@ c                                 working arrays
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -10078,9 +10028,9 @@ c                                 for each site
          zt = 0d0
          s0 = zt
 c                                 get site fractions
-         do j = 1, ksp(i,id)
+         do j = 1, zsp(id,i)
 
-            ztemp = d0(j,i,id)
+            ztemp = dcoef(0,j,i,id)
 c                                 for each term:
             do k = 1, lterm(j,i,id)
                ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
@@ -10095,7 +10045,7 @@ c                                 for each term:
          ztemp = 1d0 - zt
          if (ztemp.gt.0d0) s0 = s0 - ztemp * dlog (ztemp)
          z(j,i) = ztemp
-         s = s + qmult(i,id) * s0
+         s = s + zmult(id,i) * s0
 
       end do
 c                                 initialize derivatives:
@@ -10112,9 +10062,9 @@ c                                 initialize derivatives:
 c                                 evaluate derivatives:
       do i = 1, msite(id)
 
-         q = qmult(i,id)
+         q = zmult(id,i)
 
-         do j = 1, ksp(i,id) + 1
+         do j = 1, zsp(id,i) + 1
 
             zl = z(j,i)
 
@@ -11209,13 +11159,8 @@ c                                 working arrays
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -11239,9 +11184,9 @@ c----------------------------------------------------------------------
          zt = 0d0
          dsinf = 0d0
 
-         do j = 1, ksp(i,id)
+         do j = 1, zsp(id,i)
 
-            zl = d0(j,i,id)
+            zl = dcoef(0,j,i,id)
 c                                 for each term:
             do k = 1, lterm(j,i,id)
                zl = zl + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
@@ -11274,7 +11219,7 @@ c                                 derivative may be +/-infinite
             end if
 
          end do
-c                                 add the contibution from the ksp(i,id)+1th
+c                                 add the contibution from the zsp(id,i)+1th
 c                                 species:
          zl = 1d0 - zt
 
@@ -11305,12 +11250,12 @@ c                                 derivative may be +/-infinite
          end if
 
          if (dabs(dsinf).lt.zero) then
-            ds = ds + qmult(i,id)*dzy
-            d2s = d2s + qmult(i,id)*dzyy
+            ds = ds + zmult(id,i)*dzy
+            d2s = d2s + zmult(id,i)*dzyy
          else
             inf = .true.
-            ds = ds + qmult(i,id)*dsinf*1d4
-            d2s = d2s - qmult(i,id)*dabs(dsinf)*1d5
+            ds = ds + zmult(id,i)*dsinf*1d4
+            d2s = d2s - zmult(id,i)*dabs(dsinf)*1d5
          end if
 
       end do
@@ -11421,20 +11366,20 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer j,len,inds(k7),ict,idim,ier
+      integer inds(k7),ict,idim,ier
 
       double precision coeffs(k7)
 
       character begin*5, tag*3, tname*10
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 c----------------------------------------------------------------------
 
-      call readcd (n9,len,ier,.true.)
+      call readcd (n9,ier,.true.)
 
-      write (begin,'(5a)') (chars(j),j=1, 5)
+      write (begin,'(5a)') chars(1:5)
 
       if (begin.eq.'begin') then
 
@@ -11481,7 +11426,7 @@ c-----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       character tname*10
@@ -11564,11 +11509,15 @@ c                                 format test line
       read (n9,'(a)') new
 c                                 check version compatability
       if (.not.chksol(new)) call error (3,zt,im,new)
+c                                 move solution list into local array
+      do i = 1, isoct 
+         sname(i) = fname(i)
+      end do
 
       do while (im.lt.isoct)
 c                                 -------------------------------------
-c                                 read the solution name
-         call rmodel (tname,tn1,tn2)
+c                                 read the solution model
+         call rmodel (tn1,tn2)
 c                                 istot is zero, if eof:
          if (istot.eq.0.and.isoct-im.gt.0) then
 c                                 then at least one solution phase referenced
@@ -11581,7 +11530,7 @@ c                                 solution phase data file, write warning:
          end if
 c                                 -------------------------------------
 c                                 check the solution model:
-         call cmodel (im,idsol,tname,first)
+         call cmodel (im,idsol,first)
 
          if (jstot.eq.1.and.jsmod.eq.39.and.lopt(32)) then
 c                                  lagged aqueous speciaton with a pure water solvent.
@@ -11591,7 +11540,7 @@ c                                  normal solution.
 c                                 -------------------------------------
 c                                 reformulate the model so that it has
 c                                 no missing endmembers:
-            if (jstot.lt.istot) call reform (tname,im,first)
+            if (jstot.lt.istot) call reform (im,first)
 
             if (istot.lt.2) cycle
 
@@ -11603,19 +11552,21 @@ c                                 jmsol, dydz, .....)
 c                                 check that the name has not already been found, i.e.,
 c                                 that the name is duplicated in the solution model file
          if (first) then
+
             do i = 1, im - 1
-               if (tname.eq.sname(i)) call error (75,0d0,i,tname)
+               if (tname.eq.fname(i)) call error (75,0d0,i,tname)
             end do
+
          end if
 c                                 save solution name
-         sname(im) = tname
+         fname(im) = tname
 c                                 abbreviation
          aname(im) = tn1
 c                                 long name
          lname(im) = tn2
 c                                 save found solutions in global solution
 c                                 model arrays
-         call gmodel (im,tname,wham)
+         call gmodel (im,wham)
 c                                 generate pseudocompound compositions.
 c                                 subdiv returns the total
 c                                 number of pseudocompounds (ipcps) and
@@ -11707,10 +11658,6 @@ c                               reset ikp
             end if
 
          end if
-
-         do i = 1, im
-            fname(i) = sname(i)
-         end do
 
       end if
 
@@ -11836,27 +11783,21 @@ c--------------------------------------------------------------------------
 
       double precision zpr,smix,esum,omega,scp(k5)
 
-      logical zbad, bad
+      logical bad
 
       integer im,h,i,j,l, index, i228, oim
-
-      external zbad
 
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer iddeps,norder,nr
       double precision depnu,denth
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
 
       integer jndq, jdqf, iq
       double precision dqfg, dq
@@ -11897,9 +11838,8 @@ c--------------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -14746,9 +14686,9 @@ c-----------------------------------------------------------------------
       character names*8
       common/ cst8  /names(k1)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       integer idaq, jdaq
       logical laq
@@ -14943,10 +14883,10 @@ c                                 WERAMI/MEEMUM console output
          write (text,1050) -dlog10(mo(ihy)*gamm0),dabs(errkw),
      *                     -dlog10(mo(ihy)*gamm0)-ph0,is,gamm0
          call deblnk (text)
-         write (lu,'(400a)') (chars(j), j = 1, length)
+         write (lu,'(400a)') chars(1:length)
          write (text,1070) epsln,msol*1d3,smo
          call deblnk (text)
-         write (lu,'(400a)') (chars(j), j = 1, length)
+         write (lu,'(400a)') chars(1:length)
 
          if (jdaq.eq.20.or.lopt(32).and.jdaq.eq.39) then
 
@@ -15538,7 +15478,7 @@ c-----------------------------------------------------------------------
       character cname*5
       common/ csta4  /cname(k5)
 
-      character*8 names
+      character names*8
       common/ cst8 /names(k1)
 
       integer cl
@@ -17219,9 +17159,9 @@ c                                 adaptive coordinates
       character names*8
       common/ cst8  /names(k1)
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       integer idaq, jdaq
       logical laq
@@ -19022,13 +18962,8 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
 c                                 configurational entropy variables:
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
@@ -19115,11 +19050,11 @@ c                                 get the configurational entropy derivatives
 
          dsinf = 0d0
 
-         if (qmult(i,id).eq.0d0) then
+         if (zmult(id,i).eq.0d0) then
 c                                 temkin
-            do j = 1, ksp(i,id)
+            do j = 1, zsp(id,i)
 
-               n(j) = d0(j,i,id)
+               n(j) = dcoef(0,j,i,id)
                dn(j) = 0d0
                d2n(j) = 0d0
 
@@ -19139,7 +19074,7 @@ c                                 n(j) is molar site population
 
             if (nt.gt.0d0) then
 c                                 site has non-zero multiplicity
-               do j = 1, ksp(i,id)
+               do j = 1, zsp(id,i)
 
                   z = n(j)/nt
                   dz = (dn(j) - z*dnt)/nt
@@ -19172,9 +19107,9 @@ c                                 entropy units
          else
 c                                 non-temkin
 c                                 here nt is zt, dnt is dz, d2nt is d2z
-            do j = 1, ksp(i,id)
+            do j = 1, zsp(id,i)
 
-               z = d0(j,i,id)
+               z = dcoef(0,j,i,id)
                dz = 0d0
                d2z = 0d0
 c                                 for each term:
@@ -19213,9 +19148,9 @@ c                                 add the contibution from the last species:
                lnz = dlog(z)
                lnz1 = 1d0 + lnz
 
-               s = s - qmult(i,id)*(zlnz + z*lnz)/r
-               ds = ds - qmult(i,id)*(dzlnz - dnt * lnz1)/r
-               d2s = d2s - qmult(i,id)*
+               s = s - zmult(id,i)*(zlnz + z*lnz)/r
+               ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
+               d2s = d2s - zmult(id,i)*
      *                     (d2zlnz - d2nt * lnz1 + dnt**2 / z)/r
 
             else if (dz.gt.zero) then
@@ -19223,8 +19158,8 @@ c                                 if a species with a non-zero
 c                                 derivative is zero, the s
 c                                 derivative may be +/-infinite
                dsinf = dsinf + dsign(1d0,dz)
-               ds = ds - qmult(i,id)*dsinf*1d4
-               d2s = d2s + qmult(i,id)*dabs(dsinf)*1d8
+               ds = ds - zmult(id,i)*dsinf*1d4
+               d2s = d2s + zmult(id,i)*dabs(dsinf)*1d8
 
             end if
 
@@ -19259,13 +19194,8 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,ids
 
-      integer msite, ksp, lterm, ksub
-      common/ cxt1i /msite(h9),ksp(m10,h9),lterm(m11,m10,h9),
-     *               ksub(m0,m11,m10,h9)
-
-      double precision qmult, d0, dcoef, scoef
-      common/ cxt1r /qmult(m10,h9),d0(m11,m10,h9),dcoef(m0,m11,m10,h9),
-     *               scoef(m4,h9)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c----------------------------------------------------------------------
          do j = 1, nstot(ids)
             y(j) = 0d0
@@ -19275,9 +19205,9 @@ c----------------------------------------------------------------------
 
          zt = 0d0
 c                                 get site fractions
-         do j = 1, ksp(i,ids)
+         do j = 1, zsp(ids,i)
 
-            z = d0(j,i,ids)
+            z = dcoef(0,j,i,ids)
 c                                 for each term:
             do k = 1, lterm(j,i,ids)
                z = z + dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
@@ -19292,7 +19222,7 @@ c                                 for each term:
          end
 
 
-      subroutine rmoden (tname)
+      subroutine rmoden
 c---------------------------------------------------------------------
 c rmoden - reads 688 solution models from LUN n9.
 c---------------------------------------------------------------------
@@ -19302,7 +19232,7 @@ c---------------------------------------------------------------------
 
       logical eor
 
-      character*10 tname, tag*3, key*22, val*3,
+      character tag*3, key*22, val*3, values*80, strg80*80,
      *          nval1*12, nval2*12, nval3*12, strg*40, strg1*40
 
       integer nreact, i, j, k, l, m, ier, idim
@@ -19311,11 +19241,14 @@ c---------------------------------------------------------------------
 
       integer ijk(mst),inds(k7),ict
 
-      integer nsub,nttyp,nterm,nspm1,nsite
-      double precision acoef,smult,a0
-      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
-     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
-     *      nttyp(m10,m11,m0)
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *     nterm(m10,m11),nsub(m10,m11,m0)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -19341,40 +19274,27 @@ c---------------------------------------------------------------------
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
-
-c       ipoly - number of polytopes in a c-space
-c       isimp(ipoly) - number of simplices in each polytope
-c       ivert(ipoly,isimp(ipoly) - number of vertices in each simplex
-c       ipvert(ipoly) - number of vertices in each polytope
-c       istot - total number of vertices
-c       jmsol(m4,1:isimp(ipoly) - pointer from the endmember m4
-c               to its polytope vertex
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 c                                read number of sub-polytopes
       call readda (rnums,1,tname)
-      ipoly = idint(rnums(1))
+      poly(h0) = idint(rnums(1))
 c                                composite compositional simplex
-      isimp(ipoly+1) = 1
-      ivert(ipoly+1,1) = ipoly
+      isimp(poly(h0)+1) = 1
+      ivert(poly(h0)+1,1) = poly(h0)
 
-      if (ipoly+1.gt.h4) call error (1,rnums(1),ipoly+1,
+      if (poly(h0)+1.gt.h4) call error (1,rnums(1),poly(h0)+1,
      *    'h4 (maximum number of sub-polytopes for solution model: '
      *     //tname//')')
 c                                read subdivision ranges for the polytopes
-      if (ipoly.gt.1) then 
-         call redsub (ipoly+1,tname)
+      if (poly(h0).gt.1) then 
+         call redsub (poly(h0)+1,tname)
       else
-         pname(1,1,1) = tname
+         poname(h0,1,1,1) = tname
       end if 
 c                                initialize total number of polyyope vertices
       istot = 0 
 c                                read data for each polytope
-      do i = 1, ipoly
+      do i = 1, poly(h0)
 c                                number of simplices
          call readda (rnums,1,tname)
 
@@ -19558,73 +19478,62 @@ c                                 read excess function
       call readx (idim,tname)
 c                                 expansion for S(configurational)
       call readda (rnums,1,tname)
+c                                 total number of sites (including non-mixing)
+      msite(h0) = idint(rnums(1))
 
-      nsite = idint(rnums(1))
-c                                 counter for real sites (688)
-      l = 0
+      if (msite(h0).gt.m10) call error (1,0d0,i,'m10')
 c                                 for each site
-      do i = 1, nsite
+      do i = 1, msite(h0)
 c                                 688: read site name
-         call readcd (n9,j,k,.true.)
+         call redcd0 (n9,ier,key,values,strg80)
+         znames(h0,i,0) = key
 c                                 # of species, effective and true site multiplicty.
          call readda (rnums,3,tname)
-c                                 688: non-mixing site
-         if (rnums(1).eq.1d0) then 
-c                                 read site fraction card
-            call readcd (n9,j,k,.true.)
-            cycle
-
-         end if 
-
-         l = l + 1
-
-         if (l.gt.m10) call error (1,a0(1,1),l,'m10')
-
-         smult(l) = rnums(2)
-c                                 if multiplicity is 0, the model
-c                                 site has variable multiplicity
-c                                 and molar site population expressions
-c                                 are read rather than site fractions
-c                                 in which case we need as many expressions
-c                                 as species. nspm1 is the counter for the
-c                                 number of expressions
-         if (smult(l).gt.0d0) then
-            nspm1(l) = idint(rnums(1)) - 1
+c                                 effective multiplicity
+         zmult(h0,i) = rnums(2)
+c                                 true multiplicity
+         tzmult(h0,i) = rnums(3)
+c                                 number of species 
+         zsp1(h0,i) = idint(rnums(1))
+c                                 number of independent site fractions
+         if (zmult(h0,i).gt.0d0) then
+            zsp(h0,i) = zsp1(h0,i) - 1
          else
-            nspm1(l) = idint(rnums(1))
+            zsp(h0,i) = zsp1(h0,i)
          end if
 
-         if (nspm1(l).gt.m11) call error (1,a0(1,1),nspm1(l),'m11')
+         if (zsp1(h0,i).gt.m11) call error (1,0d0,zsp(h0,i),'m11')
 c                                 for each species, read
 c                                 function to define the
 c                                 site fraction of the species:
-         do j = 1, nspm1(l)
+         do j = 1, zsp1(h0,i)
 c                                 read expression for site
 c                                 fraction of species j on
 c                                 site i.
             call readz (coeffs,inds,ict,idim,tname,tag)
 
-            a0(l,j) = coeffs(1)
-            nterm(l,j) = ict - 1
-            if (nterm(l,j).gt.m0) call error (33,a0(1,1),m0,tname)
+            znames(h0,i,j) = tag
+
+            acoef(i,j,0) = coeffs(1)
+            nterm(i,j) = ict - 1
+            if (nterm(i,j).gt.m0) call error (33,0d0,m0,tname)
 c                                 for each term:
             do k = 2, ict
 c                                 all terms 1 order type, this
 c                                 saved for compatability with
 c                                 old versions:
-               nttyp(l,j,k-1)   = 1
-               acoef(l,j,k-1)   = coeffs(k)
-               nsub(l,j,k-1,1) = inds(k)
+               acoef(i,j,k-1)  = coeffs(k)
+               nsub(i,j,k-1)   = inds(k)
+
             end do
+
          end do
-c                                 read extra site fraction expression
-         if (smult(l).ne.0d0) call readcd (n9,j,k,.true.)
 
       end do
-c                                 689 format read extra card (zuffix)
-      if (sol689) call readcd (n9,j,k,.true.)
-c                                 reset the site counter
-      nsite = l
+c                                 read suffix used to complete structural formula
+c                                 on output. 
+      call redcd0 (n9,ier,key,values,strg80)
+      zuffix(h0) = key
 c                                 initialize endmember flags
       do i = 1, istot
          iend(i) = 0
@@ -19646,7 +19555,7 @@ c                                 equations of state.
 
       subroutine readef (idim,tname)
 c----------------------------------------------------------------------
-c readef - read solution models endmembers to be flagged so that they 
+c readef - read solution model endmembers to be flagged so that they 
 c are not identified by the solution model on output, assumes
 c data on one line of less than 240 characters, the expected format is
 
@@ -19658,13 +19567,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, len, ier, match, idim, index
+      integer i, ier, match, idim, index
 
       character name*8, eod*3, tname*10
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -19675,7 +19584,7 @@ c----------------------------------------------------------------------
 
       do
 
-         call readcd (n9,len,ier,.true.)
+         call readcd (n9,ier,.true.)
          if (ier.ne.0) goto 90
 
          write (eod,'(3a)') chars(1:3)
@@ -19684,7 +19593,7 @@ c----------------------------------------------------------------------
 
          i = 1
 
-         call readnm (i,index,len,ier,name)
+         call readnm (i,index,com,ier,name)
          if (ier.ne.0) goto 90
 
          index = match (idim,ier,name)
@@ -19696,7 +19605,7 @@ c----------------------------------------------------------------------
 
       return
 
-90    write (*,1000) tname,(chars(i),i=1,len)
+90    write (*,1000) tname,chars(1:com)
       write (*,1001)
 
       call errpau
@@ -19708,7 +19617,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine reforn (sname,im,first)
+      subroutine reforn (im,first)
 c---------------------------------------------------------------------
 c reforn - counts the number of species that can be respresented for a
 c solution given the present endmembers.
@@ -19717,12 +19626,14 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character*10 sname
-
       logical first, killed, nokill
 
       integer kill, ikill, jkill, kill1, i, j, kosp(mst,msp), kill2,
      *        k, l, im, ii, jpoly, jsimp, jvct, ksimp(mst)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -19732,21 +19643,16 @@ c---------------------------------------------------------------------
 
       logical depend,laar,order,fluid,macro,recip
       common/ cst160 /depend,laar,order,fluid,macro,recip
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
-      do ii = 1, ipoly
+      do ii = 1, poly(h0)
 
          dedpol(ii) = .false.
 
       end do 
 c                                the increment from the polytope vertex
 c                                to the endmember index
-      do ii = 1, ipoly
+      do ii = 1, poly(h0)
 
          killed = .false.
 
@@ -19857,9 +19763,9 @@ c                                 has been identified.
                dedpol(ii) = .true.
 
                if (first) call warn (100,0d0,101,
-     *                    'eliminated polytope '//pname(ipoly+1,1,ii)/
-     *                   /'during reformulation of model '//sname//
-     *                    ' due to missing endmembers.')
+     *             'eliminated polytope '//poname(h0,poly(h0)+1,1,ii)/
+     *             /'during reformulation of model '//tname//
+     *             ' due to missing endmembers.')
                exit
 
             end if
@@ -19868,9 +19774,8 @@ c                                 has been identified.
 
          if (ipvert(ii).gt.0.and.killed.and.first) 
      *      call warn (100,0d0,102,
-     *                    'reformulated polytope '//pname(ipoly+1,1,ii)/
-     *                   /' of model '//sname//
-     *                    ' due to missing endmembers.')
+     *          'reformulated polytope '//poname(h0,poly(h0)+1,1,ii)/
+     *          /' of model '//tname//' due to missing endmembers.')
 c                                 next polytope
       end do
 c                                 clean up the model by eliminating empty/
@@ -19878,7 +19783,7 @@ c                                 redundant polytopes and/or simplices:
       if (istot.lt.2) then
 c                                 failed, rejected too many endmembers
          im = im - 1
-         if (first) call warn (25,wg(1,1),jstot,sname)
+         if (first) call warn (25,wg(1,1),jstot,tname)
          jstot = 0
 
       else 
@@ -19887,7 +19792,7 @@ c                                 redundant polytopes and/or simplices:
          jvct  = 0 
          jpoly = 0
 c                                 first eliminate dead polytopes
-         do ii = 1, ipoly
+         do ii = 1, poly(h0)
 
             if (dedpol(ii)) cycle
 
@@ -19906,14 +19811,15 @@ c                                  shift the species indices
 c                                 composition space vertex counter
             jvct = jvct + ipvert(ii)
 
-            if (ii.lt.ipoly) then 
+            if (ii.lt.poly(h0)) then 
 c                                 shift the subdivision ranges
 c                                 for the composition space down
-               pxmn(ipoly+1,1,jpoly) = pxmn(ipoly+1,1,ii)
-               pxmx(ipoly+1,1,jpoly) = pxmx(ipoly+1,1,ii)
-               pxnc(ipoly+1,1,jpoly) = pxnc(ipoly+1,1,ii)
-               pimd(ipoly+1,1,jpoly) = pimd(ipoly+1,1,ii)
-               pname(ipoly+1,1,jpoly) = pname(ipoly+1,1,ii)
+               pxmn(poly(h0)+1,1,jpoly) = pxmn(poly(h0)+1,1,ii)
+               pxmx(poly(h0)+1,1,jpoly) = pxmx(poly(h0)+1,1,ii)
+               pxnc(poly(h0)+1,1,jpoly) = pxnc(poly(h0)+1,1,ii)
+               pimd(poly(h0)+1,1,jpoly) = pimd(poly(h0)+1,1,ii)
+               poname(h0,poly(h0)+1,1,jpoly) = 
+     *                            poname(h0,poly(h0)+1,1,ii)
 
             end if
 c                                 shift all polytopes down
@@ -19929,10 +19835,10 @@ c                                 shift all polytopes down
                   pxmx(jpoly,j,k) = pxmx(ii,j,k)
                   pxnc(jpoly,j,k) = pxnc(ii,j,k)
                   pimd(jpoly,j,k) = pimd(ii,j,k)
-                  pname(jpoly,j,k) = pname(ii,j,k)
+                  poname(h0,jpoly,j,k) = poname(h0,ii,j,k)
                end do
 
-               pname(jpoly,j,k) = pname(ii,j,k)
+               poname(h0,jpoly,j,k) = poname(h0,ii,j,k)
 
             end do
 
@@ -19941,7 +19847,7 @@ c                                 shift all polytopes down
          if (jpoly.eq.0) then 
 
             im = im - 1
-            if (first) call warn (25,wg(1,1),jstot,sname)
+            if (first) call warn (25,wg(1,1),jstot,tname)
             jstot = 0
             return 
 
@@ -19949,26 +19855,26 @@ c                                 shift all polytopes down
 
          j = 0
 
-         do ii = 1, ipoly
+         do ii = 1, poly(h0)
 
             if (dedpol(ii)) cycle
 
             j = j + 1
 c                                shift composition space subdivision ranges left
-            pxmn(jpoly+1,1,j) = pxmn(ipoly+1,1,ii)
-            pxmx(jpoly+1,1,j) = pxmx(ipoly+1,1,ii)
-            pxnc(jpoly+1,1,j) = pxnc(ipoly+1,1,ii)
-            pimd(jpoly+1,1,j) = pimd(ipoly+1,1,ii)
-            pname(jpoly+1,1,j) = pname(ipoly+1,1,ii)
+            pxmn(jpoly+1,1,j) = pxmn(poly(h0)+1,1,ii)
+            pxmx(jpoly+1,1,j) = pxmx(poly(h0)+1,1,ii)
+            pxnc(jpoly+1,1,j) = pxnc(poly(h0)+1,1,ii)
+            pimd(jpoly+1,1,j) = pimd(poly(h0)+1,1,ii)
+            poname(h0,jpoly+1,1,j) = poname(h0,poly(h0)+1,1,ii)
 
          end do
 
-         ipoly = j
+         poly(h0) = j
 c                                 ---------------------------------------------
 c                                 eliminate redundant simplicies from polytopes
          recip = .false.
 
-         do ii = 1, ipoly
+         do ii = 1, poly(h0)
 
             if (isimp(ii).gt.1) then
 
@@ -19993,10 +19899,10 @@ c                                 eliminate redundant simplicies from polytopes
                      pxmx(ii,jsimp,k) = pxmx(ii,j,k)
                      pxnc(ii,jsimp,k) = pxnc(ii,j,k)
                      pimd(ii,jsimp,k) = pimd(ii,j,k)
-                     pname(ii,jsimp,k) = pname(ii,j,k)
+                     poname(h0,ii,jsimp,k) = poname(h0,ii,j,k)
                   end do
 
-                  pname(ii,jsimp,k) = pname(ii,j,k)
+                  poname(h0,ii,jsimp,k) = poname(h0,ii,j,k)
 
                end do
 
@@ -20043,11 +19949,10 @@ c                                 local input variables
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
 
-      integer nsub,nttyp,nterm,nspm1,nsite
-      double precision acoef,smult,a0
-      common/ cst107 /a0(m10,m11),acoef(m10,m11,m0),smult(m10),
-     *      nsite,nspm1(m10),nterm(m10,m11),nsub(m10,m11,m0,m12),
-     *      nttyp(m10,m11,m0)
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *                nterm(m10,m11),nsub(m10,m11,m0)
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -20062,11 +19967,6 @@ c                                 local input variables
       double precision nu,y2p
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
 
       do i = 1, isimp(pkill)
@@ -20099,10 +19999,10 @@ c                              shift subdivision ranges
                pxmx(pkill,i,j) = pxmx(pkill,i,j2oj(j))
                pxnc(pkill,i,j) = pxnc(pkill,i,j2oj(j))
                pimd(pkill,i,j) = pimd(pkill,i,j2oj(j))
-               pname(pkill,i,j) = pname(pkill,i,j2oj(j))
+               poname(h0,pkill,i,j) = poname(h0,pkill,i,j2oj(j))
             end do
 
-            pname(pkill,i,j) = pname(pkill,i,j2oj(j))
+            poname(h0,pkill,i,j) = poname(h0,pkill,i,j2oj(j))
 
          end if
 
@@ -20131,13 +20031,10 @@ c                                 kill endmembers with the species
 c                                 to be deleted:
          if (jmsol(i,ikill).eq.jkill) kdsol(i) = -3
       end do
-c                                 kill any endmembers that depend
-c                                 on the killed endmember?
-c     call redep (-3)
 c                                 reset pvptr values
       ivct = 0
 
-      do ii = 1, ipoly
+      do ii = 1, poly(h0)
 
          ipvert(ii) = 1
 
@@ -20347,9 +20244,8 @@ c                                 found a dqf'd endmember
 c                                 --------------------------------------
 c                                 configurational entropy model
 
-c                                 site fractions as a function of bulk
-c                                 y's and dependent species y:
-      do i = 1, nsite
+c                                 site fractions as a function of endmember fractions
+      do i = 1, msite(h0)
 c                                 for each species, read function to define
 c                                 the site fraction of the species and eliminate
 c                                 killed species
@@ -20359,17 +20255,15 @@ c                                 and must be decremented before saving the
 c                                 final value:
          jtic = 1
 
-         do j = 1, nspm1(i)
+         do j = 1, zsp1(h0,i)
 
             ktic = 0
 c                                 for each term:
             do k = 1, nterm(i,j)
-c                                 macroscopic formulation:
-c                                 note: 4th index (nttyp) is only used
-c                                 for bragg-williams models.
+
                dead = .false.
                do l = 1, kill
-                  if (nsub(i,j,k,1).eq.ijkill(l)) then
+                  if (nsub(i,j,k).eq.ijkill(l)) then
                      dead = .true.
                      exit
                   end if
@@ -20378,29 +20272,35 @@ c                                 for bragg-williams models.
                if (.not.dead) then
 c                                 the term has survived (and therefore
 c                                 also the species):
-c                                 don't save nttyp since this is always
-c                                 1 for the macroscopic formulation
                   ktic = ktic + 1
 c                                 but my dear peanut brained friend, do
 c                                 not forget to move the pointer:
-                  nsub(i,jtic,ktic,1) = i2ni(nsub(i,j,k,1))
+                  nsub(i,jtic,ktic) = i2ni(nsub(i,j,k))
                   acoef(i,jtic,ktic) = acoef(i,j,k)
                end if
             end do
 c                                 ktic is the number of terms representing
-c                                 the jth species, we won't count species
-c                                 with no terms because the endmember configurational
-c                                 entropy is assumed to be implicit.
-         if (ktic.gt.0) then
+c                                 the jth species.
+            if (ktic.gt.0) then
 c                                 increment the species counter
-            nterm(i,jtic) = ktic
-            a0(i,jtic) = a0(i,j)
-            jtic = jtic + 1
+               znames(h0,i,jtic) = znames(h0,i,j)
+               nterm(i,jtic) = ktic
+               acoef(i,jtic,0) = acoef(i,j,0)
+               jtic = jtic + 1
+
+            end if
+
+         end do
+
+         zsp1(h0,i) = jtic - 1
+
+         if (zmult(h0,i).gt.0d0) then
+c                                 non-temkin site
+            zsp(h0,i) = zsp1(h0,i) - 1
+         else 
+c                                 temkin
+            zsp(h0,i) = zsp1(h0,i)
          end if
-
-      end do
-
-      nspm1(i) = jtic - 1
 
       end do
 c                                 ---------------------------------------
@@ -24501,9 +24401,9 @@ c----------------------------------------------------------------------
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -24629,7 +24529,7 @@ c                                 write assemblages to print file
      *                         'by assemblage index:'
          do i = 1, iasct
             call psbtxt (i,string,iend)
-            write (n3,'(i4,a,400a)') i,' - ',(chars(j), j = 1, length)
+            write (n3,'(i4,a,400a)') i,' - ',chars(1:length)
          end do
 
       end if
@@ -24651,14 +24551,14 @@ c id identifies the assemblage
 
       character string*(*), pname*14
 
-      integer i, j, ist, iend, id, np, ntot, ids
+      integer i, ist, iend, id, np, ntot, ids
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(lchar)
+      common/ cst51 /length,com,chars(lchar)
 c----------------------------------------------------------------------
       iend = 0
 
@@ -24680,13 +24580,13 @@ c                                 first solution names:
 
          ist = iend + 1
          iend = ist + 14
-         read (pname,'(400a)') (chars(j),j=ist,iend)
+         read (pname,'(400a)') chars(ist:iend)
 
          call ftext (ist,iend)
 
       end do 
 
-      write (string,'(400a)') (chars(j),j=1,iend) 
+      write (string,'(400a)') chars(1:iend) 
 
       length = iend
 
@@ -25958,13 +25858,8 @@ c----------------------------------------------------------------------
 
       character mname*8
       common/ cst18a /mname(m4)
-
-      character pname*10
-      integer ipoly, isimp, ipvert, ivert, pimd
-      common/ cst688 /ipoly,isimp(h4),ipvert(h4),ivert(h4,mst),
-     *                pimd(h4,mst,msp),pname(h4,mst,msp)
 c----------------------------------------------------------------------
-      if (ipoly.gt.1.and.ivert(jpoly,isimp(jpoly)).gt.1) then
+      if (poly(h0).gt.1.and.ivert(jpoly,isimp(jpoly)).gt.1) then
 
          ier = 0
 c                              reading a composite model or a polytope, 
@@ -25977,7 +25872,7 @@ c                              a name is associated with each subdivision range
 
                if (ier.ne.0) exit 
 
-               pname(jpoly,j,k) = key
+               poname(h0,jpoly,j,k) = key
                read (values,*,iostat=ier) pxmn(jpoly,j,k), 
      *              pxmx(jpoly,j,k), pxnc(jpoly,j,k), pimd(jpoly,j,k)
 
@@ -25989,7 +25884,7 @@ c                              a name is associated with each subdivision range
 
             call redcd0 (n9,ier,key,values,strg)
 
-            pname(jpoly,j,k) = key
+            poname(h0,jpoly,j,k) = key
 
          end do
 
@@ -26004,7 +25899,7 @@ c                              so why the j-loop?
             do k = 1, ivert(jpoly,j) - 1
                call readda (rnums,4,tname)
 
-               pname(jpoly,j,k) = 'X_'//mname(k)
+               poname(h0,jpoly,j,k) = 'X_'//mname(k)
                pxmn(jpoly,j,k) = rnums(1)
                pxmx(jpoly,j,k) = rnums(2)
                pxnc(jpoly,j,k) = rnums(3)
@@ -26012,7 +25907,7 @@ c                              so why the j-loop?
 
             end do
 
-            pname(jpoly,j,k) = 'X_'//mname(k)
+            poname(h0,jpoly,j,k) = 'X_'//mname(k)
 
          end do
 

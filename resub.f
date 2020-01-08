@@ -2241,6 +2241,9 @@ c                                 coordinates (and solution ids).
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      integer ikp
+      common/ cst61 /ikp(k1)
 c----------------------------------------------------------------------
 
       npt = 0
@@ -2253,6 +2256,7 @@ c                                                  2 active, upper bound
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
+            jkp(i) = ikp(i)
  
       end do
 
