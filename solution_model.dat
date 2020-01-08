@@ -1768,6 +1768,8 @@ begin_model
 
                       reformulated as standard O/D model, 12/18, JADC
 
+                      converted to 688 format, 1/8/20, JADC
+
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
 
@@ -1801,20 +1803,15 @@ melt(G)
 abbreviation Melt
 full_name    liquid
 
-6                                   | model type: simplicial composition space with speciation
+688                               | model type: 688 format standard model
 
-8                                   | number of endmembers
+1                                  | number of polytopes
+1                                  | number of simplices
+8                                  | number of vertices (endmembers) on each simplex
 
 foTL     faTL
 abL      silL     kspL
 woL      q8L      h2oL
-
-1                                   | ordered species definition
-                                    | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
-
-oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
-
-1 1 1 1 1 1 1 1                     | endmember flags
 
 0    .2   .1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision
 0    .3   .1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision
@@ -1823,6 +1820,14 @@ oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
 0    .6   .1  0                     | range and resolution of X(ksp), 1 => asymmetric subdivision
 0    .4   .1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
 0    .6   .1  0                     | range and resolution of X(q), 0 => cartesian subdivision
+
+
+begin_ordered_endmembers
+                                    | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
+
+oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
+
+end_ordered_endmembers
 
 begin_excess_function
 
@@ -1870,19 +1875,23 @@ W(h2oL oanL)  =    9.75d3 -  .5 * P
 end_excess_function
 
 3                           | Configurational entropy: two non-temkin sites (Water, Melt)
-                            | and one temkin site (olvine). HP assume a fsp = ab + or "molecule""
+                            | and one temkin site (olvine). HP assume a fsp = ab + or "molecule"
                             | with mixing on a temkin M site, but the math works out the same as
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped.
 
-2 1                         | water-vacancy site
-z(H) = 1 h2oL
+H
+2 1 1                       | water-vacancy site
+z(H)   = 1 h2oL
+z(Vac) = 1 foTL + 1 faTL + 1 abL + 1 silL + 1 kspL + 1 woL + 1 q8L + 1 oanL
 
-2 0                         | temkin olivine site
+Ol
+2 0 0                       | temkin olivine site
 n(Mg) = 4 foTL
 n(Fe) = 4 faTL
 
-8 0                         | melt site
+M
+8 0 0                       | melt site
 z(q)     = 1 q8L
 z(ksp)   = 1 kspL
 z(ab)    = 1 abL
@@ -1892,11 +1901,25 @@ z(wo)    = 1 woL
 z(ol)    = 1 faTL + 1 foTL  | this term was not counted prior to dec 12, 2018.
 z(H)     = 1 h2oL
 
+none                        | formula suffix, enter "none" for no suffix.
 
 begin_dqf_corrections
 dqf(silL) = -7800
 dqf(woL)  =  1300
 end_dqf_corrections
+
+begin_flagged_endmembers
+                                    | endmembers listed in this section are not associated with the
+                                    | solution on output and are identified by endmember name.
+foTL     
+faTL
+abL      
+silL     
+kspL
+woL      
+q8L      
+h2oL
+end_flagged_endmembers
 
 end_of_model
                     --------------------------------------------------------

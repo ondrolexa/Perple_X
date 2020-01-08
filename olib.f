@@ -387,7 +387,19 @@ c                                 use zbad to convert to site fractions
 
             do i = 1, msite(id)
 
-               zt = 0d0
+               if (zmult(id,i).eq.0d0) then
+
+                  zt = 0d0
+c                                 get total n for case temkin
+                  do j = 1, zsp1(id,i)
+                    zt = zt + zsite(i,j)
+                  end do
+
+               else
+
+                  zt = 1d0
+
+               end if
 c                                 counter
                m = 1
 
@@ -398,31 +410,28 @@ c                                 species name
                   read (znames(id,i,j),'(3a)') chars(m:m+2)
                   chars(m+3) = '('
 c                                 trim number
-                  call znmtxt (zsite(i,j),next,ct)
-                  call numtxt (zsite(i,j),next,ct)
+                  call znmtxt (zsite(i,j)/zt,next,ct)
 c                                 write the number
-                  chars(m+4:m+4+ct) = next(1:ct)
-                  chars(m+5+ct) = ')'
-                  m = m + 6 + ct
-                  zt = zt + zsite(i,j)
+                  chars(m+4:m+3+ct) = next(1:ct)
+                  chars(m+4+ct) = ')'
+                  m = m + 5 + ct
 
                end do
 
                write (text,'(400a)') chars(1:m-1)
                call unblnk (text)
 
-               if (tzmult(id,j).ne.0d0) zt = tzmult(id,j)
+               if (zmult(id,i).ne.0d0) zt = tzmult(id,i)
 c                                 site multiplicity
                write (znum,'(f5.2)') zt
-               call znmtxt (zt,next,ct)
 
                write (lu,'(18x,a,4x,a,7x,(400a))') znames(id,i,0),znum,
      *                                             chars(1:length)
 
             end do
 
-            if (zuffix(i).gt.' ') write (lu,'(18x,a)') 
-     *                           'Non-mixing stoichiometry: '//zuffix(i)
+            if (zuffix(id).ne.'none') write (lu,'(18x,a)') 
+     *                        'Non-mixing stoichiometry: '//zuffix(id)
 
          end do
 
@@ -1074,13 +1083,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, jd
-
-      logical zbad
-
-      double precision zsite(m10,m11)
-
-      external zbad
+      integer k, id, jd
 
       integer spct
       double precision ysp
@@ -1143,29 +1146,6 @@ c                                 hardwired binary/pseudo-binary (0)
          do k = 1, spct(id) 
             ysp(k,jd) = yf(ins(k))
          end do
-
-      end if
-
-      if (ksmod(id).eq.688) then
-
-         if (.not.zbad(pa,id,zsite)) then
-
-            do i = 1, msite(id)
-
-               write (*,'(/,a)') 'Site: '//znames(id,i,0)
-
-               do j = 1, zsp1(id,i)
-c                                 molar site population
-                  write (*,'(a,f6.4)') 'z('//znames(id,i,j)//') = ',
-     *                                    zsite(i,j)
-
-               end do
-
-            end do
-
-            write (*,'(/,a)') 'Suffix: '//zuffix(id)
-
-         end if
 
       end if
 

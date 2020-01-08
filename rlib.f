@@ -7769,7 +7769,7 @@ c                                 non-temkin (688)
 c                                 non-temkin, fractions must sum to 1
                if (dabs(zt-1d0).gt.zero) then
 
-                  write (*,'(a,g14.6)') 'site fraction sum = ',zt
+                  write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
                   call error (72,zt,i,
      *                       'site fractions on '//znames(ids,i,0)// 
@@ -19533,8 +19533,6 @@ c                                 old versions:
 c                                 read suffix used to complete structural formula
 c                                 on output. 
       call redcd0 (n9,ier,key,values,strg80)
-
-      if (key.eq.'none') key = ' '
       zuffix(h0) = key
 c                                 initialize endmember flags
       do i = 1, istot

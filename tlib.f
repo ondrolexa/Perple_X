@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Jan 6, 2020.',
+     *      'Perple_X version 6.8.9, source updated Jan 8, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -808,7 +808,11 @@ c                                 refinement points for stable solutions.
 
          else if (key.eq.'seismic_data_file') then
  
-            if (val.ne.'T') lopt(50) = .false. 
+            if (val.ne.'T') lopt(50) = .false.
+
+         else if (key.eq.'structural_formulae') then
+
+            if (val.ne.'T') lopt(51) = .false. 
 
          else if (key.eq.'max_aq_species_out') then 
 c                                 max number of aq species output for
@@ -1531,7 +1535,8 @@ c                                 WERAMI input/output options
          write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),
      *                  lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(41),lopt(42),lopt(45),
-     *                  valu(4),lopt(6),valu(22),lopt(21),lopt(24),
+     *                  valu(4),lopt(6),valu(22),lopt(51),lopt(21),
+     *                  lopt(24),
      *                  valu(14),lopt(19),lopt(20),valu(34),lopt(48)
          write (n,1234) lopt(5)
 c                                 WERAMI info file options
@@ -1544,7 +1549,8 @@ c                                 WERAMI thermodynamic options
 c                                 MEEMUM input/output options
          write (n,1231) lopt(25),iopt(32),l9,valu(26),valu(27),
      *                  lopt(14),nopt(7),lopt(22),valu(2),
-     *                  valu(21),valu(3),lopt(6),valu(22),lopt(21),
+     *                  valu(21),valu(3),lopt(6),valu(22),lopt(51),
+     *                  lopt(21),
      *                  lopt(24),valu(14),lopt(19),lopt(20)
          write (n,1234) lopt(5)
 
@@ -1721,6 +1727,7 @@ c                                 thermo options for frendly
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
      *        4x,'solution_names         ',a3,8x,'[model] abbreviation',
      *                                           ' full',/,
+     *        4x,'structural_formulae    ',l1,10x,'[T] F',/,
      *        4x,'species_output         ',l1,10x,'[T] F',/,
      *        4x,'species_Gibbs_energies ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
@@ -1743,6 +1750,7 @@ c                                 thermo options for frendly
      *        4x,'proportions            ',a3,8x,'[vol] wt mol',/,
      *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
      *        4x,'solution_names         ',a3,8x,'[mod] abb ful',/,
+     *        4x,'structural_formulae    ',l1,10x,'[T] F',/,
      *        4x,'species_output         ',l1,10x,'[T] F',/,
      *        4x,'endmember_Gs           ',l1,10x,'[F] T',/,
      *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
@@ -4253,7 +4261,7 @@ c                                 load chars into key
 c                                 now the values
          ibeg = iscnlt (iend+1,lchar,' ') 
 
-         if (ibeg.lt.lchar) then 
+         if (ibeg.lt.com) then 
 
             iend = iscnlt (com,ibeg,' ')
             if (iend-ibeg.gt.79) iend = ibeg + 79
@@ -4699,7 +4707,7 @@ c----------------------------------------------------------------------
 
       siz = 14
 
-      if (num-inum.lt.zero) then 
+      if (dabs(num-inum).lt.zero) then 
 c                                 the number can be represented as 
 c                                 an integer
          write (strg,'(i14)',iostat=ier) inum
@@ -4796,7 +4804,7 @@ c                                 delete superfluous 0
 
       subroutine znmtxt (num,text,siz)
 c----------------------------------------------------------------------
-c convert a f7.3 number to simplest possible text
+c convert a f7.3 number to simplest possible text, 
 c----------------------------------------------------------------------
       implicit none
 
@@ -4805,8 +4813,6 @@ c----------------------------------------------------------------------
       double precision num
 
       character text(*)*1, strg*7
-
-      logical dec
 
       integer i, siz, inum, ier, ibeg, iend, jscnlt, jscan
 
@@ -4817,14 +4823,14 @@ c----------------------------------------------------------------------
 
       siz = 7
 
-      if (num-inum.lt.zero) then 
+      if (dabs(num-inum).lt.zero) then 
 c                                 the number can be represented as 
 c                                 an integer
          write (strg,'(i7)',iostat=ier) inum
 
       else 
 
-         write (strg,'(f7.3)',iostat=ier) num
+         write (strg,'(f7.4)',iostat=ier) num
 
       end if
 
@@ -4866,7 +4872,7 @@ c                                 cut leading zero
 
       iend = jscan (1,siz,'.',text)
 c                                reduce len to cut trailing zeroes
-      if (iend.lt.siz) siz = jscnlt (siz,iend,'0',text)
+c     if (iend.lt.siz) siz = jscnlt (siz,iend,'0',text)
 
       end
 

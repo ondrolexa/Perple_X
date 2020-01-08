@@ -39,7 +39,7 @@
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
 !                                 h0 - h9 + 1, added to eliminate temporary solution model arrays 
-      parameter (h4=3,h5=5,h6=500,h8=200,h9=30,h0=h9+1)
+      parameter (h4=3,h5=5,h6=500,h8=250,h9=30,h0=h9+1)
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami
