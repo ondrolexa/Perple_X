@@ -12,7 +12,7 @@ c----------------------------------------------------------------------
 
       logical eof
 
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       integer eos

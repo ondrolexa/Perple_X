@@ -1187,7 +1187,7 @@ c                                 warning.
      *        '/',a,' 14 SetF',/,
      *        '%I t',/,'[',6(g9.3,1x),'] concat',/,
      *        '%I',/,'[')
-1020  format (400a)
+1020  format (400a1)
 1030  format ('] Text',/,'End',/)
       end
 c-------------------------------------------------------------------
@@ -1202,7 +1202,7 @@ c     jchar - length of unblanked character string, 0 if unknown.
 
       integer i,jchar,ict,ist
  
-      character text*(*)
+      character*(*) text
  
       character*1 itsy(255), bitsy(255) 
     
@@ -1241,6 +1241,6 @@ c                                 scan for double blanks:
 
       end if 
  
-1000  format (400a)
+1000  format (255a1)
       end
 

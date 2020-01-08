@@ -10,16 +10,15 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
  
-      character cprop*18, text*(lchar), tag*1, tag1*29, next(14)*1, 
-     *          znum*5
+      character cprop*18, text*(lchar), tag*1, tag1*29
 
-      logical aqph, sol688, zbad
+      logical aqph
 
       integer i, j, k, l, m, lu, id, inc, ct
 
-      double precision poiss, gcpd, zsite(m10,m11), zt
+      double precision poiss, gcpd
  
-      external gcpd, zbad
+      external gcpd
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -91,9 +90,9 @@ c----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      integer length,com
+      integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,com,chars(lchar)
+      common/ cst51 /length,iblank,icom,chars(lchar)
 
       integer jnd
       double precision aqg,q2,rt
@@ -111,17 +110,10 @@ c----------------------------------------------------------------------
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
       integer iam
       common/ cst4 /iam
 c---------------------------------------------------------------------- 
-
+                                    
       write (lu,1000)
 
       if (iam.eq.2) then 
@@ -337,10 +329,10 @@ c                                   molar solute
                if (k.eq.1) then 
 
                   write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        chars(1:length)
+     *                                        (chars(j), j = 1, length)
                else 
 
-                  write (lu,'(19x,400a)') chars(1:length)
+                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
 
                end if 
 
@@ -354,93 +346,7 @@ c                                   molar solute
             write (lu,'(/,1x,400a)') chars(1:length)
          end if 
 
-      end if
-
-      sol688 = .false.
-
-      do l = 1, np 
-c                                 688 format solution model flag
-         if (ksmod(kkp(l)).eq.688) sol688 = .true.
-
-      end do
-
-      if (lopt(51).and.sol688) then 
-c                                 reconstruct structural formulae
-         write (lu,'(/,a,/)') 'Structural formulae for 688 format '//
-     *                        'solution models:'
-         write (lu,'(a,8x,a/)') ' Phase','   Site  Multiplicity  '//
-     *                          'Molar Site Fractions'
-
-         do l = 1, np
-
-            id = kkp(l)
-
-            if (ksmod(id).ne.688) cycle
-
-            write (lu,'(1x,a)') pname(l)
-c                                 load speciation
-            do k = 1, spct(id)
-               pa(k) = ysp(k,l)
-            end do
-c                                 use zbad to convert to site fractions
-            sol688 = zbad(pa,id,zsite)
-
-            do i = 1, msite(id)
-
-               if (zmult(id,i).eq.0d0) then
-
-                  zt = 0d0
-c                                 get total n for case temkin
-                  do j = 1, zsp1(id,i)
-                    zt = zt + zsite(i,j)
-                  end do
-
-               else
-
-                  zt = 1d0
-
-               end if
-c                                 counter
-               m = 1
-
-               do j = 1, zsp1(id,i)
-
-                  if (zsite(i,j).lt.zero) cycle
-c                                 species name
-                  read (znames(id,i,j),'(3a)') chars(m:m+2)
-                  chars(m+3) = '('
-c                                 trim number
-                  call znmtxt (zsite(i,j)/zt,next,ct)
-c                                 write the number
-                  chars(m+4:m+3+ct) = next(1:ct)
-                  chars(m+4+ct) = ')'
-                  m = m + 5 + ct
-
-               end do
-
-               write (text,'(400a)') chars(1:m-1)
-               call unblnk (text)
-
-               if (zmult(id,i).ne.0d0) zt = tzmult(id,i)
-c                                 site multiplicity
-               write (znum,'(f5.2)') zt
-
-               write (lu,'(18x,a,4x,a,7x,(400a))') znames(id,i,0),znum,
-     *                                             chars(1:length)
-
-            end do
-
-            if (zuffix(id).ne.'none') write (lu,'(18x,a)') 
-     *                        'Non-mixing stoichiometry: '//zuffix(id)
-
-         end do
-
-      else if (lopt(51)) then
-
-         write (lu,'(/,a,/)') 'Structural formulae for 688 format '//
-     *                        'solution models: none stable.'
-
-      end if
+      end if 
 
       if (lopt(24).and.np.gt.0) then 
 
@@ -487,10 +393,10 @@ c                                 depend on the solvent properties
                if (k.eq.1) then 
 
                   write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        chars(1:length)
+     *                                        (chars(j), j = 1, length)
                else 
 
-                  write (lu,'(19x,400a)') chars(1:length)
+                  write (lu,'(19x,400a)') (chars(j), j = 1, length)
 
                end if 
 
@@ -1147,7 +1053,7 @@ c                                 hardwired binary/pseudo-binary (0)
             ysp(k,jd) = yf(ins(k))
          end do
 
-      end if
+      end if 
 
       end
 

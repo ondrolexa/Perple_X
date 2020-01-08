@@ -366,7 +366,7 @@ c pschem - subroutine to output ternary chemographies.
  
       double precision x3(3),y3(3),xx(j9),yy(j9),style,x1,y1,y,dyt,yt,xt
  
-      integer idss(10),iperm(2,3),i,j,iflag,isat,iop1,kvert,id,nchar
+      integer idss(10),iperm(2,3),i,j,iflag,isat,iop1,ivert,id,nchar
 
       integer icp,istct,ipoint,ifct,ipot,ias,jd
 
@@ -510,15 +510,15 @@ c                                  don't draw tielines
 c                                  first divariant 
             do i = 1, ib                      
                if (iasmbl(i).eq.2) then
-                  call merger (i,iperm,kvert,ipoint,xx,yy)
-                  call pspygn (xx,yy,kvert,0d0,0d0,7)
+                  call merger (i,iperm,ivert,ipoint,xx,yy)
+                  call pspygn (xx,yy,ivert,0d0,0d0,7)
                end if
             end do
 c                                  third univariant
             do i = 1, ib                      
                if (iasmbl(i).eq.1) then
-                  call merger (i,iperm,kvert,ipoint,xx,yy)
-                  call pspygn (xx,yy,kvert,1d0,0d0,3)
+                  call merger (i,iperm,ivert,ipoint,xx,yy)
+                  call pspygn (xx,yy,ivert,1d0,0d0,3)
                end if
             end do
 c                                  last invariant
@@ -642,7 +642,7 @@ c                                       sectioning constraints
 
 99    end
 
-      subroutine merger (i,iperm,kvert,ipoint,xx,yy)
+      subroutine merger (i,iperm,ivert,ipoint,xx,yy)
 
       implicit none
  
@@ -650,7 +650,7 @@ c                                       sectioning constraints
  
       double precision xx(j9), yy(j9)
  
-      integer iperm(2,3),idv(j9),idp(3),jdv(3),ias,i,kvert,j,id,
+      integer iperm(2,3),idv(j9),idp(3),jdv(3),ias,i,ivert,j,id,
      *                   jas,k,l,jvert,kp,kp2,ipoint,ll1,ll2,ll3
 
       integer idf,ib,iasmbl,ivchk
@@ -662,7 +662,7 @@ c                                       sectioning constraints
 c                                    merge high variance fields
 c                                    load first part into polygon:
       ias = iasmbl(i)
-      kvert = 3
+      ivert = 3
 
       do j = 1, 3
 
@@ -715,10 +715,10 @@ c                                    no match, reject:
 30          continue
 c                                    ok, the simplex has the same assemblage
 c                                    now match vertices:
-            jvert = kvert 
+            jvert = ivert 
 
-            do k = 1, kvert
-               if (k.lt.kvert) then 
+            do k = 1, ivert
+               if (k.lt.ivert) then 
                   kp = k + 1
                else
                   kp = 1
@@ -731,12 +731,12 @@ c                                    now match vertices:
      *                jdv(iperm(1,l)).eq.idv(kp)) then
                      if (kp.eq.1) then
 c                                    tag the common join on the end
-                        idv(kvert+1) = jdv(4-l)
+                        idv(ivert+1) = jdv(4-l)
                      else 
 c                                    the simplex might share the next
 c                                    segment as well:
                         if (ias.gt.1) then 
-                           if (kp.lt.kvert) then
+                           if (kp.lt.ivert) then
                               kp2 = kp + 1
                            else 
                               kp2 = 1
@@ -749,7 +749,7 @@ c                                    segment as well:
      *                            jdv(iperm(1,ll2)).eq.idv(kp2)) then
 c                                     the simplex matches two segments
 c                                     remove the matched point
-                                 do ll3 = kp+1, kvert
+                                 do ll3 = kp+1, ivert
                                     idv(ll3-1) = idv(ll3) 
                                  end do 
                                  iasmbl(j) = -1
@@ -759,7 +759,7 @@ c                                     remove the matched point
                            end do 
                         end if 
 c                                    found a common join, displace the old vertices
-                        do ll1 = kvert + 1, kp, -1
+                        do ll1 = ivert + 1, kp, -1
                            if (ll1.gt.j9) call error (1,0d0,ll1,'J9')
                            idv(ll1) = idv(ll1-1)
                         end do
@@ -768,7 +768,7 @@ c                                    insert the new vertex
                      end if 
 c                                    reset the assemblage flag:
                      iasmbl(j) = -1 
-                     jvert = kvert + 1
+                     jvert = ivert + 1
                      goto 40 
                   end if 
                end do 
@@ -776,8 +776,8 @@ c                                    reset the assemblage flag:
 20       continue
 c                                    if got to here then there were no
 c                                    no matches, save the polygon
-         do j = 1, kvert
-c                                    the polygon now has kvert vertices
+         do j = 1, ivert
+c                                    the polygon now has ivert vertices
 c                                    load the vertices
             if (idv(j).eq.0) cycle
 
@@ -789,7 +789,7 @@ c                                    load the vertices
          exit 
 c                                    if here found a match, check the 
 c                                    list for more
-40       kvert = jvert 
+40       ivert = jvert 
 
       end do 
 
@@ -1015,7 +1015,7 @@ c subprogram to write a text label for a reaction
  
       character text(400)*1, string*(*)
   
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -1198,7 +1198,7 @@ c psmixd - subroutine to draw binary mixed variable diagrams
       double precision vnu
       common/ rxn /vnu(k7),idr(k7),ivct,iplus(k7),iminus(k7)
 
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
@@ -1850,7 +1850,7 @@ c plinp - subroutine to read x-y plot file header.
       integer ikp
       common/ phase /ikp(k1)
 
-      character names*8
+      character*8 names
       common/ cst8  /names(k1)
 
       character fname*10, aname*6, lname*22

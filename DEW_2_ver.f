@@ -7,7 +7,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, ibeg, iend, siz, ier, iscan, iscnlt, jbeg(3), jend(3),
+      integer i, ibeg, iend, len, ier, iscan, iscnlt, jbeg(3), jend(3),
      *        nel, iel, ist, j, lun, d2v(13)
 
       logical elchk, good, reject, bad, hsc
@@ -15,14 +15,14 @@ c----------------------------------------------------------------------
       double precision nums(13),sel(50),stoich,elst(50),ost(50),ox(50), 
      *                 otot
 
-      character rec*(lchar), name8*8, elem(50)*2, elname*2, number*8,
+      character rec*240, name8*8, elem(50)*2, elname*2, number*8,
      *          oxname(50)*5, text(14)*1, two*2
 
       external iscan, iscnlt, elchk
 
-      integer length,com
+      integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,com,chars(lchar)
+      common/ cst51 /length,iblank,icom,chars(240)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
@@ -97,17 +97,17 @@ c                                 c2
 
          bad = .false. 
 
-         call redcd3 (n9,ier)
+         call redcd3 (n9,len,ier)
          if (ier.ne.0) exit
 c                                find end of first name
          ibeg = 1 
-         iend = iscan (ibeg,com,' ') - 1
+         iend = iscan (ibeg,len,' ') - 1
 
          jbeg(1) = 1
          jend(1) = iend
 c                                find the second name
-         ibeg = iscnlt (iend+1,com,' ')
-         iend = iscan (ibeg,com,' ') - 1 
+         ibeg = iscnlt (iend+1,len,' ')
+         iend = iscan (ibeg,len,' ') - 1 
 c                                decode the name
          ist = ibeg
          sel = 0d0
@@ -168,7 +168,7 @@ c                                 check if already at the end
                   i = iend - 1
                end if 
           
-               write(number,'(8a)') chars(ist+1:i)
+               write(number,'(8a1)') chars(ist+1:i)
                read (number,'(i8)',iostat=ier) j
 
                if (ier.eq.0.or.ist+1.eq.i) then 
@@ -224,17 +224,16 @@ c                                 end of a repeat group
          jbeg(2) = ibeg
          jend(2) = iend
 c                                find a comment, if there is one
-         ibeg = iscnlt (iend+1,com,'@') 
+         ibeg = iscnlt (iend+1,len,'@') 
          jbeg(3) = ibeg
-         jend(3) = com
+         jend(3) = len
 c                                write the numbers to record
-         write (rec,'(400a)') chars(jend(2)+1:com)
+         write (rec,'(240a1)') (chars(i), i = jend(2)+1, len)
 c                                read the numbers
-         read (rec,*,iostat=ier) nums
-
+         read (rec,*,iostat=ier) nums 
          if (ier.ne.0) then
             write (*,*) 'probably missing enthalpy for:',
-     *                  chars(jbeg(1):jend(1))
+     *                  (chars(i),i=jbeg(1),jend(1))
             read (rec,*,iostat=ier) nums(1),(nums(i),i=3,13)
             nums(2) = 0d0
             ier = 0 
@@ -249,19 +248,18 @@ c                                read the numbers
 
          if (jend(1)-jbeg(1).gt.7) then
             write (*,*) 'truncated name from ',
-     *                  chars(jbeg(1):jend(1)),' to ',
-     *                  chars(jbeg(1):jbeg(1)+7)
+     *                  (chars(i),i=jbeg(1),jend(1)),' to ',
+     *                  (chars(i),i=jbeg(1),jbeg(1)+7)
             jend(1) = jbeg(1) + 7
          end if 
 
-         write (name8,'(8a)') chars(jbeg(1):jend(1))
-
-         write (lun,'(/,a,a,f9.0,400a)') name8,' EoS = 16 | Gf = ',
+         write (name8,'(8a1)') (chars(i),i=jbeg(1),jend(1))
+         write (lun,'(/,a,a,f9.0,240a1)') name8,' EoS = 16 | Gf = ',
      *                                  nums(1)*4.184,
 c                                 formula
-     *                                chars(jbeg(2)-1:jend(2)+1),
+     *                                (chars(i),i=jbeg(2)-1,jend(2)+1),
 c                                 comment
-     *                                chars(jbeg(3)-1:jend(3))
+     *                                (chars(i),i=jbeg(3)-1,jend(3))
 c                                 get oxide stoichiometry
          ox = 0d0
          otot = 0d0 
@@ -290,14 +288,14 @@ c                                 get oxide stoichiometry
 c                                 load text name
                iend = ibeg + 4
 
-               read (oxname(i),'(5a)') chars(ibeg:iend)
+               read (oxname(i),'(5a1)') (chars(j), j = ibeg, iend)
 c                                 left parenthesis
                chars(iend + 1) = '('
 c                                 get number
-               call numtxt (ox(i),text,siz)
+               call numtxt (ox(i),text,len)
 c                                 load number into chars
                ibeg = iend + 2
-               iend = ibeg + siz - 1
+               iend = ibeg + len - 1
 
                do j = ibeg, iend
                   chars(j) = text(j-ibeg+1)
@@ -315,7 +313,7 @@ c                                 load number into chars
 
          call ftext (1,iend)
 c                                 write the formula
-         write (lun,'(240a)') chars(1:iend)
+         write (lun,'(240a1)') (chars(i), i = 1, iend)
 c                                 write the DEW spreadsheet options as a comment:
 c         write (lun,'(3(a,i1))') 
 c     *         '   | DEW correlation options => omega: ',int(nums(8)),
@@ -359,7 +357,7 @@ c                                 scale omega, a1, a2, a4, c2
          end do
 
 c                                 write G,S,V,cp,w,q
-         if (ibeg.gt.1) write (lun,'(400a)') chars(1:ibeg)
+         if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
 c                                 write a1-a4,c1-c2, HOH
          ibeg = 1
  
@@ -374,7 +372,7 @@ c                                 write a1-a4,c1-c2, HOH
             call outthr (2d0,e16st(13),3,ibeg)
          end if 
 
-         if (ibeg.gt.1) write (lun,'(400a)') chars(1:ibeg)
+         if (ibeg.gt.1) write (lun,'(240a1)') (chars(i), i = 1, ibeg)
 
          write (lun,'(a,/)') 'end'
 
@@ -401,35 +399,31 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine redcd3 (nloc,ier)
+      subroutine redcd3 (nloc,len,ier)
 c----------------------------------------------------------------------
 c readcd - read 240 column card image from unit 9, strip out unwanted
 c characters. ier = 1 no card found.
 c----------------------------------------------------------------------    
       implicit none
 
-      include 'perplex_parameters.h'
+      integer len, ier, iscan, ict, i, iscnlt, ibeg, nloc
 
-      integer i, ier, iscan, ict, iscnlt, ibeg, nloc
+      character card*240
 
-      external iscan, iscnlt
-
-      character card*(lchar)
-
-      integer length,com
+      integer length,iblank,icom
       character chars*1
-      common/ cst51 /length,com,chars(lchar)
+      common/ cst51 /length,iblank,icom,chars(240)
 c----------------------------------------------------------------------
 
       ier = 0 
 
       ibeg = 0
   
-      com = 0 
+      len = 0 
 
       card = ' '
 
-      do while (ibeg.ge.com) 
+      do while (ibeg.ge.len) 
 
          read (nloc,'(a)',end=90) card
 
@@ -437,11 +431,11 @@ c----------------------------------------------------------------------
 
             read (card,'(240a)') chars
 c                                 find end of data marker '|'
-            com = iscan (1,240,'|') - 1
+            len = iscan (1,240,'|') - 1
 c                                 '|' in first column
-            if (com.eq.0) cycle
+            if (len.eq.0) cycle
 c                                 find a non blank character
-            ibeg = iscnlt (1,com,' ')
+            ibeg = iscnlt (1,len,' ')
 
          end if 
 
@@ -449,7 +443,7 @@ c                                 find a non blank character
 
       ict = 1
 
-      do i = 2, com
+      do i = 2, len 
 c                                 strip out '+' and '*' chars
 c                                 eliminate blanks after '/' and '-'
 c                                 and double blanks
@@ -459,7 +453,7 @@ c                                 and double blanks
 
       end do 
 
-      com = ict
+      len = ict
 
       goto 99
 

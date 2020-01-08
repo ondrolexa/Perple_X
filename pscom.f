@@ -305,7 +305,7 @@ c psylbl - subroutine to put on y-axis labels.
             write (numbs(i),'(i5)') int(r)
          end if 
 
-         read (numbs(i),'(12a)') text
+         read (numbs(i),'(12a1)') text
 
          k = 0
 
@@ -316,7 +316,7 @@ c psylbl - subroutine to put on y-axis labels.
          end do 
 
          ic(i) = k
-         write (numbs(i),'(12a)') (next(j),j=1,k)
+         write (numbs(i),'(12a1)') (next(j),j=1,k)
          r = r + dr
 
       end do 

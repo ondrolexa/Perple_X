@@ -1121,7 +1121,7 @@ c-----------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       integer icomp,istct,iphct,icp
@@ -1177,7 +1177,7 @@ c---------------------------------------------------------------------
       double precision thermo,uf,us
       common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       double precision therdi,therlm
@@ -1651,7 +1651,7 @@ c----------------------------------------------------------------------
  
       character y*1
  
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       integer eos
@@ -1808,7 +1808,7 @@ c----------------------------------------------------------------------
       integer inames, jcmpn, i, j, k, l, icopt, ier,
      *        isct, jj, itic, jphct
  
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       integer idf
@@ -2270,7 +2270,7 @@ c----------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       integer icomp,istct,iphct,icp

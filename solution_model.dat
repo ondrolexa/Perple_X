@@ -1,4 +1,4 @@
-689 DO NOT DELETE THIS LINE
+688 DO NOT DELETE THIS LINE
 
                             ---------------------------------------------------------------------------
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO
@@ -148,7 +148,7 @@
 
                              XINC - controls the discretization (resolution) of the compositional variable its exact
                                     significance is dependent on the subdivision scheme or values of the 
-                                     initial_resolution option
+                                    initial_resolution option
 
                                  initial_resolution = [0 0] - XINC is read from the relevant solution model, regardless 
                                             of the value of IMOD.
@@ -352,7 +352,7 @@ W(ann obi)    8000
 W(obi east)   7000
 end_excess_function 
 
-4                                   | number of identisites in configurational entropy model
+6                                   | number of identisites in configurational entropy model
 
 M1                                  | site name
 5 1 1                               | number of species, effective multiplicity, true multiplicity
@@ -372,14 +372,20 @@ z(Mg,M2)   = 1 phl + 1 obi + 1 east + 1/2 tbit + 1 fbit
 T1                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
 z(Si,T1)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
-z(Al,T1)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
+z(Al,T1)   = needs_to_be_completed
+
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 10 10                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 OH                                  | site name
 2 2 2                               | 2 species on H, 2 site per formula unit.
 z(O,OH)     = 1 tbit
-z(OH,OH)    = 1 east + 1 phl + 1 ann + 1 obi + 1 mnbi 
-
-[Si2O10(OH)2]                       | formula suffix, enter "none" for no suffix.
+z(OH,OH)    = needs_to_be_completed
 
 end_of_model
                       --------------------------------------------------------
@@ -417,7 +423,7 @@ w(an  abh abh) 8471
 w(an  abh san) 100045.5 -10.3 -0.76 * P_bar
 end_excess_function 
 
-2                                   | number of sites in configurational entropy model
+4                                   | number of sites in configurational entropy model
 
 M                                   | site name
 3 1 1                               | number of species, effective multiplicity, true multiplicity
@@ -428,9 +434,15 @@ z(K,M)   = 1 san
 T1                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
 z(Al,T1) = 1/2 + 1/2 an
-z(Si,T1) = 1/2 - 1/2 an
+z(Si,T1) = 1 - 1/2 - 1/2 an
 
-[Si2O8]                             | formula suffix, enter "none" for no suffix.
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 8 8                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 reach_increment 3
 
@@ -769,18 +781,18 @@ W(mrbG tts)               50d3
 W(kprg tts)               35d3
 end_excess_function
 
-6                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, OH)
+8                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, T2, O, OH)
 
 A                                   | site name
 3 1 1                               | number of species, effective multiplicity, true multiplicity
 z(Na,A)    = 1 parg
 z(K,A)     = 1 kprg
-z(Vac,A)   = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts + 1 mrbG
+z(V,A)     = 1 cumm + 1 grun + 1 tr + 1 ts + 1 gl + 1 a + 1 b + 1 tts
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
 z(Fe,M1)   = 1 grun + 1 b
-z(Mg,M1)   = 1 cumm + 1 tr + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
+z(Mg,M1)   = 1 cumm + 1 ts + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 tts + 1 a
 
 M2                                  | site name
 5 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -800,15 +812,20 @@ z(Ca,M4)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
 T1                                  | site name
 2 1 4                               | number of species, effective multiplicity, true multiplicity
 z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg
-z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b + 1 cumm
+z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b
+
+T2                                  | site name
+1 4 4                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 22 22                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 OH                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
 z(O,OH)    = 1 tts
-z(OH,OH)   = 1 cumm + 1 grun + 1 ts + 1 tr + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 b + 1 a
-
-
-[Si4O22]                            | formula suffix, enter "none" for no suffix.
+z(OH,OH)   = 1 - 1 tts
 
 begin_van_laar_sizes
 alpha(tr)          1
@@ -1199,31 +1216,33 @@ W(cenjh kjdh)    40d3
 W(cfm kjdh)      40d3
 end_excess_function
 
-3                                   | number of sites in configurational entropy model (M1, M2, T)
+4                                   | 4 site model (M1, M2, T, O)
 
 M1                                  | site name
 6 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Fe)   = 1 cfsg
-z(Mg)   = 1 di + 1 cenjh + 1/2 mcbuf + 1 cfm
-z(Fe3+) = 1 cessh
-z(Ti)   = 1/2 mcbuf
-z(Cr)   = 1 crdih
-z(Al)   = 1 cats + 1 jd + 1 kjdh
+z(m1,fe)   = 1 cfsg
+z(m1,mg)   = 1 di + 1 cenjh + 1/2 mcbuf + 1 cfm
+z(m1,fe3+) = 1 cessh
+z(m1,Ti)   = 1/2 mcbuf
+z(m1,Cr)   = 1 crdih
+z(Al,M1)   = 1 cats + 1 jd + 1 kjdh
 
 M2                                  | site name
 5 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na)   = 1 jd
-z(K)    = 1 kjdh
-z(Mg)   = 1 cenjh
-z(Fe)   = 1 cfm  + 1 cfsg
-z(Ca)   = 1 di + 1 cats + 1 cessh + 1 crdih + 1 mcbuf
+z(m2,na)   = 1 jd
+z(m2,k)    = 1 kjdh
+z(m2,mg)   = 1 cenjh
+z(m2,fe)   = 1 cfm  + 1 cfsg
+z(Ca,M2)   = 1 di + 1 cats + 1 cess + 1 crdi + 1 mcbuf
 
 T                                   | site name
 2 .5 2                              | number of species, effective multiplicity, true multiplicity
 z(Al,T) = 1/2 cats + 1/2 mcbuf + 1/2 crdih + 1/2 cessh
 z(Si,T) = 1/2 cats + 1/2 mcbuf + 1/2 crdih + 1/2 cessh + 1 cfsg  + 1 cenjh + 1 di + 1 cfm + 1 jd + 1 kjdh
 
-[O6]                                | formula suffix, enter "none" for no suffix.
+O                                   | site name
+1 6 6                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 begin_van_laar_sizes
 alpha(di)     1.2
@@ -1406,33 +1425,35 @@ W(ocats fmc)              50d3
 W(cats fmc)               50d3
 end_excess_function
 
-4                                   | 4 site entropy model (M1, M2, T1, T2)
+5                                   | 5 site entropy model (M1, M2, T1, T2, O)
 
 M1                                  | site name
 4 1 1                               | 4 species on m1, mult = 1
-z(Fe)   = 1 cfsg
-z(Mg)   = 1 di + 1 fmc + 1 cenjh
-z(Fe3+) = 1 acm
-z(Al)   = 1 cats + 1 ocats + 1 jd
+z(m1,fe)   = 1 cfsg
+z(m1,mg)   = 1 di + 1 fmc + 1 cenjh
+z(m1,fe3+) = 1 acm
+z(Al,M1)   = needs_to_be_completed
 
 M2                                  | site name
 4 1 1                               | 4 species on m2, mult. = 1
-z(Na)   = 1 acm  + 1 jd
-z(Mg)   = 1 cenjh
-z(Fe)   = 1 fmc  + 1 cfsg
-z(Ca)   = 1 di   + 1 cats + 1 ocats
+z(m2,na)   = 1 acm  + 1 jd
+z(m2,mg)   = 1 cenjh
+z(m2,fe)   = 1 fmc  + 1 cfsg
+z(Ca,M2)   = needs_to_be_completed
 
 T1                                  | site name
 2 0.25 1                            | 2 species on T1, effective mult. = 1/4
 z(Al,T1)   = 1/2 cats
-z(Si,T1)   = 1/2 cats + 1 ocats + 1 fmc  + 1 cfsg + 1 acm  + 1 jd + 1 cenjh + 1 di
+z(Si,T1)   = needs_to_be_completed
 
 T2                                  | site name
 2 0.25 1                            | 2 species on T2, effective mult. = 1/4
 z(Al,T2)   = 1/2 cats + 1 ocats
-z(Si,T2)   = 1/2 cats + 1 fmc  + 1 cfsg + 1 acm  + 1 jd + 1 cenjh + 1 di
+z(Si,T2)   = needs_to_be_completed
 
-[O6]                                | formula suffix, enter "none" for no suffix.
+O                                   | site name
+1 6 6                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 begin_van_laar_sizes
 alpha(di)          1.2
@@ -1768,8 +1789,6 @@ begin_model
 
                       reformulated as standard O/D model, 12/18, JADC
 
-                      converted to 688 format, 1/8/20, JADC
-
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
 
@@ -1803,15 +1822,20 @@ melt(G)
 abbreviation Melt
 full_name    liquid
 
-688                               | model type: 688 format standard model
+6                                   | model type: simplicial composition space with speciation
 
-1                                  | number of polytopes
-1                                  | number of simplices
-8                                  | number of vertices (endmembers) on each simplex
+8                                   | number of endmembers
 
 foTL     faTL
 abL      silL     kspL
 woL      q8L      h2oL
+
+1                                   | ordered species definition
+                                    | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
+
+oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
+
+1 1 1 1 1 1 1 1                     | endmember flags
 
 0    .2   .1  0                     | range and resolution of X(fo),  1 => asymmetric subdivision
 0    .3   .1  0                     | range and resolution of X(fa),  1 => asymmetric subdivision
@@ -1820,14 +1844,6 @@ woL      q8L      h2oL
 0    .6   .1  0                     | range and resolution of X(ksp), 1 => asymmetric subdivision
 0    .4   .1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
 0    .6   .1  0                     | range and resolution of X(q), 0 => cartesian subdivision
-
-
-begin_ordered_endmembers
-                                    | H(oanL) = -46.5d3 - 0.25 * P - dqf(woL) 1300 - dqf(silL) -7800
-
-oanL = 1 woL + 1 silL        Delta(enthalpy)   = -40000  - 0.25 * P
-
-end_ordered_endmembers
 
 begin_excess_function
 
@@ -1875,23 +1891,19 @@ W(h2oL oanL)  =    9.75d3 -  .5 * P
 end_excess_function
 
 3                           | Configurational entropy: two non-temkin sites (Water, Melt)
-                            | and one temkin site (olvine). HP assume a fsp = ab + or "molecule"
+                            | and one temkin site (olvine). HP assume a fsp = ab + or "molecule""
                             | with mixing on a temkin M site, but the math works out the same as
                             | the endmembers are treated as separate endmembers and the M site
                             | dropped.
 
-H
-2 1 1                       | water-vacancy site
-z(H)   = 1 h2oL
-z(Vac) = 1 foTL + 1 faTL + 1 abL + 1 silL + 1 kspL + 1 woL + 1 q8L + 1 oanL
+2 1                         | water-vacancy site
+z(H) = 1 h2oL
 
-Ol
-2 0 0                       | temkin olivine site
+2 0                         | temkin olivine site
 n(Mg) = 4 foTL
 n(Fe) = 4 faTL
 
-M
-8 0 0                       | melt site
+8 0                         | melt site
 z(q)     = 1 q8L
 z(ksp)   = 1 kspL
 z(ab)    = 1 abL
@@ -1901,25 +1913,11 @@ z(wo)    = 1 woL
 z(ol)    = 1 faTL + 1 foTL  | this term was not counted prior to dec 12, 2018.
 z(H)     = 1 h2oL
 
-none                        | formula suffix, enter "none" for no suffix.
 
 begin_dqf_corrections
 dqf(silL) = -7800
 dqf(woL)  =  1300
 end_dqf_corrections
-
-begin_flagged_endmembers
-                                    | endmembers listed in this section are not associated with the
-                                    | solution on output and are identified by endmember name.
-foTL     
-faTL
-abL      
-silL     
-kspL
-woL      
-q8L      
-h2oL
-end_flagged_endmembers
 
 end_of_model
                     --------------------------------------------------------
@@ -2064,10 +2062,7 @@ z(Al,M4)    = 1 daph + 1 clin + 1 ames + 1 mnchl
 T2
 2 2 2                             | 2 species on 2 T2 sites
 z(Al,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
-z(Si,T2)    = 1 afchl + 1 och1 + 1 och2 + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl 
-
-[Si2O10(OH)8]                     | formula suffix, enter "none" for no suffix.
-
+z(Si,T2)    = 1 ames + 1/2 clin + 1/2 daph + 1/2 f3clin + 1/2 mnchl
 
 begin_dqf_corrections
 dqf(mnchl) -13030
@@ -2125,9 +2120,6 @@ M3                                | site name
 2 1 1                             | 2 species on M3, 1 site per formula unit.
 z(Al,M3) = 1 cz
 z(Fe,M3) = 1 fep + 1 ep
-
-[Ca2Si3O12(OH)]                   | formula suffix, enter "none" for no suffix.
-
 
 end_of_model
                       --------------------------------------------------------
@@ -2316,26 +2308,23 @@ end_excess_function
 
 M1                                  | site name
 5 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Fe,m1)   = 1 cfs
-z(Al,m1)   = 1 cats + 1 jd
-z(Fe3,m1)  = 1 cess
-z(Cr,m1)   = 1 crdi
-z(Mg,M1)   = 1 di   + 1 cenjh + 1 cfm
+z(m1,fe)   = 1 cfs
+z(m1,al)   = 1 cats + 1 jd
+z(m1,fe3)  = 1 cess
+z(m1,cr)   = 1 crdi
+z(Mg,M1)   = needs_to_be_completed
 
 M2                                  | site name
 4 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,m2)   = 1 jd
-z(Mg,m2)   = 1 cenjh
-z(Fe,m2)   = 1 cfs  + 1 cfm
-z(Ca,M2)   = 1 di   + 1 crdi + 1 cess 
+z(m2,na)   = 1 jd
+z(m2,mg)   = 1 cenjh
+z(m2,fe)   = 1 cfs  + 1 cfm
+z(Ca,M2)   = needs_to_be_completed
 
 T                                   | site name
 2 .5 2                              | number of species, effective multiplicity, true multiplicity
-z(Al,T)   = 1/2 cats + 1/2 cess + 1/2 crdi
-z(Si,T)   = 1/2 cats + 1/2 cess + 1/2 crdi +  1 cfs  + 1 cfm + 1 jd + 1 cenjh + 1 di
-
-[O6]                                | formula suffix, enter "none" for no suffix.
-
+z(T,al)   = 1/2 cats + 1/2 cess + 1/2 crdi
+z(Si,T)   = needs_to_be_completed
 
 begin_van_laar_sizes
 alpha(di)    =  1.2
@@ -3303,26 +3292,23 @@ end_excess_function
 
 M1                                  | site name
 5 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Fe)   = 1 fs
-z(Al)   = 1 mgts
-z(Fe3+) = 1 mots1
-z(Mn)   = 1 mnopx
-z(Mg)   = 1 en + 1 opx
+z(m1,fe)   = 1 fs
+z(m1,al)   = 1 mgts
+z(m1,fe3+) = 1 mots1
+z(m1,mn)   = 1 mnopx
+z(Mg,M1)   = 1 en + 1 opx
 
 M2                                  | site name
 4 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Fe)   = 1 fs + 1 opx
-z(Ca)   = 1 di
-z(Mn)   = 1 mnopx
-z(Mg)   = 1 en + 1 mgts + 1 mots1
+z(m2,fe)   = 1 fs + 1 opx
+z(m2,ca)   = 1 di
+z(m2,mn)   = 1 mnopx
+z(Mg,M2)   = 1 en + 1 mgts + 1 mots1
 
 T                                   | site name
 2 .25 2                             | number of species, effective multiplicity, true multiplicity
 z(Al,T)    = 1/2 mgts + 1/2 mots1
 z(Si,T)    = 1/2 mgts + 1/2 mots1 + 1 en + 1 fs + 1 opx + 1 di + 1 mnopx
-
-[O6]                                | formula suffix, enter "none" for no suffix.
-
 
 begin_van_laar_sizes
 alpha(en)       1
@@ -3377,9 +3363,8 @@ begin_model
                           Dependent:    Sdph          Al      Fe     AlAl   OH
                                         East          Al      Mg     AlAl   OH
 
-                                        Ann           Fe      Fe     AlSi   OH
+                            Species:    Ann           Fe      Fe     AlSi   OH
                                         Phl           Mg      Mg     AlSi   OH
-
                                         mnbi          Mn      Mn     AlSi   OH independent orphan
                                                       __________________________
 
@@ -3455,35 +3440,41 @@ W(fbi mnbi) 116d2
 
 end_excess_function
 
-4                                   | Configurational entropy: 4 sites, M1, M2, T1, OH.
+6                                   | Configurational entropy: 6 sites, M1, M2, T1, T2, O, OH.
 
 M1                                  | site name
-6 1 1                               | 6 species on M1, 1 site per formula unit.
+6 1 1                               | 5 species on M1, 1 site per formula unit.
 
-z(Mg)   = 1 phl
-z(Fe3+) = 1 fbi
-z(Mn)   = 1 mnbi
-z(Ti)   = 1 tbi
-z(Al)   = 1 east
-z(Fe)   = 1 ann  + 1 obi
+z(m1,fe)   = 1 ann  + 1 obi
+z(m1,mg)   = 1 phl
+z(m1,Fe3+) = 1 fbi
+z(m1,mn)   = 1 mnbi
+z(m1,Ti)   = 1 tbi
+z(Al,M1)   = needs_to_be_completed
 
 M2                                  | site name
-3 2 2                               | 3 species on M2, 2 sites per formula unit.
-z(Fe)   = 1 ann
-z(Mn)   = 1 mnbi
-z(Mg)   = 1 phl + 1 tbi + 1 obi + 1 fbi + 1 east
+3 2 2                               | 2 species on M2, 2 sites per formula unit.
+z(m2,fe)   = 1 ann
+z(m2,mn)   = 1 mnbi
+z(Mg,M1)   = needs_to_be_completed
 
 T1                                  | site name
 2 2 2                               | 2 species on T1, 2 site per formula unit.
-z(Si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
-z(Al)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi + 1 east + 1 fbi
+z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
+z(Al,T1)   = needs_to_be_completed
+
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 10 10                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 OH                                  | site name
 2 2 2                               | 2 species on H, 2 site per formula unit.
 z(O,OH)     = 1 tbi
-z(OH,OH)    = 1 phl + 1 obi + 1 fbi + 1 east + 1 ann + 1 mnbi
-
-[Si2O10]                            | formula suffix, enter "none" for no suffix.
+z(OH,OH)    = needs to be completed
 
 begin_dqf_corrections
 dqf(ann)  -3000
@@ -3606,35 +3597,42 @@ W(fbi mnbi) 116d2
 
 end_excess_function
 
-4                                   | Configurational entropy: 4 sites, M1, M2, T1, OH.
+
+6                                   | Configurational entropy: 6 sites, M1, M2, T1, T2, O, OH.
 
 M1                                  | site name
-6 1 1                               | 6 species on M1, 1 site per formula unit.
+6 1 1                               | 5 species on M1, 1 site per formula unit.
 
-z(Mg)   = 1 phl
-z(Fe3+) = 1 fbi
-z(Mn)   = 1 mnbi
-z(Ti)   = 1 tbi
-z(Al)   = 1 east
-z(Fe)   = 1 ann  + 1 obi
+z(m1,fe)   = 1 ann  + 1 obi
+z(m1,mg)   = 1 phl
+z(m1,Fe3+) = 1 fbi
+z(m1,mn)   = 1 mnbi
+z(m1,Ti)   = 1 tbi
+z(Al,M1)   = needs_to_be_completed
 
 M2                                  | site name
-3 2 2                               | 3 species on M2, 2 sites per formula unit.
-z(Fe)   = 1 ann
-z(Mn)   = 1 mnbi
-z(Mg)   = 1 phl + 1 tbi + 1 obi + 1 fbi + 1 east
+3 2 2                               | 2 species on M2, 2 sites per formula unit.
+z(m2,fe)   = 1 ann
+z(m2,mn)   = 1 mnbi
+z(Mg,M1)   = needs_to_be_completed
 
 T1                                  | site name
 2 2 2                               | 2 species on T1, 2 site per formula unit.
-z(Si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
-z(Al)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
+z(t1,si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
+z(Al,T1)   = needs_to_be_completed
+
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 10 10                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 OH                                  | site name
 2 2 2                               | 2 species on H, 2 site per formula unit.
 z(O,OH)     = 1 tbi
-z(OH,OH)    = 1 phl + 1 obi + 1 fbi + 1 east + 1 ann + 1 mnbi
-
-[Si2O10]                            | formula suffix, enter "none" for no suffix.
+z(OH,OH)    = needs to be completed
 
 begin_dqf_corrections
 dqf(ann)  -6000             | changed from -3d3 in Holland et al. 2018 TC file. Debaditya Bandyopadhyay 5/1/19.
@@ -7955,7 +7953,7 @@ w(cats di)    7d3
 w(cats hed)   4d3
 end_excess_function
 
-3                             | number of sites in the configurational entropy model
+5                             | number of sites in the configurational entropy model
 
 M1                            | site name
 5 1 1                         | number of species, effective multiplicity, true multiplicity.
@@ -7977,7 +7975,13 @@ T1                            | site name
 z(Al,T1)   = 1 cats + 1 esn
 z(Si,T1)   = 1 ccrts + 1 di + 1 hed + 1 jd + 1 acm
 
-[SiO6]                        | formula suffix, enter "none" for no suffix.
+T2                                  | site name
+1 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 6 6                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 reach_increment 0
 
@@ -9091,29 +9095,39 @@ W(obi east)  10000
 
 end_excess_function
 
-3                                   | Configurational entropy: 3 sites, M1, M2, T1
+6                                   | Configurational entropy: 6 sites, M1, M2, T1, T2, O, OH
 
 M2                                  | site name
 5 1 1                               | 5 species on M1, 1 site per formula unit.
-z(Mg) = 1 phl
-z(Mn) = 1 mnbi
-z(Al) = 1 east
-z(Ti) = 1 tbi
-z(Fe) = 1 ann  + 1 obi
+z(m1,fe) = 1 ann  + 1 obi
+z(m1,mg) = 1 phl
+z(m1,mn) = 1 mnbi
+z(m1,al) = 1 east
+z(Ti,M1)   = needs_to_be_completed
 
 M2                                  | site name
 4 2 2                               | 4 species on M2, 2 sites per formula unit.
-z(Fe)   = 1 ann
-z(Mn)   = 1 mnbi
-z(Vac)  = 1/2 tbi
-z(Mg)   = 1/2 tbi + 1 phl + 1 obi + 1 east
+z(m2,fe)   = 1 ann
+z(m2,mn)   = 1 mnbi
+z(m2,vac)  = 1/2 tbi
+z(Mg,M2)   = needs_to_be_completed
 
 T1                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
 z(Al,T1) = 1/2 tbi + 1/2 mnbi + 1/2 ann + 1/2 phl +1/2 obi + 1 east
-z(Si,T1) = 1/2 tbi + 1/2 mnbi + 1/2 ann + 1/2 phl +1/2 obi
+z(Si,T1)   = needs_to_be_completed
 
-[Si2O10(OH)2]                       | formula suffix, enter "none" for no suffix.
+T2                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 10 10                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+OH                                  | site name
+1 2 2                               | 2 species on H, 2 site per formula unit.
+z(OH,OH)   = 1
 
 end_of_model
 
@@ -9690,24 +9704,24 @@ w(parg_dqf ts_dqf) -40e3
 w(ts_dqf tr)        20e3
 end_excess_function
 
-5                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1)
+8                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, T2, O, OH)
 
 A                                   | site name
 2 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,A)   =    1 parg_dqf
-z(Vac,A)  =    1 cumm_dqf + 1 grun_dqf + 1 tr + 1 ts_dqf + 1 gl_dqf + 1 cammo1 + 1 cammo2 
+z(Na,A) =    1 parg_dqf
+z(V,A)  =    1 cumm_dqf + 1 grun_dqf + 1 tr + 1 ts_dqf + 1 gl_dqf + 1 cammo1 + 1 cammo2 
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
 z(Fe,M1)   = 1 grun_dqf + 1 cammo2
-z(Mg,M1)   = 1 cumm_dqf + 1 ts_dqf + 1 parg_dqf + 1 mrb + 1 gl_dqf + 1 cammo1
+z(Mg,M1)   = 1 cumm + 1 ts + 1 parg_dqf + 1 mrb + 1 gl_dqf + 1 cammo1
 
 M2                                  | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
 z(Fe,M2)   = 1 grun_dqf + 1 cammo1
 z(Fe3,M2)  = 1 mrb
-z(Al,M2)   = 1 ts_dqf     + 1/2 parg_dqf + 1 gl_dqf
-z(Mg,M2)   = 1/2 parg_dqf + 1 tr         + 1 cumm_dqf + 1 cammo2
+z(Al,M2)   = 1 ts_dqf + 1/2 parg_dqf + 1 gl_dqf
+z(Mg,M2)   = 1/2 parg_dqf + 1 tr + 1 cumm + cammo2
 
 M4                                  | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -9719,10 +9733,19 @@ z(Ca,M4)   = 1 ts_dqf + 1 parg_dqf + 1 tr
 T1                                  | site name
 2 1 4                               | number of species, effective multiplicity, true multiplicity
 z(Al,T1)   = 1/2 ts_dqf  + 1/2 parg_dqf
-z(Si,T1)   = 1/2 ts_dqf + 1/2 parg_dqf + 1 gl_dqf + 1 mrb + 1 tr + 1 grun_dqf + 1 cammo1 + 1 cammo2 + 1 cumm_dqf
+z(Si,T1)   = 1/2 ts_dqf + 1/2 parg_dqf + 1 gl_dqf + 1 mrb + 1 tr + 1 grun_dqf + 1 cammo1 + 1 cammo2
 
-[Si4O22(OH)2]                       | formula suffix, enter "none" for no suffix.
+T2                                  | site name
+1 4 4                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
 
+O                                   | site name
+1 22 22                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+OH                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(OH,OH)   = 1 
 
 begin_van_laar_sizes
 alpha(tr)       1
@@ -9996,12 +10019,12 @@ W(omrb_dqf ammo2)        63d3
 W(ammo1 ammo2)            20d3
 end_excess_function
 
-5                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1)
+8                                   | number of sites in configurational entropy model (A, M1, M2, M4, T1, T2, O, OH)
 
 A                                   | site name
 2 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Na,A)   =    1 mpa
-z(Vac,A)  =    1 anth     + 1 fanth_dq + 1 tr + 1 ged_dqf + 1 ogl_dqf + 1 ammo1 + 1 ammo2 
+z(Na,A) =    1 mpa
+z(V,A)  =    1 anth     + 1 fanth_dq + 1 tr + 1 ged_dqf + 1 ogl_dqf + 1 ammo1 + 1 ammo2 
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
@@ -10013,7 +10036,7 @@ M2                                  | site name
 z(Fe,M2)   = 1 fanth_dq + 1 ammo1
 z(Fe3,M2)  = 1 omrb_dqf
 z(Al,M2)   = 1 ged_dqf   + 1/2 mpa + 1 ogl_dqf
-z(Mg,M2)   = 1/2 mpa     + 1 tr    + 1 anth + 1 ammo2
+z(Mg,M2)   = 1/2 mpa_dqf + 1 tr    + 1 anth + ammo2
 
 M4                                  | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -10027,7 +10050,17 @@ T1                                  | site name
 z(Al,T1)   = 1/2 ged_dqf  + 1/2 mpa
 z(Si,T1)   = 1/2 ged_dqf  + 1/2 mpa + 1 anth + 1 ogl_dqf + 1 omrb_dqf + 1 tr + 1 fanth_dq + 1 ammo1 + 1 ammo2
 
-[Si4O22(OH)2]                       | formula suffix, enter "none" for no suffix.
+T2                                  | site name
+1 4 4                               | number of species, effective multiplicity, true multiplicity
+z(Si,T2)   = 1
+
+O                                   | site name
+1 22 22                             | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
+
+OH                                  | site name
+1 2 2                               | number of species, effective multiplicity, true multiplicity
+z(OH,OH)   = 1
 
 begin_van_laar_sizes
 alpha(tr)          1
@@ -11518,16 +11551,14 @@ X                                   | site name
 z(Fe) = 1 alm
 z(Ca) = 1 gr
 z(Na) = 1/3 nagt
-z(Mg) = 1 py + 2/3 nagt
+z(Mg) = needs_to_be_completed
 
 Y                                   | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
 z(Mg) = 1/2 maj
 z(Fe) = 1/2 gfm
 z(Si) = 1/2 maj + 1/2 gfm + 1/2 nagt
-z(Al) = 1 gr + 1 alm + 1 py + 1/2 nagt
-
-[Si3O12]                            | formula suffix, enter "none" for no suffix.
+z(Al) = needs_to_be_completed
 
 end_of_model
                       --------------------------------------------------------
@@ -11777,20 +11808,20 @@ begin_model
                                       Multiplicity    1       1(2)
                                                      ____________
 
-                        Prism I:      1 macf          Mg      AlAl  independent
-                                      5 mscf          Mg      MgSi  independent
-                                      7 cscf_d        Ca      MgSi  dependent
+                        Prism I:      1 macf          Mg      Al1/2Al1/2  independent
+                                      5 mscf          Mg      Mg1/2Si1/2  independent
+                                      7 cscf_d        Ca      Mg1/2Si1/2  dependent
 
-                                      2 facf_d        Fe      AlAl  dependent
-                                     10 fscf          Fe      FeSi  independent
-                                     11 cfscf_d       Ca      FeSi  dependent
+                                      2 facf_d        Fe      Al1/2Al1/2  dependent
+                                     10 fscf          Fe      Fe1/2Si1/2  independent
+                                     11 cfscf_d       Ca      Fe1/2Si1/2  dependent
                                                      ____________
                         Orphans:
-                                      3 cacf          Ca      AlAl  independent
-                                      4 nacfb         Na      AlSi  independent (orphan)
+                                      3 cacf          Ca      Al1/2Al1/2  independent
+                                      4 nacfb         Na      Al1/2Si1/2  independent (orphan)
                                                      ____________
 
-                            Ordered: 13 oscf          Fe2+    MgSi  (same as oscf_d above)
+                            Ordered: 13 oscf          Fe2+    Mg1/2Si1/2  (same as oscf_d above)
 
 CFer(H)
 abbreviation CFer
@@ -11860,19 +11891,17 @@ end_excess_function
 
 M1                                  | site name
 4 1 1                               | 4 species on M1, site multiplicity of 1
-z(Ca) = 1 cacf
-z(Fe) = 1 fscf + 1 oscf
-z(Na) = 1 nacfb
-z(Mg) = 1 macf + 1 mscf
+z(m1,ca) = 1 cacf
+z(m1,fe) = 1 fscf + 1 oscf
+z(m1,na) = 1 nacfb
+z(Mg,M1)   = needs_to_be_completed
 
 M2                                  | site name
 4 1 2                               | 4 species on M2, (fake) site multiplicity of 1
-z(Al) = 1 macf + 1 cacf + 1/2 nacfb
-z,Mg) = 1/2 mscf + 1/2 oscf
-z(Fe) = 1/2 fscf
-z(Si) = 1/2 mscf + 1/2 oscf + 1/2 fscf
-
-[O4]                                | formula suffix, enter "none" for no suffix.
+z(m2,al) = 1 macf + 1 cacf + 1/2 nacfb
+z(m2,mg) = 1/2 mscf + 1/2 oscf
+z(m2,fe) = 1/2 fscf
+z(Si,M2)   = needs_to_be_completed
 
 end_of_model
                       --------------------------------------------------------
@@ -13587,30 +13616,32 @@ W(obuf ojd)              4d3
 W(macm ojd)             -11d3
 end_excess_function
 
-3                                   | number of sites in entropy model (M1, M2, T)
+4                                   | 4 site entropy model (M1, M2, T, O)
 
 M1                                  | site name
 6 1 1                               | number of species, effective multiplicity, true multiplicity
-z(fe)   = 1 fs
-z(al)   = 1 mgts + 1 ojd
-z(fe3+) = 1 macm
-z(cr)   = 1 crenh
-z(ti)   = 1/2 obuf
-z(Mg)   = 1/2 obuf + 1 odi + 1 en
+z(m1,fe)   = 1 fs
+z(m1,al)   = 1 mgts + 1 ojd
+z(m1,fe3+) = 1 macm
+z(m1,cr)   = 1 crenh
+z(m1,ti)   = 1/2 obuf
+z(Mg,M1)   = 1/2 obuf + 1 odi + 1 en
 
 M2                                  | site name
 4 1 1                               | number of species, effective multiplicity, true multiplicity
-z(fe)   = 1 fs + 1 fm
-z(ca)   = 1 odi
-z(na)   = 1 ojd
-z(Mg)   = 1 obuf + 1 en + 1 crenh + 1 macm + 1 mgts 
+z(m2,fe)   = 1 fs + 1 fm
+z(m2,ca)   = 1 odi
+z(m2,na)   = 1 ojd
+z(Mg,M2)   = 1 obuf + 1 en + 1 crenh + 1 macm + 1 mgts 
 
 T                                   | site name
 2 .5 2                              | number of species, effective multiplicity, true multiplicity
 z(Al,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm
 z(Si,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm + 1 ojd + 1 odi + 1 en + 1 fs
 
-[O6]                                | formula suffix, enter "none" for no suffix.
+O                                   | site name
+1 6 6                               | number of species, effective multiplicity, true multiplicity
+z(O,O)     = 1
 
 begin_van_laar_sizes
 alpha(en)        1

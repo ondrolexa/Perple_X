@@ -135,7 +135,7 @@ c----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      character names*8
+      character*8 names
       common/ cst8 /names(k1)
 
       integer ilam,jlam,idiso,lamin,idsin
