@@ -9406,12 +9406,13 @@ c                                 tolerance
          do j = i+1, kstot
 
             jd = kdsol(insp(j))
+            if (ctot(id)*ctot(jd).eq.0d0) cycle
 c                                 switched from molar to mole fraction in 688
             do k = 1, icp
 
                dx = dabs(cp(k,id)/ctot(id) - cp(k,jd)/ctot(jd))
 
-               if (dx.lt.nopt(5)) then
+               if (dx.lt.zero) then
                   cycle
                else if (dcp(k,im).lt.dx) then
                   dcp(k,im) = dx
@@ -11509,10 +11510,6 @@ c                                 format test line
       read (n9,'(a)') new
 c                                 check version compatability
       if (.not.chksol(new)) call error (3,zt,im,new)
-c                                 move solution list into local array
-      do i = 1, isoct 
-         sname(i) = fname(i)
-      end do
 
       do while (im.lt.isoct)
 c                                 -------------------------------------
@@ -11554,12 +11551,12 @@ c                                 that the name is duplicated in the solution mo
          if (first) then
 
             do i = 1, im - 1
-               if (tname.eq.fname(i)) call error (75,0d0,i,tname)
+               if (tname.eq.sname(i)) call error (75,0d0,i,tname)
             end do
 
          end if
 c                                 save solution name
-         fname(im) = tname
+         sname(im) = tname
 c                                 abbreviation
          aname(im) = tn1
 c                                 long name
@@ -11658,6 +11655,10 @@ c                               reset ikp
             end if
 
          end if
+
+         do i = 1, im
+            fname(i) = sname(i)
+         end do
 
       end if
 
