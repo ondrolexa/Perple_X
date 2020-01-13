@@ -11561,6 +11561,18 @@ c                                 vertex/meemum need static pseudocompounds
             end do
 
             ophct = iphct
+
+            if (outprt.and.lopt(10)) then 
+c                                 write solution model name/endmembers for pseudocompound list file:
+               if (lrecip(im)) then
+                  j = mstot(im)
+               else 
+                  j = lstot(im)
+               end if
+
+               write (n8,1060) tname,(mname(iorig(knsp(i,im))), i= 1, j)
+
+            end if
 c                                 subdiv discretizes the composition of the 
 c                                 solution and stores the data (soload/loadgx)
             call subdiv (im,im,gcind,iphct,.false.)
@@ -11576,33 +11588,6 @@ c                                 write reach_increment
 c                                 indicate site_check_override and refine endmembers
                if (.not.sck(im)) write (*,1080) tname
                if (.not.nrf(im).and..not.lopt(39)) write (*,1090) tname
-
-               if (outprt.and.lopt(10)) then
-
-                  if (jsmod.ne.6.and.jsmod.ne.8) then
-                     write (n8,1060) tname,
-     *                         (names(jend(im,2+i)), i =1, lstot(im))
-                  else if (jsmod.eq.6) then
-                     write (n8,1060) tname,
-     *                         (mname(iorig(knsp(i,im))),
-     *                         i = 1, lstot(im)),'* see footnote 1'
-                  else if (jsmod.eq.8) then
-                     write (n8,1060) tname,
-     *                         (mname(iorig(knsp(i,im))),
-     *                         i = 1, lstot(im)),'* see footnotes 1 & 2'
-                  end if
-
-                  do i = ophct+1, iphct
-                     write (n8,1070) names(i),(pa(j), j = 1, lstot(im))
-                  end do
-
-                  if (jsmod.eq.6) then
-                     write (n8,1120)
-                  else if (jsmod.eq.8) then
-                     write (n8,1120)
-                     write (n8,1130)
-                  end if
-               end if
 
             end if
 
@@ -11660,7 +11645,6 @@ c                              close solution model file
 1040  format (/,'no models will be considered.',/)
 1060  format (/,'Solution: ',a,/,12x,'Endmember fractions:',
      *        /,12x,20(a,1x))
-1070  format (a,2x,20(1x,f6.3,2x))
 1080  format (9x,'site_check_override is on for ',a)
 1090  format (9x,'refine_endmembers is on for ',a)
 1100  format (i8,' pseudocompounds generated for: ',a)
@@ -11949,11 +11933,23 @@ c                                all the rest:
          end if
 
       end if
-c                                get blanks out of name:
+c                                 get blanks out of name:
       if (mstot(im).lt.4) then
          call unblnk (names(iphct))
       else
          call reblnk (names(iphct))
+      end if
+c                                 -------------------------------------
+      if (outprt.and.lopt(10)) then
+
+         if (lrecip(im)) then
+            h = mstot(im)
+         else 
+            h = lstot(im)
+         end if
+c                                 write composition name to pseudocompound list file
+          write (n8,1050) names(iphct),(y(j), j = 1, h)
+
       end if
 c                                 -------------------------------------
       do i = 1, m3
@@ -12079,6 +12075,7 @@ c                              or a dependent endmember
       end do
 
 1020  format (a2,a2,'_',a2)
+1050  format (a,2x,20(1x,f6.3,2x))
 1060  format (a2,a2,a2,a2)
 1070  format (a3,'_',f4.1)
 1080  format (a2,i6)
@@ -21852,7 +21849,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
  
-      logical output, eof, first, err
+      logical eof, first, err
 
       character*100 blank*1,string(3)*8,rname*5,name*8,strg*80,n2name,
      *              n9name,y*1,sname*10,prt*3,plt*3
@@ -21980,7 +21977,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                             output = .false. then in 1st cycle of
 c                             autorefine.
-      if (.not.output) then 
+      if (.not.outprt) then 
 c                                 read computational option file
          call fopen1
       
@@ -22511,7 +22508,7 @@ c                                 err only set for unsplt (iam.eq.14)
 c                                 read auxilliary input for 2d fractionation
       if (icopt.eq.9) call rdain
 c                                 get runtime parameters
-      if (first.or.(.not.first).and.(.not.output).or.iam.eq.13) 
+      if (first.or.(.not.first).and.(.not.outprt).or.iam.eq.13) 
      *   call redop1 (first,tfname)
 
       goto 999
