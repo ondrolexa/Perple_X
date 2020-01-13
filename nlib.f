@@ -14,6 +14,8 @@ c     nclin  is the number of general linear constraints (rows of  a).
 
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision  obj
       integer           idead, iter, lda, leniw, lenw, n, nclin
       double precision  a(lda,*), ax(*), bl(nclin), 
@@ -33,9 +35,6 @@ c     nclin  is the number of general linear constraints (rows of  a).
 
       integer loclc
       common/ ae04mf /loclc(15)
-
-      double precision  wmach(9)
-      common/ ax02za /wmach
 
       integer ldq,ldt
       common/ be04nb /ldt,ldq
@@ -313,7 +312,6 @@ c----------------------------------------------------------------------
       double precision  ddot, dnrm2, adivb
 
       common            /ae04mf/loclc(15)
-      common            /ax02za/wmach
       common            /be04nb/ldt,ldq
       common            /de04nb/asize, dtmax, dtmin
 
@@ -839,13 +837,13 @@ c        copy the fixed components of  wrk  into the end of  v.
       end
 
 
-      subroutine e04nfq(unitq,k1,k2,it,nactiv,nartif,nz,nfree,
+      subroutine e04nfq(unitq,ik1,ik2,it,nactiv,nartif,nz,nfree,
      *                  nrejtd,ngq,n,ldq,lda,ldt,istate,kactiv,kx,
      *                  condmx,a,t,gqm,q,w,c,s)
 c     mark 16 release. nag copyright 1992.
 
 c     ******************************************************************
-c     e04nfq  includes general constraints  k1  thru  k2  as new rows of
+c     e04nfq  includes general constraints  ik1  thru  ik2  as new rows of
 c     the  tq  factorization:
 c              a(free) * q(free)  = ( 0 t)
 c                        q(free)  = ( z y)
@@ -860,7 +858,7 @@ c     ******************************************************************
       implicit none
 
       double precision  condmx
-      integer           it, k1, k2, lda, ldq, ldt, n, nactiv,
+      integer           it, ik1, ik2, lda, ldq, ldt, n, nactiv,
      *                  nartif, nfree, ngq, nrejtd, nz
       logical           unitq
       double precision  a(lda,*), c(n), gqm(n,*), q(ldq,*), s(n),
@@ -875,7 +873,6 @@ c     ******************************************************************
      *                  jt, k, l, nzadd
       logical           overfl
       double precision  dnrm2, adivb
-      common            /ax02za/wmach
       common            /de04nb/asize, dtmax, dtmin
 
 
@@ -901,7 +898,7 @@ c           first general constraint added.  set  q = i.
          call f06flf(nactiv,t(it,jt),ldt+1,dtmax,dtmin)
       end if
 
-      do k = k1, k2
+      do k = ik1, ik2
          iadd = kactiv(k)
          jadd = n + iadd
          if (nactiv.lt.nfree) then
@@ -989,7 +986,7 @@ c                 is used.
 
       end do 
 
-      if (nactiv.lt.k2) then
+      if (nactiv.lt.ik2) then
 
 c        some of the constraints were classed as dependent and not
 c        included in the factorization.  re-order the part of  kactiv
@@ -997,8 +994,8 @@ c        that holds the indices of the general constraints in the
 c        working set.  move accepted indices to the front and shift
 c        rejected indices (with negative values) to the end.
 
-         l = k1 - 1
-         do k = k1, k2
+         l = ik1 - 1
+         do k = ik1, ik2
             i = kactiv(k)
             if (i.ge.0) then
                l = l + 1
@@ -1065,7 +1062,7 @@ c           the top of the array  t.
          end if
       end if
 
-      nrejtd = k2 - nactiv
+      nrejtd = ik2 - nactiv
 
       end
 
@@ -1164,7 +1161,7 @@ c        variables exactly on their bounds.
       integer           nfix(2)
       double precision  d, tolz
       integer           is, j, maxfix
-      common            /ax02za/wmach/ce04mf/tolx0, ndegen, itnfix, nfix
+      common            /ce04mf/tolx0, ndegen, itnfix, nfix
       save              tolz
 
       nmoved = 0
@@ -1350,7 +1347,9 @@ c           as a violation if the constraint is in the working set.
      *                  hitlow,move,onbnd,unbndd,alfa,alfap,jhit,anorm,
      *                  ap,ax,bl,featol,p,x)
 
-      implicit none 
+      implicit none
+
+      include 'perplex_parameters.h'
 
 c     e04mfs  finds a step alfa such that the point x + alfa*p reaches
 c     one of the linear constraints (including bounds).
@@ -1480,9 +1479,6 @@ c     gamma = 0.001 seems to be safe.
       logical           blockf, blocki
 
       common            /ce04mf/tolx0, ndegen, itnfix, nfix
-
-      double precision wmach(9)
-      common/ax02za/wmach
 
 c     tolpiv is a tolerance to exclude negligible elements of a'p.
 
@@ -1821,7 +1817,9 @@ c     unbounded.
      *                  nfree,ngq,n,lda,ldq,ldt,kx,condmx,
      *                  a,t,gqm,q,w,c,s)
 
-      implicit none 
+      implicit none
+
+      include 'perplex_parameters.h'
 
 c     e04nfr  updates the matrices  z, y, t, r  and  d  associated with
 c     factorizations
@@ -1878,9 +1876,6 @@ c     columns of the  (ngq x n)  matrix  gqm'.
       double precision  dnrm2, adivb
 
       common            /de04nb/asize, dtmax, dtmin
-
-      double precision wmach(9)
-      common/ax02za/wmach
 
       overfl = .false.
       bound = jadd .le. n
@@ -2419,13 +2414,15 @@ c                                 add the infeasibility.
 
       subroutine f06baf(a, b, c, s)
 c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
       double precision   a, b, c, s, t, abst
 
       logical            fail
       double precision   adivb
-
-      double precision wmach(9)
-      common /ax02za/wmach
+      external adivb
 c----------------------------------------------------------------------
       if (b.eq.0d0) then
 
@@ -2485,44 +2482,43 @@ c                                 wmach(4) = sqrt(epsmch)
 
       end
 
-      subroutine f06qrf(side, n, k1, k2, c, s, a, lda)
+      subroutine f06qrf(side, n, ik1, ik2, c, s, a, lda)
 c----------------------------------------------------------------------
       implicit none
 
-      integer  k1, k2, lda, n, i, j
+      include 'perplex_parameters.h'
 
-      character*1 side
+      integer  ik1, ik2, lda, n, i, j
+
+      character side*1
 
       double precision a(lda,*), c(*), s(*), aij, ctemp, stemp, subh, 
      *                 temp
-
-      double precision wmach(9)
-      common/ax02za/wmach
 c----------------------------------------------------------------------
-      if ((min(n, k1).lt.1).or.(k2.le.k1).or.(k2.gt.n))return
+      if ((min(n, ik1).lt.1).or.(ik2.le.ik1).or.(ik2.gt.n))return
 
       if (side.eq.'l') then
 
-         do 20 j = k1, n
-            aij = a(k1,j)
-            do 10 i = k1, min(j, k2) - 1
+         do 20 j = ik1, n
+            aij = a(ik1,j)
+            do 10 i = ik1, min(j, ik2) - 1
                temp = a(i + 1,j)
                a(i,j) = s(i)*temp + c(i)*aij
                aij = c(i)*temp - s(i)*aij
    10       continue
-            if (j.lt.k2) then
+            if (j.lt.ik2) then
 
                subh = s(j)
                call f06baf(aij, subh, c(j), s(j))
                a(j,j) = aij
             else
-               a(k2,j) = aij
+               a(ik2,j) = aij
             end if
    20    continue
 
       else if (side.eq.'r') then
 
-         do 40 j = k2 - 1, k1, -1
+         do 40 j = ik2 - 1, ik1, -1
 
             subh = s(j)
 
@@ -2551,43 +2547,42 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine f06qvf(side, n, k1, k2, c, s, a, lda)
+      subroutine f06qvf(side, n, ik1, ik2, c, s, a, lda)
 c----------------------------------------------------------------------
       implicit none
 
-      integer            k1, k2, lda, n, i, j
+      include 'perplex_parameters.h'
 
-      character*1        side
+      integer            ik1, ik2, lda, n, i, j
+
+      character side*1
 
       double precision   a(lda, *), c(*), s(*), aij, ctemp, stemp, temp
-
-      double precision wmach(9)
-      common /ax02za/wmach
 c----------------------------------------------------------------------
-      if (min(n,k1).lt.1.or.k2.le.k1.or.k2.gt.n) return
+      if (min(n,ik1).lt.1.or.ik2.le.ik1.or.ik2.gt.n) return
 
       if (side.eq.'l') then
 
-         do 20 j = n, k1, -1
+         do 20 j = n, ik1, -1
 
-            if (j.ge.k2) then
-               aij = a(k2,j)
+            if (j.ge.ik2) then
+               aij = a(ik2,j)
             else
                aij = c(j)*a(j,j)
                s(j) = -s(j)*a(j,j)
             end if
 
-            do 10 i = min(k2,j) - 1, k1, -1
+            do 10 i = min(ik2,j) - 1, ik1, -1
                temp = a(i,j)
                a(i + 1,j) = c(i)*aij - s(i)*temp
                aij = s(i)*aij + c(i)*temp
    10       continue
-            a(k1,j) = aij
+            a(ik1,j) = aij
    20    continue
 
       else if (side.eq.'r') then
 
-         do j = k1, k2 - 1
+         do j = ik1, ik2 - 1
 
             if (c(j).ne.1d0.or.s(j).ne.0d0) then
                stemp = s(j)
@@ -2615,34 +2610,33 @@ c                                 added following line 11/06
 
       end
 
-      subroutine f06qxf(side, direct, m, n, k1, k2, c, s, a, lda)
+      subroutine f06qxf(side, direct, m, n, ik1, ik2, c, s, a, lda)
 c----------------------------------------------------------------------
       implicit none
 
-      integer            k1, k2, lda, m, n, i, j
+      include 'perplex_parameters.h'
 
-      character*1        direct, side
+      integer            ik1, ik2, lda, m, n, i, j
+
+      character direct*1, side*1
 
       double precision   a(lda, *), c(*), s(*), aij, ctemp, stemp, temp
 
       logical            left, right
-
-      double precision wmach(9)
-      common/ax02za/wmach
 c----------------------------------------------------------------------
       left = (side.eq.'l')
       right = (side.eq.'r')
 
-      if ((min(m, n, k1).lt.1).or.(k2.le.k1).or.
-     $    (left .and.k2.gt.m).or.(right.and.k2.gt.n)) return
+      if ((min(m, n, ik1).lt.1).or.(ik2.le.ik1).or.
+     $    (left .and.ik2.gt.m).or.(right.and.ik2.gt.n)) return
 
       if (left) then
 
             if (direct.eq.'f') then
 
                do j = 1, n
-                  aij = a(k1,j)
-                  do i = k1, k2 - 1
+                  aij = a(ik1,j)
+                  do i = ik1, ik2 - 1
                      temp = a(i + 1,j)
 
                      if (c(i).lt.wmach(3)) c(i) = 0d0
@@ -2650,22 +2644,22 @@ c----------------------------------------------------------------------
                      a(i,j) = s(i)*temp + c(i)*aij
                      aij = c(i)*temp - s(i)*aij
                   end do 
-                  a(k2,j) = aij
+                  a(ik2,j) = aij
                end do
 
             else if (direct.eq.'b') then
 
                do j = 1, n
-                  aij = a(k2,j)
+                  aij = a(ik2,j)
 
-                  do i = k2 - 1, k1, -1
+                  do i = ik2 - 1, ik1, -1
                      temp = a(i,j)
                      if (c(i).lt.wmach(3)) c(i) = 0d0
                      a(i + 1,j) = c(i)*aij - s(i)*temp
                      aij = s(i)*aij + c(i)*temp
                   end do
 
-                  a(k1,j) = aij
+                  a(ik1,j) = aij
                end do
 
             end if
@@ -2674,7 +2668,7 @@ c----------------------------------------------------------------------
 
             if (direct.eq.'f') then
 
-               do 140 j = k1, k2 - 1
+               do j = ik1, ik2 - 1
 
                   if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
                      ctemp = c(j)
@@ -2683,19 +2677,19 @@ c----------------------------------------------------------------------
 
                      stemp = s(j)
 
-                     do 130 i = 1, m
+                     do i = 1, m
                         temp = a(i, j + 1)
                         a(i, j + 1) = ctemp*temp - stemp*a(i,j)
                         a(i,j) = stemp*temp + ctemp*a(i,j)
-  130                continue
+                     end do
 
                   end if
 
-  140          continue
+               end do
 
             else if (direct.eq.'b') then
 
-               do j = k2 - 1, k1, -1
+               do j = ik2 - 1, ik1, -1
 
                   if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
 
@@ -2754,12 +2748,11 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision   alpha, zeta, beta, scale, ssq, x(*)
 
       integer n
-
-      double precision wmach(9)
-      common /ax02za/wmach
 c----------------------------------------------------------------------
       if (n.lt.1) then
 
@@ -2940,12 +2933,11 @@ c flmax = wmach(7) = huge()
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       logical fail
 
       double precision a, b, absb, absa, div
-
-      double precision wmach(9)
-      common /ax02za/wmach
 c----------------------------------------------------------------------
       absa = dabs(a)
       absb = dabs(b)
@@ -3144,12 +3136,12 @@ c original code was using
 
 c flmax = wmach(7) = huge
 c flmin = 1/flmax ~= wmach(3) = epsmch
+
       implicit none
 
-      double precision scale, ssq, sqt, norm
+      include 'perplex_parameters.h'
 
-      double precision wmach(9)
-      common /ax02za/wmach
+      double precision scale, ssq, sqt, norm
 c----------------------------------------------------------------------
       sqt = dsqrt(ssq)
 

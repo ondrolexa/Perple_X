@@ -28,7 +28,7 @@ c      include 'flib.f'
 
       character uname*8, y*1, rxny*1, opname*100
 
-      integer i, j, k, l, idiag, ier, icopt, iord
+      integer i, j, k, l, idiag, ier, iord
 
       double precision coef(0:10)
 
@@ -93,7 +93,7 @@ c                                 read icopt, default icopt = 2.
 
          if (icopt.eq.4) exit 
 
-         call jnput2 (icopt,rxny,uname)
+         call jnput2 (rxny,uname)
  
          nonlin = .false.
 
@@ -114,7 +114,7 @@ c                                 select variables and set up plot file:
 
                if (rxny.ne.'y'.and.rxny.ne.'Y') exit 
   
-               call jnput2 (icopt,rxny,uname)
+               call jnput2 (rxny,uname)
                 
             end do
  
@@ -1787,7 +1787,7 @@ c                          record:
 
       end
 
-      subroutine jnput2 (icopt,rxny,uname)
+      subroutine jnput2 (rxny,uname)
 c----------------------------------------------------------------------
 c jnput2 reads all data in the thermodynamic data file, makes a list of
 c possible phases and, depending on icopt, allows users to select 
@@ -1805,7 +1805,7 @@ c----------------------------------------------------------------------
 
       logical eof, first, match
 
-      integer inames, jcmpn, i, j, k, l, icopt, ier,
+      integer inames, jcmpn, i, j, k, l, ier,
      *        isct, jj, itic, jphct
  
       character names*8

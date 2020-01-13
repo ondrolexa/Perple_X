@@ -229,6 +229,14 @@ c
 
       double precision ctot
       common/ cst3  /ctot(k1)
+c                                 precision stuff used in lpnag 
+      double precision wmach(9)
+      common /ax02za/wmach
+
+
+
+      integer isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p
 c                                 -------------------------------
 c                                 local solution model variables:
 c                                 -------------------------------
@@ -242,6 +250,9 @@ c       jmsol(m4,1:isimp(poly(h0)) - pointer from the endmember m4 to its polyto
       integer isimp, ipvert, ivert, pimd
       common/ cst688 /isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp)
+c                                 solution model counter
+      integer isoct
+      common/ cst79 /isoct
 c                                 -------------------------------
 c                                 global solution model variables:
 c                                 -------------------------------

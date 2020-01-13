@@ -32,9 +32,6 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
@@ -207,8 +204,8 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 
       character vnm*8
       common/ cxt18a /vnm(l3)
@@ -568,8 +565,8 @@ c---------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 c----------------------------------------------------------------------
       if (icopt.eq.7.and.fileio) then
 c                                 fractionation from a coodinate file
@@ -2651,8 +2648,8 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 c----------------------------------------------------------------------
       node = .false.
       dim = 1

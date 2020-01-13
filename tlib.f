@@ -109,14 +109,10 @@ c----------------------------------------------------------------------
       double precision rid 
       common/ cst327 /grid(6,2),rid(5,2)
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 c                                 precision stuff used in lpnag 
-      double precision wmach(9)
-      common /ax02za/wmach
+
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -1413,8 +1409,8 @@ c----------------------------------------------------------------------
       double precision dblk,cx
       common/ cst314 /dblk(3,k5),cx(2),icont
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 
       integer iam
       common/ cst4 /iam
@@ -5431,9 +5427,6 @@ c----------------------------------------------------------------------
 
       double precision sum, ssum
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
@@ -6614,9 +6607,6 @@ c-----------------------------------------------------------------------
 
       integer ipoint,kphct,imyn
       common/ cst60  /ipoint,kphct,imyn
-
-      integer isoct
-      common/ cst79 /isoct
 
       integer ifp
       logical fp

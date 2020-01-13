@@ -24,9 +24,6 @@ c Please do not distribute any part of this source.
       integer iop0 
       common / basic /iop0
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 

@@ -3307,7 +3307,7 @@ z(Fe)   = 1 fs
 z(Al)   = 1 mgts
 z(Fe3+) = 1 mots1
 z(Mn)   = 1 mnopx
-z(Mg)   = 1 en + 1 opx
+z(Mg)   = 1 en + 1 opx + 1 di
 
 M2                                  | site name
 4 1 1                               | number of species, effective multiplicity, true multiplicity
@@ -13943,7 +13943,7 @@ abL      sil8L    anL
 kspL     wi8L     q8L
 h2oL
 
-1 1 1 1 1 1 1 1 1 1                 | endmember flags.
+0 0 0 0 0 0 0 0 0                   | endmember flags.
 
                                     | RESTRICTED(!) subdivision ranges and model
                                     | the ranges must be extended if calculations
@@ -13954,8 +13954,8 @@ h2oL
 0      .1    .1 0                   | range and resolution of X(fo),  0 => cartesian subdivision
 0      .2    .1 0                   | range and resolution of X(fa),  0 => cartesian subdivision
 1e-4  1e-2   .1 1                   | range and resolution of X(zrL), 1 => asymmetric subdivision
-0      1     .1 0                   | range and resolution of X(ab),  0 => cartesian subdivision
-0      1    .1 0                   | range and resolution of X(sil), 0 => cartesian subdivision
+0      .4    .1 0                   | range and resolution of X(ab),  0 => cartesian subdivision
+0      .4    .1 0                   | range and resolution of X(sil), 0 => cartesian subdivision
 0      .1    .1 0                   | range and resolution of X(an),  0 => cartesian subdivision
 0      .4    .1 0                   | range and resolution of X(ksp), 0 => cartesian subdivision
 1e-4  1e-2   .1 1                   | range and resolution of X(wiL), 1 => asymmetric subdivision

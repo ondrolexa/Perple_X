@@ -4765,12 +4765,11 @@ c evaluates debye integral: int((ln(1-exp(-t))*t^2),t=0..t)
 c-----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer i
 
       double precision t, p1, p2, p3, p4, dinc
-
-      double precision wmach(9)
-      common /ax02za/wmach
 c-----------------------------------------------------------------------
 
       p1 = dexp(-t)
@@ -6376,9 +6375,6 @@ c---------------------------------------------------------------------
 
       integer imiss, im, idsol, i, j, h, ineg, ipos
 
-      integer isoct
-      common/ cst79 /isoct
-
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
@@ -7753,9 +7749,6 @@ c                                 for each term:
 
                end do
 c                                 non-temkin (688)
-               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
-                  write (*,*) 'wtf?'
-               end if 
                if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) call error (72,
      *                       zt,i,'the expression for z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
@@ -8373,9 +8366,6 @@ c                                 dqf parameters
       integer jndq, jdqf, iq
       double precision dqfg, dq
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 c                                 parameters for autorefine
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -9573,9 +9563,6 @@ c-----------------------------------------------------------------------
       double precision a(k8,k8),d(k8),rmax,tmax,temp,ratio
 
       integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
-
-      double precision wmach(9)
-      common /ax02za/wmach
 c-----------------------------------------------------------------------
       ier = 0
 c                            initialize ipvt,d
@@ -10193,9 +10180,6 @@ c-----------------------------------------------------------------------
       integer m,ipvt(m),i,j,k,ip1,n,istr
 
       double precision a(m,m),d(m),rmax,tmax,temp,ratio
-
-      double precision wmach(9)
-      common /ax02za/wmach
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d
@@ -11456,9 +11440,6 @@ c-----------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      integer isoct
-      common/ cst79 /isoct
-
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
@@ -11852,9 +11833,6 @@ c--------------------------------------------------------------------------
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       double precision exces
       common/ cst304 /exces(m3,k1)
@@ -15221,9 +15199,6 @@ c-----------------------------------------------------------------------
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      integer isoct
-      common/ cst79 /isoct
-
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
@@ -16042,9 +16017,6 @@ c-----------------------------------------------------------------------
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
 
-      integer isoct
-      common/ cst79 /isoct
-
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
@@ -16416,9 +16388,6 @@ c                                 local variables:
 c                                 -------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -16432,9 +16401,6 @@ c                                 endmember names
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -16640,9 +16606,6 @@ c----------------------------------------------------------------------
       integer ii, i, j, k, ipop, lun
 
       character char8*8
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -16875,9 +16838,6 @@ c----------------------------------------------------------------------
       integer ii, ids, j, k
 
       character char8*8, incre*8, upper*5
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -17799,9 +17759,6 @@ c----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       character vnm*8
       common/ cxt18a /vnm(l3)
@@ -21533,15 +21490,9 @@ c----------------------------------------------------------------------
 
       character prject*100,tfname*100
       common/ cst228 /prject,tfname
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
@@ -21804,12 +21755,6 @@ c----------------------------------------------------------------------
       logical output
 
       integer i,index
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer ivarrx,ivarip,isudo,ivar
       common/ cst62 /ivarrx(k2),ivarip(k2),isudo,ivar
@@ -21988,9 +21933,6 @@ c-----------------------------------------------------------------------
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
 
-      integer isoct
-      common/ cst79 /isoct
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
@@ -22011,9 +21953,6 @@ c-----------------------------------------------------------------------
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer jbulk
       double precision cblk
@@ -23469,9 +23408,6 @@ c---------------------------------------------------------------------
       double precision dblk,cx
       common/ cst314 /dblk(3,k5),cx(2),icont
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       logical fileio, flsh, anneal, short
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
@@ -23731,9 +23667,6 @@ c----------------------------------------------------------------------
       character*10 unnown
  
       include 'perplex_parameters.h'
- 
-      integer isoct
-      common/ cst79 /isoct
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -23790,9 +23723,6 @@ c-----------------------------------------------------------------------
 
       character*5 cname
       common/ csta4 /cname(k5)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer iff,idss,ifug
       common/ cst10  /iff(2),idss(h5),ifug
@@ -24654,9 +24584,6 @@ c-----------------------------------------------------------------------
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
@@ -25064,9 +24991,6 @@ c----------------------------------------------------------------------
       integer idasls,iavar,iasct,ias
       common/ cst75 /idasls(k5,k3),iavar(3,k3),iasct,ias
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
@@ -25294,9 +25218,6 @@ c---------------------------------------------------------------------
       double precision abc0,vz,iblk
       common/ cst66 /abc0(0:mord,mpol),vz(6),iblk(lay,k5),ilay,
      *               irep(lay),npoly,ord,pzfunc
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)

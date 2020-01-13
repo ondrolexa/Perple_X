@@ -35,7 +35,7 @@ c-----------------------------------------------------------------------
      *          sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
 
       integer i, k, l, iind, im, idum, ivct, iwt, jcth, j, ier, idep, 
-     *        gct(i9), gid(i9,i9), ict, idsol, isoct, inames
+     *        gct(i9), gid(i9,i9), ict, idsol, inames
 
       logical eof, good, oned, findph, first, feos, chksol
 
@@ -50,9 +50,6 @@ c-----------------------------------------------------------------------
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       character*8 name
       common/ csta6 /name
@@ -228,10 +225,10 @@ c                                 changed to 10 in varich if fileio.
 
       end if
 c                                 choose chemical components
-      call compch (ivct,icopt,feos,mname,pname,oname,uname)
+      call compch (ivct,feos,mname,pname,oname,uname)
 c                                 physical variable choces and ranges
 c                                 set icopt to its internal value:
-      call varich (c,icopt,ivct,iind,oned,idep,iord,jcth,iwt,
+      call varich (c,ivct,iind,oned,idep,iord,jcth,iwt,
      *             amount,dtext,opname,pname,cfname)
 c                                 warn about the use of chemical potentials
 c                                 in different types of calculations
@@ -1164,7 +1161,7 @@ c                                 find index in uname array
      *        ', and do not use leading blanks. Try again:',/)
       end
 
-      subroutine compch (ivct,icopt,feos,mname,pname,oname,uname)
+      subroutine compch (ivct,feos,mname,pname,oname,uname)
 c---------------------------------------------------------------------------
 c interactively choose components for build.
 c---------------------------------------------------------------------------
@@ -1172,8 +1169,7 @@ c---------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, jcmpn, ivct, igood, ier, jsat(h5), ima, jspec, 
-     *        jc(2), icopt
+      integer i, j, jcmpn, ivct, igood, ier, jsat(h5), ima, jspec, jc(2)
 
       logical satflu, mobflu, good, findph, eof, quit, feos
 
@@ -1723,7 +1719,7 @@ c                                 component pointers for chkphi
 
       end 
 
-      subroutine varich (c,icopt,ivct,iind,oned,idep,iord,jcth,iwt,
+      subroutine varich (c,ivct,iind,oned,idep,iord,jcth,iwt,
      *                   amount,dtext,opname,pname,cfname)
 c---------------------------------------------------------------------------
 c interatctively choose physical variables for build.
@@ -1732,7 +1728,7 @@ c---------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, icopt, ivct, ier, iind, idep, iord, kvct, jc, icth,
+      integer i, j, ivct, ier, iind, idep, iord, kvct, jc, icth,
      *        jcth, iwt, loopx, loopy, ind, ix, jst, jvct
 
       logical oned

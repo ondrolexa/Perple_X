@@ -45,9 +45,6 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
@@ -60,9 +57,6 @@ c----------------------------------------------------------------------
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)

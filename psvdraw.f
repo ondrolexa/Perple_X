@@ -25,8 +25,8 @@ c Please do not distribute any part of this source.
       character*100 prject,tfname
       common/ cst228 /prject,tfname
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       integer iam
       common/ cst4 /iam
@@ -150,8 +150,8 @@ c----------------------------------------------------------------------
       integer  iop0 
       common / basic /iop0
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       integer isat
       common/ wee /isat
@@ -397,8 +397,8 @@ c pschem - subroutine to output ternary chemographies.
       double precision x
       common/ asmbl /x(2,k1),idf(3,k2),ib,iasmbl(k2),ivchk(k1)
  
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       logical spline, half, tenth, grid, fill, label
       integer ifont, bbox 
@@ -1217,8 +1217,8 @@ c psmixd - subroutine to draw binary mixed variable diagrams
       integer  iop0 
       common / basic /iop0
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       logical spline, half, tenth, grid, fill, label
       integer ifont, bbox 
@@ -1723,8 +1723,8 @@ c imis = 1 => solvus between solution(ids) compositions x1 and x2
       double precision x
       common/ tx /x(k1),iphi(k1),ivph(k1),ib,istct
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       imis = 0
 c                                igo=1, disabled cause of projections
@@ -1761,8 +1761,8 @@ c           if imatch = 0 the assemblage id matches the criteria
       integer ixct,iex,jex,ict
       common/ excl1 /ixct(3),iex(50,3),jex(50,3),ict(3)
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       imatch = 0
 
@@ -1859,8 +1859,8 @@ c plinp - subroutine to read x-y plot file header.
       character*162 title
       common/ csta8 /title(4)
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 
       integer isat
       common/ wee /isat
@@ -2093,8 +2093,8 @@ c   icpd = the id of the compound if itis = 0
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      integer icopt,isoct,iphct
-      common/ ln4 /icopt,isoct,iphct
+      integer iphct
+      common/ ln4 /iphct
 c----------------------------------------------------------------------
       do i = 1, isoct
          if (unnown.eq.fname(i)) then

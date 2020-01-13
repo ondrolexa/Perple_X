@@ -43,9 +43,6 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-c                                 solution model counter
-      integer isoct
-      common/ cst79 /isoct
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1716,17 +1713,11 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision wmach(9)
-      common /ax02za/wmach
-
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer isoct
-      common/ cst79 /isoct
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
@@ -2321,9 +2312,6 @@ c----------------------------------------------------------------------
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
-
-      double precision wmach(9)
-      common /ax02za/wmach
 
       integer jphct
       double precision g2, cp2, c2tot

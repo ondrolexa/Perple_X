@@ -477,7 +477,7 @@ c                                       sectioning constraints
 
       end
 
-      subroutine psaxop (icopt,jop0,iop1)
+      subroutine psaxop (jcopt,jop0,iop1)
 c----------------------------------------------------------------------
 c psaxop - subroutine to make graphics transformation and get some options
 
@@ -508,13 +508,13 @@ c psaxop - subroutine to make graphics transformation and get some options
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
      *             spline,half,tenth,grid,fill,label
 
-      integer icopt
+      integer jcopt
 c----------------------------------------------------------------------
 
       jop0 = 0
 
       
-      if (icopt.eq.3) then 
+      if (jcopt.eq.3) then 
 c                                     Should just prompt for axis
 c                                     numeration.
          jop0 = iop0
@@ -527,7 +527,7 @@ c                                     numeration.
 
       end if 
 
-      if (jop0.eq.1.and.icopt.ne.3) then
+      if (jop0.eq.1.and.jcopt.ne.3) then
 
          write (*,1070) 
          read (*,1030) yes

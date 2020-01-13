@@ -70,8 +70,8 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -241,7 +241,7 @@ c                              write header to graphics files (n4, n5):
  
          if (icopt.eq.1) then 
 c                              computing schreinemakers projection
-            call header (icopt)
+            call header
 
          else if (icopt.le.3) then 
 c                              computing chemography or mixed-var.
@@ -338,9 +338,6 @@ c-------------------------------------------------------------------
 
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
-
-      integer isoct
-      common/ cst79 /isoct
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -446,14 +443,8 @@ c-----------------------------------------------------------------------
       double precision cp, bbb, ccc
       common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
-      integer isoct
-      common/ cst79 /isoct
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -666,9 +657,6 @@ c-----------------------------------------------------------------------
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer ismax,igot
       double precision value
@@ -1974,8 +1962,8 @@ c-----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -2567,7 +2555,7 @@ c                                 save id's of saturated comps
 
       end     
 
-      subroutine header (icopt)
+      subroutine header
 c-----------------------------------------------------------------------
 c header writes the graphics file header for schreinemakers diagrams
 c to lun n4
@@ -2576,7 +2564,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer icopt,i,ipres,itemp,jind
+      integer i,ipres,itemp,jind
 
       character*162 title
       common/ csta8 /title(4)
@@ -2597,9 +2585,6 @@ c-----------------------------------------------------------------------
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
 
-      integer iso
-      common/ cst79 /iso
-
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
@@ -2607,7 +2592,7 @@ c-----------------------------------------------------------------------
       common/ cst61 /ikp(k1)
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -2618,7 +2603,7 @@ c-----------------------------------------------------------------------
 c                              value to be read as icopt
       write (n4,*) icopt
 c                              phase and solution count:
-      write (n4,*) iphct, iso
+      write (n4,*) iphct, isoct
 c                              component and volatile counters:
       if (ifct.gt.0.or.isat.gt.0) then 
          write (n4,*) 1, icp
@@ -2630,7 +2615,7 @@ c                              phase names:
 c                              solution phase flags:
       write (n4,*) (ikp(i), i = 1, iphct)  
 c                              solution names:
-      if (iso.ne.0) write (n4,'(8a)') (fname(i), i = 1, iso)
+      write (n4,'(8a)') (fname(i), i = 1, isoct)
 c                               make and output title blurb
       call maktit
 
@@ -2882,8 +2867,8 @@ c----------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+
+
 
       integer ivarrx,ivarip,isudo,ivar
       common/ cst62 /ivarrx(k2),ivarip(k2),isudo,ivar
@@ -3355,9 +3340,6 @@ c-----------------------------------------------------------------------
 
       integer jtest,jpot
       common/ debug /jtest,jpot
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -4144,9 +4126,6 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
@@ -4398,9 +4377,6 @@ c----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 
       double precision vmax,vmin,ddv
       common/ cst9  /vmax(l2),vmin(l2),ddv(l2)
@@ -4852,9 +4828,6 @@ c-----------------------------------------------------------------------
       double precision vn
       common/ cst31 /vn(k2,k7),irct,ird
 
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
-
       integer ikp
       common/ cst61 /ikp(k1)
 
@@ -5103,9 +5076,6 @@ c-----------------------------------------------------------------------
       double precision vnu
 
       character*8 name, part*34, solnam*14
-
-      integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
 c-----------------------------------------------------------------------
       if (ikp.eq.0) then
 
