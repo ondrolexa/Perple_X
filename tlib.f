@@ -128,6 +128,9 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0

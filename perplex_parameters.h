@@ -230,8 +230,7 @@ c
       double precision ctot
       common/ cst3  /ctot(k1)
 c                                 precision stuff used in lpnag 
-      double precision wmach(9)
-      common /ax02za/wmach
+
 c                                 outprt is a universal flag
 c                                 that suppresses print output in exploratory
 c                                 stage of two-stage auto-refine calculation.

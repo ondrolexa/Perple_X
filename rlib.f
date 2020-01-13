@@ -4770,6 +4770,9 @@ c-----------------------------------------------------------------------
       integer i
 
       double precision t, p1, p2, p3, p4, dinc
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c-----------------------------------------------------------------------
 
       p1 = dexp(-t)
@@ -9563,6 +9566,9 @@ c-----------------------------------------------------------------------
       double precision a(k8,k8),d(k8),rmax,tmax,temp,ratio
 
       integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c-----------------------------------------------------------------------
       ier = 0
 c                            initialize ipvt,d
@@ -10180,6 +10186,9 @@ c-----------------------------------------------------------------------
       integer m,ipvt(m),i,j,k,ip1,n,istr
 
       double precision a(m,m),d(m),rmax,tmax,temp,ratio
+
+      double precision wmach(9)
+      common /ax02za/wmach
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d
