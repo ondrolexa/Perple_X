@@ -17,7 +17,7 @@ c Please do not distribute any part of this source.
 
       integer jop0
 
-      logical output, first, err
+      logical first, err
 
       character yes*1
  
@@ -34,14 +34,13 @@ c                                 version info
 
       iop0 = 0 
 
-      output = .false.
+      outprt = .false.
       first  = .false.
-      err = .false.
 c                                 read input from unit n1 (terminal/disk).
 c                                 subroutine input1 also initializes:
 c                                 equilibrium counters; units n2 and n4;
 c                                 and the limits for numerical results.
-      call input1 (first,output,err)
+      call input1 (first,err)
 c                                 don't allow users to do anything
 c                                 other than gridded min
       if (icopt.lt.5) then 
@@ -53,11 +52,11 @@ c                                 other than gridded min
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
 c                                 read autorefine lists
-      call setau1 (output)
+      call setau1
 c                                 read data for solution phases on n9:
-      call input9 (first,output)
+      call input9 (first)
 
-      call setau2 (output)
+      call setau2
 c                                 read the plot/blk files
       call interm (.false.,err)
 c                                 organize variables 

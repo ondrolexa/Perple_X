@@ -232,11 +232,12 @@ c
 c                                 precision stuff used in lpnag 
       double precision wmach(9)
       common /ax02za/wmach
-
-
-
+c                                 outprt is a universal flag
+c                                 that suppresses print output in exploratory
+c                                 stage of two-stage auto-refine calculation.
+      logical outprt
       integer isec,icopt,ifull,imsg,io3p
-      common/ cst103 /isec,icopt,ifull,imsg,io3p
+      common/ cst103 /isec,icopt,ifull,imsg,io3p,outprt
 c                                 -------------------------------
 c                                 local solution model variables:
 c                                 -------------------------------

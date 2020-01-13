@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Jan 9, 2020.',
+     *      'Perple_X version 6.8.9, source updated Jan 13, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -111,8 +111,6 @@ c----------------------------------------------------------------------
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
-c                                 precision stuff used in lpnag 
-
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1

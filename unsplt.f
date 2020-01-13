@@ -12,7 +12,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, output, fake, match, nomtch, reord, used(k5), err,
+      logical first, fake, match, nomtch, reord, used(k5), err,
      *        ok
 
       integer h, i, j, k, l, m, n, o, p, gasct, ggrd(l7,l7), gi,
@@ -85,14 +85,14 @@ c                                 version info
       call vrsion (6)
 c                                 initialize some flags
       first = .true.
-      output = .false.
+      outprt = .false.
       fake   = .false.
 c                                 read input from unit n1 (terminal/disk).
 
 c                                 input1 also initializes:
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-      call input1 (first,output,err)
+      call input1 (first,err)
 c                                 set ivar flag, this indicates the number
 c                                 of possible independent plotting variables, jvar
 c                                 indicates the number of thermodynamic variables
@@ -103,11 +103,11 @@ c                                 other than gridded min
 c                                 read thermodynamic data on unit n2:
       call input2 (fake)
 c                                 read autorefine lists
-      call setau1 (output)
+      call setau1
 c                                 read data for solution phases on n9:
-      call input9 (fake,output)
+      call input9 (fake)
 
-      call setau2 (output)
+      call setau2
 c                                 initialize, set global lists and project name
       gsoct = isoct
 
@@ -180,18 +180,18 @@ c----------------------------------------------------------------------
             write (*,'(a,a)') 'processing: ',dir
 c                                 read input, this is probably not all
 c                                 necessary, in particular the thermo data 
-            call input1 (first,output,err)
+            call input1 (first,err)
 c                                 if err the files haven't been written
 c                                 by the splitter
             if (err) goto 10
 c                                 read thermodynamic data on unit n2:
             call input2 (fake)
 c                                 read autorefine lists
-            call setau1 (output)
+            call setau1
 c                                 read data for solution phases on n9:
-            call input9 (fake,output)
+            call input9 (fake)
 c                                 does what? 
-            call setau2 (output)
+            call setau2
 c                                 make pointers from the local solution model 
 c                                 indices to the global indices:
             do l = 1, isoct

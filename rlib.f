@@ -11385,7 +11385,7 @@ c                                 amounts of the ordered endmembers
 
       end
 
-      subroutine input9 (first,output)
+      subroutine input9 (first)
 c-----------------------------------------------------------------------
 c given a list of solution phase names (fname(h9)) input9 searches a
 c data file (on unit n9) for the relevant data and subdivides the
@@ -11397,7 +11397,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, im, id, idsol, ixct, gcind, ophct
 
-      logical output, first, chksol, wham
+      logical first, chksol, wham
 
       character sname(h9)*10, new*3, tn1*6, tn2*22
 
@@ -11481,7 +11481,7 @@ c                                 identify the fluid for aqrxdo
 
       end if
 c                                 open pseudocompund list file
-      if (output.and.lopt(10)) then
+      if (outprt.and.lopt(10)) then
 
          call mertxt (tfname,prject,'_pseudocompound_list.txt',0)
          open (n8,file=tfname)
@@ -11577,7 +11577,7 @@ c                                 indicate site_check_override and refine endmem
                if (.not.sck(im)) write (*,1080) tname
                if (.not.nrf(im).and..not.lopt(39)) write (*,1090) tname
 
-               if (output.and.lopt(10)) then
+               if (outprt.and.lopt(10)) then
 
                   if (jsmod.ne.6.and.jsmod.ne.8) then
                      write (n8,1060) tname,
@@ -11623,7 +11623,7 @@ c                               reset ikp
             if (ikp(i).lt.0) ikp(i) = 0
          end do
 
-         if (io3.eq.0.and.output.and.(iam.lt.3.or.iam.eq.15)
+         if (io3.eq.0.and.outprt.and.(iam.lt.3.or.iam.eq.15)
      *                                     .and.isoct.ne.im) then
 
             write (n3,1020)
@@ -11631,7 +11631,7 @@ c                               reset ikp
             if (im.gt.0) then
                write (n3,1000)
                write (n3,1010) (sname(i), i = 1, im)
-            else if (output) then
+            else if (outprt) then
                write (n3,1040)
             end if
 
@@ -11647,7 +11647,7 @@ c                               reset ikp
 c                              identify the fluid for aqrxdo
       call aqidst
 c                              close pseudocompound list
-      if (output.and.lopt(10)) close (n8)
+      if (outprt.and.lopt(10)) close (n8)
 c                              close solution model file
       close (n9)
 
@@ -21468,7 +21468,7 @@ c                                 y coordinates used to compute the composition
 
 c routines common to all programs? could be in tlib.f?
 
-      subroutine setau1 (output)
+      subroutine setau1
 c----------------------------------------------------------------------
 c setau1 sets autorefine dependent parameters. called by vertex, werami,
 c pssect, convex, and meemum.
@@ -21480,8 +21480,6 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      logical output
- 
       character y*1, badnam(h9)*10
 
       integer ibad2, ibad1, igood, i, j, ier
@@ -21542,7 +21540,7 @@ c                                 no auto_refine data
                read (n10,*,iostat=ier) ibad1, ibad2, igood
                if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
 c                                 changed to .and. 9/10/19
-               if (iopt(6).ne.2.and.output) write (*,1030) n10nam
+               if (iopt(6).ne.2.and.outprt) write (*,1030) n10nam
 
                if (iopt(6).eq.1) then 
 c                                 manual mode, allow reinitialization
@@ -21560,9 +21558,9 @@ c                                 or suppression.
 
                   end if
 
-                  output = .true.
+                  outprt = .true.
  
-               else if (output) then  
+               else if (outprt) then  
 c                                 second cycle of automated mode
                   refine = .true.
 
@@ -21703,11 +21701,11 @@ c                                 that depend on refinement
       if (iopt(6).eq.2.and..not.refine) then
 c                                 this means it must be in the exploratory
 c                                 stage
-         output = .false.
+         outprt = .false.
 
       else
 
-         output = .true.
+         outprt = .true.
 
       end if
 
@@ -21740,7 +21738,7 @@ c                                  results file
 
       end 
 
-      subroutine setau2 (output)
+      subroutine setau2
 c----------------------------------------------------------------------
 c setau2 sets/resets autorefine parameters after the solution models have
 c been read. setau1 must be called first.
@@ -21751,8 +21749,6 @@ c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
-
-      logical output
 
       integer i,index
 
@@ -21782,9 +21778,9 @@ c-----------------------------------------------------------------------
       if (isoct.eq.0) then 
      
          index = 2
-         output = .true.
+         outprt = .true.
 
-      else if (.not.output) then
+      else if (.not.outprt) then
 
          index = 1
 
@@ -21840,7 +21836,7 @@ c                                 default search increment
 
       end 
 
-      subroutine input1 (first,output,err)
+      subroutine input1 (first,err)
 c-----------------------------------------------------------------------
 c input1 reads data from a file on unit n1, this data controls the
 c computational options and is modified frequently.

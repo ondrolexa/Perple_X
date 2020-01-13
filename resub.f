@@ -1421,7 +1421,7 @@ c                                 assymmetric stretching
 
       end
 
-      subroutine sorter (kdbulk,ic,jc,output)
+      subroutine sorter (kdbulk,ic,jc)
 c----------------------------------------------------------------------
 c sorter compares assemblages to those already defined and reorders 
 c the phases if the assemblage has been identified earlier
@@ -1432,7 +1432,7 @@ c----------------------------------------------------------------------
 
       integer ii,i,j,k,l,m,kdbulk,ic,jc,ids,ioct,inct
 
-      logical output, reord, match, nomtch, ok 
+      logical reord, match, nomtch, ok 
 
       double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5),caqt(k5,l10)
 c                                 x-coordinates for the final solution
@@ -1622,7 +1622,7 @@ c                                 the assemblage is new:
 
       end if 
                                 
-      if (output.or.iopt(34).ne.0) call outbl1 (ic,jc)
+      if (outprt.or.iopt(34).ne.0) call outbl1 (ic,jc)
      
       end 
 
@@ -3227,21 +3227,21 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, output, err 
+      logical first, err 
 c----------------------------------------------------------------------- 
       first = .true.
-      output = .false.
-      err = .false.
+c                                 set false for input1
+      outprt = .false.
 c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
 c                                 are in subroutine input1
-      call input1 (first,output,err)
+      call input1 (first,err)
 c                                 read thermodynamic data on unit n2:
       call input2 (first)
 c                                 allow reading of auto-refine data 
-      call setau1 (output)
+      call setau1 
 c                                 read data for solution phases on n9:
-      call input9 (first,output)
+      call input9 (first)
 c                                 seismic data summary file
       if (lopt(50)) call outsei
 c                                 call initlp to initialize arrays 

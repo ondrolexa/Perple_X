@@ -65,13 +65,10 @@ c parameters are assigned in "perplex_parameter.h"
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
-      logical output, first, pots, err  
+      logical first, pots, err  
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
-
-
-
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -89,8 +86,8 @@ c-----------------------------------------------------------------------
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
-      save err,first,output,pots
-      data err,output,first/.false.,.false.,.true./
+      save err,first,pots
+      data err,first/.false.,.true./
 
       integer iam
       common/ cst4 /iam
@@ -113,6 +110,9 @@ c                                    iam = 15 - convex
       iam = 15
 c                                 version info
       call vrsion (6)
+c                                 initialize outprt to .false. to force input1 to 
+c                                 read input, subsequently outprt is set in aetau2
+      outprt = .false.
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
@@ -124,7 +124,7 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes: conditions,
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-         call input1 (first,output,err)
+         call input1 (first,err)
 c                                 read thermodynamic data on unit n2:
          call input2 (first)
 c                                 copy the cst12 cp array into cst313 to 
@@ -134,22 +134,22 @@ c                                 read/set autorefine dependent parameters,
 c                                 it would be logical to output context specific 
 c                                 parameter settings here instead of the generic 
 c                                 blurb dumped by redop1
-         call setau1 (output)
+         call setau1 
 c                                 read data for solution phases on n9:
-         call input9 (first,output)
+         call input9 (first)
 
-         call setau2 (output)
+         call setau2
 c                                 initialize potentials
          call inipot 
 c                                 -------------------------------------
 c                                 at this point the problem is fully 
 c                                 configured, 
 c                                 -------------------------------------
-         if (output) then
+         if (outprt) then
 
             io4 = 0
 c                                 header info for print and graphics files
-            call topout (icopt)
+            call topout
 c                                 inform user of 1st stage
             if (iopt(6).ne.0) write (*,1000) 'auto_refine'
 c                                 turn of printing of potentials if no
@@ -179,14 +179,14 @@ c                                 (these flags are reset by input1).
          if (icopt.eq.0) then
 c                                 calculate composition phase diagrams
 c                                 calculations and remaining output
-            call chmcal (output)
+            call chmcal
 
          else if (icopt.eq.1.or.icopt.eq.3) then                     
 c                                 phase diagram projection or mixed variable
 c                                 diagram 
             if (jmct.gt.0) istct = kphct + 1
 
-            call newhld (output)
+            call newhld
 
          else if (icopt.eq.4) then 
 c                                 generate pseudo-compound file
@@ -213,9 +213,9 @@ c                                 disabled stability field calculation
 c                                 output compositions for autorefine
          call outlim 
 
-         if (output) exit
+         if (outprt) exit
 
-         output = .true.   
+         outprt = .true.   
          first = .false.
 
       end do 
@@ -224,14 +224,14 @@ c                                 output compositions for autorefine
 
       end
 
-      subroutine topout (icopt)
+      subroutine topout
 c-----------------------------------------------------------------------
 c call various routines to generate the header section of graphics and
 c print files depending on computational model (icopt)
 c-----------------------------------------------------------------------
       implicit none
 
-      integer icopt 
+      include 'perplex_parameters.h'
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -255,15 +255,13 @@ c                              title page for print file:
 
       end 
 
-      subroutine chmcal (output)
+      subroutine chmcal
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
  
       integer jpoly, ier
-
-      logical output
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -291,7 +289,7 @@ c                                 compute phase diagram
          call gall
          call combin
 
-         if (output) then 
+         if (outprt) then 
 c                                 graphics file
             if (io4.ne.1) call outgrf
 c                                 print file:
@@ -593,7 +591,7 @@ c---------------------------------------------------------------------
 
 99    end 
 
-      subroutine newhld (output)
+      subroutine newhld
 c-----------------------------------------------------------------------
 c newhld replaces nohold. newhld is designed to do boundary traverses
 c for individual equilibrium configurations and in certain cases,

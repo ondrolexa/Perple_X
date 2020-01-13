@@ -65,7 +65,7 @@ c parameters are assigned in "perplex_parameter.h"
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
-      logical output, first, pots, err
+      logical first, pots, err
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -82,8 +82,8 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      save err,first,output,pots
-      data err,output,first/.false.,.false.,.true./
+      save err,first,pots
+      data err,first/.false.,.true./
 
       integer iam
       common/ cst4 /iam
@@ -106,6 +106,9 @@ c                                    iam = 15 - convex
       iam = 1
 c                                 version info
       call vrsion (6)
+c                                 initialize outprt to .false. to force input1 to 
+c                                 read input, subsequently outprt is set in aetau2
+      outprt = .false.
 c                                 this do loop is a cheap strategy to automate
 c                                 "auto_refine"
       do
@@ -117,27 +120,27 @@ c                                 read input from unit n1 (terminal/disk).
 c                                 input1 also initializes: conditions,
 c                                 equilibrium counters; units n2 n4 and n6;
 c                                 and the limits for numerical results.
-         call input1 (first,output,err)
+         call input1 (first,err)
 c                                 read thermodynamic data on unit n2:
          call input2 (first)
 c                                 read/set autorefine dependent parameters, 
 c                                 it would be logical to output context specific 
 c                                 parameter settings here instead of the generic 
 c                                 blurb dumped by redop1
-         call setau1 (output)
+         call setau1
 c                                 read data for solution phases on n9:
-         call input9 (first,output)
+         call input9 (first)
 c                                 seismic data summary file
          if (lopt(50)) call outsei
 
-         call setau2 (output)
+         call setau2
 c                                 initialize potentials
          call inipot 
 c                                 -------------------------------------
 c                                 at this point the problem is fully 
 c                                 configured, 
 c                                 -------------------------------------
-         if (output) then
+         if (outprt) then
 
             io4 = 0
 c                                 header info for print and graphics files
@@ -175,19 +178,19 @@ c                                 (these flags are reset by input1).
 
          else if (icopt.eq.5) then 
 c                                 optimization on a 2-d grid.
-            call wav2d1 (output)
+            call wav2d1
 
          else if (icopt.eq.7) then 
 c                                 fractionation on a 1-d path.
-            call frac1d (output)
+            call frac1d
 
          else if (icopt.eq.12) then 
 c                                 0-d fractionation/titration
-            call titrat (output)
+            call titrat
 
          else if (icopt.eq.9) then 
 c                                 fractionation on a 2-d path (space-time) 
-            call frac2d (output)
+            call frac2d
 
          else
 c                                 disabled stability field calculation
@@ -197,13 +200,14 @@ c                                 disabled stability field calculation
 c                                 output compositions for autorefine
          call outlim 
 
-         if (output) then
+         if (outprt) then
 c                                 close n4/n5, delete interim results
-            call interm (output,first)
+            call interm (outprt,first)
             exit
+
          end if
 
-         output = .true.   
+         outprt = .true.   
          first = .false.
 
       end do 
@@ -212,7 +216,7 @@ c                                 close n4/n5, delete interim results
 
       end
 
-      subroutine frac1d (output)
+      subroutine frac1d
 c-----------------------------------------------------------------------
 c a main program template to illustrate how to call the minimization 
 c procedure. the example here is 1d fractionation.
@@ -220,8 +224,6 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical output
 
       integer i, j, idead, ier, it
 
@@ -330,9 +332,9 @@ c                                 get total moles to compute mole fractions
             end do
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-            call lpopt (1,j,idead,output)
+            call lpopt (1,j,idead)
 c                                 fractionate the composition:
-            call fractr (idead,output,.true.,errr)
+            call fractr (idead,outprt,.true.,errr)
 
             if (it.gt.99) then 
                write (*,'(i5,a)') j,' optimizations completed...'
@@ -373,7 +375,7 @@ c                                 get total moles to compute mole fractions
                end do
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-               call lpopt (1,j,idead,output)
+               call lpopt (1,j,idead)
 
                write (*,1000)
                do i = 1, jbulk
@@ -413,9 +415,9 @@ c                                 echo to scratch
                write (n0-1,*) v
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-               call lpopt (1,j,idead,output)
+               call lpopt (1,j,idead)
 c                                 fractionate the composition:
-               call fractr (idead,output,.true.,errr)
+               call fractr (idead,outprt,.true.,errr)
 
                it = it + 1
 
@@ -430,7 +432,7 @@ c                                 fractionate the composition:
 
       end if 
 c                                 output 
-      if (output.and.io4.eq.0) call outgrd (1,loopy,1,n4,0)
+      if (outprt.and.io4.eq.0) call outgrd (1,loopy,1,n4,0)
 c                                 close fractionation data files
       do i = -1, ifrct
          close (n0+i)
@@ -448,7 +450,7 @@ c                                 close fractionation data files
 
       end
 
-      subroutine titrat (output)
+      subroutine titrat
 c-----------------------------------------------------------------------
 c a main program template to illustrate how to call the minimization 
 c procedure. the example here is 1d fractionation.
@@ -456,8 +458,6 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical output
 
       integer i, j, idead, it
 
@@ -556,9 +556,9 @@ c                                 get total moles to compute mole fractions
          end do
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-         call lpopt (1,j,idead,output)
+         call lpopt (1,j,idead)
 c                                 fractionate the composition:
-         call fractr (idead,output,verbos,errr)
+         call fractr (idead,outprt,verbos,errr)
 c                                  add the infiltrant
          do i = 1, icp 
             cblk(i) = cblk(i) + nopt(36) * iblk(i)
@@ -573,7 +573,7 @@ c                                  add the infiltrant
 
       close (n8)
 c                                 output 
-      if (output) then 
+      if (outprt) then 
 
         call outgrd (1, iopt(36) + 1, 1,n4,0)
 c                                 close fractionation data files
@@ -595,7 +595,7 @@ c                                 close fractionation data files
 
       end 
 
-      subroutine frac2d (output)
+      subroutine frac2d
 c-----------------------------------------------------------------------
 c a subprogram template to illustrate how to do 2-d (space-time) 
 c fractionation. 
@@ -619,8 +619,6 @@ c-----------------------------------------------------------------------
       double precision gblk(maxbox,k5),cdcomp(k5,lay),vox(k5),rho,zbox,
      *                 tot,lcomp(k5,lay),cmass(k5),cfmass(k5),area,
      *                 imass(k5),errr(k5),icerr(k5),ccerr(k5)
-
-      logical output
 
       double precision atwt
       common/ cst45 /atwt(k0)
@@ -915,7 +913,7 @@ c                                 get total moles to compute mole fractions
                b(i) = cblk(i)/ctotal
             end do
 
-            call lpopt (1,k,idead,output)
+            call lpopt (1,k,idead)
 
             if (idead.eq.101) then 
 
@@ -1058,7 +1056,7 @@ c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
             if (io3.eq.0) write (n3,*) 'step ',j,' on path, box ',k
 
-            call lpopt (j,k,idead,output)
+            call lpopt (j,k,idead)
 
             if (idead.eq.101) then 
 
@@ -1078,7 +1076,7 @@ c                                 write failure info to fld file:
 
             end if 
 
-            call fractr (idead,output,verbos,errr)
+            call fractr (idead,outprt,verbos,errr)
 c                                 at this point we've computed the stable
 c                                 assemblage at each point in our column
 c                                 and could do mass transfer, etc etc 
@@ -1221,7 +1219,7 @@ c                                 end of j index loop
          close (lun + j)
       end do
 
-      if (output) call outgrd (loopx,ncol,1,n4,0)
+      if (outprt) call outgrd (loopx,ncol,1,n4,0)
 
       write (*,'(/,a)') 'NOTE: use nodal coordinates for layer'//
      *                    ' boundaries in PSSECT and WERAMI.'
@@ -1250,7 +1248,7 @@ c                                 end of j index loop
 
       end
 
-      subroutine lpopt (i,j,idead,output)
+      subroutine lpopt (i,j,idead)
 c-----------------------------------------------------------------------
 c lpopt - is a shell to maintain backwards compatibility used for gridded
 c minimization calculations. it calls lpopt0 to do a minimization, then 
@@ -1259,8 +1257,6 @@ c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical output
 
       integer i,j,k,idead
 
@@ -1301,7 +1297,7 @@ c                                 the np solutions are in cp3, ctot3, x3 indexed
 c                                 by np and the original indices of the 
 c                                 ncpd compounds are -kkp(np+1..ntot), and
 c                                 the molar amounts of the phases are in amt.
-         call sorter (igrd(i,j),i,j,output)
+         call sorter (igrd(i,j),i,j)
 
       else 
  
@@ -1410,7 +1406,7 @@ c                                for true boundaries.
 
       end
 
-      subroutine wav2d1 (output)
+      subroutine wav2d1
 c--------------------------------------------------------------------
 c wav2d does constrained minimization on a 2 dimensional multilevel
 c grid (ith column of a 2-d grid), lowest resolution is the default, 
@@ -1424,8 +1420,6 @@ c---------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical output 
 
       integer kinc, jinc(l8), iind(4), jind(4), iiind(4,2),htic,
      *        jjind(4,2), hotij(l7*l7,2), kotij(l7*l7,2), icind(4),
@@ -1464,7 +1458,7 @@ c                               initialize assemblage counter
       ibulk = 0 
 c                               call old routine for 1d grid
       if (loopx.eq.1) then
-         call wavgrd (output)
+         call wavgrd
          return
       end if 
 c                               load arrays for lp solution
@@ -1518,7 +1512,7 @@ c                               do all points on lowest level
       do i = 1, loopx, kinc
          do j = 1, loopy, kinc
             call setvr0 (i,j)
-            call lpopt (i,j,idead,output)
+            call lpopt (i,j,idead)
          end do
 c                               progress info
          write (*,1030) dfloat(i)/dfloat(loopx)*1d2
@@ -1583,7 +1577,7 @@ c                              the hot cell
             jcent = jjc + kinc
             if (igrd(icent,jcent).eq.0) then 
                call setvr0 (icent,jcent)
-               call lpopt (icent,jcent,idead,output)
+               call lpopt (icent,jcent,idead)
                jtic = jtic + 1
                htic = htic + 1
             end if 
@@ -1610,7 +1604,7 @@ c                              compute assemblages at new nodes
                      jj = jjc + jjind(hh,kk)*kinc
                      if (igrd(ii,jj).eq.0) then 
                         call setvr0 (ii,jj)
-                        call lpopt (ii,jj,idead,output)
+                        call lpopt (ii,jj,idead)
                         jtic = jtic + 1
                         htic = htic + 1
                      end if 
@@ -1653,7 +1647,7 @@ c                                compute assemblage at cell nodes
                               jjl = jj + jind(ll)*kinc
                               if (igrd(iil,jjl).eq.0) then              
                                  call setvr0 (iil,jjl)
-                                 call lpopt (iil,jjl,idead,output)
+                                 call lpopt (iil,jjl,idead)
                                  jtic = jtic + 1
                                  htic = htic + 1
                               end if 
@@ -1703,7 +1697,7 @@ c                               output interim plt file
 
       end do
 c                                 ouput grid data
-10    if (output) call outgrd (loopx,loopy,1,n4,0)
+10    if (outprt) call outgrd (loopx,loopy,1,n4,0)
 
 1030  format (f5.1,'% done with low level grid.')
 1050  format (/,'Beginning grid refinement stage.',/)
@@ -1716,7 +1710,7 @@ c                                 ouput grid data
 
       end 
 
-      subroutine wavgrd (output)
+      subroutine wavgrd
 c----------------------------------------------------------------------
 c wavgrd does constrained minimization on a 1 dimensional multilevel
 c grid (ith column of a 2-d grid), lowest resolution is the default, 
@@ -1729,8 +1723,6 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-
-      logical output
 
       integer kinc,jinc(l8),i,j,k,klast,kmax,kd,idead,jtic,jmin,
      *        jmax,klev,klow,ltic 
@@ -1798,7 +1790,7 @@ c                                initialize grid vars
 c                                call to incvr2 moved here (formerly
 c                                at end of loop), april 5, 2006. JADC
             call setvr0 (j,1)
-            call lpopt (i,j,idead,output)
+            call lpopt (i,j,idead)
             jtic = jtic + 1
 c                                progress information
             ltic = ltic + 1
@@ -1897,7 +1889,7 @@ c                                must be > level 1
 
       end do
 c                                 output graphics data
-      if (output) call outgrd (i,loopy,jinc(jlev),n4,0)
+      if (outprt) call outgrd (i,loopy,jinc(jlev),n4,0)
 
       end 
 
