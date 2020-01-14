@@ -7675,7 +7675,7 @@ c                                 evaluate enthalpies of ordering
 
       end
 
-      logical function zbad (y,ids,z)
+      logical function zbad (y,ids,z,text)
 c----------------------------------------------------------------------
 c subroutine to compute site fractions computed from equations entered by
 c user for configurational entropy (macroscopic form). with range checks.
@@ -7697,8 +7697,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,ids
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character text*(*)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -7755,7 +7754,7 @@ c                                 non-temkin (688)
                if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) call error (72,
      *                       zt,i,'the expression for z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
-     *                       ' in '//fname(ids)//' is incorrect.')
+     *                       ' in '//text//' is incorrect.')
 
                zt = zt + z(i,j)
 
@@ -7769,7 +7768,7 @@ c                                 non-temkin, fractions must sum to 1
 
                   call error (72,zt,i,
      *                       'site fractions on '//znames(ids,i,0)// 
-     *                       ' in '//fname(ids)//' do not sum to 1.')
+     *                       ' in '//text//' do not sum to 1.')
 
                end if
 
@@ -7924,7 +7923,7 @@ c                                 zero y-array
 
          y(h) = 1d0
 c                                 check for valid site fractions
-         if (zbad(y,id,zsite)) call error (125,z(1),h,tname)
+         if (zbad(y,id,zsite,tname)) call error (125,z(1),h,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,y)
 
@@ -8919,7 +8918,7 @@ c                                 save y -> p array
 c                                 check for invalid site fractions, this is only necessary
 c                                 for H&P models that assume equipartition (which is not
 c                                 implemented).
-            if (zbad(pa,im,zsite)) then
+            if (zbad(pa,im,zsite,tname)) then
 
                if (iam.lt.3.or.iam.eq.4.or.iam.eq.15)
      *            call warn (59,y(1),i,

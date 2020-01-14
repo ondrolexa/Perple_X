@@ -2327,7 +2327,7 @@ M2                                  | site name
 z(Na,m2)   = 1 jd
 z(Mg,m2)   = 1 cenjh
 z(Fe,m2)   = 1 cfs  + 1 cfm
-z(Ca,M2)   = 1 di   + 1 crdi + 1 cess 
+z(Ca,M2)   = 1 di   + 1 crdi + 1 cess + 1 cats
 
 T                                   | site name
 2 .5 2                              | number of species, effective multiplicity, true multiplicity
@@ -9695,12 +9695,12 @@ end_excess_function
 A                                   | site name
 2 1 1                               | number of species, effective multiplicity, true multiplicity
 z(Na,A)   =    1 parg_dqf
-z(Vac,A)  =    1 cumm_dqf + 1 grun_dqf + 1 tr + 1 ts_dqf + 1 gl_dqf + 1 cammo1 + 1 cammo2 
+z(Vac,A)  =    1 cumm_dqf + 1 grun_dqf + 1 tr + 1 ts_dqf + 1 gl_dqf + 1 cammo1 + 1 cammo2 + 1 mrb
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
 z(Fe,M1)   = 1 grun_dqf + 1 cammo2
-z(Mg,M1)   = 1 cumm_dqf + 1 ts_dqf + 1 parg_dqf + 1 mrb + 1 gl_dqf + 1 cammo1
+z(Mg,M1)   = 1 cumm_dqf + 1 ts_dqf + 1 parg_dqf + 1 mrb + 1 gl_dqf + 1 cammo1 + 1 tr
 
 M2                                  | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -10001,12 +10001,12 @@ end_excess_function
 A                                   | site name
 2 1 1                               | number of species, effective multiplicity, true multiplicity
 z(Na,A)   =    1 mpa
-z(Vac,A)  =    1 anth     + 1 fanth_dq + 1 tr + 1 ged_dqf + 1 ogl_dqf + 1 ammo1 + 1 ammo2 
+z(Vac,A)  =    1 anth     + 1 fanth_dq + 1 tr + 1 ged_dqf + 1 ogl_dqf + 1 ammo1 + 1 ammo2 + 1 omrb_dqf  
 
 M1                                  | site name
 2 3 3                               | number of species, effective multiplicity, true multiplicity
 z(Fe,M1)   = 1 fanth_dq + 1 ammo2
-z(Mg,M1)   = 1 anth     + 1 ged_dqf + 1 mpa + 1 omrb_dqf + 1 ogl_dqf + 1 ammo1
+z(Mg,M1)   = 1 anth     + 1 ged_dqf + 1 mpa + 1 omrb_dqf + 1 ogl_dqf + 1 ammo1 + 1 tr
 
 M2                                  | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
