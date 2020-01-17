@@ -380,10 +380,10 @@ c                                 reconstruct structural formulae
             write (lu,'(1x,a)') pname(l)
 c                                 load speciation
             do k = 1, spct(id)
-               pa(k) = ysp(k,l)
+               pa(k) = ysp(k,id)
             end do
 c                                 use zbad to convert to site fractions
-            sol688 = zbad(pa,id,zsite,pname(i))
+            sol688 = zbad(pa,id,zsite,pname(l))
 
             do i = 1, msite(id)
 

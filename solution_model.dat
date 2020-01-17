@@ -13943,7 +13943,7 @@ abL      sil8L    anL
 kspL     wi8L     q8L
 h2oL
 
-0 0 0 0 0 0 0 0 0                   | endmember flags.
+0 0 0 0 0 0 0 0 0 0                 | endmember flags.
 
                                     | RESTRICTED(!) subdivision ranges and model
                                     | the ranges must be extended if calculations
