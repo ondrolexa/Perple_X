@@ -20276,19 +20276,6 @@ c                                 ordered species:
 c                                 there are no ordered species left
             order = .false.
 
-            write (*,*) 'yagghg!'
-            call errpau
-
-            if (depend) then
-
-               jsmod = 7
-
-            else
-c                                 why jsmod = 2?
-               jsmod = 2
-
-            end if
-
          else
 c                                 shift the ordered species pointers
 c                                 and data to eliminate kill ordered
