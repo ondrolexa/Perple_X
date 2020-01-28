@@ -8254,7 +8254,7 @@ c                                 initialize polytope x's
 c                                 assign endmember fractions
             x3(jd,ii,i,kmsol(ids,knsp(h,ids),i)) = 1d0
 c                                 assign polytope weight
-            x3(jd,pop1(ids),1,ii) = 1d0
+            if (pop1(ids).gt.1) x3(jd,pop1(ids),1,ii) = 1d0
 
          end do 
 

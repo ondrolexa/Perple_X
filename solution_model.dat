@@ -10416,7 +10416,7 @@ H2O
 
 0 0 0 0 0 0 0 0             | endmember flags
 
-1e-5   3e-1      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   5e-1      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1         .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-3      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
