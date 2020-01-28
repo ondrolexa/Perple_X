@@ -6900,7 +6900,7 @@ spss     alm      py       gr         endmember names
 
   1  0  0  0                        | endmember flags
 
-0   .2   .1 0              | imod = 1 -> asymmetric transform subdivision
+0  1     .1 0              | imod = 1 -> asymmetric transform subdivision
 0  1     .1 0              | imod = 0 -> cartesian subdivision
 0  1     .1 0              | imod = 0 -> cartesian subdivision
                            | NOTE restricted subdivision range on Mn (Species 1)!

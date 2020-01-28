@@ -50,7 +50,7 @@ composition_system        default | [wt] mol or wt; system composition in WERAMI
 console_messages          default | [on] off => suppresses most console messages (warnings, errors, etc)
 cumulative                default | [F] WERAMI, computational mode 3, property choice #36 only!- cumulative component amounts (for fractionation problems)
 dependent_potentials      default | [off] on => compute dependent thermodynamic potentials (usually chemical potentials)
-efficiency                default | [3] 1->5, only relevant for CONVEX
+efficiency                1 default | [3] 1->5, only relevant for CONVEX
 explicit_bulk_modulus     default | [T] T => use explicit function for bulk modulii if available
 fancy_cumulative_modes    default | [F] T => order cumulative modes to account for univariant reactions (WERAMI, mode 3, property 25)
 fd_expansion_factor       default | [2] nth order finite difference increment is increased by fd_expansion_factor^(n-1)
@@ -75,17 +75,17 @@ non_linear_switch         default | VERTEX/MEEMUM [F], CONVEX [T], toggles wheth
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_details  T default | [F] T => output intermediate adaptive optimization information
-output_iteration_G        T default | [F] T => print iteration G to monitor convergence during optimization
+output_iteration_details  default | [F] T => output intermediate adaptive optimization information
+output_iteration_G        default | [F] T => print iteration G to monitor convergence during optimization
 pause_on_error            default | [T] T => wait for user response after errors
 pc_perturbation           default | [5d-3] pseudo-compound composition perturbation; only relevant for CONVEX
 poisson_ratio             default | [on 0.35] value 1: on, off or all; value 2: 0->0.5; controls use of poisson ratio estimates for shear moduli
 poisson_test              default | [F] T => use poisson ratio to check for valid results
 proportions               default | [vol] vol, wt, or mol; volume, weight (mass), or molar phase proportions
-pseudocompound_file       T default | [F] echo static pseudocompound compositions to my_project_pseudocompound_list.txt
+pseudocompound_file       default | [F] echo static pseudocompound compositions to my_project_pseudocompound_list.txt
 reach_increment_switch    default | [on] all, on, off; VERTEX => on activates reach_increments only during auto_refine; MEEMUM default is [all]
-reaction_format           default | [minimum] minimum, full, stoich, S+V, or everything
-reaction_list             default | [off] on or off
+reaction_format           full default | [minimum] minimum, full, stoich, S+V, or everything
+reaction_list             on default | [off] on or off
 refinement_points         default | [auto] or an integer > 0, max number of metastable refinement points retained during adaptive minimization
 refinement_switch         default | [F] allow metastable refinement points for stable solutions
 refine_endmembers         default | [F] accept endmember compositions as refinement points

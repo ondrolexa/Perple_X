@@ -5029,10 +5029,10 @@ c                                 find valid makes:
 
                   inmk(i) = .false.
 
-                  if (first) then
-                     if (iam.ne.3.and.iam.lt.6.or.iam.eq.15)
-     *                  call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
-                  end if
+c                 if (first) then
+c                    if (iam.ne.3.and.iam.lt.6.or.iam.eq.15)
+c    *                  call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
+c                 end if
 
                   exit
 
@@ -5182,13 +5182,17 @@ c                                makes:
       if (nmak.gt.0.and.first.and.(iam.lt.3.or.iam.eq.15)) then
 c                                write list of valid makes:
          write (*,1010)
-         write (*,1000) (mknam(i,mknum(i)+1),i=1,nmak)
-         write (*,'(/)')
+         do j = 1, nmak, 6
+            k = j + 5
+            if (k.gt.nmak) k = nmak
+            write (*,1000) (mknam(i,mknum(i)+1),i=j,k)
+         end do 
+         write (*,'(80(''-''))')
 
       end if
 
-1000  format (6(a,2x))
-1010  format (/,'Summary of make-definition entities:')
+1000  format (4x,6(a,2x))
+1010  format (/,80('-'),/,'Summary of make-definition entities:',/)
 
       end
 
@@ -5415,8 +5419,8 @@ c                                 find valid makes:
 
                if (mnames(k).eq.mknam(i,j).and.(.not.inph(k))) then
                   inmk(i) = .false.
-                  if (iam.ne.3.and.iam.lt.6.or.iam.eq.15)
-     *               call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
+c                 if (iam.ne.3.and.iam.lt.6.or.iam.eq.15)
+c    *               call warn (51,tot,icmpn,mknam(i,mknum(i)+1))
                   exit
                else if (mnames(k).eq.mknam(i,j)) then
                   mkind(i,j) = k
@@ -11500,6 +11504,8 @@ c                                 format test line
 c                                 check version compatability
       if (.not.chksol(new)) call error (3,zt,im,new)
 
+      write (*,'(80(''-''),/,a,/)') 'Solution model summary:'
+
       do while (im.lt.isoct)
 c                                 -------------------------------------
 c                                 read the solution model
@@ -11643,6 +11649,8 @@ c                              close pseudocompound list
       if (outprt.and.lopt(10)) close (n8)
 c                              close solution model file
       close (n9)
+
+      write (*,'(80(''-''),/,a)')
 
       first = .false.
 
@@ -22527,7 +22535,7 @@ c----------------------------------------------------------------------
 
       double precision twt(k5),tsel(k5),tcox(k5),cst
  
-      integer i,j,im, ict, k, ifer,inames, jphct, imak(k16), iox
+      integer i, j, k, l, im, ict, ifer,inames, jphct, imak(k16), iox
  
       logical eof, good, first
 
@@ -22925,20 +22933,26 @@ c                                 for each saturation constraint
 
       if (isat.gt.0.and.first.and.(iam.lt.4.or.iam.eq.15)) then
 
-         write (*,'(a)') 'Summary of saturated-component entities:'
+         write (*,'(/,80(''-'')/,a,/)') 
+     *         'Summary of saturated-component entities:'
 
          do i = 1, isat
 
             write (*,1040) (cname(icp+j),j=1, i)
-            write (*,1050) (names(ids(i,j)), j = 1, isct(i))
+            write (*,*) ' '
 
+            do k = 1, isct(i), 6
+               l = k + 6
+               if (l.gt.isct(i)) l = isct(i)
+               write (*,1050) (names(ids(i,j)), j = 1, l)
+            end do 
          end do
 
-         if (iam.eq.15) write (*,'(a)') 
-     *         '* solutions may also have composition'
-     *       //'s consisting entirely of saturated components'
+         if (iam.eq.15.and.isoct.gt.0) write (*,'(/,a)')
+     *         '*solutions may also have compositions'
+     *       //' consisting entirely of saturated components'
 
-         write (*,'(/)')
+         write (*,'(80(''-''))')
 
       end if 
 c                                 save endmembers that consist entirely 
@@ -23218,8 +23232,8 @@ c                                endmembers:
 1020  format (/,'Summary of aqueous solute species:',//,
      *        6('name     chg   ')) 
 1030  format (6(a,2x,i2,3x))
-1040  format ('for ',15(a,1x))
-1050  format (6(a,2x))
+1040  format (2x,'for: ',5(a,1x))
+1050  format (4x,6(a,2x))
 1230  format ('**error ver013** ',a,' is an incorrect component'
      *       ,' name, valid names are:',/,12(1x,a))
 1240  format ('check for upper/lower case matches or extra blanks',/)

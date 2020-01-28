@@ -604,7 +604,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical output, quit
+      logical quit
 
       integer iedge,i,j,irend,knct,ier,iste,jnct,ivi,ivd
 
@@ -786,7 +786,7 @@ c                                 call coface to delineate all the
 c                                 equilibria that are cofacial with
 c                                 the simplex defined by the vertices
 c                                 idv.
-         call coface (ivd,ivi,div,iste,irend,output,quit)
+         call coface (ivd,ivi,div,iste,irend,quit)
 c                                 returns quit if coface thinks the
 c                                 assemblage is
          if (quit) cycle 
@@ -832,7 +832,7 @@ c                                 return for icopt=1
 90    if (icfct.eq.j9) call warn (205,r,j9,'NEWHLD')
 
 c                                 summarize print and graphics output
-      if (output) then 
+      if (outprt) then 
          if (icopt.eq.3) call onedim
          call outier
       end if 
@@ -1909,7 +1909,7 @@ c                                 parameters:
 
 99    end
 
-      subroutine coface (iovd,iovi,odiv,iste,irend,output,quit)
+      subroutine coface (iovd,iovi,odiv,iste,irend,quit)
 c----------------------------------------------------------------------
 c once nohold has established that a stable equilibrium occurs on
 c the boundary of a diagram, coface traces the equilibrium condiitons
@@ -1925,7 +1925,7 @@ c-----------------------------------------------------------------------
       integer iopct,icter,irend,iovd,
      *        ivi,ivd,iovi,jflg,ier,iste,i,inpct,jer,ikwk
 
-      logical bad, output, quit
+      logical bad, quit
 
       double precision odiv,div
 
@@ -1959,9 +1959,6 @@ c-----------------------------------------------------------------------
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
-
-
-
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
@@ -2008,7 +2005,7 @@ c                                 assign reaction:
          vip(4,ird) = v(4)
          vip(5,ird) = v(5)
 
-         if (output) call outrxn (0,0)
+         if (outprt) call outrxn (0,0)
 
          goto 9999
 
@@ -2055,7 +2052,7 @@ c                                 assign the 1st point
 c                                 follow the equilibrium
 60    ikwk = 0 
       jflg = 0
-      call sfol1 (ivd,ivi,ier,div,ikwk,irend,output)
+      call sfol1 (ivd,ivi,ier,div,ikwk,irend)
 c                                 sfol1 returns ier = 1
       if (ier.eq.1.or.ier.eq.2) then 
          goto 70
@@ -2089,7 +2086,7 @@ c                                 an ip was found:
       
 75    call warn (10,v(1),ier,'COFACE')
 
-      if (output) call outrxn (ipct,2)
+      if (outprt) call outrxn (ipct,2)
       ibug(irct) = 1
 c                                 return on error
       goto 9999                
@@ -2101,13 +2098,13 @@ c                                 before each call to sfol2.
 c                           inpct=the total number after each call to 
 c                                 sfol2.
 10    iopct = ipct
-      call sfol2 (iovi,iovd,iopct,irend,output)
+      call sfol2 (iovi,iovd,iopct,irend)
       if (iopct.eq.ipct) goto 9999
       iopct = iopct + 1
       inpct = ipct
 c                                 loop for new invariant points
 30    do i = iopct, inpct
-         call sfol2 (iovi,iovd,i,irend,output)
+         call sfol2 (iovi,iovd,i,irend)
       end do 
       if (ipct.eq.inpct) goto 9999
       iopct = inpct + 1
@@ -2116,7 +2113,7 @@ c                                 loop for new invariant points
 c                                 error in univeq:
 9000  call warn (79,v(1),ird,'COFACE')
       ipt2 = 0
-      if (output) call outrxn (ipct,2)
+      if (outprt) call outrxn (ipct,2)
       ibug(irct) = 1
 
 9999  iflg1= 0
@@ -3694,6 +3691,9 @@ c----------------------------------------------------------------------
       character names*8
       common/ cst8 /names(k1)
 
+      character*8 vname,xname
+      common/ csta2  /xname(k5),vname(l2)
+
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
       common/ cst23 /a(k8,k8),b(k8),ipvt(k8),idv(k8),
@@ -3706,7 +3706,10 @@ c----------------------------------------------------------------------
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer io3,io4,io9
+      common / cst41 /io3,io4,io9
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -3865,10 +3868,29 @@ c                                 traverses 3,4.
             iflg1 = 0
    
             if (iugh.gt.3) then
-               write (n3,1020) ivd,dv(ivd),(names(idv(j)),j = 1, icp)
-               write (n3,*) ' '
+
+               write (*,1020) vname(ivd),(names(idv(j)),j = 1, icp)
+
+               if (ivd.eq.3) then 
+                  write (*,1030) vname(ivd),vname(ivd),vname(ivd)
+               else 
+                  write (*,'(/)')
+               end if
+
+               if (io3.eq.0) then
+                  write (n3,1020) vname(ivd),(names(idv(j)),j = 1, icp)
+
+                  if (ivd.eq.3) then 
+                    write (n3,1030) vname(ivd),vname(ivd),vname(ivd)
+                  else 
+                     write (n3,'(/)')
+                  end if
+
+               end if 
+
                ier = 2
                goto 99
+
             end if 
       
             goto 100 
@@ -3884,18 +3906,21 @@ c                                 next traverse.
 1000  format ('**warning ver066** Metastable assemblage into FLIPIT: ',
      *        /,4x,12(1x,a))
 1010  format ('v =',5(g12.6,1x))
-1020  format (/,'**warning ver047** SEARCH: > 1 equilibrium',
-     *         ' occurs within the minimum search',/,'increment for',
-     *         ' variable: ',i1,'. This often occurs as YCO2 =>',
-     *         ' 1 or => 0.',/,'You may be able to correct this by',
-     *         ' assigning slightly different limits',/,'for YCO2 or',
-     *         ' by reducing the default increment for this variable',
-     *         ' (',g12.3,')',/,'in the perplex_option.dat.',/,
-     *         'Equilibria involving the following assemblage may',
-     *         ' not be delineated:',/,7(1x,a8)) 
+1020  format (/,'**warning ver047** > 1 equilibrium occurs within the',
+     *       ' minimum search increment for ',a,/,
+     *       'Equilibria involving the following assemblage may not ',
+     *       'be traced:',//,12(1x,a))
+1030  format (/,'This problem often occurs as ',a,' => 1 or => 0. If no'
+     *      ,' equilibria are traced for this',/,
+     *       'calculation correct the error by either: ',/,
+     *       '  1) setting the min/max limits for ',a,' to values ',
+     *       'slightly > 0 and < 1 (recommended).',/,
+     *       '  2) setting the increment option to resolve ',a,' with',
+     *       'greater precision (not recommended).',/)
+
 99    end
 
-      subroutine sfol1 (ivd,ivi,ier,dv,ikwk,irend,output)
+      subroutine sfol1 (ivd,ivi,ier,dv,ikwk,irend)
 c----------------------------------------------------------------------
 c eliminated computed goto's introduced do loop, 1/9/09.
 c----------------------------------------------------------------------
@@ -3905,7 +3930,7 @@ c----------------------------------------------------------------------
 
       integer ikwk,irend,ivd,ivi,iswtch,jswtch,ier,jer,ip
 
-      logical output, fail
+      logical fail
 
       integer irchk
       common/ cst801 /irchk(k2)
@@ -4025,7 +4050,7 @@ c                                 the conditions of the invariant point:
             call findjp (ivi,ivd,dv,ip,ird,fail)
 
             if (fail) then 
-               if (output) call outrxn (ip,ier)
+               if (outprt) call outrxn (ip,ier)
                ier = 3
                goto 999
             end if 
@@ -4058,13 +4083,13 @@ c                                 switching iv's, set iswitch flag
 c                                 output the traversed equilibrium:
 900   ier = 0
 
-      if (output) call outrxn (ip,ier)    
+      if (outprt) call outrxn (ip,ier)    
 c                                 save conditions of the endpoint
       call svrend (ird,irend,jer)
 
 999   end                         
 
-      subroutine sfol2 (iovi,iovd,ip,irend,output)
+      subroutine sfol2 (iovi,iovd,ip,irend)
 c----------------------------------------------------------------------
 c sfol2 generates and computes the loci of stable equilibria
 c emanating from an ip indexed by the array ipid and the
@@ -4083,7 +4108,7 @@ c----------------------------------------------------------------------
 
       character text(kd2)*1, alpha(130)*1
 
-      logical bad, output
+      logical bad
 
       integer ikwk,irend,ivd,ivi,ier,jer,ip,jchk,icp3,
      *        iovi,iovd,iend,i,j,itic,jtic,lphi,idno,icter,jend
@@ -4216,7 +4241,7 @@ c                                 set the bug flag:
 
          icter = 0
 
-60       call sfol1 (ivd,ivi,ier,div,ikwk,irend,output)
+60       call sfol1 (ivd,ivi,ier,div,ikwk,irend)
          jchk = jchk + 1
 
          if (ier.eq.0) then 
@@ -4234,7 +4259,7 @@ c                                 set the bug flag:
       
          call warn (20,v(ivi),ivi,'SFOL2 ')
 
-         if (output) call outrxn (ip,1)
+         if (outprt) call outrxn (ip,1)
          ivi =iovi
          ivd=iovd
       end do 
