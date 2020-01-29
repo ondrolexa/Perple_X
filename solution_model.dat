@@ -10418,8 +10418,8 @@ H2O
 
 1e-5   5e-1      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1         .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   1e-3      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-5   2.5e-5    .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-3      .1       1        | H2S subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   2.5e-5    .1       1        | SO2 subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 
@@ -13596,7 +13596,7 @@ z(al)   = 1 mgts + 1 ojd
 z(fe3+) = 1 macm
 z(cr)   = 1 crenh
 z(ti)   = 1/2 obuf
-z(Mg)   = 1/2 obuf + 1 odi + 1 en
+z(Mg)   = 1/2 obuf + 1 odi + 1 en + 1 fm
 
 M2                                  | site name
 4 1 1                               | number of species, effective multiplicity, true multiplicity
@@ -13608,7 +13608,7 @@ z(Mg)   = 1 obuf + 1 en + 1 crenh + 1 macm + 1 mgts
 T                                   | site name
 2 .5 2                              | number of species, effective multiplicity, true multiplicity
 z(Al,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm
-z(Si,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm + 1 ojd + 1 odi + 1 en + 1 fs
+z(Si,T)    = 1/2 mgts + 1/2 crenh + 1/2 obuf + 1/2 macm + 1 ojd + 1 odi + 1 en + 1 fs + 1 fm
 
 [O6]                                | formula suffix, enter "none" for no suffix.
 

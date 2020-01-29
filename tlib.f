@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Jan 28, 2020.',
+     *      'Perple_X version 6.8.9, source updated Jan 29, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2800,8 +2800,6 @@ c----------------------------------------------------------------------
          write (*,40) 
       else if (ier.eq.42) then
          write (*,42)     
-      else if (ier.eq.43) then
-         write (*,43) int
       else if (ier.eq.45) then
          write (*,45) char
       else if (ier.eq.46) then 
@@ -3043,9 +3041,6 @@ c----------------------------------------------------------------------
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',
      *          'change the bulk composition or add phases.',/)
-43    format (/,'**warning ver043** ',i2,' solutions referenced ',
-     *          'in your input were not found in the solution ',
-     *          'model file.',/)
 45    format (/,'**warning ver045** ',a,' involves a nonlinear EoS.',/,
      *          ' Output properties are stoichiometric averages.',/)
 46    format (/,'**warning ver046** temperature (',g12.6,' K) is out',

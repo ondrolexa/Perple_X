@@ -6367,7 +6367,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine cmodel (im,idsol,first)
+      subroutine cmodel (im,idsol,first,found)
 c---------------------------------------------------------------------
 c cmodel - checks to see if solution models contain valid endmembers.
 c modified to allow saturated phase/component endmembers, 10/25/05.
@@ -6376,7 +6376,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical first, ok
+      logical first, ok, found
 
       character missin(m4)*8
 
@@ -6445,6 +6445,7 @@ c----------------------------------------------------------------------
       ineg = 0
       ipos = 0
       ok = .false.
+      found = .false.
 c                              if called by build (iam = 4) skip the
 c                              name check:
       if (iam.ne.4) then
@@ -6457,6 +6458,7 @@ c                              got a match, exit
                idsol = i
                im = im + 1
                ok = .true.
+               found = ok
                exit
 
             end if
@@ -6592,7 +6594,7 @@ c                                 is possible
      *                         'solution model: '//tname//
      *                         ' will be rejected'
 
-             jstot = 0
+             jstot = 1
 
          end if
 
@@ -6606,7 +6608,6 @@ c                                missing endmember warnings:
 
          im = im - 1
          if (first) call warn (25,wg(1,1),jstot,tname)
-         jstot = 0
 
       else
 
@@ -11407,11 +11408,12 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, im, id, idsol, ixct, gcind, ophct
+      integer i, j, im, id, idsol, ixct, gcind, ophct, irjct, infnd
 
-      logical first, chksol, wham
+      logical first, chksol, wham, ok, found
 
-      character sname(h9)*10, new*3, tn1*6, tn2*22
+      character sname(h9)*10, new*3, tn1*6, tn2*22, rjct(h9)*10, 
+     *          nfnd(h9)*10
 
       double precision zt
 
@@ -11477,6 +11479,8 @@ c                                 global compositional index counter
       gcind = 0
 c                                 initialize model counter
       im = 0
+c                                 rejected model counter
+      irjct = 0
 c                                 a flag to check if more than one solution model
 c                                 references an internal molecular EoS.
       wham = .false.
@@ -11511,30 +11515,32 @@ c                                 -------------------------------------
 c                                 read the solution model
          call rmodel (tn1,tn2)
 c                                 istot is zero, if eof:
-         if (istot.eq.0.and.isoct-im.gt.0) then
-c                                 then at least one solution phase referenced
-c                                 in the input is not present in the
-c                                 solution phase data file, write warning:
-            if (iam.lt.3.or.iam.eq.15)
-     *                               call warn (43,zt,isoct-im,'INPUT9')
-            exit
-
-         end if
+         if (istot.eq.0) exit
 c                                 -------------------------------------
 c                                 check the solution model:
-         call cmodel (im,idsol,first)
+         call cmodel (im,idsol,first,found)
 
          if (jstot.eq.1.and.jsmod.eq.39.and.lopt(32)) then
 c                                  lagged aqueous speciaton with a pure water solvent.
          else
 c                                  normal solution.
-            if (jstot.lt.2) cycle
+            if (jstot.lt.2) then
+               if (found) then
+                  irjct = irjct + 1
+                  rjct(irjct) = tname
+               end if 
+               cycle
+            end if
 c                                 -------------------------------------
 c                                 reformulate the model so that it has
 c                                 no missing endmembers:
             if (jstot.lt.istot) call reform (im,first)
 
-            if (istot.lt.2) cycle
+            if (istot.lt.2) then
+               irjct = irjct + 1
+               rjct(irjct) = tname
+               cycle
+            end if
 
          end if
 c                                 -------------------------------------
@@ -11611,9 +11617,56 @@ c                                 indicate site_check_override and refine endmem
 c                               read next solution
       end do
 
-      if (isoct.gt.0) then
+      if (iam.lt.3.or.iam.eq.15) then
 
-         if (iam.lt.3.or.iam.eq.15) write (*,1110) iphct - ipoint
+         infnd = 0 
+
+         do i = 1, isoct
+
+            ok = .false.
+c                                 check if fname was included:
+            do j = 1, im
+               if (fname(i).eq.sname(j)) then 
+                  ok = .true.
+                  exit
+               end if
+            end do
+
+            if (ok) cycle
+c                                  check if fname was rejected:
+            do j = 1, irjct
+               if (fname(i).eq.rjct(j)) then 
+                  ok = .true.
+                  exit 
+               end if
+            end do
+
+            if (ok) cycle
+c                                  add to not found list:
+            infnd = infnd + 1
+            nfnd(infnd) = fname(i)
+
+         end do
+c                                  total pseudocompound count:
+         write (*,1110) iphct - ipoint
+c                                  list of found solutions
+         if (im.gt.0) then
+            write (*,'(/,a,/)') 'Summary of included solution models:'
+            write (*,'(8a)') (sname(i),i= 1, im)
+         else
+            write (*,'(/,a,/)') 'No solution models included!'
+         end if
+
+         if (irjct.gt.0) then
+            write (*,'(/,a,/)') 'Summary of rejected solution models:'
+            write (*,'(8a)') (rjct(i),i= 1, irjct)
+         end if
+
+         if (infnd.gt.0) then
+            write (*,'(/,a,/)') 
+     *             'Requested solution models that were not found:'
+            write (*,'(8a)') (nfnd(i),i= 1, infnd)
+         end if
 c                               flush for paralyzer's piped output
          flush (6)
 c                               scan for "killed endmembers"
@@ -19735,7 +19788,7 @@ c                                 has been identified.
 
                if (first) call warn (100,0d0,101,
      *             'eliminated polytope '//poname(h0,poly(h0)+1,1,ii)/
-     *             /'during reformulation of model '//tname//
+     *             /'during reformulation of '//tname//
      *             ' due to missing endmembers.')
                exit
 
@@ -19746,7 +19799,7 @@ c                                 has been identified.
          if (ipvert(ii).gt.0.and.killed.and.first) 
      *      call warn (100,0d0,102,
      *          'reformulated polytope '//poname(h0,poly(h0)+1,1,ii)/
-     *          /' of model '//tname//' due to missing endmembers.')
+     *          /' of '//tname//' due to missing endmembers.')
 c                                 next polytope
       end do
 c                                 clean up the model by eliminating empty/
