@@ -455,9 +455,14 @@ c                                 don't allow fluid models if
 c                                 the system is fluid saturated:
             if (jsmod.eq.0.and.ifct.gt.0) cycle
 c                                 check for endmembers:
-            call cmodel (im,idsol,first)
-            if (jstot.eq.0) cycle
-      
+            call cmodel (im,idsol,first,good)
+
+            if (jsmod.eq.39) then
+               if (jstot.eq.0) cycle
+            else if (jstot.lt.2) then 
+               cycle
+            end if
+
             ict = ict + 1
             if (ict.gt.i9) call error (24,0d0,i9,'build')
 

@@ -3627,7 +3627,7 @@ z(Mg)   = 1 phl + 1 tbi + 1 obi + 1 fbi + 1 east
 T1                                  | site name
 2 2 2                               | 2 species on T1, 2 site per formula unit.
 z(Si)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
-z(Al)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi
+z(Al)   = 1/2 phl + 1/2 ann + 1/2 tbi + 1/2 obi + 1/2 mnbi + 1 east + 1 fbi
 
 OH                                  | site name
 2 2 2                               | 2 species on H, 2 site per formula unit.

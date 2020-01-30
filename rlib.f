@@ -11658,7 +11658,9 @@ c                                  list of found solutions
          end if
 
          if (irjct.gt.0) then
-            write (*,'(/,a,/)') 'Summary of rejected solution models:'
+            write (*,'(/,a,/)') 'Summary of rejected solution models '//
+     *                             '(see warnings above for reasons):'
+         
             write (*,'(8a)') (rjct(i),i= 1, irjct)
          end if
 
