@@ -11691,11 +11691,11 @@ c                               reset ikp
 
          end if
 
-         do i = 1, im
-            fname(i) = sname(i)
-         end do
-
       end if
+
+      do i = 1, im
+         fname(i) = sname(i)
+      end do
 
       isoct = im
 c                              identify the fluid for aqrxdo

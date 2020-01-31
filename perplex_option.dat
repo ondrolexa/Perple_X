@@ -58,7 +58,7 @@ final_resolution          default | [1d-2 1d-3] >0, <1, exploratory and auto-ref
 finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st order finite difference increment on pressure
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction
-global_reach_increment      6     | [0] >= 0, overridden by reach_factor specified in solution model file
+global_reach_increment    default | [0] >= 0, overridden by reach_factor specified in solution model file
 grid_levels               default | [1 4] exploratory and auto-refine (grid parameters keyword group)
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
 hybrid_EoS_H2O              5     | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
