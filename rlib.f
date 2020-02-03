@@ -954,7 +954,11 @@ c        b6 = c2/theta^2 => b12
 c        b7 = -c1-c2/theta^2
          b8 = -(b1+b7)
 c                                 the reference condition born radius (thermo 19)
-         b9 = 5d9 * eta * c**2 / (1.622323167d9 * eta * c + 5d9 * b)
+         if (b.ne.0d0.or.c.ne.0d0) then 
+            b9 = 5d9 * eta * c**2 / (1.622323167d9 * eta * c + 5d9 * b)
+         else 
+            b9 = 0d0
+         end if
 
          return
 c                                 remaining standard forms have caloric polynomial
@@ -15291,10 +15295,6 @@ c-----------------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -21191,10 +21191,6 @@ c----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -21419,6 +21415,21 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
+      integer iam
+      common/ cst4 /iam
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      integer npt,jdv
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
       integer jend
       common/ cxt23 /jend(h9,m4)
 
@@ -21447,35 +21458,47 @@ c-----------------------------------------------------------------------
          scp(j) = 0d0 
       end do
 
-      if (lopt(32).and.ksmod(ids).eq.39) then 
+      if (lopt(32).and.ksmod(ids).eq.39) then
 
-         if (pure.or.caq(jd,na1).eq.0d0) then
+         if ((iam.eq.1.or.iam.eq.2).and.resub) then 
+c                                  meemum, vertex => during dynamic optimization
+            i = jdv(jd)
+
+            do j = 1, icomp
+               scp(j) = cp2(j,i)*c2tot(i)
+            end do
+
+         else
+
+            if (pure.or.caq(jd,na1).eq.0d0) then
 c                                  pure solvent, use the y array to be safe
-            do i = 1, ns
-               do j = 1, icomp 
-                  scp(j) = scp(j) + y(i) * cp(j,jnd(i))
-               end do 
-            end do
+               do i = 1, ns
+                  do j = 1, icomp 
+                     scp(j) = scp(j) + y(i) * cp(j,jnd(i))
+                  end do 
+               end do
 
-         else 
+            else 
 c                                  impure solvent
-            do i = 1, ns
-               do j = 1, icomp 
-                  scp(j) = scp(j) + caq(jd,i) * cp(j,jnd(i))
-               end do 
-            end do
+               do i = 1, ns
+                  do j = 1, icomp 
+                     scp(j) = scp(j) + caq(jd,i) * cp(j,jnd(i))
+                  end do 
+               end do
 
-            do i = sn1, nsa
+               do i = sn1, nsa
 
-               k = i - ns
+                  k = i - ns
 c                                 convert molality to mole fraction (xx)
-               xx = caq(jd,i)/caq(jd,na2)
+                  xx = caq(jd,i)/caq(jd,na2)
 
-               do j = 1, icomp
-                  scp(j) = scp(j) + xx * aqcp(j,k)
-               end do  
+                  do j = 1, icomp
+                     scp(j) = scp(j) + xx * aqcp(j,k)
+                  end do  
 
-            end do
+               end do
+
+           end if
 
          end if
 

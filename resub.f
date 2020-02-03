@@ -902,10 +902,6 @@ c                                 global variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -2305,10 +2301,6 @@ c----------------------------------------------------------------------
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
 
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
-
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
@@ -2867,10 +2859,6 @@ c----------------------------------------------------------------------
 
       integer jtest,jpot
       common/ debug /jtest,jpot
-
-      logical quack
-      integer solc, isolc
-      common/ cxt1 /solc(k5),isolc,quack(k21)
 
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin
