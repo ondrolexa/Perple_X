@@ -302,7 +302,7 @@ c tzmult(i,tsite)  - true site mutliplicity
       common/ cxt1n /zcoef(0:m0,m11,m10,h0),zmult(h0,m10),
      *               msite(h0),zsp(h0,m10)
 
-      character*22 zuffix
+      character*60 zuffix
       integer zsp1
       logical zform
       double precision tzmult

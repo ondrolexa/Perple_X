@@ -8275,7 +8275,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character sname*10
+      character sname*10, text*80
 
       logical add, wham, zbad, bad
 
@@ -8842,11 +8842,36 @@ c                                 y's and dependent species y:
 
       do i = 1, msite(h0)
 c                                 eliminate sites with 1 species
-         if (zmult(h0,i).gt.0) then 
+         if (zmult(h0,i).gt.0) then
 c                                 non-temkin
-            if (zsp(h0,i).eq.0) cycle
+            if (zsp(h0,i).eq.0) then
+c                                 pad zuffix with the remaining species
+               if (tzmult(h0,i).eq.1d0) then 
+                  znames(h0,i,2) = ' '
+               else 
+                  write (znames(h0,i,2),'(i2)') idint(tzmult(h0,i))
+               end if
+
+               text = znames(h0,i,0)//'['//znames(h0,i,1)
+     *                                   //znames(h0,i,2)//']'
+
+               call unblnk (text)
+               call mertxt (text,text,zuffix(h0),0)
+               zuffix(h0) = text
+               zuffix(im) = text
+               cycle
+            end if
          else
-            if (zsp(h0,i).eq.1) cycle
+            if (zsp(h0,i).eq.1) then
+c                                 pad zuffix with the remaining species
+               text = znames(h0,i,0)//'['//znames(h0,i,1)//']'
+               call unblnk (text)
+               call mertxt (text,text,zuffix(h0),0)
+               zuffix(h0) = text
+               zuffix(im) = text
+               cycle
+               cycle
+            end if
          end if
 
          nloc = nloc + 1
@@ -8864,8 +8889,7 @@ c                                 # of terms in the
 c                                 site fraction function and a0.
             lterm(j,nloc,im) = nterm(i,j)
             dcoef(0,j,nloc,im) = acoef(i,j,0)
-            znames(im,nloc,j) = znames(h0,nloc,j) 
-          
+            znames(im,nloc,j) = znames(h0,i,j)
 c                                 for each term:
             do k = 1, nterm(i,j)
 c                                 term coefficient amd species index:

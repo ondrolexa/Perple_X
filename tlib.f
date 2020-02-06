@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Feb 3, 2020.',
+     *      'Perple_X version 6.8.9, source updated Feb 6, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2163,7 +2163,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.9) then 
          write (*,9) char
       else if (ier.eq.10) then 
-         write (*,10) char
+         write (*,10) char, int
       else if (ier.eq.11) then 
          write (*,11) char,int
       else if (ier.eq.12) then 
@@ -5224,7 +5224,7 @@ c                                 get pointer to end of string in chars
 
       text = ' '
 
-      if (nchar2.gt.len(text)) call error (10,0d0,lchar,text2)
+      if (nchar2.gt.len(text)) call error (10,0d0,len(text),text2)
 
       write (text,'(400a)') chars(1:nchar2)
 
