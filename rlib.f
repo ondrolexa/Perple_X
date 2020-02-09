@@ -7931,8 +7931,11 @@ c                                 zero y-array
          end do
 
          y(h) = 1d0
+
+         call y2p0 (id)
 c                                 check for valid site fractions
-         if (zbad(y,id,zsite,tname)) call error (125,z(1),h,tname)
+         if (sck(id).and.zbad(pa,id,zsite,tname)) 
+     *                                     call error (125,z(1),h,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,y)
 
@@ -8983,7 +8986,7 @@ c                                 shift pointer from y array to p array
 c                                 -------------------------------------
 c                                 if msite(h0) ne 0 get "normalization" constants (endmember
 c                                 configurational entropies) for entropy model:
-      if (msite(h0).ne.0) call snorm (im,tname)
+      if (msite(im).ne.0) call snorm (im,tname)
 c                                 -------------------------------------
       if (order) then
 c                                 models with speciation:
@@ -11536,7 +11539,8 @@ c                                 format test line
 c                                 check version compatability
       if (.not.chksol(new)) call error (3,zt,im,new)
 
-      write (*,'(80(''-''),/,a,/)') 'Solution model summary:'
+      if (iam.lt.3.or.iam.eq.15)
+     *           write (*,'(80(''-''),/,a,/)') 'Solution model summary:'
 
       do while (im.lt.isoct)
 c                                 -------------------------------------
@@ -21038,9 +21042,20 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical dynam, bad
+      logical dynam, bad, zbad
+
+      external zbad
 
       integer ids, phct
+
+      double precision zsite(m10,m11)
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 c                                 get the polytopic compositions:
       call setexs (ids,phct,dynam)
@@ -21054,6 +21069,17 @@ c                                 optionally non-refineable endmember, otherwise
 c                                 xtoy sets the y's for the composite polytopic
 c                                 composition.
       if (bad) return
+
+      if (.not.sck(ids)) then
+c                                 as ridiculous as this may seem, if ~sck, then this
+c                                 is a relict equipartition model, BUT because people 
+c                                 prefer the result that they get with site-checking do
+c                                 a site check here and reject compositions with negative 
+c                                 site fractions:
+        bad = zbad(pa,ids,zsite,fname(ids))
+        if (bad) return
+
+      end if 
 c                                 convert the y's into p0a/pp/pa arrays indexed
 c                                 only by independent endmembers, if this were
 c                                 done for models without disorder the p-
