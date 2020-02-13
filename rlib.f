@@ -7926,18 +7926,16 @@ c                                 get normalization constants
 c                                 for each endmember
       do h = 1, nstot(id)
 c                                 zero y-array
-         do j = 1, nstot(id)
-            y(j) = 0d0
+         do j = 1, mstot(id)
+            pa(j) = 0d0
          end do
 
-         y(h) = 1d0
-
-         call y2p0 (id)
+         pa(h) = 1d0
 c                                 check for valid site fractions
          if (sck(id).and.zbad(pa,id,zsite,tname)) 
      *                                     call error (125,z(1),h,tname)
 c                                 evaluate S
-         scoef(h,id) = omega(id,y)
+         scoef(h,id) = omega(id,pa)
 
       end do
 
