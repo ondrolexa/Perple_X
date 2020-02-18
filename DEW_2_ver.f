@@ -142,12 +142,16 @@ c                                 find its stoichiometry
 
                read (chars(ist),*) stoich
 
-               if (chars(ist+1).le.'9'.and.chars(ist+1).ge.'1') then
+               if (chars(ist+1).le.'9'.and.chars(ist+1).ge.'0') then
+
+                  if (chars(ist+1).eq.'0') then 
+                     write (*,*) chars(1:jend(1)),' wudda been wrong689'
+                  end if 
 c                                 two digit numeral, no provision for larger numbers...
                   write (two,'(a,a)') chars(ist:ist+1)
                   read (two,*) stoich
                   ist = ist + 1
-                  write (*,*) chars(1:jend(1)),' wudda been wrong1'
+
                end if
 
                ist = ist + 1
@@ -192,10 +196,6 @@ c                                 check if already at the end
 c                                 the previous character was an element
 c                                 and there is no stoichiometric coeff
                   stoich = 1d0
-               else 
-                  if (stoich.ne.1d0) then
-                     write (*,*) chars(1:jend(1)),' wudda been wrong3'
-                  end if
                end if
 
                ist = iend 
@@ -208,8 +208,6 @@ c                                 end of a repeat group
 
             if (ist.eq.iend.and.
      *          chars(ist).le.'Z'.and.chars(ist).ge.'A') then
-
-               write (*,*) chars(1:jend(1)),' wudda been wrong2'
                cycle
 
             end if
@@ -315,7 +313,7 @@ c                                 load number into chars
 
          call ftext (1,iend)
 c                                 write the formula
-         write (lun,'(240a)') chars(1:iend)
+         write (lun,'(400a)') chars(1:iend)
 c                                 write the DEW spreadsheet options as a comment:
 c         write (lun,'(3(a,i1))') 
 c     *         '   | DEW correlation options => omega: ',int(nums(8)),
@@ -435,7 +433,7 @@ c----------------------------------------------------------------------
 
          if (card.ne.' ') then 
 
-            read (card,'(240a)') chars
+            read (card,'(400a)') chars
 c                                 find end of data marker '|'
             com = iscan (1,240,'|') - 1
 c                                 '|' in first column

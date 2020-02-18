@@ -90,9 +90,9 @@ c------------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
-      integer length,iblank,icom
+      integer length,com
       character chars*1
-      common/ cst51 /length,iblank,icom,chars(240)
+      common/ cst51 /length,iblank,com,chars(lchar)
 
       double precision cp
       common/ cst12 /cp(k5,k1)

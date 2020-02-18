@@ -8479,7 +8479,8 @@ end_of_model
 
 begin_model
                       --------------------------------------------------------
-                        HP model
+                        HP 2011 model, "tro" must be excluded to stabilize this 
+                        solution model.
 Po(HP)
 abbreviation Po
 full_name    pyrrhotite

@@ -2873,6 +2873,27 @@ a1 = 3.385902  a2 = 1431.639  a3 = 8.238714  a4 = -122193.7  c1 = 92.853  c2 = -
 end
 
 
+GLUTAMAT EoS = 16 | Gf =  -699807. C5H8NO4-  Revised 1/22/15 based on V at 25 C from Ziemer & Woolley (2007) and predicted a1, a2, and a4; c1 and c2 from fits to delCpr 
+C(5)H2(4)O2(2)N2(.5) 
+G0 = -699807.5  S0 = 185.7696  w = 400367  q = -1  
+a1 = 7.305264  a2 = 5163.056  a3 = -23.05384  a4 = -137653.6  c1 = 209.2  c2 = -619232  
+end
+
+
+GLUTAMIC EoS = 16 | Gf =  -724041. C5H9NO4  Revised 1/22/15 based on fitting Cp and V vs T data from Hakin et al. (1994) + revised correlation for a1 from Sverjensky e
+C(5)H2(4.5)O2(2)N2(.5) 
+G0 = -724041.2  S0 = 256.0608  w = 292880  
+a1 = 8.07512  a2 = 5564.72  a3 = -18.4096  a4 = -139327.2  c1 = 289.5328  c2 = -385764.8  
+end
+
+
+GLUTAMIN EoS = 16 | Gf =  -528356. C5H10N2O3  Shock & Helgeson (1990) revised with new predicted a1 for complex species 
+C(5)H2(5)N2(1)O2(1.5) 
+G0 = -528355.5  S0 = 261.1234  w = 75312  
+a1 = 8.287458  a2 = 6098.431  a3 = -30.89215  a4 = -141486.1  c1 = 140.0812  c2 = 246123.8  
+end
+
+
 GLUTARAT EoS = 16 | Gf =  -714878. C5H7O4-  Shock & Helgeson (1990) revised with new predicted a1 for complex species 
 C(5)H2(3.5)O2(2) 
 G0 = -714878.2  S0 = 221.3336  w = 346393.4  q = -1  
@@ -2884,6 +2905,13 @@ GLUTARIC EoS = 16 | Gf =  -739648. C5H8O4  Shock & Helgeson (1990) revised with 
 C(5)H2(4)O2(2) 
 G0 = -739647.5  S0 = 306.2688  w = -41840  
 a1 = 8.667951  a2 = 6460.682  a3 = -33.92973  a4 = -142979.8  c1 = 179.138  c2 = 419387.4  
+end
+
+
+GLYCINE, EoS = 16 | Gf =  -380535. C2H5NO2  Plyasunov & Shock (2001) 
+C(2)H2(2.5)O2(1)N2(.5) 
+G0 = -380534.8  S0 = 164.4312  w = 83680  
+a1 = 4.51872  a2 = 543.92  a3 = 31.7984  a4 = -146440  c1 = 117.152  c2 = -343088  
 end
 
 
@@ -3010,6 +3038,13 @@ HSO5-    EoS = 16 | Gf =  -637516. HSO5(-)  Shock et al. (1997) revised with new
 H2(.5)S2(.5)O2(2.5) 
 G0 = -637516.1  S0 = 212.1288  w = 360284.2  q = -1  
 a1 = 4.928668  a2 = 2900.516  a3 = -4.078145  a4 = -128264.7  c1 = 130.5935  c2 = 121896.7  
+end
+
+
+Isobutan EoS = 16 | Gf =      151. C4H10(0)  G, H, S, Cp, V from Shock & Helgeson (1990); a1 estimated with Sverjensky et al. (2014; c2 estimated with a new hydro
+C(4)H2(5) 
+G0 = 150.624  S0 = 167.4437  w = -125520  
+a1 = 7.305264  a2 = 5163.056  a3 = -23.05384  a4 = -137653.6  c1 = 386.1832  c2 = 799980.8  
 end
 
 

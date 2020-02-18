@@ -7926,7 +7926,7 @@ c                                 get normalization constants
 c                                 for each endmember
       do h = 1, nstot(id)
 c                                 zero y-array
-         do j = 1, mstot(id)
+         do j = 1, nstot(id)
             pa(j) = 0d0
          end do
 
@@ -12060,7 +12060,7 @@ c                                 -------------------------------------
       smix = 0d0
       esum = 0d0
 c                                 load static array constants:
-      do h = 1, lstot(im)
+      do h = 1, nstot(im)
 c                                 accumulate endmember configurational entropy
          esum = esum + pa(h) * scoef(h,im)
 

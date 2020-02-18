@@ -17,6 +17,7 @@ H  H2    2. 0.
 Cl Cl2   2. 0.
 S  S2    2. 0.
 F  F2    2. 0.
+N  N2    2. 0.
 O  O2    2. 0.
 end end  0. 0.         = list terminator
 
