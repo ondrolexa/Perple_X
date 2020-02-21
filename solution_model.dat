@@ -372,12 +372,12 @@ z(Mg,M2)   = 1 phl + 1 obi + 1 east + 1/2 tbit + 1 fbit
 T1                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
 z(Si,T1)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
-z(Al,T1)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
+z(Al,T1)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi + 1 fbit
 
 OH                                  | site name
 2 2 2                               | 2 species on H, 2 site per formula unit.
 z(O,OH)     = 1 tbit
-z(OH,OH)    = 1 east + 1 phl + 1 ann + 1 obi + 1 mnbi 
+z(OH,OH)    = 1 east + 1 phl + 1 ann + 1 obi + 1 mnbi + 1 fbit
 
 [Si2O10(OH)2]                       | formula suffix, enter "none" for no suffix.
 

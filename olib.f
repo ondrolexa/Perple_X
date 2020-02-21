@@ -2325,9 +2325,9 @@ c                                 pressure increments
          end do
 
          if (okt) then 
-            if (dp0/dabs(fac*v/gpp).lt.1d-1) then 
-c            write (*,*) 'pp',dp0/dabs(fac*v/gpp),dp0,p,t,id
-            end if 
+c                                 last good dp0
+            xdp = dp0
+
             dp0 = dabs(fac*v/gpp)
          else 
 c                                 negative compressibility?
@@ -2342,6 +2342,14 @@ c                                 negative compressibility?
       end if  
 c                                 final values
       call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+
+      if ((v.lt.0d0.or.gpp.gt.0d0).and..not.rxn.and.okt) then
+c                                 v or K < 0, reset to last working value
+         dp0 = xdp
+
+         call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
+
+       end if
 c                                 -------------------------------------
 c                                 temperature increments
       if (.not.rxn) then 
@@ -2374,14 +2382,16 @@ c                                 temperature increments
 
          end do
 
-         if (okt) then 
-            if (dt0/dabs(fac*s/gtt).lt.1d-1) then
-c            write (*,*) 'tt',dt0/dabs(fac*s/gtt),dt0,p,t,id
-            end if 
+         if (okt) then
+c                                 last good dt0
+            xdt = dt0
+
             dt0 = dabs(fac*s/gtt)
+
          else 
 c                                 something has gone horribly wrong! 
             dt0 = xdt
+
          end if
 
       else 
@@ -2392,6 +2402,14 @@ c                                 something has gone horribly wrong!
       end if  
 c                                 final values
       call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+
+      if ((s.lt.0d0.or.gtt.gt.0d0).and..not.rxn.and.okt) then
+c                                 v or K < 0, reset to last working value
+         dt0 = xdt
+
+         call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
+
+      end if
 c                                 emergency check on increments
       if (t-2d0*dt2.lt.0d0) then 
 
