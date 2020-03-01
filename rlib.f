@@ -1967,7 +1967,7 @@ c---------------------------------------------------------------------
       common/ cst338 /fwt(k10)
 c---------------------------------------------------------------------
 
-      if (id+1.gt.k10) call error (1,0d0,id,'k10')
+      if (id+1.gt.k10) call error (1,0d0,id+1,'k10')
 
       ipoint = iphct
 c                               check for duplicates
@@ -3075,6 +3075,9 @@ c                                 find the name
          call readnm (ibeg,iend,com,ier,name)
          if (ier.ne.0) goto 90
          ict = ict + 1
+         if (ict.gt.m4) call error (1,0d0,ict,
+     *                 'm4 (maximum number of endmembers)')
+
          mname(ict) = name
 
          if (ibeg.ge.com.and.ict-i.lt.idim) then
@@ -3732,7 +3735,11 @@ c                                 if nreact = -1, new name
       else
 c                                 reciprocal sol, get index
          inds(1) = match(idim,ier,name)
-         if (ier.ne.0) goto 90
+
+         if (ier.ne.0) then
+            rnum = 1d0
+            goto 90
+         end if
 
       end if
 c                                 find marker '='
@@ -6606,7 +6613,12 @@ c                                 is possible
 
       call redep (0)
 c                                done if nothing is missing:
-      if (jstot.eq.istot) return
+      if (jstot.eq.istot) then
+         if (jstot.eq.1.and..not.lopt(32)) call warn (99,wg(1,1),1,
+     *                tname//'will be rejected because '//
+     *                'aq_lagged_speciation = F')
+         return
+      end if 
 c                                missing endmember warnings:
       if (jstot.lt.2) then
 
@@ -11707,7 +11719,7 @@ c                               reset ikp
             if (ikp(i).lt.0) ikp(i) = 0
          end do
 
-         if (io3.eq.0.and.outprt.and.(iam.lt.3.or.iam.eq.15)
+         if (io3.eq.0.and.outprt.and.(iam.eq.1.or.iam.eq.15)
      *                                     .and.isoct.ne.im) then
 
             write (n3,1020)
@@ -14955,13 +14967,24 @@ c                                  other properties
 c                                 WERAMI/MEEMUM console output
          call rankem (mo,ind,aqct,iopt(32))
 
-         write (lu,1000)
+         if (jdaq.eq.20.or.lopt(32).and.jdaq.eq.39) then
+
+            write (lu,1000)
+
+         else
+
+            write (lu,1005)
+
+         end if
 
          write (text,1050) -dlog10(mo(ihy)*gamm0),dabs(errkw),
      *                     -dlog10(mo(ihy)*gamm0)-ph0,is,gamm0
          call deblnk (text)
          write (lu,'(400a)') chars(1:length)
          write (text,1070) epsln,msol*1d3,smo
+         call deblnk (text)
+         write (lu,'(400a)') chars(1:length)
+         write (text,1075) tmass/smot
          call deblnk (text)
          write (lu,'(400a)') chars(1:length)
 
@@ -15142,7 +15165,8 @@ c                                 forward model
 
       end if
 
-1000  format (/,'Back-calculated solute speciation in the solvent:',/)
+1000  format (/,'Back-calculated solute speciation:',/)
+1005  format (/,'Simple back-calculated solute speciation:',/)
 1010  format (a8,4x,i2,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1020  format (/,'Solvent endmember properties:',//,
      *        9x,'molality',3x,'mol_fraction',2x,'vol_fraction#',
@@ -15158,6 +15182,7 @@ c                                 forward model
 1070  format ('dielectric constant = ', g10.4,
      *        '; solvent molar mass, g/mol = ',f8.4,
      *        '; solute molality = ',g10.4)
+1075  format ('total molar mass, g/mol-solvent = ',f8.4)
 1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
 1100  format (/,'Solute endmember properties:',/,
@@ -15165,7 +15190,7 @@ c                                 forward model
      *       'molality',5x,'mol_fraction',3x,'mol_fraction',6x,
      *       'g,J/mol*',5x,'g0,J/mol**')
 1110  format (1x,a8,2x,4(g12.6,3x))
-1120  format (/,'Back-calculated fluid bulk composition:',//,
+1120  format (/,'Simple back-calculated fluid bulk composition:',//,
      *        13x,'mol %',11x,'wt %')
 1130  format (/,'Back-calculated vs optimized fluid bulk composition:',
      *        //,26x,'optimized',21x,'optimized',/,
@@ -19334,7 +19359,7 @@ c                                composite compositional simplex
       isimp(poly(h0)+1) = 1
       ivert(poly(h0)+1,1) = poly(h0)
 
-      if (poly(h0)+1.gt.h4) call error (1,rnums(1),poly(h0)+1,
+      if (poly(h0).gt.h4) call error (1,rnums(1),poly(h0),
      *    'h4 (maximum number of sub-polytopes for solution model: '
      *     //tname//')')
 c                                read subdivision ranges for the polytopes
@@ -19352,7 +19377,7 @@ c                                number of simplices
 
          isimp(i) = idint(rnums(1))
 
-         if (isimp(i).gt.mst) call error (1,rnums(1),istot,
+         if (isimp(i).gt.mst) call error (1,rnums(1),isimp(i),
      *      'mst (maximum number of simplices in a polytope for '//
      *      'solution model: '//tname//')')
 
@@ -21151,7 +21176,7 @@ c----------------------------------------------------------------------
 
             if (k.ne.0) then
 c                                 reject pure independent endmember compositions.
-               if (ldsol(k,ids).gt.0.and.nrf(ids)
+               if (ldsol(k,ids).gt.0.and.nrf(ids).and.lopt(39)
      *                              .and.pwt(ii).gt.one) then
 
                   bad = .true.

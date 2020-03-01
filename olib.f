@@ -2404,7 +2404,7 @@ c                                 final values
       call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
       if ((s.lt.0d0.or.gtt.gt.0d0).and..not.rxn.and.okt) then
-c                                 v or K < 0, reset to last working value
+c                                 s or Cp < 0, reset to last working value
          dt0 = xdt
 
          call getgtt (g0,dt0,dt1,dt2,s,gtt,id)

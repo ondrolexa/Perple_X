@@ -487,7 +487,7 @@ c                                  because non-linear stretching can prevent
 c                                  fluid composition from reaching pure water.
          if (ophct.eq.jphct.and.ksmod(ids).eq.39) then 
 
-            write (*,'(3(a,/))') ' 688 version error: resub failed to ',
+            write (*,'(3(a,/))') '688 version error: resub failed to ',
      *           'gnerate pure water solvent, use 687 to avoid this ',
      *           'problem, please report this error. CARTES needs to ',
      *           'be modified to output sum(min) composition.'

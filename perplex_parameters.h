@@ -32,14 +32,14 @@
 !                                 mst - max number of distinct identisites per solution
 !                                 mdim - hard constraint on max number of dimensions
 !                                        for a solution model composition space.
-      parameter (mst=3,mdim=8,msp=mdim+6,ms1=msp-1)
+      parameter (mst=4,mdim=8,msp=mdim+6,ms1=msp-1)
 !                                 h4  - max-number of polytopes in a composite composition space
 !                                 h5  - max number of saturated components
 !                                 h6  - max number of saturated composants in any subcomposition
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
 !                                 h0 - h9 + 1, added to eliminate temporary solution model arrays 
-      parameter (h4=3,h5=5,h6=500,h8=250,h9=30,h0=h9+1)
+      parameter (h4=4,h5=5,h6=500,h8=250,h9=30,h0=h9+1)
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami
@@ -133,7 +133,7 @@
       parameter (k18=k1*k31, k20=k21*k31, k24=k1*k32, k25=k21*k32)
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2,k17=7,k19=3*k5)
-      parameter (k9=35,k10=400,k14=18,k15=6,k16=120)
+      parameter (k9=35,k10=450,k14=18,k15=6,k16=120)
       parameter (k22=mdim*mst*h4*k19,k23=25)
 
 !                                 l2 - max number of independent potential variables
@@ -175,8 +175,8 @@
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
 
-      parameter (m0=12,m1=60,m2=8,m3=3,m4=50,m6=6,m7=15,m8=9,m9=10,
-     *           m10=6,m11=11,m12=4,m13=8,m14=2,m15=35,m16=6,m17=5,
+      parameter (m0=12,m1=60,m2=8,m3=3,m4=68,m6=6,m7=15,m8=9,m9=10,
+     *           m10=6,m11=11,m12=4,m13=8,m14=2,m15=57,m16=6,m17=5,
      *           m18=6)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
