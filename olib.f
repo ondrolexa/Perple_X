@@ -383,7 +383,7 @@ c                                 load speciation
                pa(k) = ysp(k,l)
             end do
 c                                 use zbad to convert to site fractions
-            sol688 = zbad(pa,id,zsite,pname(l))
+            sol688 = zbad(pa,id,zsite,pname(l),.false.,pname(l))
 
             do i = 1, msite(id)
 

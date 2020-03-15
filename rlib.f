@@ -6751,13 +6751,19 @@ c---------------------------------------------------------------------
 
       logical eor
 
-      double precision coeffs(k7), rnums(m4), enth(3)
+      double precision coeffs(k7), rnums(m4), enth(3), sum
 
       integer ijk(mst),inds(k7),ict
 
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
+
+      character mname*8
+      common/ cst18a /mname(m4)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer nsub,nterm
       double precision acoef
@@ -6952,10 +6958,23 @@ c                               nreact is returned by readr
             ndph(i) = nreact - 1
             if (ndph(i).gt.j4) call error (1,enth(1),ndph(i),'j4')
 
+            sum = 0d0
+
             do j = 1, ndph(i)
+               sum = sum + coeffs(j+1)
                nu(i,j) = coeffs(j+1)
                idep(i,j) = inds(j+1)
             end do
+
+            if (dabs(sum-1d0).gt.zero) then
+
+               write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
+
+               call error (72,sum,i,'dependent endmember '//
+     *              mname(inds(1))//' definition coefficients do not'
+     *              //'sum to 1, solution model:'//tname)
+
+            end if
 
          end do
 
@@ -7696,7 +7715,7 @@ c                                 evaluate enthalpies of ordering
 
       end
 
-      logical function zbad (y,ids,z,text)
+      logical function zbad (y,ids,z,text,endtst,text1)
 c----------------------------------------------------------------------
 c subroutine to compute site fractions computed from equations entered by
 c user for configurational entropy (macroscopic form). with range checks.
@@ -7710,7 +7729,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical badz, bad
+      logical badz, bad, endtst
 
       external badz
 
@@ -7718,7 +7737,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,ids
 
-      character text*(*)
+      character text*(*), text1*(*)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -7772,10 +7791,26 @@ c                                 for each term:
 
                end do
 c                                 non-temkin (688)
-               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) call error (72,
+               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
+
+                  if (endtst) then
+
+                     write (*,1000) text1,z(i,j),text
+
+                     call error (72,zt,i,' z('//
+     *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
+     *                       ' in '//text//' is invalid.')
+
+                  else 
+
+                     call error (72,
      *                       zt,i,'the expression for z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
      *                       ' in '//text//' is incorrect.')
+
+                  end if 
+
+               end if
 
                zt = zt + z(i,j)
 
@@ -7786,6 +7821,8 @@ c                                 non-temkin, fractions must sum to 1
                if (dabs(zt-1d0).gt.zero) then
 
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
+
+                  if (endtst) write (*,1000) text1,zt,text
 
                   call error (72,zt,i,
      *                       'site fractions on '//znames(ids,i,0)// 
@@ -7816,6 +7853,13 @@ c                                 negative site?
       end do
 
       zbad = bad
+
+1000  format (/,'**error ver071** during testing of dependent endmember'
+     *       ,' ',a,' the following invalid site fraction (z = ',g12.6,
+     *        ')',/,'was found. The cause of this error may be either ',
+     *       'the dependent endmember definition or invalid site',/,
+     *       'fraction expressions for one or more of the independent ',
+     *       'endmembers of ',a,/)
 
       end
 
@@ -7944,7 +7988,7 @@ c                                 zero y-array
 
          pa(h) = 1d0
 c                                 check for valid site fractions
-         if (sck(id).and.zbad(pa,id,zsite,tname)) 
+         if (sck(id).and.zbad(pa,id,zsite,tname,.false.,tname)) 
      *                                     call error (125,z(1),h,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,pa)
@@ -8964,7 +9008,8 @@ c                                 save y -> p array
 c                                 check for invalid site fractions, this is only necessary
 c                                 for H&P models that assume equipartition (which is not
 c                                 implemented).
-            if (zbad(pa,im,zsite,tname)) then
+            if (zbad(pa,im,zsite,tname,.true.,
+     *                     mname(iorig(knsp(lstot(im)+j,im))))) then
 
                if (iam.lt.3.or.iam.eq.4.or.iam.eq.15)
      *            call warn (59,y(1),i,
@@ -19314,7 +19359,7 @@ c---------------------------------------------------------------------
 
       integer nreact, i, j, k, l, m, ier, idim
 
-      double precision coeffs(k7), rnums(m4), enth(3)
+      double precision coeffs(k7), rnums(m4), enth(3), sum
 
       integer ijk(mst),inds(k7),ict
 
@@ -19348,6 +19393,12 @@ c---------------------------------------------------------------------
       double precision nu,y2p
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
+
+      character mname*8
+      common/ cst18a /mname(m4)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
@@ -19536,10 +19587,20 @@ c                               nreact is returned by readr
                if (ndph(mdep).gt.j4) 
      *            call error (1,enth(1),ndph(mdep),'j4')
 
+               sum = 0d0
+
                do j = 1, ndph(mdep)
+                  sum = sum + coeffs(j+1)
                   nu(mdep,j) = coeffs(j+1)
                   idep(mdep,j) = inds(j+1)
                end do
+
+              if (dabs(sum-1d0).gt.zero) then 
+                  write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
+                  call error (72,sum,i,'dependent endmember '//
+     *                 mname(inds(1))//' definition coefficients do not'
+     *                 //' sum to 1, solution model: '//tname)
+               end if
 
             end do
 
@@ -21008,7 +21069,7 @@ c                                 static arrays:
 c                                 composite space, save location of 
 c                                 polytopic wts
            gcind = gcind + 1
-           if (gcind.gt.k24) call error (58,0d0,0,'K24 [SOLOAD/SETIND]')
+           if (gcind.gt.k24) call err41 ('K24 [SOLOAD/SETIND]')
            jcox(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
          end if
@@ -21025,8 +21086,7 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
-               if (gcind.gt.k24) 
-     *            call error (58,0d0,0,'K24 [SOLOAD/SETIND]')
+               if (gcind.gt.k24) call err41 ('K24 [SOLOAD/SETIND]')
                jcox(gcind) = spx(ii,i) 
      *                       +  (sco(pos+i) - 1) * ndim(i,ii,ids)
             end do
@@ -21099,7 +21159,7 @@ c                                 is a relict equipartition model, BUT because p
 c                                 prefer the result that they get with site-checking do
 c                                 a site check here and reject compositions with negative 
 c                                 site fractions:
-        bad = zbad(pa,ids,zsite,fname(ids))
+        bad = zbad(pa,ids,zsite,fname(ids),.false.,fname(ids))
         if (bad) return
 
       end if 

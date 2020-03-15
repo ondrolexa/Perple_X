@@ -39,7 +39,7 @@
 !                                 h8  - max number of excluded phases
 !                                 h9  - max number of solutions
 !                                 h0 - h9 + 1, added to eliminate temporary solution model arrays 
-      parameter (h4=4,h5=5,h6=500,h8=250,h9=30,h0=h9+1)
+      parameter (h4=5,h5=5,h6=500,h8=250,h9=30,h0=h9+1)
 !                                 i6  - maximum number of independent chemical potentials (or 
 !                                       fugacity/activities).
 !                                 i7  - number of system props used in werami
@@ -59,7 +59,7 @@
 !                                 j5  - max number of stoichiometric limits on an ordered species
 !                                 j6  - max number of terms in a stoichiometric limit on an ordered species
 !                                 j9  - max number of divariant assemblages
-      parameter (j3=4,j4=7,j5=8,j6=12,j9=160000)
+      parameter (j3=4,j4=8,j5=8,j6=12,j9=160000)
 !                                 k0  - max number of database components
 !                                 k1  - max number of compounds
 !                                 k2  - max number of invariant and univariant compound 
@@ -175,8 +175,8 @@
 !                                m17 - max order of redlich-kistler expansion
 !                                m18 - max number of pairwise terms in a redlich-kistler expansion
 
-      parameter (m0=12,m1=60,m2=8,m3=3,m4=68,m6=6,m7=15,m8=9,m9=10,
-     *           m10=6,m11=11,m12=4,m13=8,m14=2,m15=57,m16=6,m17=5,
+      parameter (m0=12,m1=60,m2=8,m3=3,m4=96,m6=6,m7=15,m8=9,m9=10,
+     *           m10=6,m11=11,m12=4,m13=8,m14=2,m15=85,m16=6,m17=5,
      *           m18=6)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
