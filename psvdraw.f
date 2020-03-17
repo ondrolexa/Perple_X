@@ -366,7 +366,7 @@ c pschem - subroutine to output ternary chemographies.
  
       double precision x3(3),y3(3),xx(j9),yy(j9),style,x1,y1,y,dyt,yt,xt
  
-      integer idss(10),iperm(2,3),i,j,iflag,isat,iop1,kvert,id,nchar
+      integer iperm(2,3),i,j,iflag,isat,iop1,kvert,id,nchar
 
       integer icp,istct,ipoint,ifct,ipot,ias,jd
 
@@ -1181,7 +1181,7 @@ c psmixd - subroutine to draw binary mixed variable diagrams
   
       character*8 title*162, string*(lchar), y*1, tname(5),xname(k5)
   
-      integer idss(10),idf(3),jphi(k1),igo,jop0,iop1,iop2,iop3,jb,
+      integer idf(3),jphi(k1),igo,jop0,iop1,iop2,iop3,jb,
      *        jplus,jminus,isum,idif,j,i1,id1,it,i2,id2,jt,itot,
      *        i00,imis,itoc,j1,iend
 

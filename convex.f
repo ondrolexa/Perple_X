@@ -328,9 +328,6 @@ c-------------------------------------------------------------------
       character names*8
       common/ cst8 /names(k1)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
 
@@ -502,9 +499,6 @@ c-----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 c-----------------------------------------------------------------------
 c                             stable configurations, phases are
 c                             labelled by the index 'i' in the
@@ -636,9 +630,6 @@ c-----------------------------------------------------------------------
       double precision a,b
       common/ cst23 /a(k8,k8),b(k8),ipvt(k8),idv(k8),
      *               iophi,idphi,iiphi,iflg1
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer irct,ird
       double precision vn
@@ -1356,9 +1347,6 @@ c-----------------------------------------------------------------------
 
       double precision cp, bbb, ccc
       common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer idr,ivct
       double precision vnu
@@ -2330,9 +2318,6 @@ c-----------------------------------------------------------------------
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -2419,9 +2404,6 @@ c-----------------------------------------------------------------------
       integer jds,ifr
       double precision du,dv
       common/ cst21 /du(2),dv(2),jds(h5),ifr
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer idr,ivct
       double precision vnu
@@ -4836,9 +4818,6 @@ c-----------------------------------------------------------------------
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer idr,ivct
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
@@ -5030,9 +5009,6 @@ c-----------------------------------------------------------------------
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       save exten 
 c                                 this is a bullshit trick and

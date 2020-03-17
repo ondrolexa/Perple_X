@@ -19,9 +19,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       double precision fo2,fs2,yo2,yc,dg
- 
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
 
       double precision f
       common/ cst11 /f(3)
@@ -84,7 +81,7 @@ c                                 bulk coordinates
 
       end
 
-      subroutine rfluid (irk,ifug)
+      subroutine rfluid (i)
 c---------------------------------------------------------------------
 c irk = 1 - write/read prompt for fluid equations of state
 c irk = 2 - write fluid equation of state for outtit to unit n3
@@ -94,7 +91,7 @@ c---------------------------------------------------------------------
    
       include 'perplex_parameters.h'
 
-      integer nrk,i,irk,ifug,ier
+      integer nrk,i,irk,ier
 
       parameter (nrk=27)
    
@@ -509,11 +506,11 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine setins (ifug)
+      subroutine setins (jfug)
 c-----------------------------------------------------------------------
 c set species for internal eos choices and, if appropriate, variable name.
 
-c    ifug - eos pointer
+c    jfug - eos pointer
 c    isp  - species counter
 c    ins  - pointer to species
 
@@ -522,7 +519,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ifug, i
+      integer jfug, i
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -534,7 +531,7 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 c----------------------------------------------------------------------- 
-      if (ifug.le.5.or.ifug.eq.14.or.ifug.eq.25) then 
+      if (jfug.le.5.or.jfug.eq.14.or.jfug.eq.25) then 
 c                                 xco2 EoS's
             vname(3) = 'X(CO2)  '
 
@@ -543,10 +540,10 @@ c                                 xco2 EoS's
             ins(1) = 1
             ins(2) = 2
 
-      else if (ifug.ge.8.and.ifug.le.12.or.ifug.eq.19.or.
-     *         ifug.eq.20.or.ifug.eq.24.or.ifug.eq.27) then
+      else if (jfug.ge.8.and.jfug.le.12.or.jfug.eq.19.or.
+     *         jfug.eq.20.or.jfug.eq.24.or.jfug.eq.27) then
 c                                 standard COHS species  
-         if (ifug.eq.8.or.ifug.eq.24) then
+         if (jfug.eq.8.or.jfug.eq.24) then
             vname(3) = 'log(fO2)'
          else 
             vname(3) = 'X(O)    '
@@ -558,31 +555,31 @@ c                                 standard COHS species
             ins(i) = i
          end do
  
-         if (ifug.eq.10) then 
+         if (jfug.eq.10) then 
 
             isp = 6 
             ins(6) = 16
 
-         else if (ifug.eq.19.or.ifug.eq.20) then
+         else if (jfug.eq.19.or.jfug.eq.20) then
 
             isp = 8
             ins(7) = 8
             ins(8) = 9
   
-         else if (ifug.ge.12.and.ifug.le.18) then
+         else if (jfug.ge.12.and.jfug.le.18) then
 
             isp = 9
             ins(7) = 7
             ins(8) = 8
             ins(9) = 9
 
-         else if (ifug.eq.24) then
+         else if (jfug.eq.24) then
 
             isp = 7
             ins(6) = 10
             ins(7) = 11
 
-         else if (ifug.eq.27) then
+         else if (jfug.eq.27) then
 c                                 C-O-H free
             vname(4) = 'Y(C)    '
 
@@ -591,7 +588,7 @@ c                                 C-O-H free
 
          end if
 
-      else if (ifug.eq.13.or.ifug.eq.15) then 
+      else if (jfug.eq.13.or.jfug.eq.15) then 
 
          vname(3) = 'X(H2)   '
 
@@ -599,7 +596,7 @@ c                                 C-O-H free
          ins(1) = 1
          ins(2) = 5
 
-      else if (ifug.eq.16) then
+      else if (jfug.eq.16) then
 
          vname(3) = 'X(O)    '
 
@@ -608,7 +605,7 @@ c                                 C-O-H free
          ins(2) = 5
          ins(3) = 7
 
-      else if (ifug.eq.17) then
+      else if (jfug.eq.17) then
 
          vname(3) = 'X(O)    '
 
@@ -619,7 +616,7 @@ c                                 C-O-H free
          ins(4) = 7
          ins(5) = 8
 
-      else if (ifug.eq.26) then
+      else if (jfug.eq.26) then
 c                                 silica vapor 
          vname(3) = 'X(Si)   '
 
@@ -632,7 +629,7 @@ c                                 silica vapor
 
       else 
 
-         call error (74,1d0,ifug,vname(3))
+         call error (74,1d0,jfug,vname(3))
 
       end if 
 
@@ -1450,9 +1447,6 @@ c----------------------------------------------------------------------
 
       double precision fh2o,fco2,funk
       common/ cst11 /fh2o,fco2,funk
-
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
 
       save ins, jns
       data ins, jns/ 1,2,3,4,5,6,8,9,1,2,4/

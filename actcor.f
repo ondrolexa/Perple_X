@@ -153,9 +153,6 @@ c----------------------------------------------------------------------
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
                                                             

@@ -197,6 +197,18 @@ c                                 lchar - maximum length of character strings
 c------------------------------------------------------------------------------
 c                                 commons with globally consistent, non-conflicting, variable names:
 
+c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
+c jiinc - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix
+
+c icox(phct) - locates static compositional coordinates for composition phct->gcind
+c jcox(gcind + 1:nsimp)
+c - locates the compositional coordinates for each simplex in xco
+c icoz(phct) - locates dynamic compositional coordinates for composition phct->gcind
+c jcoz(gcind + 1:nsimp)
+c - locates the compositional coordinates for each simplex in zco
+c stind(ii) - starting index - 1 of the simplex indices of polytope ii in the sco array
+c npoly(ii) - number of compositions in polytope ii
+
       integer spx, icox, jcox
       double precision xco
       common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k24)
@@ -371,15 +383,9 @@ c                                 -------------------------------
       double precision times, btime, etime
       common/ time /times(30),btime(30),etime(30)
 
-c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
-c jiinc  - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix
+      double precision thermo
+      common/ cst1 /thermo(k4,k10)
 
-c icox(phct)   - locates static compositional coordinates for composition phct -> gcind
-c jcox(gcind+1:nsimp)
-c              - locates the compositional coordinates for each simplex in xco
-c icoz(phct)   - locates dynamic compositional coordinates for composition phct -> gcind
-c jcoz(gcind+1:nsimp)
-c              - locates the compositional coordinates for each simplex in zco
-c stind(ii)    - starting index - 1 of the simplex indices of polytope ii in the sco array
-c npoly(ii)    - number of compositions in polytope ii
-
+      double precision uf, us
+      integer iff, idss, ifug
+      common/ cst10 /uf(2),us(h5),iff(2),idss(h5),ifug

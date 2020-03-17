@@ -95,9 +95,6 @@ c-----------------------------------------------------------------------
       character*8 vname, xname
       common/ csta2 /xname(k5),vname(l2)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       double precision buf
       common/ cst112 /buf(5)
 
@@ -399,7 +396,7 @@ c                               got one, get the EoS
                write (*,'(/,a,/)') 
      *               'One or more endmembers require a fluid EoS'
 
-               call rfluid (1,ifug) 
+               call rfluid (1) 
 
                exit 
 
@@ -1190,9 +1187,6 @@ c---------------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)
 
@@ -1619,7 +1613,7 @@ c                                 write explanation
          if (ifct.ne.0) write (*,1025) 
 
          feos = .true.
-         call rfluid (1,ifug)
+         call rfluid (1)
          write (*,'(/)')
 c                                 eliminate composition variable
 c                                 for saturated fluid if constrained

@@ -103,9 +103,6 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       double precision exces
       common/ cst304 /exces(m3,k1)
 
@@ -140,9 +137,6 @@ c----------------------------------------------------------------------
       integer id, j
 
       double precision g, vdp
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -248,9 +242,6 @@ c---------------------------------------------------------------------
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character names*8
       common/ cst8   /names(k1)
@@ -1663,9 +1654,6 @@ c---------------------------------------------------------------------
 
       double precision p,t,ps,g,pdv
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
@@ -1871,12 +1859,6 @@ c---------------------------------------------------------------------
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       double precision cp
       common/ cst12 /cp(k5,k10)
 
@@ -2075,7 +2057,6 @@ c                               principle may need vnumu as well).
       if (ieos.eq.15.or.ieos.eq.16) then
 c                                aqst is only properly initialized by programs that call input2,
 c                                build sets it to -1 as a flag.
-c
          if (aqst.eq.-1) aqst = iphct - 1
 
          aqct = iphct - aqst
@@ -4005,9 +3986,6 @@ c-----------------------------------------------------------------------
      *                 ltht0, dtht, dtht0, d2tht, d2tht0, g, g0, dg,
      *                 dg0, d2g, d2g0, dfc, d2fc, dft, d2ft, dft0, d2ft0
 
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       double precision smu
       common/ cst323 /smu
 
@@ -4205,12 +4183,14 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer iam
       common/ cst4 /iam
@@ -4218,10 +4198,10 @@ c-----------------------------------------------------------------------
       save psi, theta, eta
       data psi, theta, eta/2600d0, 228d0, 694656.968d0/
 c-----------------------------------------------------------------------
-      if (id.eq.ihy) then
+      if (id.eq.aqst+ihy) then
 c                                 assumes proton is the only species
 c                                 with zero G0, return G_H+(P,T) = 0.
-         ghkf = 0
+         ghkf = 0d0
          return
 
       else if (iam.eq.5) then
@@ -4381,9 +4361,6 @@ c-----------------------------------------------------------------------
 
       double precision vh2o, vh2o0, fh2o, tp
 
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -4444,9 +4421,6 @@ c-----------------------------------------------------------------------
 
       double precision a5, a6, a7, a8, a9, a10, a11, v0, v, v2, df, f,
      *                 d2a, v23, tol, d2f, df2, da, a1
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character names*8
       common/ cst8   /names(k1)
@@ -4570,9 +4544,6 @@ c-----------------------------------------------------------------------
       double precision nr9, d2f, tht, tht0, etht, etht0, df1,
      *                 dtht, dtht0, d2tht, d2tht0,
      *                 dfc, d2fc, dfth, d2fth, dfth0, d2fth0
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       double precision smu
       common/ cst323 /smu
@@ -6397,9 +6368,6 @@ c---------------------------------------------------------------------
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer eos
       common/ cst303 /eos(k10)
 
@@ -7296,6 +7264,67 @@ c                                 make y2p array
 
       end
 
+      double precision function gaqpr (jd)
+c-----------------------------------------------------------------------
+c gaqpr - computes projected free energy of aqueous species id. uproj must be
+c called prior to gaqpr
+c jd is the pointer relative to the first species
+c id is the pointer in the thermodynamic data
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id, jd, j
+
+      double precision gcpd
+
+      external gcpd
+
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
+
+      integer icomp,istct,iphct,icp
+      common/ cst6 /icomp,istct,iphct,icp
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+c---------------------------------------------------------------------
+      id = jd + aqst
+c                                 gcpd will project through the chemical 
+c                                 potentials of mobile components
+      gaqpr = gcpd (id,.true.)
+c                                 if istct > 0 must be some saturated
+c                                 components
+      if (istct.gt.1) then
+c                                 this is a screw up solution
+c                                 necessary cause uf(1) and uf(2)
+c                                 are allocated independent of ifct!
+         if (ifct.gt.0) then
+            do j = 1, 2
+               if (iff(j).ne.0) gaqpr = gaqpr - aqcp(iff(j),jd)*uf(j)
+            end do
+         end if
+
+         do j = 1, isat
+            gaqpr = gaqpr - aqcp(icp+j,jd) * us(j)
+         end do
+
+      end if
+
+      end
+
       recursive double precision function gproj (id)
 c-----------------------------------------------------------------------
 c gproj - computes projected free energy of phase id. uproj must be
@@ -7313,15 +7342,6 @@ c-----------------------------------------------------------------------
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
-      double precision vnumu
-      common/ cst44 /vnumu(i6,k10)
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -7575,9 +7595,6 @@ c                                 working arrays
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 c----------------------------------------------------------------------
       gg = 0d0
 
@@ -8464,9 +8481,6 @@ c                                 parameters for autorefine
       character specie*4
       integer jsp, ins
       common/ cxt33 /jsp,ins(nsp),specie(nsp)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -11930,9 +11944,6 @@ c--------------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
@@ -12255,9 +12266,6 @@ c---------------------------------------------------------------------
       integer id,jd
 
       double precision  g,vdp
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -13232,9 +13240,6 @@ c-----------------------------------------------------------------
       implicit none
       include 'perplex_parameters.h'
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
@@ -13516,9 +13521,6 @@ c-----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -13583,9 +13585,6 @@ c                                           JADC, 12/3/2017
 c-----------------------------------------------------------------
       implicit none
       include 'perplex_parameters.h'
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -14066,9 +14065,6 @@ c---------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer jend
       common/ cxt23 /jend(h9,m4)
 c----------------------------------------------------------------------
@@ -14222,9 +14218,6 @@ c-----------------------------------------------------------------------
       integer ins, isp
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -14240,9 +14233,6 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 c----------------------------------------------------------------------
       if (wham) then
 c                                 an internal molecular eos has already
@@ -14761,9 +14751,6 @@ c-----------------------------------------------------------------------
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -15646,9 +15633,6 @@ c-----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
 
@@ -15667,7 +15651,7 @@ c                          title:
 c                          data base
       write (n3,1210) dname
 c                          fluid
-      if (ifct.gt.0.or.gflu) call rfluid (2,ifug)
+      if (ifct.gt.0.or.gflu) call rfluid (2)
 c                          independent potentials:
       write (n3,1070) (vname(jv(j)), j = 1, ipot)
 c                          saturated phase components:
@@ -16042,14 +16026,8 @@ c----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer ifct,idfl
       common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -16172,14 +16150,8 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer ifct,idfl
       common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -16483,9 +16455,6 @@ c----------------------------------------------------------------------
 
       external gcpd, gzero
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -16494,9 +16463,6 @@ c----------------------------------------------------------------------
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 c-----------------------------------------------------------------------
 c                           compute the chemical potentials of
 c                           fluid components in fluid saturated
@@ -17229,9 +17195,6 @@ c                                 adaptive coordinates
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -17655,16 +17618,13 @@ c-----------------------------------------------------------------------
      *                 d(l9), is, gamm0, g0(*), lnkw, dix,
      *                 gso(*), xdn, qb(l9)
 
-      double precision gcpd, solve, aqact
+      double precision gaqpr, solve, aqact
 
       external gcpd, solve, aqact
 
       integer ion, ichg, jchg
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -17692,6 +17652,9 @@ c-----------------------------------------------------------------------
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
       logical abort
       common/ cstabo /abort
 c----------------------------------------------------------------------
@@ -17710,18 +17673,18 @@ c                                  set default charge balance ion (aq_ion_H+, lo
 c                                  if default choice fails switch to back-up choice
       do k = 1, 2
 c                                 set up coefficients for mo(ion) equation
-         g0(ion) = gcpd(aqst+ion,.false.)
+         g0(ion) = gaqpr(ion)
 c                                 compute solute properties
          do i = 1, aqct
 c                                 dg is the solvent oxide potentials - g
-            g0(i) = gcpd(aqst + i, .false.)
+            g0(i) = gaqpr(i)
             qr(i) = q(i)/q(ion)
             qb(i) = (q(ion)-q(i))*q(i)
             dg = -g0(i) + qr(i)*g0(ion)
 
             kill = .false.
 
-            do j = 1, jbulk
+            do j = 1, icp
 
                dn = aqcp(j,i) - qr(i)*aqcp(j,ion)
 
@@ -18266,9 +18229,6 @@ c                                 working arrays
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character specie*4
       integer isp, ins
@@ -22137,9 +22097,6 @@ c-----------------------------------------------------------------------
       double precision ctrans
       common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
@@ -22750,9 +22707,6 @@ c----------------------------------------------------------------------
  
       logical eof, good, first
 
-      integer iff,idss,ifug
-      common / cst10 /iff(2),idss(h5),ifug
-
       integer iwt
       common/ cst209 /iwt
 
@@ -22863,9 +22817,6 @@ c----------------------------------------------------------------------
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
@@ -23936,9 +23887,6 @@ c-----------------------------------------------------------------------
 
       character*5 cname
       common/ csta4 /cname(k5)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2

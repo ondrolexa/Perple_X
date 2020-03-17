@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Mar 15, 2020.',
+     *      'Perple_X version 6.8.9, source updated Mar 17, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2306,7 +2306,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.75) then 
          write (*,75) char
       else if (ier.eq.76) then 
-         write (*,76) char, char, char
+         write (*,76) char, char
       else if (ier.eq.78) then 
          write (*,78) char,char
       else if (ier.eq.89) then
@@ -2596,10 +2596,13 @@ c                                 accordingly:
      *          'named ',a,/,'delete or rename the replicate models in',
      *          ' the solution model file.',/)
 76    format (/,'**error ver076** the ',a,' solution model was not ',
-     *        'reformulated correctly',/,'this error occurs because ',
-     *        a,' has a logically inconsistent ordering scheme.',/,
-     *        'To correct this error exclude either more or fewer ',a,
-     *        'endmembers.',/)
+     *          'reformulated correctly.',//,
+     *          'If this error was preceeded by warning ver114 for a ',
+     *          'dependent endmember, then',/,'it is possible that ',
+     *          'the endmember definition is missing from the model.',
+     *           //,
+     *          'Otherwise excluding either more or fewer ',a,
+     *          ' endmembers may bypass/rectify this error.',/)
 78    format (/,'**error ver078** ',a,' has dependent endmembers with ',
      *        'invalid site populations',/,'it cannot be used unless ',
      *        'it is corrected or the site_check_override keyword is',/,
@@ -3706,15 +3709,9 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer iff,idss,ifug
-      common / cst10 /iff(2),idss(h5),ifug
-    
       double precision ptx
       integer ipt2
       common/ cst32 /ptx(l5),ipt2
-
-      double precision thermo,uf,us
-      common/ cst1  /thermo(k4,k10),uf(2),us(h5)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -3809,9 +3806,6 @@ c----------------------------------------------------------------------
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer iam
       common/ cst4 /iam
@@ -3913,9 +3907,6 @@ c----------------------------------------------------------------------
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(k4),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
@@ -4395,9 +4386,6 @@ c----------------------------------------------------------------------
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -5432,9 +5420,6 @@ c----------------------------------------------------------------------
       integer ictr, itrans
       double precision ctrans
       common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
-
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot

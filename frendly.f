@@ -405,9 +405,6 @@ c----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
@@ -1173,9 +1170,6 @@ c---------------------------------------------------------------------
       integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
- 
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       character names*8
       common/ cst8 /names(k1)
@@ -1186,9 +1180,6 @@ c---------------------------------------------------------------------
       integer idf
       double precision act
       common/ cst205 /act(k7),idf(3)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -1605,7 +1596,7 @@ c                                end of phase loop
       read (*,1050) y
       if (y.ne.'y'.and.y.ne.'Y') return 
 
-      call rfluid (1,ifug)
+      call rfluid (1)
 c                                 for multispecies fluids set
 c                                 up species indices and name
 c                                 of independent variable
@@ -1667,9 +1658,6 @@ c----------------------------------------------------------------------
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)    
 
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(32),mstrg(6),dstrg(m8),tstrg(11),wstrg(m16),
@@ -1819,9 +1807,6 @@ c----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -1855,9 +1840,6 @@ c----------------------------------------------------------------------
       integer idr,ivct
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       double precision mcomp
       character mknam*8
@@ -2174,7 +2156,7 @@ c                                remake pointer array for makes
       end do  
 c                                 select equation of state for the
 c                                 saturated phase.
-      if (ifct.gt.0) call rfluid (1,ifug)
+      if (ifct.gt.0) call rfluid (1)
 c                                 compute formula weights
       do l = 1,iphct
 

@@ -2600,9 +2600,6 @@ c----------------------------------------------------------------------
       logical static, abort, bad
 
       double precision c(k5)
-
-      integer iff,idss,ifug
-      common/ cst10  /iff(2),idss(h5),ifug
  
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2636,9 +2633,6 @@ c                                 hcp is different from icp only if usv
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
-
-      double precision thermo,uf,us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       logical mus
       double precision mu

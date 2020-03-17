@@ -328,9 +328,6 @@ c-----------------------------------------------------------------------
       double precision vol
       common/ cst26 /vol
 
-      integer iff,idss,ifug
-      common/ cst10 /iff(2),idss(h5),ifug
-
       integer ibuf,hu,hv,hw,hx 
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
@@ -367,7 +364,7 @@ c                                 configure EoS
          fs2 = -9999d0*tentoe/2d0
          elag = 0d0
 c                                 get the users choice of EoS:   
-         call rfluid (1, ifug)
+         call rfluid (1)
 c                                 for multispecies fluids set
 c                                 up species indices and name
 c                                 of independent variable
@@ -1111,7 +1108,7 @@ c                                  a buffer:
 c                                  call fluid routine:
                call cfluid (fo2, fs2)
                write (*,*) ' '
-               call rfluid (3, ifug)
+               call rfluid (3)
                write (*,1280) p,t
 c                                  output results:
                igo = 1
