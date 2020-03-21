@@ -270,10 +270,6 @@ c-----------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
@@ -506,10 +502,6 @@ c-----------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
@@ -651,10 +643,6 @@ c-----------------------------------------------------------------------
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)  
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc 
@@ -2173,10 +2161,6 @@ c-----------------------------------------------------------------------
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 
       character*5 cname
       common/ csta4 /cname(k5)

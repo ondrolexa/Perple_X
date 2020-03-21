@@ -104,10 +104,6 @@ c psdplt - subroutine to plot gridded minimization sections
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       logical oned
       common/ cst82 /oned
 c---------------------------------------------------------------

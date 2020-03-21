@@ -239,6 +239,10 @@ c
       integer jpoint, jiinc
       common/ cxt60 /jpoint,jiinc
 
+      integer jbulk, kbulk
+      double precision cblk
+      common/ cst300 /cblk(k5),jbulk,kbulk
+
       double precision ctot
       common/ cst3  /ctot(k1)
 c                                 precision stuff used in lpnag 
@@ -389,3 +393,9 @@ c                                 -------------------------------
       double precision uf, us
       integer iff, idss, ifug
       common/ cst10 /uf(2),us(h5),iff(2),idss(h5),ifug
+
+
+      integer iaq, aqst, aqct
+      character aqnam*8
+      double precision aqcp, aqtot
+      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct

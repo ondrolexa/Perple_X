@@ -1937,11 +1937,6 @@ c---------------------------------------------------------------------
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       double precision atwt
       common/ cst45 /atwt(k0)
 
@@ -4187,11 +4182,6 @@ c-----------------------------------------------------------------------
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer iam
       common/ cst4 /iam
 
@@ -6394,11 +6384,6 @@ c---------------------------------------------------------------------
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer ikp
       common/ cst61 /ikp(k1)
 
@@ -6934,7 +6919,7 @@ c                               nreact is returned by readr
                idep(i,j) = inds(j+1)
             end do
 
-            if (dabs(sum-1d0).gt.zero) then
+            if (dabs(sum-1d0).gt.1d4*zero) then
 
                write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
 
@@ -7295,11 +7280,6 @@ c-----------------------------------------------------------------------
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c---------------------------------------------------------------------
       id = jd + aqst
 c                                 gcpd will project through the chemical 
@@ -7835,7 +7815,7 @@ c                                 non-temkin (688)
 
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
-               if (dabs(zt-1d0).gt.zero) then
+               if (dabs(zt-1d0).gt.1d4*zero) then
 
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
@@ -9131,7 +9111,7 @@ c                                with respect to the ordered species
                dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
             end do
 c                                dnu ~0 => speciation reaction is not equimolar
-            if (dabs(dnu(im)).gt.zero) then
+            if (dabs(dnu(im)).gt.1d4*zero) then
                if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)
@@ -11982,11 +11962,6 @@ c--------------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       double precision exces
       common/ cst304 /exces(m3,k1)
 
@@ -14221,11 +14196,6 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
@@ -14279,7 +14249,7 @@ c                                 set ns in case of aqrxdo or aqlagd
          na1 = nsa + 1
          na2 = nsa + 2
          na3 = nsa + 3
-         nat = nsa + 8
+         nat = nsa + 9
 
          do i = 1, isp
             ins(i) = jspec(ids,i)
@@ -14766,15 +14736,6 @@ c-----------------------------------------------------------------------
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       double precision cp
       common/ cst12 /cp(k5,k10)
 
@@ -14786,9 +14747,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m4)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
 
       logical mus
       double precision mu
@@ -14900,7 +14858,7 @@ c                                 compute charge balance error
 c                                 neutral pH
       ph0 = -lnkw/2d0/2.302585d0
 
-      do i = 1, icp
+      do i = 1, kbulk
          blk(i) = 0d0
       end do
 c                                 total molality
@@ -14908,7 +14866,7 @@ c                                 total molality
 c                                 compute mole fractions, total moles first
       do i = 1, ns
 c                                 moles/kg-solvent
-         do j = 1, icp
+         do j = 1, kbulk
             blk(j) = blk(j) + y(i)*cp(j,jnd(i))/msol
          end do
 
@@ -14923,7 +14881,7 @@ c                                  total solute molality
          smo = smo + mo(i)
          ind(i) = i
 
-         do j = 1, icp
+         do j = 1, jbulk
             blk(j) = blk(j) + mo(i)*aqcp(j,i)
          end do
 
@@ -14934,7 +14892,7 @@ c                                 bulk fluid composition
       tmass = 0d0
       totm = 0d0
 
-      do i = 1, icp
+      do i = 1, jbulk
          totm = totm + blk(i)
          tmass = tmass + atwt(i)*blk(i)
       end do
@@ -14944,7 +14902,7 @@ c                                error in log10(K_w)
 
       if (output.and.lu.lt.0) then
 c                                 WERAMI props on a grid
-         do i = 1, icp
+         do i = 1, jbulk
 c                                 bulk composition
             if (iopt(2).eq.0) then
 c                                 molar
@@ -14958,7 +14916,7 @@ c                                 mass
 
          end do
 
-         k = icp
+         k = jbulk
 
          do i = 1, ns
 c                                 solvent speciation
@@ -15125,7 +15083,7 @@ c                                 bulk chemistry:
             tsmol = 0d0
             tsmas = 0d0
 
-            do i = 1, icp
+            do i = 1, jbulk
                smol(i) = 0d0
             end do
 
@@ -15133,7 +15091,7 @@ c                                 bulk chemistry:
 c                                 lagged model
                do i = 1, nsa
 
-                  do j = 1, icp
+                  do j = 1, jbulk
 
                      if (i.lt.sn1) then
                         dn = y(i)/caq(jd,na3) * cp(j,jnd(i))
@@ -15156,7 +15114,7 @@ c                                 forward model
 
                   k = jnd(i)
 
-                  do j = 1, icp
+                  do j = 1, jbulk
 
                      if (i.lt.sn1) then
                         dn = ysp(i,jd) * cp(j,k)
@@ -15177,7 +15135,7 @@ c                                 forward model
 
             write (lu,1130)
 
-            do i = 1, icp
+            do i = 1, jbulk
                write (lu,1110) cname(i),blk(i)/totm*1d2,
      *                                  smol(i)/tsmol*1d2,
      *                                  blk(i)*atwt(i)/tmass*1d2,
@@ -15188,7 +15146,7 @@ c                                 forward model
 
             write (lu,1120)
 
-            do i = 1, icp
+            do i = 1, jbulk
                write (lu,1110) cname(i),blk(i)/totm*1d2,
      *                                  blk(i)*atwt(i)/tmass*1d2
             end do
@@ -15348,11 +15306,6 @@ c-----------------------------------------------------------------------
 
       character prject*100, tfname*100
       common/ cst228 /prject,tfname
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer idaq, jdaq
       logical laq
@@ -16538,11 +16491,6 @@ c                                 endmember names
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
       ibad1 = 0
       ibad2 = 0
@@ -16752,11 +16700,6 @@ c                                 endmember names
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
       ipop = pop1(i)
 
@@ -16909,11 +16852,6 @@ c                                 endmember names
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
          if (poly(i).eq.1.and.istg(i,1).eq.1) then
 c                                 single site solution or orphan
@@ -16988,11 +16926,6 @@ c                                 endmember names
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 c----------------------------------------------------------------------
 
       if (pos) then 
@@ -17209,15 +17142,6 @@ c                                 adaptive coordinates
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       double precision cp
       common/ cst12 /cp(k5,k10)
 
@@ -17267,8 +17191,14 @@ c                                 adaptive coordinates
       logical hscon, hsc, oxchg
       common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision p,t,xco2,mmu,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
       logical abort
       common/ cstabo /abort
@@ -17284,10 +17214,14 @@ c----------------------------------------------------------------------
          return
 
       else
-
+c                                 load independent chemical potentials
+         do i = 1, jmct
+            tmu(jbulk+i) = mmu(i)
+         end do
+c                                 load dependent chemical potentials
          if (recalc) then
 c                                 use lagged chemical potentials
-            do i = 1, icp
+            do i = 1, jbulk
                tmu(i) = lmu(i)
             end do
 c                                 set flag so slvnt3 evaluates pure
@@ -17298,7 +17232,7 @@ c                                 fluid eos (not clear if this is necessary).
 
             lmus = .true.
 
-            do i = 1, icp
+            do i = 1, jbulk
 
                lmu(i) = mu(i)
                tmu(i) = mu(i)
@@ -17355,7 +17289,7 @@ c                                 iterate on speciation
 
       end if
 c                                 back calculated bulk composition
-      do j = 1, icp
+      do j = 1, kbulk
          blk(j) = 0d0
       end do
 
@@ -17374,7 +17308,7 @@ c                                 total g
 c                                 total molality
          smo = smo + mo(i)
 c                                 accumulate component moles
-         do j = 1, icp
+         do j = 1, kbulk
             blk(j) = blk(j) + mo(i)*aqcp(j,i)
          end do
 
@@ -17394,7 +17328,7 @@ c DEBUG DEBUG
 c                                 total molality
          smo = smo + slvmo(i)
 c                                 moles/kg-solvent
-         do j = 1, icp
+         do j = 1, kbulk
             blk(j) = blk(j) + slvmo(i)*cp(j,jnd(i))
          end do
 
@@ -17416,7 +17350,7 @@ c                                check on charge imbalance
          posox = 0d0
          negox = 0d0
 
-         do j = 1, icp
+         do j = 1, kbulk
             if (cox(j).gt.0) then
                posox = posox + cox(j)*blk(j)
             else
@@ -17429,7 +17363,7 @@ c                                check on charge imbalance
 
       end if
 
-      do j = 1, icp
+      do j = 1, kbulk
 c                                zero bulk compositions below chg balance error
          if (blk(j).lt.err) blk(j) = 0d0
 c                                totm is the total number of moles of the
@@ -17458,6 +17392,18 @@ c                                  Delta_pH
          caq(id,na3+3) = caq(id,na3+2) + lnkw/4.605170d0
 c                                  solute molality
          caq(id,na3+4) = solmol
+c                                  net charge
+         posox = 0d0
+
+         if (oxchg) then
+c                                check on charge imbalance
+            do j = 1, kbulk
+               posox = posox + cox(j)*blk(j)
+            end do
+
+         end if
+
+         caq(id,na3+5) = posox
 c                                  dielectric cst
          caq(id,nat) = epsln
 
@@ -17467,14 +17413,23 @@ c                                 load into molar normalized arrays
 c                                 used by resub, g per mole of components
          g2(jphct) = gtot/totm
 
-         do j = 1, icp
+         do j = 1, kbulk
 c                                 bulk composition per mole of components
             cp2(j,jphct) = blk(j)/totm
          end do
+c                                 legendre transform for saturated components
+         do j = 1, isat
+            g2(jphct) = g2(jphct) - blk(icp+j) * us(j)
+         end do
+c                                 legendre transform for mobile components
+         do j = 1, jmct
+            g2(jphct) = g2(jphct) - blk(jbulk+j) * mmu(j)
+         end do
+
 c                                c2tot is the number of moles of the
 c                                components in a solution with 1 mole of
 c                                species, this is needed for consistent
-c                                ouput (i.e., a mol of the phase is per
+c                                output (i.e., a mol of the phase is per
 c                                mol of species rather than per mole of
 c                                components). at the cost of k21 real vars
          c2tot(jphct) = totm/smo
@@ -17618,7 +17573,7 @@ c-----------------------------------------------------------------------
      *                 d(l9), is, gamm0, g0(*), lnkw, dix,
      *                 gso(*), xdn, qb(l9)
 
-      double precision gaqpr, solve, aqact
+      double precision gcpd, solve, aqact
 
       external gcpd, solve, aqact
 
@@ -17633,15 +17588,6 @@ c-----------------------------------------------------------------------
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -17651,9 +17597,6 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
 
       logical abort
       common/ cstabo /abort
@@ -17673,18 +17616,18 @@ c                                  set default charge balance ion (aq_ion_H+, lo
 c                                  if default choice fails switch to back-up choice
       do k = 1, 2
 c                                 set up coefficients for mo(ion) equation
-         g0(ion) = gaqpr(ion)
+         g0(ion) = gcpd (aqst+ion,.false.)
 c                                 compute solute properties
          do i = 1, aqct
 c                                 dg is the solvent oxide potentials - g
-            g0(i) = gaqpr(i)
+            g0(i) = gcpd (aqst+i,.false.)
             qr(i) = q(i)/q(ion)
             qb(i) = (q(ion)-q(i))*q(i)
             dg = -g0(i) + qr(i)*g0(ion)
 
             kill = .false.
 
-            do j = 1, icp
+            do j = 1, kbulk
 
                dn = aqcp(j,i) - qr(i)*aqcp(j,ion)
 
@@ -17735,7 +17678,6 @@ c                                  sum (q(i)*m(i)) = 0.
 
             else
 c                                  neutral species assumed to be ideal, molality is
-
                mo(i) = dg
 
             end if
@@ -18097,10 +18039,6 @@ c----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
@@ -18217,11 +18155,6 @@ c                                 working arrays
       integer jd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,jd
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ion, ichg, jchg
       double precision q, q2, qr
@@ -19555,7 +19488,7 @@ c                               nreact is returned by readr
                   idep(mdep,j) = inds(j+1)
                end do
 
-              if (dabs(sum-1d0).gt.zero) then 
+              if (dabs(sum-1d0).gt.1d4*zero) then 
                   write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
                   call error (72,sum,i,'dependent endmember '//
      *                 mname(inds(1))//' definition coefficients do not'
@@ -21391,11 +21324,6 @@ c                                 working arrays
       integer jend
       common/ cxt23 /jend(h9,m4)
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
@@ -21533,11 +21461,6 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -22118,10 +22041,6 @@ c-----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer ivarrx,ivarip,isudo,ivar
       common/ cst62 /ivarrx(k2),ivarip(k2),isudo,ivar
 
@@ -22349,7 +22268,7 @@ c                                 check for compositional constraints
             read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, k)
          end if 
 
-      end do           
+      end do
 
       icp1 = icp + 1
       icp2 = icp + 2
@@ -22488,7 +22407,10 @@ c                             the ifct flag can probably be set later if fluid
 c                             is in the thermodynamic composition space.   
       jfct = icp + isat 
 c                             jprct+1..icomp -> (jmct.ne.0) mobile components 
-      jprct = icomp - jmct 
+      jprct = icomp - jmct
+c                             kbulk counter used for aq speciation which allows
+c                             saturated + mobile components
+      kbulk = jbulk + jmct
 c                             excluded phases
       ixct = 0
 c                             decode excluded phases
@@ -22756,17 +22678,8 @@ c----------------------------------------------------------------------
       double precision atwt
       common/ cst45 /atwt(k0) 
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer ixct,ifact
       common/ cst37 /ixct,ifact 
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer ion, ichg, jchg
       double precision q, q2, qr
@@ -23483,10 +23396,6 @@ c-----------------------------------------------------------------------
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer icont
       double precision dblk,cx
       common/ cst314 /dblk(3,k5),cx(2),icont
@@ -23559,10 +23468,6 @@ c---------------------------------------------------------------------
 
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common / cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -23973,10 +23878,6 @@ c-----------------------------------------------------------------------
 
       character*100 cfname
       common/ cst227 /cfname
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 c-----------------------------------------------------------------------
 c                                 look for input data from a file 
 c                                 of type aux
@@ -25021,10 +24922,6 @@ c                                 global assemblage data
 
       double precision amu
       common/ cst48 /amu(k8,k2)
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 
       integer iam
       common/ cst4 /iam

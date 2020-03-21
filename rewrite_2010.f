@@ -97,9 +97,6 @@ c------------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k1)
 
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
-
       do 
 c                                 need to eliminate hsc conversion.
          call ogtphi (name,eof)
@@ -159,9 +156,6 @@ c-----------------------------------------------------------------------
 
       double precision cp
       common/ cst12 /cp(k5,k1)
-
-      double precision thermo, uf, us
-      common/ cst1 /thermo(k4,k10),uf(2),us(h5)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -383,9 +377,6 @@ c----------------------------------------------------------------------
       double precision ctrans
       integer ictr,itrans
       common/ cst207 /ctrans(k0,k5),ictr(k5),itrans
-
-      integer iff,idss,ifug,ifyn,isyn
-      common/ cst10 /iff(2),idss(h5),ifug,ifyn,isyn
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot

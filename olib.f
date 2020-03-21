@@ -50,10 +50,6 @@ c----------------------------------------------------------------------
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
@@ -105,11 +101,6 @@ c----------------------------------------------------------------------
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -282,6 +273,8 @@ c                                 special properties
                             spnams(ns+m,id) = 'Delta_pH'
                          else if (j.eq.na3+4) then
                             spnams(ns+m,id) = 'solute_m'
+                         else if (j.eq.na3+5) then
+                            spnams(ns+m,id) = 'ref_chg'
                          else if (j.eq.nat) then
                             spnams(ns+m,id) = 'epsilon'
                          end if 
@@ -830,17 +823,8 @@ c                                 bookkeeping variables
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa

@@ -46,10 +46,6 @@ c----------------------------------------------------------------------
       character*5 cname
       common/ csta4 /cname(k5)
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 

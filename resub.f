@@ -918,11 +918,6 @@ c                                  x-coordinates for the final solution
       double precision fwt
       common/ cst338 /fwt(k10)
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
@@ -1218,14 +1213,14 @@ c                                pH, Delta_pH, solute molality, epsilon (nat)
 
          end do
 
-         if (lopt(32).and.ksmod(ids).eq.39.and.ximp.gt.0d0) then
+c         if (lopt(32).and.ksmod(ids).eq.39.and.ximp.gt.0d0) then
 c                                 renomalize err_log_kw, pH, Delta_pH, epsilon
-            ncaq(i,na3+1) = ncaq(i,na3+1)/ximp
-            ncaq(i,na3+2) = ncaq(i,na3+2)/ximp
-            ncaq(i,na3+3) = ncaq(i,na3+3)/ximp
-            ncaq(i,nat) = ncaq(i,nat)/ximp
+c            ncaq(i,na3+1) = ncaq(i,na3+1)/ximp
+c            ncaq(i,na3+2) = ncaq(i,na3+2)/ximp
+c            ncaq(i,na3+3) = ncaq(i,na3+3)/ximp
+c            ncaq(i,nat) = ncaq(i,nat)/ximp
 
-         end if
+c         end if
 
       end do
 c                                 now reform the arrays kdv and b
@@ -1654,10 +1649,6 @@ c                                 x-coordinates for the final solution
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 c----------------------------------------------------------------------
 c                                graphics output  
       write (n5,'(3(i8,1x))') ic,jc,iap(ibulk)
@@ -2133,10 +2124,6 @@ c---------------------------------------------------------------------
       integer jphct,istart
       common/ cst111 /jphct,istart
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer ldt,ldq
       common /be04nb/ldt,ldq
 
@@ -2607,10 +2594,6 @@ c----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
@@ -2841,10 +2824,6 @@ c----------------------------------------------------------------------
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 
       integer npt,jdv
       logical fulrnk
@@ -3128,10 +3107,6 @@ c----------------------------------------------------------------------
 
       character*5 cname
       common/ csta4 /cname(k5)
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)

@@ -2989,7 +2989,7 @@ c----------------------------------------------------------------
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
 
-      save ind, stble, ksol, nsol
+      save ind, knd, stble, ksol, nsol
 c----------------------------------------------------------------------
       do i = 1, iprop
          prop(i) = nopt(7)
@@ -3003,11 +3003,11 @@ c----------------------------------------------------------------------
          jk = 0
 
          do j = 1, istab
-
-            if (idstab(j).eq.idsol(i,ias)) then
 c                               jnd points to the column before 
 c                               the j'th solution
-               jnd(j) = jk
+            jnd(j) = jk
+
+            if (idstab(j).eq.idsol(i,ias)) then
 
                do k = 1, nrep(i,ias)
 
@@ -3106,7 +3106,7 @@ c                                 to real zeros (not nopt(7)).
                   prop(jnd(ind(i))+j) = 0d0
                end do 
 
-            end do 
+            end do
 
          end if
 
@@ -4621,11 +4621,6 @@ c----------------------------------------------------------------
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
-
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  

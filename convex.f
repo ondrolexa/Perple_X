@@ -1466,10 +1466,6 @@ c----------------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
 c----------------------------------------------------------------------
 c                                 initialization
       imyn = 1
@@ -5899,10 +5895,6 @@ c----------------------------------------------------------------------------
       double precision cp, bbb, ccc
       common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-                   
       open (n8,file='xsystem.dat')
 
       do j = 1, icp

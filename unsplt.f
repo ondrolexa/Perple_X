@@ -35,10 +35,6 @@ c----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc1
       common/ cst312 /jlow,jlev,loopx,loopy,jinc1
 
-      integer jbulk
-      double precision cblk
-      common/ cst300 /cblk(k5),jbulk
-
       integer jtest,jpot
       common/ debug /jtest,jpot
 

@@ -146,11 +146,6 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      integer iaq, aqst, aqct
-      character aqnam*8
-      double precision aqcp, aqtot
-      common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-
       integer idspe,ispec
       common/ cst19 /idspe(2),ispec
 
