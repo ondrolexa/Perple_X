@@ -117,7 +117,8 @@ c                                 on severe error do a cold start.
 c                                 necessary?
          istart = 0
 
-      else if (hcp.eq.1.or.iopt(10).eq.0.or.isoct.eq.0) then 
+      else if (hcp.eq.1.and.isoct.eq.0
+     *        .or.iopt(10).eq.0.or.isoct.eq.0) then 
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
@@ -2096,7 +2097,7 @@ c                            solve ux = y for x:
       end do 
 
       b(n) = x(n)
- 
+
       end
 
       subroutine initlp 
@@ -2119,7 +2120,7 @@ c---------------------------------------------------------------------
       common/ cst9 /vmax(l2),vmin(l2),dv(l2)
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer jphct,istart
       common/ cst111 /jphct,istart
@@ -2671,8 +2672,6 @@ c                                 k is the saturated component pointer
             k = i - icp
 c                                 initialize bulk
             c(k) = cblk(i)
-c                                 save chemical potentials from gproj
-            mu(i) = us(k)
 c                                 subtract the amount of the component in the 
 c                                 phases in the thermodynamic c-space
             do j = 1, npt 
@@ -2681,7 +2680,7 @@ c                                 phases in the thermodynamic c-space
 
          end do 
 
-         do i = jbulk, icp+1, -1
+         do i = jbulk, icp1, -1
 c                                  cycle through the saturated phases
             npt = npt + 1
             id = idss(i-icp)

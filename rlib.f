@@ -19,9 +19,6 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      character names*8
-      common/ cst8  /names(k1)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c-----------------------------------------------------------------------
@@ -242,9 +239,6 @@ c---------------------------------------------------------------------
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
-
-      character names*8
-      common/ cst8   /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -1068,6 +1062,7 @@ c ichk = 0 and 2 -> test for saturated entities
 c ichk = 1 and 3 -> test for non-saturated entities
 c ichk = 4 -> look for phases that consist entirely of constrained components
 c ichk > 1  and not 4 -> do not compare against excluded list (for make definitions).
+c ichk = 5 allow phases that include only mobile/saturated components (aq species).
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1116,7 +1111,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       good = .true.
 c                               reject the data if excluded in input:
-      if (ichk.lt.2.or.ichk.eq.4) then
+      if (ichk.lt.2.or.ichk.ge.4) then
          do i = 1, ixct
             if (name.eq.exname(i)) goto 90
          end do
@@ -1126,6 +1121,8 @@ c                               not included in the input:
       do i= 1, icmpn
          if (icout(i).eq.0.and.comp(i).ne.0d0) goto 90
       end do
+
+      if (ichk.eq.5) return
 c                               reject phases with negative/zero compositions
       tot = 0d0
 
@@ -1228,7 +1225,7 @@ c         if (.not.lopt(37)) goto 90
 
          tot = 0d0
 
-         do j = icp + 1, icp + isat + ifct + jmct
+         do j = icp1, icp + isat + ifct + jmct
             tot = tot + comp(ic(j))
          end do
 
@@ -1849,9 +1846,6 @@ c---------------------------------------------------------------------
       external gzero
 
       double precision z(14),smax,t0,qr2,vmax,dt,g1,g2
-
-      character names*8
-      common/ cst8   /names(k1)
 
       double precision therdi, therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -3984,9 +3978,6 @@ c-----------------------------------------------------------------------
       double precision smu
       common/ cst323 /smu
 
-      character names*8
-      common/ cst8   /names(k1)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -4412,9 +4403,6 @@ c-----------------------------------------------------------------------
       double precision a5, a6, a7, a8, a9, a10, a11, v0, v, v2, df, f,
      *                 d2a, v23, tol, d2f, df2, da, a1
 
-      character names*8
-      common/ cst8   /names(k1)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
@@ -4537,9 +4525,6 @@ c-----------------------------------------------------------------------
 
       double precision smu
       common/ cst323 /smu
-
-      character names*8
-      common/ cst8   /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6364,9 +6349,6 @@ c---------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      character names*8
-      common/ cst8 /names(k1)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
@@ -7249,62 +7231,6 @@ c                                 make y2p array
 
       end
 
-      double precision function gaqpr (jd)
-c-----------------------------------------------------------------------
-c gaqpr - computes projected free energy of aqueous species id. uproj must be
-c called prior to gaqpr
-c jd is the pointer relative to the first species
-c id is the pointer in the thermodynamic data
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer id, jd, j
-
-      double precision gcpd
-
-      external gcpd
-
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
-
-      integer icomp,istct,iphct,icp
-      common/ cst6 /icomp,istct,iphct,icp
-
-      integer ifct,idfl
-      common/ cst208 /ifct,idfl
-
-      integer ids,isct,icp1,isat,io2
-      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-c---------------------------------------------------------------------
-      id = jd + aqst
-c                                 gcpd will project through the chemical 
-c                                 potentials of mobile components
-      gaqpr = gcpd (id,.true.)
-c                                 if istct > 0 must be some saturated
-c                                 components
-      if (istct.gt.1) then
-c                                 this is a screw up solution
-c                                 necessary cause uf(1) and uf(2)
-c                                 are allocated independent of ifct!
-         if (ifct.gt.0) then
-            do j = 1, 2
-               if (iff(j).ne.0) gaqpr = gaqpr - aqcp(iff(j),jd)*uf(j)
-            end do
-         end if
-
-         do j = 1, isat
-            gaqpr = gaqpr - aqcp(icp+j,jd) * us(j)
-         end do
-
-      end if
-
-      end
-
       recursive double precision function gproj (id)
 c-----------------------------------------------------------------------
 c gproj - computes projected free energy of phase id. uproj must be
@@ -7335,6 +7261,10 @@ c-----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 c---------------------------------------------------------------------
@@ -7353,8 +7283,8 @@ c                                 are allocated independent of ifct!
                end do
             end if
 
-            do j = 1, isat
-               gproj = gproj - cp(icp+j,id) * us(j)
+            do j = icp1, icp + isat
+               gproj = gproj - cp(j,id) * mu(j)
             end do
 
          end if
@@ -11505,9 +11435,6 @@ c-----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      character names*8
-      common/ cst8 /names(k1)
-
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
@@ -11733,7 +11660,7 @@ c                                  total pseudocompound count:
 c                                  list of found solutions
          if (im.gt.0) then
             write (*,'(/,a,/)') 'Summary of included solution models:'
-            write (*,'(8a)') (sname(i),i= 1, im)
+            write (*,'(8(a,1x))') (sname(i),i= 1, im)
          else
             write (*,'(/,a,/)') 'No solution models included!'
          end if
@@ -11742,13 +11669,13 @@ c                                  list of found solutions
             write (*,'(/,a,/)') 'Summary of rejected solution models '//
      *                             '(see warnings above for reasons):'
          
-            write (*,'(8a)') (rjct(i),i= 1, irjct)
+            write (*,'(8(a,1x))') (rjct(i),i= 1, irjct)
          end if
 
          if (infnd.gt.0) then
             write (*,'(/,a,/)') 
      *             'Requested solution models that were not found:'
-            write (*,'(8a)') (nfnd(i),i= 1, infnd)
+            write (*,'(8(a,1x))') (nfnd(i),i= 1, infnd)
          end if
 c                               flush for paralyzer's piped output
          flush (6)
@@ -11908,9 +11835,6 @@ c--------------------------------------------------------------------------
       character tname*10
       logical refine, resub
       common/ cxt26 /refine,resub,tname
-
-      character names*8
-      common/ cst8 /names(k1)
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -14670,16 +14594,13 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
 c-----------------------------------------------------------------------
 
          do i = 1, ns
 
             gso(i) = 0d0
 
-            do j = 1, icp
+            do j = 1, kbulk
 
                if (isnan(mu(j))) cycle
 
@@ -14711,13 +14632,17 @@ c-----------------------------------------------------------------------
 
       double precision mo(l9), blk(k5), dn, smot, err, is, gamm0, totm,
      *                 g0(l9), lnkw, gso(nsp), ph0, tmass, tsmas, tsmol,
-     *                 smol(k5), errkw, smo, gcpd
+     *                 smol(k5), errkw, smo, gcpd, posox
 
       external gcpd
 
       integer ion, ichg, jchg
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
+
+      double precision sel, cox
+      logical hscon, hsc, oxchg
+      common/ cxt45 /sel(k0),cox(k0),hscon,oxchg,hsc(k1)
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -14761,9 +14686,6 @@ c-----------------------------------------------------------------------
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      character names*8
-      common/ cst8  /names(k1)
 
       integer length,com
       character chars*1
@@ -14881,18 +14803,28 @@ c                                  total solute molality
          smo = smo + mo(i)
          ind(i) = i
 
-         do j = 1, jbulk
+         do j = 1, kbulk
             blk(j) = blk(j) + mo(i)*aqcp(j,i)
          end do
 
       end do
+c                                  net charge
+      posox = 0d0
+
+      if (oxchg) then
+c                                check on charge imbalance
+         do j = 1, kbulk
+            posox = posox + cox(j)*blk(j)
+         end do
+
+      end if
 
       smot = smot + smo
 c                                 bulk fluid composition
       tmass = 0d0
       totm = 0d0
 
-      do i = 1, jbulk
+      do i = 1, kbulk
          totm = totm + blk(i)
          tmass = tmass + atwt(i)*blk(i)
       end do
@@ -14902,7 +14834,7 @@ c                                error in log10(K_w)
 
       if (output.and.lu.lt.0) then
 c                                 WERAMI props on a grid
-         do i = 1, jbulk
+         do i = 1, kbulk
 c                                 bulk composition
             if (iopt(2).eq.0) then
 c                                 molar
@@ -14916,7 +14848,7 @@ c                                 mass
 
          end do
 
-         k = jbulk
+         k = kbulk
 
          do i = 1, ns
 c                                 solvent speciation
@@ -14974,7 +14906,7 @@ c                                 WERAMI/MEEMUM console output
          write (text,1070) epsln,msol*1d3,smo
          call deblnk (text)
          write (lu,'(400a)') chars(1:length)
-         write (text,1075) tmass/smot
+         write (text,1075) tmass/smot, posox/smot
          call deblnk (text)
          write (lu,'(400a)') chars(1:length)
 
@@ -15083,7 +15015,7 @@ c                                 bulk chemistry:
             tsmol = 0d0
             tsmas = 0d0
 
-            do i = 1, jbulk
+            do i = 1, kbulk
                smol(i) = 0d0
             end do
 
@@ -15091,7 +15023,7 @@ c                                 bulk chemistry:
 c                                 lagged model
                do i = 1, nsa
 
-                  do j = 1, jbulk
+                  do j = 1, kbulk
 
                      if (i.lt.sn1) then
                         dn = y(i)/caq(jd,na3) * cp(j,jnd(i))
@@ -15114,7 +15046,7 @@ c                                 forward model
 
                   k = jnd(i)
 
-                  do j = 1, jbulk
+                  do j = 1, kbulk
 
                      if (i.lt.sn1) then
                         dn = ysp(i,jd) * cp(j,k)
@@ -15135,7 +15067,7 @@ c                                 forward model
 
             write (lu,1130)
 
-            do i = 1, jbulk
+            do i = 1, kbulk
                write (lu,1110) cname(i),blk(i)/totm*1d2,
      *                                  smol(i)/tsmol*1d2,
      *                                  blk(i)*atwt(i)/tmass*1d2,
@@ -15146,7 +15078,7 @@ c                                 forward model
 
             write (lu,1120)
 
-            do i = 1, jbulk
+            do i = 1, kbulk
                write (lu,1110) cname(i),blk(i)/totm*1d2,
      *                                  blk(i)*atwt(i)/tmass*1d2
             end do
@@ -15172,7 +15104,8 @@ c                                 forward model
 1070  format ('dielectric constant = ', g10.4,
      *        '; solvent molar mass, g/mol = ',f8.4,
      *        '; solute molality = ',g10.4)
-1075  format ('total molar mass, g/mol-solvent = ',f8.4)
+1075  format ('total molar mass, g/mol-species = ',f8.4,
+     *        '; ref_chg, 1/mol-species = ',f8.4)
 1080  format (a8,4x,i2,3x,g12.6,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1090  format (a8,4x,i2,3x,g12.6,3x,g12.6,20x,i8,5(2x,g12.6))
 1100  format (/,'Solute endmember properties:',/,
@@ -15307,6 +15240,9 @@ c-----------------------------------------------------------------------
       character prject*100, tfname*100
       common/ cst228 /prject,tfname
 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
@@ -15334,6 +15270,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
       double precision cp
       common/ cst12 /cp(k5,k10)
 
@@ -15350,6 +15289,21 @@ c                                 set option flags if necessary
      *                         'dependent_potentials set = on (AQIDST)')
 
             jpot = 0
+
+         end if 
+
+         if (ifct.gt.0.and.(iff(1).ne.0.or.iff(2).ne.0)) then 
+
+            call warn (99,0d0,0,'aq_output and aq_lagged_speciation'
+     *            //'cannot be used with saturated phase components'//
+     *              'and have been disabled (AQIDST)')
+
+             aqct = 0
+             iopt(32) = 0
+             lopt(25) = .false.
+             lopt(32) = .false. 
+
+             return
 
          end if
 c                                reset iopt(32) [# aq species output]
@@ -15431,14 +15385,18 @@ c                                 off chance they will be used
 
       end if
 
-      if (lagged.and..not.lopt(39)) then
+      if (lagged) then
+
+         if (.not.lopt(39).and.nrf(idaq)) then
 c                                lagged speciation, set
 c                                refine_endmembers to true.
-            lopt(39) = .true.
+         write (*,'(/,a)') '**error ver099** aq_lagged_speciation is T,'
+     *                      //' but refine_endmembers is F (AQIDST).'
+         write (*,'(a)') 'Set refine_endmembers in either '//
+     *                   fname(idaq)//' or perplex_option.dat'
+         call errpau
 
-            call warn (99,0d0,0,'aq_lagged_speciation is T, but '
-     *                        //'refine_endmembers is F, '//
-     *                          'refine_endmembers set = T (AQIDST)')
+         end if 
 
       end if
 c                                open a bad point file for lagged and
@@ -15508,7 +15466,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       if (iam.ne.5) then
 c                                 not frendly
-         gsolv  = gcpd(jnd(1),.true.)
+         gsolv  = gcpd(jnd(1),.false.)
 
       else
 c                                 frendly
@@ -15557,9 +15515,6 @@ c-----------------------------------------------------------------------
 
       character cname*5
       common/ csta4  /cname(k5)
-
-      character names*8
-      common/ cst8 /names(k1)
 
       integer cl
       character cmpnt*5, dname*80
@@ -15979,6 +15934,10 @@ c----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
@@ -16023,7 +15982,7 @@ c                                 if multiple component saturation constraints
 c                                 apply saturation hierarchy legendre transform:
                i1 = i-1
                do l = 1, i1
-                  uss(j) = uss(j)-cp(icp+l,k)*us(l)
+                  uss(j) = uss(j)-cp(icp+l,k)*mu(icp+l)
                end do
             end if
 
@@ -16054,7 +16013,7 @@ c                           now find stable "composant":
 c                               save the id of the stable composant.
          idss(i) = ids(i,id)
 c                               and its chemical potential.
-         us(i) = u
+         mu(icp+i) = u
 c                               in case a phase in the component
 c                               saturation space is an endmember of
 c                               a solution transform the endmember G's:
@@ -16119,14 +16078,18 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+      double precision p,t,xco2,mmu,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -16135,8 +16098,19 @@ c                                 endmember names
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
-c                                 of the projected components.
+c                                 of the projected components. 
+c                                 saturated component potentials are loaded
+c                                 into mu(icp+1:icp+isat), currently no provision
+c                                 for saturated phase components, this would be
+c                                 necessary to allow back-calculated electrolytic
+c                                 fluid speciation with a saturated fluid phase
       call uproj
+c                                 load mobile components into mu(icp+isat+1:kbulk)
+      do j = 1, jmct
+
+         mu(icp+isat+j) = mmu(j)
+
+      end do
 c                                 first do the endmembers:
 c                                 changed start index to 1 from kphct + 1, to
 c                                 allow projection through endmembers in constrained
@@ -16477,9 +16451,6 @@ c                                 solution model names
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
 
       character tname*10
       logical refine, resub
@@ -16690,9 +16661,6 @@ c                                 solution model names
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -16838,9 +16806,6 @@ c                                 solution model names
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
 
       character tname*10
       logical refine, resub
@@ -16912,9 +16877,6 @@ c                                 solution model names
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
-c                                 endmember names
-      character names*8
-      common/ cst8  /names(k1)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -17168,9 +17130,6 @@ c                                 adaptive coordinates
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
-      character names*8
-      common/ cst8  /names(k1)
-
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
@@ -17194,9 +17153,6 @@ c                                 adaptive coordinates
       double precision p,t,xco2,mmu,tr,pr,r,ps
       common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
 
-      integer jfct,jmct,jprct,jmuct
-      common/ cst307 /jfct,jmct,jprct,jmuct
-
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
@@ -17214,14 +17170,10 @@ c----------------------------------------------------------------------
          return
 
       else
-c                                 load independent chemical potentials
-         do i = 1, jmct
-            tmu(jbulk+i) = mmu(i)
-         end do
 c                                 load dependent chemical potentials
          if (recalc) then
 c                                 use lagged chemical potentials
-            do i = 1, jbulk
+            do i = 1, kbulk
                tmu(i) = lmu(i)
             end do
 c                                 set flag so slvnt3 evaluates pure
@@ -17232,12 +17184,12 @@ c                                 fluid eos (not clear if this is necessary).
 
             lmus = .true.
 
-            do i = 1, jbulk
+            do i = 1, kbulk
 
                lmu(i) = mu(i)
                tmu(i) = mu(i)
 
-               if (cblk(i).eq.0d0.and..not.lopt(36)) then
+               if (cblk(i).eq.0d0.and..not.lopt(36).and.i.le.jbulk) then
 c                                 check that the solvent does not contain
 c                                 the absent component
                   do j = 1, ns
@@ -17343,6 +17295,7 @@ c                                 solvent bulk mole fraction:
       end do
 c                                 bulk fluid composition
       totm = 0d0
+
       err = dabs(err)*1d1
 
       if (lopt(36).and.oxchg) then
@@ -17366,10 +17319,13 @@ c                                check on charge imbalance
       do j = 1, kbulk
 c                                zero bulk compositions below chg balance error
          if (blk(j).lt.err) blk(j) = 0d0
-c                                totm is the total number of moles of the
+c                                totm is the total number of moles of themodynamic components
 c                                components in a solution of smo moles of
 c                                species
+         if (j.gt.icp) cycle
+
          totm = totm + blk(j)
+
       end do
 
       if (recalc) then
@@ -17403,36 +17359,31 @@ c                                check on charge imbalance
 
          end if
 
-         caq(id,na3+5) = posox
+         caq(id,na3+5) = posox/smo
 c                                  dielectric cst
          caq(id,nat) = epsln
 
       else
 c                                 stuff need for optimization:
 c                                 load into molar normalized arrays
-c                                 used by resub, g per mole of components
-         g2(jphct) = gtot/totm
-
+c                                 used by resub
          do j = 1, kbulk
 c                                 bulk composition per mole of components
             cp2(j,jphct) = blk(j)/totm
          end do
-c                                 legendre transform for saturated components
-         do j = 1, isat
-            g2(jphct) = g2(jphct) - blk(icp+j) * us(j)
+c                                 legendre transform for saturated/mobile components
+         do j = icp+1, kbulk
+            gtot = gtot - blk(j) * mu(j)
          end do
-c                                 legendre transform for mobile components
-         do j = 1, jmct
-            g2(jphct) = g2(jphct) - blk(jbulk+j) * mmu(j)
-         end do
-
-c                                c2tot is the number of moles of the
-c                                components in a solution with 1 mole of
-c                                species, this is needed for consistent
-c                                output (i.e., a mol of the phase is per
-c                                mol of species rather than per mole of
-c                                components). at the cost of k21 real vars
+c                                 c2tot is the number of moles of the
+c                                 components in a solution with 1 mole of
+c                                 species, this is needed for consistent
+c                                 output (i.e., a mol of the phase is per
+c                                 mol of species rather than per mole of
+c                                 components). at the cost of k21 real vars
          c2tot(jphct) = totm/smo
+c                                 g per mole of components
+         g2(jphct) = gtot/totm
 
       end if
 
@@ -17459,6 +17410,10 @@ c-----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -17474,6 +17429,9 @@ c-----------------------------------------------------------------------
 
       double precision g
       common/ cst2 /g(k1)
+
+      double precision cp
+      common/ cst12 /cp(k5,k10)
 
       double precision gh,dvhy,gmrk0
       common/ csthyb /gh(nsp),dvhy(nsp),gmrk0(nsp)
@@ -17529,6 +17487,10 @@ c                                 the mrk pure fugacity coeff in gp.
             do k = 1, ns
 c                                 use previously computed g
                aqg(k) = g(jnd(k))
+c                                 unproject for mobile and saturated components:
+               do i = icp+1, kbulk
+                  aqg(k) = aqg(k) + cp(i,jnd(k))*mu(i)
+               end do
 
             end do
 
@@ -17652,7 +17614,7 @@ c                                 this check is necessary because lp may
 c                                 give a zero-amount solution for the chemical
 c                                 potential of an absent component. the test
 c                                 cannot be made with oxide components.
-                  if (aqcp(j,i).ne.0d0) then
+                  if (aqcp(j,i).ne.0d0.and.j.le.jbulk) then
                      kill = .true.
                      exit
                   end if
@@ -21129,7 +21091,7 @@ c----------------------------------------------------------------------
 
             if (k.ne.0) then
 c                                 reject pure independent endmember compositions.
-               if (ldsol(k,ids).gt.0.and.nrf(ids).and.lopt(39)
+               if (ldsol(k,ids).gt.0.and.nrf(ids)
      *                              .and.pwt(ii).gt.one) then
 
                   bad = .true.
@@ -22641,9 +22603,6 @@ c----------------------------------------------------------------------
       character cname*5
       common/ csta4 /cname(k5)
 
-      character names*8
-      common/ cst8 /names(k1)
-
       character name*8
       common/ csta6 /name
 
@@ -23017,9 +22976,9 @@ c                                 for each saturation constraint
             write (*,*) ' '
 
             do k = 1, isct(i), 6
-               l = k + 6
+               l = k + 5
                if (l.gt.isct(i)) l = isct(i)
-               write (*,1050) (names(ids(i,j)), j = 1, l)
+               write (*,1050) (names(ids(i,j)), j = k, l)
             end do 
          end do
 
@@ -23183,7 +23142,7 @@ c                                 loop to load solute data:
 c                                 skip non-solute standard state data
          if (ieos.ne.15.and.ieos.ne.16) cycle
 c                                 check if valid species:
-         call chkphi (1,name,good)
+         call chkphi (5,name,good)
 c                                 check for oxidation state of aqueous
 c                                 data if aq_oxides is set:
 c         if (good.and.lopt(36).and.oxchg) then
@@ -23739,9 +23698,6 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      character names*8
-      common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)

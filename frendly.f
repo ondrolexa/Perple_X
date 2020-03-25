@@ -1118,9 +1118,6 @@ c-----------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
@@ -1170,9 +1167,6 @@ c---------------------------------------------------------------------
       integer ilam,jlam,idiso,lamin,idsin
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
-
-      character names*8
-      common/ cst8 /names(k1)
 
       double precision therdi,therlm
       common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
@@ -1641,9 +1635,6 @@ c----------------------------------------------------------------------
       integer i, ier 
  
       character y*1
- 
-      character names*8
-      common/ cst8 /names(k1)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -1795,9 +1786,6 @@ c----------------------------------------------------------------------
 
       integer inames, jcmpn, i, j, k, l, ier,
      *        isct, jj, itic, jphct
- 
-      character names*8
-      common/ cst8 /names(k1)
 
       integer idf
       double precision act
@@ -2251,9 +2239,6 @@ c----------------------------------------------------------------------
       integer idr,ivct
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
-
-      character names*8
-      common/ cst8 /names(k1)
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp

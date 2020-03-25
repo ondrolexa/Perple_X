@@ -12,9 +12,6 @@ c----------------------------------------------------------------------
 
       logical eof
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer eos
       common/ cst303 /eos(k10)
 

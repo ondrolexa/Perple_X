@@ -10387,6 +10387,8 @@ ideal                      | the fluid is non-ideal, this tag means only no exce
 
 reach_increment 0
 
+refine_endmembers
+
 end_of_model
                       --------------------------------------------------------
 begin_model
@@ -10430,6 +10432,8 @@ ideal
 
 reach_increment 0
 
+refine_endmembers
+
 end_of_model
                       --------------------------------------------------------
 begin_model
@@ -10448,6 +10452,8 @@ H2O
 ideal
 
 0                           | ideal configurational entropy
+
+refine_endmembers
 
 end_of_model
                       --------------------------------------------------------

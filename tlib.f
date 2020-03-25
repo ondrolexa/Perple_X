@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Mar 21, 2020.',
+     *      'Perple_X version 6.8.9, source updated Mar 25, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -3633,8 +3633,7 @@ c----------------------------------------------------------------------
 
       integer ids
 
-      character names*8, name*14
-      common/ cst8  /names(k1)
+      character name*14
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -3735,6 +3734,10 @@ c-----------------------------------------------------------------------
       logical sroot
       common/ rkroot /vrt,irt,sroot
 
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
@@ -3743,7 +3746,7 @@ c-----------------------------------------------------------------------
 
       data iff,ipt2,goodc,badc/3*0,6*0d0/
 c
-      data us, uf/ h5*0d0, 2*0d0/
+      data mu, uf/ k8*0d0, 2*0d0/
 
       data r/8.3144126d0/
 
@@ -4395,9 +4398,6 @@ c----------------------------------------------------------------------
 
       integer eos
       common/ cst303 /eos(k10)
-
-      character names*8
-      common/ cst8 /names(k1)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6595,9 +6595,6 @@ c-----------------------------------------------------------------------
 
       integer make
       common / cst335 /make(k10)
-
-      character names*8
-      common/ cst8  /names(k1)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)

@@ -325,9 +325,6 @@ c-------------------------------------------------------------------
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
 
@@ -428,9 +425,6 @@ c-----------------------------------------------------------------------
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
-
-      character names*8
-      common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -548,9 +542,6 @@ c---------------------------------------------------------------------
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
-
-      character names*8
-      common/ cst8 /names(k1)
 
       integer h,id
       common/ cst52 /h,id(k7)
@@ -864,11 +855,7 @@ c-----------------------------------------------------------------------
       integer i,j
 
       character cname*5
-      common/ csta4  /cname(k5) 
-
-
-      character names*8
-      common/ cst8 /names(k1)
+      common/ csta4  /cname(k5)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -1374,7 +1361,7 @@ c                                 matrix for an assemblage of icp phases
 c                                 assemble the composition vectore
 c                                 for the icp+1 th phase tangent to
 c                                 the free energy plane.
-      ip = icp + 1
+      ip = icp1
       do i = 1, icp
          b(i) = cp(i,idphi)
       end do 
@@ -2162,9 +2149,6 @@ c-----------------------------------------------------------------------
       integer iflag
       common/ cst7 /iflag
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
       common/ cst23 /a(k8,k8),b(k8),ipvt(k8),idv(k8),
@@ -2299,9 +2283,6 @@ c-----------------------------------------------------------------------
 
       character cname*5
       common/ csta4  /cname(k5) 
-
-      character names*8
-      common/ cst8 /names(k1)
 
       integer iffr,isr
       double precision vuf,vus
@@ -2548,9 +2529,6 @@ c-----------------------------------------------------------------------
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
-
-      character names*8
-      common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -2997,9 +2975,6 @@ c----------------------------------------------------------------------
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer icp2
       common/ cst81 /icp2
 
@@ -3095,9 +3070,6 @@ c-----------------------------------------------------------------------
 
       integer i,j,ist,id,iend,jp
 
-      character names*8
-      common/ cst8  /names(k1)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
@@ -3161,9 +3133,6 @@ c-----------------------------------------------------------------------
 
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
-
-      character names*8
-      common/ cst8 /names(k1)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -3665,9 +3634,6 @@ c----------------------------------------------------------------------
 
       double precision v,tr,pr,r,ps
       common/ cst5 /v(l2),tr,pr,r,ps
-
-      character names*8
-      common/ cst8 /names(k1)
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -4472,10 +4438,7 @@ c-----------------------------------------------------------------------
       integer l,ikwk,isign,lchkl,i,iv,jfail,ier,ivi,
      *        ivd,icter,lphi,jswit,ifail
 
-      logical fail 
-
-      character names*8
-      common/ cst8 /names(k1)
+      logical fail
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -4801,9 +4764,6 @@ c-----------------------------------------------------------------------
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer iffr,isr
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
@@ -4974,9 +4934,6 @@ c-----------------------------------------------------------------------
 
       character cname*5
       common/ csta4  /cname(k5) 
-
-      character names*8
-      common/ cst8 /names(k1)
 
       integer iffr,isr
       double precision vuf,vus
@@ -5885,9 +5842,6 @@ c----------------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp   
-
-      character names*8
-      common/ cst8 /names(k1)
 
       double precision g
       common/ cst2 /g(k1)

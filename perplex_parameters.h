@@ -302,7 +302,6 @@ c                                site names are in znames(id,1:nsite, 0)
       character znames*3
       common/ cxt47 /znames(h0,m10,0:m11)
 
-
       double precision dcoef, scoef
       common/ cxt1r /dcoef(0:m0,m11,m10,h9),scoef(m4,h9)
 
@@ -327,9 +326,6 @@ c tzmult(i,tsite)  - true site mutliplicity
       logical quack
       integer solc, isolc
       common/ cxt1 /solc(k5),isolc,quack(k21)
-
-
-
 
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
@@ -390,12 +386,18 @@ c                                 -------------------------------
       double precision thermo
       common/ cst1 /thermo(k4,k10)
 
-      double precision uf, us
+      double precision uf
       integer iff, idss, ifug
-      common/ cst10 /uf(2),us(h5),iff(2),idss(h5),ifug
-
+      common/ cst10 /uf(2),iff(2),idss(h5),ifug
 
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
+
+      character names * 8
+      common / cst8 / names(k1)
+
+      integer did, dct
+      double precision dgee
+      common/ dean /dgee(k10), did(k10), dct

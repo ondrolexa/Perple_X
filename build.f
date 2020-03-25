@@ -86,9 +86,6 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      character names*8
-      common/ cst8 /names(k1)
-
       integer eos
       common/ cst303 /eos(k10)
 
@@ -673,7 +670,7 @@ c                                 output component data:
 
       write (n1,3060) 'saturated component list'
 
-      do i = icp + 1, icp + isat
+      do i = icp1, icp + isat
 
          if (i.gt.jcth) then 
             write (n1,3000) pname(i),0,0.,0.,0.,'unconstrained'
@@ -1200,9 +1197,6 @@ c---------------------------------------------------------------------------
 
       character*8 name
       common/ csta6 /name
-
-      character names*8
-      common/ cst8 /names(k1)
 
       character*8 vname, xname
       common/ csta2 /xname(k5),vname(l2)

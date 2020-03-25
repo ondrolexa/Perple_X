@@ -4637,9 +4637,6 @@ c----------------------------------------------------------------
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
 
-      character names*8
-      common/ cst8  /names(k1)
-
       save spec 
       data spec/'pH-pH_0','pH','error_pH','permittivity','I,m',
      *          'tot_solute_m'/

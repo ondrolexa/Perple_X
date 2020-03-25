@@ -99,6 +99,9 @@ c----------------------------------------------------------------------
       logical laq
       common/ cxt3 /idaq,jdaq,laq
 
+      integer jfct,jmct,jprct,jmuct
+      common/ cst307 /jfct,jmct,jprct,jmuct
+
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -657,7 +660,7 @@ c     *                    cname(i),fbulk1(i)*atwt(i)/psys1(17)*1d3
 
 c         end do
 
-c      end if 
+c      end if
 c                                 chemical potentials variance
       if (jpot.ne.1) then 
          write (lu,1130) (cname(i), i = 1, jbulk)
@@ -676,6 +679,10 @@ c                                 test for non-NaN chemical potentials
       end if 
 
       if (laq.and.lopt(25)) then 
+c                                 load independent potentials if in use
+         do i = 1, jmct
+            mu(jbulk+i) = v(3+i)
+         end do
 
          do i = 1, ntot
             
