@@ -670,7 +670,7 @@ c                                 output component data:
 
       write (n1,3060) 'saturated component list'
 
-      do i = icp1, icp + isat
+      do i = icp + 1, icp + isat
 
          if (i.gt.jcth) then 
             write (n1,3000) pname(i),0,0.,0.,0.,'unconstrained'

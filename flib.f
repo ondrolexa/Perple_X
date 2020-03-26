@@ -81,7 +81,7 @@ c                                 bulk coordinates
 
       end
 
-      subroutine rfluid (i)
+      subroutine rfluid (irk)
 c---------------------------------------------------------------------
 c irk = 1 - write/read prompt for fluid equations of state
 c irk = 2 - write fluid equation of state for outtit to unit n3
