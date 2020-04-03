@@ -67,8 +67,14 @@ c-----------------------------------------------------------------------
 
       logical first, pots, err
 
+      character tag*11
+
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -140,22 +146,26 @@ c                                 -------------------------------------
 c                                 at this point the problem is fully 
 c                                 configured, 
 c                                 -------------------------------------
+         if (refine) then
+            tag = 'auto_refine'
+         else 
+            tag = 'exploratory'
+         end if
+c                                 inform user of 1st stage
+         write (*,1000) tag
+
          if (outprt) then
 
             io4 = 0
 c                                 header info for print and graphics files
 c                                 title page for print file:
             if (io3.ne.1) call outtit
-c                                 inform user of 1st stage
-            if (iopt(6).ne.0) write (*,1000) 'auto_refine'
 c                                 turn of printing of potentials if no
 c                                 print file request.
             if (.not.first.and.pots) jpot = 0
             if (icopt.lt.5.and.io3.eq.1) jpot = 1
 
          else 
-c                                 inform user of 2nd stage
-            if (iopt(6).ne.0) write (*,1000) 'exploratory'
 c                                 suppress output to graphics and print files
 c                                 (these flags are reset by input1). 
             io4 = 1
@@ -207,7 +217,7 @@ c                                 close n4/n5, delete interim results
 
          end if
 
-         outprt = .true.   
+         outprt = .true.
          first = .false.
 
       end do 
