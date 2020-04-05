@@ -440,7 +440,7 @@ c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call setexs (ids,id,.false.)
             else
-               if (.not.lopt(39)) cycle
+               if (nrf(ids)) cycle
                call endmmx (kd,id,ids)
             end if
 
@@ -454,7 +454,10 @@ c                                 point to solution models
             if (id.lt.0) then
 
                ids = ikp(-id)
-               if (ids.eq.0.or..not.lopt(39)) cycle
+
+               if (ids.eq.0) cycle 
+
+               if (nrf(ids)) cycle
 c                                 endmember refinement point:
 c                                 get refine point composition
                call endmmx (kd,-id,ids)

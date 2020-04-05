@@ -29,11 +29,11 @@ absolute                  default | [F] WERAMI - output absolute component amoun
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
 aq_bad_results            default | [error]* 101 102 103 or ignore => response to suspect lagged speciation results. *defaults to 101 for fractionation problems
-aq_output                 F default | [T] output back-calculated solute chemistry when electrolyte data is available
+aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
-aq_lagged_speciation      default | [F] do lagged solute chemistry when electrolyte data is available
+aq_lagged_speciation      T default | [F] do lagged solute chemistry when electrolyte data is available
 aq_solute_composition     default | [m] y => mole fractions, m => molality
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solvent_solvus         default | [T] allow solvent phase separation without aq_bad_results error trigger
@@ -71,12 +71,12 @@ interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output
-non_linear_switch         T default | VERTEX/MEEMUM [F], CONVEX [T], toggles whether nonlinear subdivision uses initial_resolution
+non_linear_switch         default | VERTEX/MEEMUM [F], CONVEX [T], toggles whether nonlinear subdivision uses initial_resolution
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_details  T default | [F] T => output intermediate adaptive optimization information
-output_iteration_G        T default | [F] T => print iteration G to monitor convergence during optimization
+output_iteration_details  default | [F] T => output intermediate adaptive optimization information
+output_iteration_G        default | [F] T => print iteration G to monitor convergence during optimization
 pause_on_error            default | [T] T => wait for user response after errors
 pc_perturbation           default | [5d-3] pseudo-compound composition perturbation; only relevant for CONVEX
 poisson_ratio             default | [on 0.35] value 1: on, off or all; value 2: 0->0.5; controls use of poisson ratio estimates for shear moduli

@@ -2012,7 +2012,7 @@ c                                 in ifp array, this is only used by gcpd.
 c                                 liquid
          ifp(id) = -1
 
-      else if (eos(id).eq.10.or.eos(id).gt.101.and.eos(id).le.202.or.
+      else if (eos(id).eq.10.or.eos(id).ge.101.and.eos(id).le.202.or.
      *         eos(id).eq.605) then
 c                                 fluid
          gflu = .true.
@@ -20910,7 +20910,7 @@ c                                 skip 0-d simplices
 
          else
 
-            call loadgx (kds,ids,phct)
+            call loadgx (kds,ids,gcind)
 
          end if
 
