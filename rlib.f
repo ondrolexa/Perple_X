@@ -16898,7 +16898,7 @@ c----------------------------------------------------------------------
       else 
          upper = 'lower'
          incre = 'decrease'
-         y(1) = xmxg(ids,ii,j,k) - xncg(ids,ii,j,k)/2d0
+         y(1) = xmng(ids,ii,j,k) - xncg(ids,ii,j,k)/2d0
          if (y(1).lt.0d0) y(1) = 0d0
       end if
 
@@ -16940,7 +16940,7 @@ c                                 single polytope
 c                                 composite polytope
          write (*,1050) fname(ids), poname(ids,ii,j,k), 
      *                              poname(ids,pop1(ids),1,ii)
-         write (*,1035) poname(ids,pop1(ids),1,ii), xmnh(ids,ii,j,k), 
+         write (*,1035) poname(ids,ii,j,k), xmnh(ids,ii,j,k), 
      *                  xmxh(ids,ii,j,k), x(ii,j,k)
          write (*,1010) incre,upper,y(1)
 
