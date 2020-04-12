@@ -4606,7 +4606,7 @@ c----------------------------------------------------------------
 
       integer i
 
-      character spec(6)*14
+      character spec(7)*14
 
       integer inv
       character dname*14, title*162
@@ -4639,9 +4639,9 @@ c----------------------------------------------------------------
 
       save spec 
       data spec/'pH-pH_0','pH','error_pH','permittivity','I,m',
-     *          'tot_solute_m'/
+     *          'ref_chg','tot_solute_m'/
 c----------------------------------------------------------------------
-      if (icp+ns+aqct+6.gt.i11) call error (1,rt,icp+ns+aqct+6,'i11')
+      if (icp+ns+aqct+7.gt.i11) call error (1,rt,icp+ns+aqct+7,'i11')
 c                                 bulk composition, wt% or mol 
       do i = 1, icp 
 
@@ -4712,7 +4712,7 @@ c                                 molality
 
       end do 
 c                                 special variables
-      do i = 1, 6 
+      do i = 1, 7 
          iprop = iprop + 1
          dname(iprop) = spec(i)
       end do 
@@ -4831,8 +4831,10 @@ c                                 dielectric constant
          prop(k+4) = caq(jd,nat)
 c                                 ionic strength
          prop(k+5) = caq(jd,na1)
-c                                 solute molality
+c                                 ref_chg
          prop(k+6) = caq(jd,nat-1)
+c                                 total solute molality
+         prop(k+7) = caq(jd,nat-2)
 
       else 
 c                                 averaging multiple phases:
@@ -4909,8 +4911,10 @@ c                                 dielectric constant
             prop(k+4) = prop(k+4) + x * caq(ld,nat)
 c                                 ionic strength
             prop(k+5) = prop(k+5) + x * caq(ld,na1)
+c                                 ref_chg
+            prop(k+6) = prop(k+6) + x * caq(jd,nat-1)
 c                                 solute molality
-            prop(k+6) = prop(k+6) + x * caq(ld,nat-1)
+            prop(k+7) = prop(k+7) + x * caq(ld,nat-2)
 
          end do
 
