@@ -565,6 +565,7 @@ c                                     set axes scales
 1080  format ('This may be sloppy. ')
 1090  format (/,'Modify drafting options (y/n)?',/,
      *          '  answer yes to modify:',/,
+     *          '   - field labeling',/,
      *          '   - x-y plotting limits',/,
      *          '   - axes numbering')
      
@@ -1030,6 +1031,8 @@ c                                 field_fill_scale => adjust gray scale incremen
       plopt(1) = .true.
 c                                 field_fill_zero
       plopt(2) = .true.
+c                                 numeric_field_label
+      plopt(3) = .false.
 c                                 field labels
       label = .true. 
 c                                 font - default font, the ifont choice
@@ -1106,7 +1109,11 @@ c                                 divariant.
          else if (key.eq.'field_label') then 
 c                                 label phase fields (gridded minimization).   
             read (strg,*) label
-          
+
+         else if (key.eq.'numeric_field_label') then 
+         
+            read (strg,*) plopt(3)
+
          else if (key.eq.'splines') then 
 c                                 eps bounding box.   
             read (strg,*) spline
@@ -1153,9 +1160,9 @@ c                                 --------------------------------------
 c                                 output 
       write (*,1000) 
 
-      write (*,1010) nscale, bbox, fill, label, ascale, font, grid, 
-     *               half, width, dsx, 
-     *               dsy, dtx, dty, drot, xfac, rlabel, spline, tenth, 
+      write (*,1010) nscale, bbox, fill, label, plopt(3), rlabel, 
+     *               ascale, font, grid, half, width, dsx, 
+     *               dsy, dtx, dty, drot, xfac, spline, tenth, 
      *               cscale
 
       write (*,1020) 
@@ -1171,6 +1178,9 @@ c                                 -------------------------------------
      *        28x,i4,6x,'[800] y-length (pts)',/,
      *        4x,'field_fill             ',l1,10x,'[T] F',/,
      *        4x,'field_label            ',l1,10x,'[T] F',/,
+     *        4x,'numeric_field_label    ',l1,10x,'[F] T, if T '
+     *           'PSSECT writes list to *_assemblages.txt',/,
+     *        4x,'replicate_label        ',f5.3,6x,'0->1 [0.025]',/,
      *        4x,'field_label_scale      ',f4.2,7x,'[0.72] (rel)',/,
      *        4x,'font                   ',a,/,
      *        4x,'grid                   ',l1,10x,'[F] T',/,
@@ -1184,7 +1194,6 @@ c                                 -------------------------------------
      *        28x,g9.3,1x,'[0.0]  rotation (deg)',/           
      *        4x,'plot_aspect_ratio      ',f5.3,6x,
      *           '[1.0] x_axis_length/y_axis_length',/,
-     *        4x,'replicate_label        ',f5.3,6x,'0->1 [0.025]',/,
      *        4x,'splines                ',l1,10x,'[T] F',/,
      *        4x,'tenth_ticks            ',l1,10x,'[F] T',/,
      *        4x,'text_scale             ',f5.3,6x,'[1.] (rel)')

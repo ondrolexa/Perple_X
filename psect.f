@@ -57,15 +57,15 @@ c                                 read data for solution phases on n9:
       call input9 (first)
 
       call setau2
+c                                 read plot option file, set
+c                                 default transformation
+      call rdopt 
 c                                 read the plot/blk files
       call interm (.false.,err)
 c                                 organize variables 
       call getvar
 c                                 initialize the grid parameters
       call setvar
-c                                 read plot option file, set
-c                                 default transformation
-      call rdopt 
 c                                 open output file 
       call psopen     
 c                                 ask for options
@@ -76,7 +76,7 @@ c                                 ask for options
 
 c                                 get user options and read
 c                                 rest of plot file, draw data
-      call psdplt (jop0)         
+      call psdplt (jop0)
  
       call psclos
  
@@ -110,7 +110,7 @@ c---------------------------------------------------------------
       iop5 = 0
       iop6 = 0
       iop7 = 0
-      lop(8) = 0 
+      lop(8) = 0
 c                                 get some options 
       call psaxop (1,jop0,iop1)
 
@@ -146,7 +146,7 @@ c                               restrict by phase absence
                call rname (3,prompt)
             end if 
          end if
-      end if 
+      end if
 c                                 gridded pseudosection construction
       if (oned) then 
          call psgrd1 (jop0,iop5,iop6,iop7)
@@ -276,8 +276,8 @@ c----------------------------------------------------------------------
 
       logical bad
 
-      integer k, iran(2,k3), jran(2,k3), i, hfill, nblen, maxvar,
-     *        j, ipoly, idr(k5), iop5, iop6, jop0, nctr(k3), minvar,
+      integer k, iran(2,k3), jran(2,k3), i, hfill, nblen, maxvar, j, 
+     *        ipoly, idr(k5), iop2, iop5, iop6, jop0, nctr(k3), minvar,
      *        iop7, imatch, iend, ivar, ipoint, jj, ii, lex(k3), ntot,
      *        iax(l7,2), nax(2), ibeg, jbeg, jend, kk, ictr
 
@@ -307,7 +307,7 @@ c----------------------------------------------------------------------
 
       logical spline, half, tenth, grid, fill, label
       integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
+      double precision xfac, cscale, nscale, ascale, rlabel, width 
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
      *             spline,half,tenth,grid,fill,label
 
@@ -325,7 +325,7 @@ c----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c----------------------------------------------------------------------
-      hfill = 0 
+      hfill = 0
 c                                 set up variance based fills:
       maxvar = icp + isat + 2 - piopt(1)
       minvar = icp + isat + 2 - piopt(2)
@@ -677,16 +677,13 @@ c                                  far enough apart:
 
                if (bad) cycle
 
-               call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy, 1d0,0d0,0,0,1)
-               call pssctr (ifont,ascale,ascale, 0d0)
-               call pstext (x+dcx*ascale,y+.7d0*dcy*ascale,
-     *                      text,nblen(text))
+               call psflbl (x,y,lex(k),nblen(text),text)
 
-            end do 
+            end do
 
             cycle
 c                                 ---------end george's block------------
-            end if 
+            end if
 
             ipoly = lex(k)
 c                                 scan the range to find a node 
@@ -751,10 +748,7 @@ c                                 igrd to zero allows this?
 
          end if 
 c                                 call label routine:
-50       call pselip (x,y, 0.25d0*dcx, 0.25d0*dcy,1d0,0d0,0,0,1) 
-         call psbtxt (ipoint, text, iend)
-         call pssctr (ifont,ascale,ascale, 0d0)
-         call pstext (x+dcx*ascale,y+.7d0*dcy*ascale,text, iend)
+50       call psflbl (x,y,lex(k),iend,text)
 
       end do 
 
@@ -779,6 +773,55 @@ c                                 draw axes
      *          ' fills that may look strange.',/,'Suppress phase ',
      *          'field fills for fields with variance > 6 (y/n)? ')
 1010  format ('There are ',i3,' fields for: ',a)
+
+      end
+
+      subroutine psflbl (x,y,lex,iend,text)
+c----------------------------------------------------------------------
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character text*(lchar), lnm*6
+
+      integer iend, lex
+
+      double precision x,y,dx1,dy1
+
+      double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
+      common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
+
+      logical plopt
+      integer piopt
+      common/ cst213 /piopt(5),plopt(5)
+
+      logical spline, half, tenth, grid, fill, label
+      integer ifont, bbox 
+      double precision xfac, cscale, nscale, ascale, rlabel, width 
+      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
+     *             spline,half,tenth,grid,fill,label
+c----------------------------------------------------------------------
+
+      call pssctr (ifont,ascale,ascale, 0d0)
+
+      dx1 = .75d0*dcx*ascale
+      dy1 = .75d0*dcy*ascale
+
+      call pselip (x,y,.25d0*dcx,.25d0*dcy,1d0,0d0,0,0,1)
+
+      if (plopt(3)) then 
+c                                 numeric field label lex(k)
+         write (lnm,'(i6)') lex
+         call unblnk (lnm)
+
+         call pstext (x+dx1,y+dy1,lnm,5)
+
+      else 
+c                                 text field label
+         call pstext (x+dx1,y+dy1,text,iend)
+
+      end if
 
       end
 
