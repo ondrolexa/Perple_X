@@ -277,7 +277,7 @@ c----------------------------------------------------------------------
       logical bad
 
       integer k, iran(2,k3), jran(2,k3), i, hfill, nblen, maxvar, j, 
-     *        ipoly, idr(k5), iop2, iop5, iop6, jop0, nctr(k3), minvar,
+     *        ipoly, idr(k5), iop5, iop6, jop0, nctr(k3), minvar,
      *        iop7, imatch, iend, ivar, ipoint, jj, ii, lex(k3), ntot,
      *        iax(l7,2), nax(2), ibeg, jbeg, jend, kk, ictr
 
@@ -748,7 +748,8 @@ c                                 igrd to zero allows this?
 
          end if 
 c                                 call label routine:
-50       call psflbl (x,y,lex(k),iend,text)
+50       call psbtxt (ipoint, text, iend)
+         call psflbl (x,y,lex(k),iend,text)
 
       end do 
 
