@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.8.9, source updated Apr 15, 2020.',
+     *      'Perple_X version 6.9.0, source updated Apr 17, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -56,7 +56,7 @@ c----------------------------------------------------------------------
       else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *         new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *         new.eq.'679'.or.new.eq.'689') then 
+     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'689') then 
 
          chksol = .true.
 
@@ -73,7 +73,7 @@ c----------------------------------------------------------------------
 c redop1 - redop1 looks for the perplex_option.dat file, if it finds
 c the option file it scans the file for keywords and sets options
 c accordingly. also sets machine precision dependent (wmach) and 
-c fractional constants.
+c fractional constants. also checks for goofball parameter choices.
 
 c iam - indicates calling program 1 - vertex
 c                                 2 - meemum
@@ -90,7 +90,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, jer, i, loopx, loopy, ibeg, iend
+      integer ier, jer, i, loopx, loopy, ibeg, iend, ik1, ik21
 
       logical output
 
@@ -312,6 +312,8 @@ c                                 aq_lagged_iterations
 c                                 interim_results, 1 - auto, 0 - off, 2 - man
       iopt(34) = 1
       valu(34) = 'aut'
+c                                 keep_max
+      iopt(52) = 10000
 c                                 -------------------------------------
 c                                 closed or open compositional space
       lopt(1) = .true.
@@ -414,6 +416,8 @@ c                                 seismic_data_file
       lopt(50) = .true.
 c                                 structural formula options
       lopt(51) = .true.
+c                                 keep_auto
+      lopt(52) = .true.
 c                                 final resolution, auto-refine stage
       rid(2,2) = 1d-3
 c                                 final resolution, exploratory stage
@@ -811,6 +815,14 @@ c                                 refinement points for stable solutions.
 
             if (val.ne.'T') lopt(51) = .false. 
 
+         else if (key.eq.'keep_auto') then
+
+            if (val.ne.'T') lopt(52) = .false. 
+
+         else if (key.eq.'keep_max') then 
+
+            read (strg,*) iopt(52)
+
          else if (key.eq.'max_aq_species_out') then 
 c                                 max number of aq species output for
 c                                 back-calculated and lagged speciation
@@ -1127,6 +1139,11 @@ c                                 -------------------------------------
 c                                 automatic specification of metastable
 c                                 refinement points
       if (lopt(40)) iopt(31) = icp + 2
+c                                 turn dependent potentials on if auto_keep
+      if (lopt(52)) then
+         jpot = 0
+         valu(11) = 'on'
+      end if 
 c                                 always allow null phases if not CONVEX
       if (iam.eq.15) lopt(37) = .true. 
 c                                 write and optional file choices
@@ -1353,6 +1370,38 @@ c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
       nopt(1) = nopt(16)
       nopt(16) = 1.5d0*(1d0-2d0*nopt(16))/(1d0+nopt(16))
+c                                 -------------------------------------
+c                                 check dynamic memory allocation:
+      if (iam.lt.3) then
+c                                 recommended value for k21, to be absolutely 
+c                                 safe multiply by 2.
+         ik21 = iopt(52)*icp
+
+         if (k21.le.ik21) then 
+c                                 consequent value for k1
+            ik1 = (memory - (1 + k32)*ik21)/(2*k31+k32+2)
+
+            write (*,'(a,i8,2a,i7,a/,a,i7,a,/)') 
+     *            '**warning ver072** parameter k21 (',k21,') is below',
+     *            ' its recommended value (',ik21,')','decrease k1 to ',
+     *            ik1,' or reduce keep_max to avoid potential problems'
+
+         end if 
+
+         if (k21.le.100) then
+
+            ik1 = (memory - (1 + k32)*50000)/(2*k31+k32+2)
+
+            write (*,'(a,i7,2a/,a,i7,a,/)') 
+     *            '**error ver072** k21 (',k21,') is too far below the',
+     *            ' minimum safe value (~10000)','decrease k1 to < ',
+     *            ik1,' and recompile Perple_X'
+
+            call errpau
+
+         end if
+
+      end if
 
 1000  format ('Context specific options are echoed in: ',a,/)
 1010  format (/,'ERROR: reading option file: ',a50,/,
@@ -1410,9 +1459,6 @@ c----------------------------------------------------------------------
       double precision dblk,cx
       common/ cst314 /dblk(3,k5),cx(2),icont
 
-
-
-
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -1466,7 +1512,8 @@ c                                 reaction format and lists
          else 
 c                                 adaptive optimization
             write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
-     *                     iopt(31),k5,lopt(49),nval2,
+     *                     iopt(31),k5,lopt(49),lopt(52),iopt(52),
+     *                     k21/10,nval2,
      *                     int(nopt(23)),valu(20),nopt(9)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
@@ -1677,22 +1724,25 @@ c                                 thermo options for frendly
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
+     *        4x,'keep_auto               ',l1,9x,'[T] F',/,
+     *        4x,'keep_max              ',i7,5x,
+     *           '[10000], ~100 < keep_max < ~k21/10 =',i7,/,
      *        4x,'solvus_tolerance_II     ',a7,3x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
      *        4x,'zero_mode               ',e7.1E2,3x,
      *           '0->1 [1e-6]; < 0 => off')
 1190  format (/,2x,'1D grid options:',//,
-     *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
+     *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40], >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
      *           ' nodes',/
      *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4], >0, '
      *          ,'<',i2,/)
 1200  format (/,2x,'2D grid options:',//,
-     *        4x,'x_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
+     *        4x,'x_nodes               ',i3,' /',i3,4x,'[40/40], >0, '
      *          ,'<',i4,'; effective x-resolution ',i4,' /',i4
      *          ,' nodes',/
-     *        4x,'y_nodes               ',i3,' /',i3,4x,'[20/40], >0, '
+     *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40], >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
      *           ' nodes',/
      *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4], >0, '
@@ -2267,16 +2317,6 @@ c---------------------------------------------------------------------
          write (*,56) k17
       else if (ier.eq.57) then 
          write (*,57) char, char, char
-      else if (ier.eq.58) then 
-         write (*,58)
-         if (nopt(21).gt.2d0) write (*,587)
-         write (*,583)
-         if (lopt(49)) write (*,584)
-         write (*,585)
-         if (lopt(32)) write (*,586)
-         write (*,581)
-         write (*,413)
-         write (*,580) char
       else if (ier.eq.60) then 
          write (*,60) k22, char
       else if (ier.eq.61) then 
@@ -2538,26 +2578,6 @@ c                                 accordingly:
      *         ,' for ',a,/,'routine INPUT2. Exclude ',a,' and restart',
      *          ' the calculation.',/,'If ',a,/,' is legitimate. please'
      *         ,' report this error.',/)
-58    format (/,'**error ver058** exhausted memory during ',
-     *          'adaptive minimization this error can usually',/,
-     *          'be eliminated by one of the ',
-     *          'following actions (best listed first):',/)
-580   format (2x,'- increase parameter ',a,' and recompile ',
-     *           'Perple_X')
-581   format (2x,'- set the low_reach flag for high-dimension ',
-     *           'solution models in solution_model.dat')
-583   format (2x,'- reduce any reach_increments specified ',
-     *           'in solution_model.dat',/,
-     *        2x,'  or set reach_increment_switch to off ',
-     *           'in perplex_option.dat')
-584   format (2x,'- set refinement_switch to F ',
-     *           'in perplex_option.dat')
-585   format (2x,'- reduce refinement_points (< c+2, > 0) ',
-     *           'in perplex_option.dat')
-586   format (2x,'- set aq_solvent_solvus to F ',
-     *           'in perplex_option.dat')
-587   format (2x,'- reduce resolution_factor to 2 (default) ',
-     *           'in perplex_option.dat')
 60    format (/,'**error ver060** too many coordinates generated by ',
      *        'refinement, increase dimension k22 (',i8,') routine: ',a)
 61    format (/,'**error ver061** too many solution coordinates, ',
@@ -2828,7 +2848,46 @@ c----------------------------------------------------------------------
       else if (ier.eq.56) then 
          write (*,56) char
       else if (ier.eq.58) then
+
          write (*,58)
+         write (*,582)
+         if (nopt(21).gt.2d0) write (*,587)
+         write (*,583)
+         if (lopt(49)) write (*,584)
+         write (*,585)
+         if (lopt(32)) write (*,586)
+         write (*,581)
+         write (*,413)
+         write (*,580) char
+
+58    format (/,'**warning ver058** exhausted memory during adaptive o',
+     *       'ptimization, the result will',/,'be reported as a failed',
+     *       ' optimization, if such failures are excessive the ',/,
+     *       'problem may be eliminated by the ',
+     *       'following actions (best listed first):',/)
+580   format (2x,'- increase parameter ',a,' and recompile ',
+     *           'Perple_X')
+581   format (2x,'- set the low_reach flag for high-dimension ',
+     *           'solution models in solution_model.dat')
+582   format (2x,'- set keep_auto to T or default ',
+     *           'in perplex_option.dat')
+583   format (2x,'- reduce any reach_increments specified ',
+     *           'in solution_model.dat',/,
+     *        2x,'  or set reach_increment_switch to off ',
+     *           'in perplex_option.dat')
+584   format (2x,'- set refinement_switch to F ',
+     *           'in perplex_option.dat')
+585   format (2x,'- reduce refinement_points (< c+2, > 0) ',
+     *           'in perplex_option.dat')
+586   format (2x,'- set aq_solvent_solvus to F ',
+     *           'in perplex_option.dat')
+587   format (2x,'- reduce resolution_factor to 2 (default) ',
+     *           'in perplex_option.dat')
+413   format (2x,'- simplify the calculation, e.g., eliminate ',
+     *           'components and/or simplify solution models')
+
+      else if (ier.eq.589) then
+         write (*,589)
       else if (ier.eq.59) then
          write (*,59) char
       else if (ier.eq.60) then
@@ -3088,7 +3147,7 @@ c----------------------------------------------------------------------
      *        'ecified in the problem definition file. To prevent this',
      *      /,'behavior delete the special_component section from the ',
      *        'header of the',/,'thermodynamic data file.',/)
-58    format (/,'**warning ver058** wway, the equilibrium of the '
+589   format (/,'**warning ver589** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)
 59    format (/,'**warning ver059** endmember ',a,
@@ -3772,7 +3831,7 @@ c                                 fluid eos species
       data specie /
      *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
      *      'SO2 ','COS ','N2  ','NH3 ','O   ','SiO ','SiO2',
-     *      'Si  ','C2H6','DIL '/
+     *      'Si  ','C2H6','HF  '/
 
       data times,btime,etime/90*0d0/
 

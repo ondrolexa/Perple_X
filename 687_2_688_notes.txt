@@ -1,12 +1,6 @@
 1) X 687: redop1/meemum set iopt(6) = 0, prevents setau1 from using arf data?
 
-2) X yclos1 has set soltol to 1 in 687? reset to nopt(25) in 688. 
-
-   a) HOWEVER function SOLVUS uses a better distance measure and therefore 
-      the optimal value of nopt(25) needs to be reevaluated.
-   b) YCLOS2 generates too many refinement points with 687 models (possibly because
-      of near degeneracy). experimenting with not accepting metastable points if 
-      the solution is already stable.
+2) X yclos1 has set soltol to 1 in 687? reset to nopt(25) in 688.
 
 3) 688 eliminates clib.f, dlib.f, getxz1.f, dumlib.f files from make.
 
@@ -15,73 +9,14 @@
    X b) double output of time stamp
    X c) in gphase gfes called with y(1) rather than y(2)
    d) call to moduli may reset p0a in getphp prior to call to ginc?
-   X e) 0-trap for iind not included in subinc, corrected but not pushed
-   X f) cAmph(G) incorrect T1 site occupancy (SiAl) rather than (SiSi).
 
 5) csol and getscp are largely redundant, csol assumes p0a has been set to account
    for decomposition of ordered species, whereas getscp does the decomposition with
    getpp.
 
-6) X getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
+6) getpp is redundant with p0dord? y2p0 should be used if a prior call to getscp/csol
    may have changed p0 (as in moduli or getcmp).
 
-7) 688 configurational entropy format expanded to include site names for all fractions of 
-   all species on a site, and non-mixing sites. Site fraction designation format is 
-   z(species,site) (z can be any character, "site" is optional, but if present it 
-   must occur after the "species" designator).
-
-8) refine_switch added, default does not allow metastable refinement points for stable solutions
-   opposite to pre-688 behavior.
-
-9) seismic_data_file added, allows output of seismic computational options for endmembers
-   and solutions.
-
-10) low_reach solution model option, halves the reach during adaptive optimization.
-
-11) begin_flagged_endmembers solution model option.
-
-12) configurational entropy model now specifies all site fractions and site names,
-currently the nth site fraction is not used and may be left as a comment (e.g., 
-"z(Si,T2)   = needs_to_be_completed"). Site fraction designation also remains optional
-but for future use the format "z(species_name,site_name)" is recommended. Additionally, the 
-line that formerly specified the number of species on a site and the effective multiplicity
-now includes the true site multiplicity. 
-
-Solution model notes:
-
-cAmph(G) - the M-Ca-A-Ti-parg and M-Ca-A-Fe3+-parg exchanges have been commented out
-in the ACMT-Amph polytope definition. refer to the model commentary for instruction
-to restore the exchanges.
-
-Cpx(HGP) - the FeTi exchanges have been commented out in the [T][A,C] polytope definition.
-refer to the model commentary for instruction to restore the exchanges. The MTi exchange
-included in the TM+MC is most likely superfluous.
-
-Opx(HGP) - the MTi exchanges have been commented out in the [T][Na,C] polytope definition.
-refer to the model commentary for instruction to restore the exchanges.
-
-Benchmark notes:
-
-bl478 - updated, use of full amph model does not improve comparison.
-
-kghp - updated, comparison improved, spurious solvi eliminated.
-
-Augite(G) - complete.
-Cpx(JH)   - complete.
-Cpx(HGP)  - complete model provided but simplified by commenting from [M,T][A,C,M] by eliminating the [FeTi][A,C] endmembers, where: T = Al, Fe3, Cr, MTi on M1; C = Ca on M2; M = Mg, Fe; A = Na, K on M2*; *A partially coupled to T by charge balance. 
-Opx(HGP)  - complete model provided but simplified by commenting from [M,T][A,C,M] by eliminating the [FeTi][A,C] endmembers, where: T = Al, Fe3, Cr, MTi on M1; C = Ca on M2; M = Mg, Fe; A = Na on M2*; *A partially coupled to T by charge balance. 
-cAmph(G)  - complete model provided but simplified by commenting from [A][M][M,T,MT][M,C,N] to [A][M][M,T,MAl][M,C,N], where: A = Na, K, V; T = Al, Fe3, Ti*; MT = MAl, MFe3, MTi; C = Ca; M = Mg, Fe; N = Na; *Ti-glaucophane not permitted. 
-cAmph(DP) - simplified from [M][M,T,MT][M,C,N] to [M][M,T,MAl][M,C,N], where: T = Al, Fe3; MT = MAl, MFe3; C = Ca; M = Mg, Fe; N = Na.
-oAmph(DP) - simplified from [M][M,T,MT][M,C,N] to [M][M,T,MAl][M,C,N], where: T = Al, Fe3; MT = MAl, MFe3; C = Ca; M = Mg, Fe; N = Na.
-Chl(W)    - complete, no change.
-Ep(HP11)  - complete, no change.
-Bi(W)     - complete, no change.
-Bio(TCC)  - complete, no change.
-Gt(H)     - complete, no change.
-CFer(H)   - complete, no change.
-feldspar  - complete, no change.
 
 
-13
-		v(1)	15385.3076923077	REAL(8) 
-		v(2)	1073.00000000000  15385.3076923077	REAL(8) 
+

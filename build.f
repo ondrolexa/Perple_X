@@ -632,7 +632,7 @@ c                                 coordinate file name if necessary
          end do 
       end if 
 
-      write (n1,1010) iwt,'component amounts, 0 - molar, 1 weight'
+      write (n1,1010) iwt,'component amounts, 0 - mole, 1 mass'
       write (n1,1010) idum,'unused place holder, post 06'
       write (n1,1010) idum,'unused place holder, post 06'
       write (n1,1010) idum,'unused place holder, post 05'
@@ -706,8 +706,8 @@ c                                 output component data:
       end do 
       write (n1,3050) 'solution phase list'
 c                                 output variable choices and values:
-      write (n1,4020) (vmax(i), i= 1, l2),'max p, t, xco2, u1, u2'
-      write (n1,4020) (vmin(i), i= 1, l2),'min p, t, xco2, u1, u2'
+      write (n1,4020) (vmax(i), i= 1, l2),'max p, t, xco2, mu_1, mu_2'
+      write (n1,4020) (vmin(i), i= 1, l2),'min p, t, xco2, mu_1, mu_2'
       write (n1,4020) (dv(i), i= 1, l2),'unused place holder post 06'
 
       if (oned) then 

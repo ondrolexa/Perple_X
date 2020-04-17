@@ -10,7 +10,7 @@
       integer m16,m17,m18
       integer msp,mst,mdim,ms1
       integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,nsp,nx,ny
-      integer memory, k31, k32, k33
+      integer memory,k31,k32
 !                                 n0  - starting LUN-1 for fractionation files, these files may 
 !                                       have LUNs from n0+1 up to n0+k23
 !                                 n1  - problem definition file.
@@ -86,7 +86,7 @@
 !                                 k23 - max number of phases to be fractionated.
 !                                 k24 - max number of static simplicial coordinate sets (jcox).
 !                                 k25 - max number of dynamic simplicial coordinate sets (jcoz).
-
+c----------------------------------------------------------------------
 !                                 The array dimensions for static compositions:
 !                                    k1, k18, k24
 !                                 bear the same relation to eachother as the 
@@ -123,19 +123,36 @@
 !                                 by the above logic. 
 
 !                                 uncomment this line to specify k1 independently of k21 (assumes k1>k21)
-!     parameter (memory=78000000,k31=2,k32=10,k33=1,k1=3000000)
+!     parameter (memory=78000000,k31=4,k32=10,k33=1,k1=4000000)
 !                                 the next two lines make k1 = k21, comment these if the line above is uncommented.
-      parameter (memory=78000000,k31=2,k32=10,k33=1)
-      parameter (k1 = memory/(2*k31+2*k32+2+1/k33))
-!                                 set k13 = k21/k13 if k21 > k1
-      parameter (k13=k1/k33)
-      parameter (k21=((memory-(k31+k32+1)*k1)-k13)/(1+k31+k32))
-      parameter (k18=k1*k31, k20=k21*k31, k24=k1*k32, k25=k21*k32)
+!     parameter (memory=78000000,k31=4,k32=10,k33=1)
+!     parameter (k1 = memory/(2*k31+2*k32+2+1/k33))
+!                                 set k13 = k21/k33 if k21 > k1
+!     parameter (k13=k1/k33)
+!     parameter (k21=((memory-(k31+k32+1)*k1)-k13)/(1+k31+k32))
+!     parameter (k18=k1*k31, k20=k21*k31, k24=k1*k32, k25=k21*k32)
+
+!                                 laggit version static: 
+!                                    k18 = k1 * k31
+!                                    k24 = k1 * k32
+!                                 laggit version dynamic: 
+!                                    k20 = k18 (static and dynamic generate comparable simplicial coordinates)
+!                                    k25 = k21 * k32
+!                                  then 
+!                                    memory = k1 + k21 + k18 + k20 + k24 + k25 + k1;
+!                                  and solving for k21 
+!                                    k21 = (memory - k1*(2*k31 + k32 + 2))/(k32+1)
+      parameter(memory=78000000,k31=2,k32=10,k1=4500000)
+!                                  static
+      parameter(k18=k1*k31,k24=k1*k32,k13=k1)
+!                                  dynamic
+      parameter(k21=(memory-(2*k31+k32+2)*k1)/(1+k32))
+      parameter(k20=k18,k25=k21*k32)
+c----------------------------------------------------------------------
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=12)
       parameter (k7=k5+1,k8=k5+2,k17=7,k19=3*k5)
       parameter (k9=35,k10=450,k14=18,k15=6,k16=120)
       parameter (k22=mdim*mst*h4*k19,k23=25)
-
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve
@@ -395,9 +412,13 @@ c                                 -------------------------------
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
 
-      character names * 8
-      common / cst8 / names(k1)
+      character names*8
+      common / cst8 /names(k1)
 
       integer did, dct
       double precision dgee
-      common/ dean /dgee(k10), did(k10), dct
+      common/ dean /dgee(k10),did(k10),dct
+
+      logical restrt, dead
+      integer ophct
+      common/ lop28 /ophct,restrt,dead

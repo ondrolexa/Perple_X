@@ -4497,7 +4497,7 @@ c                                 with the invariant point?
 
             if (fail) then
 
-               call warn (58,dv(1),ier,'WWAY')
+               call warn (589,dv(1),ier,'WWAY')
 
                if (ivct.lt.5) then 
 

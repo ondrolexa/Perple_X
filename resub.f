@@ -154,7 +154,13 @@ c                                 reoptimize with refinement
 c            if (lopt(28)) call endtim (4,.true.,'Dynamic optimization ')
 
 c                                 final processing, .false. indicates dynamic
-            if (idead.eq.0) then 
+            if (dead) then 
+c                                 ran out of dynamic memory
+               idead = 105
+
+               call lpwarn (idead,'LPOPT0')
+
+            else if (idead.eq.0) then 
 
                call rebulk (.false.,abort)
 
@@ -209,13 +215,16 @@ c-----------------------------------------------------------------------
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
-      double precision ax(k5), x(k21), clamda(k21+k5), w(lw), tot(k5)
+      double precision ax(k5), clamda(k21+k5), w(lw), tot(k5)
 
       integer is(k21+k5), iw(liw)
 
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      double precision x
+      common/ scrtch /x(k21)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -233,21 +242,23 @@ c-----------------------------------------------------------------------
 c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
       quit = .false.
+      restrt = .false.
+      dead = .false.
       opt = npt
       kterat = .false.
       kitmax = 0
       kter = 0
       idead1 = 0 
-
 c                                 --------------------------------------
-c                                 first iteration
-      if (lopt(28)) call begtim (5)
+c                                 generate pseudo compounds for the first 
+c                                 iteration from static arrays
+      call cresub (1,5,kterat)
 
-      call resub (1,kterat)
+      if (dead) then
+c                                 ran out of dynamic memory.
+         return
 
-      if (lopt(28)) call endtim (5,.true.,'1st RESUB call ')
-
-      if (jphct.eq.jpoint) then
+      else if (jphct.eq.jpoint) then
 c                                 if nothing to refine, set idead 
 c                                 to recover previous solution,
 c                                 DEBUG DEBUG set to error 102 because
@@ -258,6 +269,7 @@ c                                 likely failed aqlagd
       end if
 
       if (kterat) kitmax = iopt(33)
+
       iter = 2
 
       do
@@ -334,7 +346,8 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
             if (idead1.ne.0) then
                write (*,'(/,a,/)') 'bad result on idead = 3'
-            end if 
+            end if
+
          end if
 
          kter = kter + 1
@@ -358,14 +371,63 @@ c                                 the xcoor array.
          call saver
 
          if (quit) exit
-
-         if (lopt(28)) call begtim (6)
 c                                 generate new pseudocompounds
-         call resub (iter,kterat)
+         call cresub (iter,6,kterat)
 
-         if (lopt(28)) call endtim (6,.true.,'Nth RESUB call ')
+         if (dead) exit
 
       end do
+
+      end
+
+      subroutine cresub (iter,itim,kterat)
+c-----------------------------------------------------------------------
+c cresub shell to call resub but allow iterative reduction of keep_max
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer iter, itim
+
+      logical kterat
+c-----------------------------------------------------------------------
+      if (lopt(28)) call begtim (itim)
+
+      do
+
+         call resub (iter,kterat)
+
+         if (restrt) then
+
+            iopt(52) = 0.9*iopt(52)
+            write (*,1000) iopt(52)
+            restrt = .false.
+
+         else
+
+            exit 
+
+         end if
+
+      end do
+
+      if (lopt(28)) then
+
+         if (itim.eq.5) then
+            call endtim (5,.true.,'1st RESUB call ')
+         else
+            call endtim (6,.true.,'Nth RESUB call ')
+         end if
+
+      end if
+
+1000  format (/,'**warning ver058** the number of compositions or ',
+     *       'compositional coordinates',/,'exceeds the allocated ',
+     *       'memory (k21 or k25), the keep_max option value will be',/,
+     *       'reduced to ',i7,' to circumvent the problem. Reducing ',
+     *       'keep_max may lower',/,'optimization quality to avoid '
+     *       'this effect increase k21 or k25 and recompile Perple_X',/)
 
       end
 
@@ -380,7 +442,7 @@ c----------------------------------------------------------------------
 
       logical kterat
 
-      integer i, ids, lds, id, kd, iter, gcind, ophct
+      integer i, ids, lds, id, kd, iter, gcind
 
       double precision res0
 
@@ -484,7 +546,7 @@ c                                 get the subdivision limits:
 c                                  do the subdivision and load the data
          call subdiv (ids,kd,gcind,jphct,.true.)
 
-c        write (*,*) ' refining: ',kd, ids, jphct - ophct
+         if (restrt.or.dead) return
 c                                  special call to make H2O for
 c                                  lagged speciation, this is necessary
 c                                  because non-linear stretching can prevent
@@ -606,16 +668,20 @@ c idead set to 1.
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer idead, iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, 
-     *        iwarn03
+     *        iwarn03, iwarn05, iwarn58
 
       character char*(*)
 
       double precision c
 
-      save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03
+      save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
+     *     iwarn05, iwarn58
 
-      data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03/6*0/
+      data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
+     *     iwarn05, iwarn58/8*0/
 c----------------------------------------------------------------------
 c                                             look for errors
       if (idead.eq.2.or.idead.gt.4.and.idead.lt.100
@@ -640,6 +706,18 @@ c                                             solution.
          iwarn90 = iwarn90 + 1
          if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
 
+      else if (iwarn58.lt.11.and.(idead.eq.58.or.idead.eq.59)) then 
+
+         if (idead.eq.58) then 
+            call warn (58,c,k21,char)
+         else 
+            call warn (58,c,k25,char)
+         end if 
+
+         iwarn58 = iwarn58 + 1
+
+         if (iwarn58.eq.10) call warn (49,c,58,'LPWARN')
+
       else if (idead.eq.101.and.iwarn01.lt.10) then
 
           iwarn01 = iwarn01 + 1
@@ -661,6 +739,13 @@ c                                             solution.
           call warn (100,c,103,'pure and impure solvent phases '//
      *              'coexist. To output result set aq_bad_result.')
           if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
+
+      else if (idead.eq.105.and.iwarn05.lt.10) then
+
+          iwarn05 = iwarn05 + 1
+          call warn (100,c,105,'ran out of memory during optimization.'
+     *                   //' On excessive failure increase k21 or k25')
+          if (iwarn05.eq.20) call warn (49,c,105,'LPWARN')
 
       end if
 
@@ -1026,7 +1111,7 @@ c                                 total molality
 
                else
 c                                 impure solvent, get speciation
-                  call aqlagd (i,bad,.true.)
+                  call aqlagd (i,i,bad,.true.)
 
                end if
 
@@ -3347,4 +3432,5 @@ c                                 for non-elemental components
 
       end do
 
-      end 
+      end
+

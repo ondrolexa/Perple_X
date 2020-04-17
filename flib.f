@@ -2718,6 +2718,12 @@ c         8 = SO2
 c         9 = COS
 c        10 = N2
 c        11 = NH3
+c        12 = O
+c        13 = SiO
+c        14 = SiO2
+c        15 = Si  
+c        16 = C2H6
+c        17 = HF
 c-----------------------------------------------------------------------
       implicit none
 
@@ -2856,6 +2862,7 @@ c        13 = SiO
 c        14 = SiO2
 c        15 = Si  
 c        16 = C2H6
+c        17 = HF
 c-----------------------------------------------------------------------
       implicit none
 
@@ -5784,6 +5791,7 @@ c input:
 c        ins(i) -  pointers indicating the species are to be calculated.
 c        isp     - the number of species to be calculated.
 c        t       - input from cst5, p(bars), t(K)
+c        cm3/mol volumetric units (R = 83.1441)
 
 c species indices:
 
@@ -5803,7 +5811,7 @@ c        13 = SiO
 c        14 = SiO2
 c        15 = Si  
 c        16 = C2H6
-c        17 = ideal dilutant for electrolyte fluid model 
+c        17 = HF
 c-----------------------------------------------------------------------
       implicit none
 
@@ -5831,7 +5839,7 @@ c     *          174026d2, 424441664.6d0,  7097834092d0, 2348660042d0,
 c max a values for si, sio2
 c    *          174026d2, 424441664.6d0,  7500726468d0, 3767833334d0, 
      *          174026d2, 424441664.6d0,  7373939618d0, 3767833334d0, 
-     *          98774720.4d0, 0d0/,
+     *          98774720.4d0, 7284049.7d0/,
      *     brk /14.6,  29.7,  27.38, 29.681, 15.7699, 29.94,
      *          22.07,  37.4,  43d0,  23.42,   18.84, 
 c             O, SiO, SiO2, Si, unk:
@@ -5839,7 +5847,7 @@ c             bsio = bco/bco2*bsio2 => 1/4.83
 c             bo  ~ bo2
 c using actual bco/bco2:
      *          22.07, 23.81d0, 25.83798814d0, 10.35788774, 45.139d0,
-     *          0d0/
+     *          17.93096733d0/
 c rhocrit o2 - 1449 o - 724. sio - 1851 sio2 - 2325 si - 2711
 c using bco/bco2 = 1/4.83 (true critical b's):
 c    *          22.07, 5.148732998d0, 25.83798814d0, 10.35788774, 0d0/

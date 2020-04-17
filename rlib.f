@@ -2012,7 +2012,7 @@ c                                 in ifp array, this is only used by gcpd.
 c                                 liquid
          ifp(id) = -1
 
-      else if (eos(id).eq.10.or.eos(id).ge.101.and.eos(id).le.202.or.
+      else if (eos(id).eq.10.or.eos(id).gt.100.and.eos(id).le.202.or.
      *         eos(id).eq.605) then
 c                                 fluid
          gflu = .true.
@@ -5754,12 +5754,11 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical skip, bad, dead
+      logical skip, bad
 
       integer jsp,jtic,morder,jend,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
-     *        i2ni(m4),kwas(m4),
-     *        k,l,itic,ijkill(m4),
+     *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
      *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,mord
 c                                 dqf variables
       integer indq,idqf
@@ -11418,7 +11417,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, im, id, idsol, ixct, gcind, ophct, irjct, infnd
+      integer i, j, im, id, idsol, ixct, gcind, irjct, infnd
 
       logical first, chksol, wham, ok, found
 
@@ -11797,7 +11796,7 @@ c---------------------------------------------------------------------
 
       end
 
-      subroutine soload (im,bad)
+      subroutine soload (im,phct,bad)
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties:
 
@@ -11830,7 +11829,7 @@ c--------------------------------------------------------------------------
 
       logical bad
 
-      integer im,h,i,j,l, index, i228, oim
+      integer im, h, i, j, l, index, i228, oim, phct
 
       character tname*10
       logical refine, resub
@@ -11907,7 +11906,7 @@ c                                 ternary coh fluids above the CH4-CO join
 
       bad = .false.
 
-      ikp(iphct) = im
+      ikp(phct) = im
 c                                 -------------------------------------
 c                                encode a name, this is archaic and only relevant 
 c                                for CONVEX which is unlikely to be effective for
@@ -11950,62 +11949,62 @@ c use mname array to flag retained absent endmembers
 
       if (istg(im,1).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(iphct),1020) tname, znm(1,1),znm(2,1)
+         write (names(phct),1020) tname, znm(1,1),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.3)
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
+         write (names(phct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.2)
      *        then
 c                                special case 3, bin-tern reciprocal solution
-         write (names(iphct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
+         write (names(phct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
-         write (names(iphct),1060) znm(1,1),znm(1,2),znm(2,1),znm(2,2)
+         write (names(phct),1060) znm(1,1),znm(1,2),znm(2,1),znm(2,2)
 
       else if (mstot(im).eq.2) then
 c                                binary solutions
          if (pa(1).gt.0.9999d0) then
-            write (names(iphct),'(a3,a)') names(jend(im,3)),'_100*'
+            write (names(phct),'(a3,a)') names(jend(im,3)),'_100*'
          else if (pa(1).ge.0.98d0) then
-            write (names(iphct),'(a2,a,f5.2)')
+            write (names(phct),'(a2,a,f5.2)')
      *             names(jend(im,3)),'_',1d2*pa(1)
          else if (pa(1).lt.1d-6) then
-            write (names(iphct),'(a3,a)') names(jend(im,3)),'_0*'
+            write (names(phct),'(a3,a)') names(jend(im,3)),'_0*'
          else if (pa(1).lt.0.02d0) then
-            write (names(iphct),'(a2,a,f5.4)')
+            write (names(phct),'(a2,a,f5.4)')
      *             names(jend(im,3)),'_',1d2*pa(1)
          else
-            write (names(iphct),1070) names(jend(im,3)),1d2*pa(1)
+            write (names(phct),1070) names(jend(im,3)),1d2*pa(1)
          end if
 
       else if (mstot(im).eq.3) then
 c                                ternary solutions
-         write (names(iphct),1060) (names(jend(im,2+j)),
+         write (names(phct),1060) (names(jend(im,2+j)),
      *                             pnm(j), j = 1, 2)
       else if (mstot(im).eq.4) then
 c                                quaternary solutions
-         write (names(iphct),1060) tname, (pnm(j), j = 1, 3)
+         write (names(phct),1060) tname, (pnm(j), j = 1, 3)
 
       else
 c                                all the rest:
-         if (iphct.lt.1000000) then
-            write (names(iphct),1080) tname, iphct
-         else if (iphct.lt.10000000) then
-            write (names(iphct),1100) tname, iphct
+         if (phct.lt.1000000) then
+            write (names(phct),1080) tname, phct
+         else if (phct.lt.10000000) then
+            write (names(phct),1100) tname, phct
          else
-            write (names(iphct),'(i8)') iphct
+            write (names(phct),'(i8)') phct
          end if
 
       end if
 c                                 get blanks out of name:
       if (mstot(im).lt.4) then
-         call unblnk (names(iphct))
+         call unblnk (names(phct))
       else
-         call reblnk (names(iphct))
+         call reblnk (names(phct))
       end if
 c                                 -------------------------------------
       if (outprt.and.lopt(10)) then
@@ -12016,12 +12015,12 @@ c                                 -------------------------------------
             h = lstot(im)
          end if
 c                                 write composition name to pseudocompound list file
-          write (n8,1050) names(iphct),(y(j), j = 1, h)
+          write (n8,1050) names(phct),(y(j), j = 1, h)
 
       end if
 c                                 -------------------------------------
       do i = 1, m3
-         exces(i,iphct) = 0d0
+         exces(i,phct) = 0d0
       end do
 
       smix = 0d0
@@ -12033,7 +12032,7 @@ c                                 accumulate endmember configurational entropy
 
       end do
 c                                 bulk composition stuff
-      call getscp (scp,ctot(iphct),im,1,.true.)
+      call getscp (scp,ctot(phct),im,1,.true.)
 
       do l = 1, icomp
 
@@ -12047,7 +12046,7 @@ c                                 bulk composition stuff
       end do
 c                                 check if the phase consists
 c                                 entirely of saturated components:
-      if (ctot(iphct).lt.zero) then
+      if (ctot(phct).lt.zero) then
 
          if (im.ne.oim) call warn (55,scp(1),l,tname)
 
@@ -12061,13 +12060,13 @@ c                                 load the static composition matrix
       if (iam.eq.1.or.iam.eq.2) then 
 c                                 MEEMUM/VERTEX
          do j = 1, icp
-            a(j,iphct-jiinc) = scp(j)/ctot(iphct)
+            a(j,phct-jiinc) = scp(j)/ctot(phct)
          end do
 
       else if (iam.eq.15) then 
 c                                 CONVEX
          do j = 1, icp
-            a(j,iphct) = scp(j)
+            a(j,phct) = scp(j)
          end do
 
       end if
@@ -12084,7 +12083,7 @@ c                                 is evaluated from speciation.
 
       end if
 c                                 save it:
-      exces(2,iphct) = smix
+      exces(2,phct) = smix
 c                                 load excess terms, if not Laar or ordered:
       if (extyp(im).eq.0.and.(.not.order)) then
 
@@ -12097,7 +12096,7 @@ c                                 load excess terms, if not Laar or ordered:
             end do
 
             do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + zpr * wgl(j,i,im)
+               exces(j,phct) = exces(j,phct) + zpr * wgl(j,i,im)
             end do
 
          end do
@@ -12110,7 +12109,7 @@ c                                 G Helffrich, 4/16
                zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
      *             * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
                do l = 1, m3
-                  exces(l,iphct) = exces(l,iphct) +
+                  exces(l,phct) = exces(l,phct) +
      *               zpr * wkl(l,j,i,im)
                end do
             end do
@@ -12132,11 +12131,11 @@ c                              or a dependent endmember
 
          if (depend) then
             do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + pp(index)*dqfg(j,i,im)
+               exces(j,phct) = exces(j,phct) + pp(index)*dqfg(j,i,im)
             end do
          else
             do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + y(index)*dqfg(j,i,im)
+               exces(j,phct) = exces(j,phct) + y(index)*dqfg(j,i,im)
             end do
          end if
 
@@ -17063,7 +17062,7 @@ c                                 as above.
 99    end
 
 
-      subroutine aqlagd (id,bad,recalc)
+      subroutine aqlagd (id,phct,bad,recalc)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c configured to be called from resub with output to the (molar normalized)
@@ -17074,7 +17073,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, badct
+      integer i, j, id, badct, phct
 
       logical bad, recalc, lmus, feos
 
@@ -17369,7 +17368,7 @@ c                                 load into molar normalized arrays
 c                                 used by resub
          do j = 1, kbulk
 c                                 bulk composition per mole of components
-            cp2(j,jphct) = blk(j)/totm
+            cp2(j,phct) = blk(j)/totm
          end do
 c                                 legendre transform for saturated/mobile components
          do j = icp+1, kbulk
@@ -17381,9 +17380,9 @@ c                                 species, this is needed for consistent
 c                                 output (i.e., a mol of the phase is per
 c                                 mol of species rather than per mole of
 c                                 components). at the cost of k21 real vars
-         c2tot(jphct) = totm/smo
+         c2tot(phct) = totm/smo
 c                                 g per mole of components
-         g2(jphct) = gtot/totm
+         g2(phct) = gtot/totm
 
       end if
 
@@ -19923,7 +19922,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical skip, bad, dead
+      logical skip, bad
 
       integer jsp,jtic,morder,pkill,ii,ivct,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
@@ -20487,6 +20486,8 @@ c                                  compositions at constant wt, initialization:
          end do
 
          call setind (ids,kds,stind,nind,gcind,phct)
+
+         if (restrt.or.dead) return
 c                                  now generate all permutations of the polytopic 
 c                                  compositions:
          do 
@@ -20512,6 +20513,8 @@ c                                  figure out the index to be incremented
             end do
 c                                 save the indexes
             call setind (ids,kds,stind,nind,gcind,phct)
+
+            if (restrt.or.dead) return
 
          end do 
 
@@ -20580,6 +20583,7 @@ c                                 number of compositions in the polytope
 c                                 initialize the indices
          nind(i) = 1
          scoct = scoct + 1
+
          if (scoct.gt.k13) then 
             if (dynam) then
                call error (58,0d0,0,'K13')
@@ -20587,6 +20591,7 @@ c                                 initialize the indices
                call err41 ('K13')
             end if
          end if
+
          sco(scoct) = 1
 
       end do
@@ -20692,8 +20697,8 @@ c                                 weights
          end if
 
          do ii = 1, poly(ids)
-
-            if (pwt(ii).eq.0d0) cycle
+c load 0-wt polytopes so the number of indices are cst for a given solution
+c DEBUG   if (pwt(ii).eq.0d0) cycle
 c                                 recover the polytope compositions
             do i = 1, istg(ids,ii)
 c                                 skip 0-d simplices
@@ -20863,7 +20868,19 @@ c-----------------------------------------------------------------------
 c                                 load simplicial compoisition indices
       if (resub) then 
 c                                 dynamic arrays:
-         if (phct.gt.k21) call error (58,1d0,k21,'K21 LOADGX/SETIND')
+         if (phct.gt.k21) then
+
+            if (lopt(52)) then
+               call warn (99,1d0,k21,'number of compositions > k21')
+               restrt = .true.
+            else
+               call lpwarn (58,'K21 LOADGX/SETIND')
+               dead = .true.
+            end if
+
+            return
+
+         end if
 
          jkp(phct) = ids
          hkp(phct) = kds
@@ -20872,17 +20889,31 @@ c                                 dynamic arrays:
          if (ipop.gt.1) then 
 c                                 composite space, save location of 
 c                                 polytopic wts
-           gcind = gcind + 1
-           if (gcind.gt.k25) call error (58,0d0,0,'K25 LOADGX/SETIND')
+            gcind = gcind + 1
 
-           jcoz(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
+            if (gcind.gt.k25) then
+
+               if (lopt(52)) then
+                  call warn (99,1d0,k25,'number of compositional coor'/
+     *                      /'dinates > k25')
+                  restrt = .true.
+               else
+                  call lpwarn (59,'K25 LOADGX/SETIND')
+                  dead = .true.
+               end if
+
+               return
+
+            end if
+
+            jcoz(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
 
          end if
 c                                 save location of each set of simplicial
 c                                 coordinates in each polytope
          do ii = 1, poly(ids)
-
-            if (pwt(ii).le.0d0) cycle
+c load 0-wt polytopes so the number of coordinates for a given solution are cst.
+c DEBUG   if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
@@ -20891,8 +20922,21 @@ c                                 skip 0-d simplices
                if (ndim(i,ii,ids).eq.0) cycle
 
                gcind = gcind + 1
-               if (gcind.gt.k25) 
-     *            call error (58,0d0,0,'K25 LOADGX/SETIND')
+
+               if (gcind.gt.k25) then
+
+                  if (lopt(52)) then
+                     call warn (99,1d0,k25,'number of compositional '/
+     *                      /'coordinates > k25')
+                     restrt = .true.
+                  else
+                     call lpwarn (59,'K25 LOADGX/SETIND')
+                     dead = .true.
+                  end if
+
+                  return
+
+               end if
 
                jcoz(gcind) = spx(ii,i) 
      *                       + (sco(pos+i) - 1) * ndim(i,ii,ids)
@@ -20910,7 +20954,8 @@ c                                 skip 0-d simplices
 
          else
 
-            call loadgx (kds,ids,gcind)
+            call loadgx (kds,ids,gcind,phct)
+            if (restrt.or.dead) return
 
          end if
 
@@ -20950,20 +20995,11 @@ c                                 skip 0-d simplices
 
          call setxyp (ids,phct,resub,bad)
 
-         if (bad) then
+         if (.not.bad) call soload (ids,phct,bad)
 
+         if (bad) then
             gcind = icox(phct) - 1
             phct = phct - 1
-
-         else
-
-            call soload (ids,bad)
-
-            if (bad) then
-               gcind = icox(phct) - 1
-               phct = phct - 1
-            end if 
-
          end if
 
       end if
@@ -21161,15 +21197,15 @@ c                                 the pop1'th polytope composition
 
       end
 
-      subroutine loadgx (kd,ids,gcind) 
+      subroutine loadgx (kd,ids,gcind,phct) 
 c----------------------------------------------------------------------
       implicit none 
 
       include 'perplex_parameters.h'
 
-      integer kd, ids, gcind
+      integer kd, ids, gcind, phct
 
-      logical bad, recalc
+      logical bad
 
       double precision gsol1
 
@@ -21178,87 +21214,113 @@ c----------------------------------------------------------------------
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      save recalc
-      data recalc/.false./
 c----------------------------------------------------------------------
-      recalc = .false.
-
       if (lopt(32).and.ksmod(ids).eq.39) then
 
          if (lopt(46)) then
 c                                 set as aq_solvent_solvus:
 c                                 solute free cpd
-            g2(jphct) = gsol1(ids)
+            g2(phct) = gsol1(ids)
 
-            call csol (ids,bad)
+            call csol (phct,ids,bad)
 
             if (bad) then
 
-               gcind = icoz(jphct) - 1
-               jphct = jphct - 1
-               return 
+               call reset (phct,gcind)
 
-            end if 
+               return
 
-            quack(jphct) = .true.
-c                                 now pad out counters for 
-c                                 a solute cpd
-            jphct = jphct + 1
-            if (jphct.gt.k21) call error (58,1d0,k21,'resub')
+            end if
 
-            jkp(jphct) = ids
-            hkp(jphct) = kd
-            icoz(jphct) = icoz(jphct - 1)
+            quack(phct) = .true.
 
-         end if 
-c                                  solute-bearing compound
-         call aqlagd (1,bad,recalc)
+            if (phct-ophct.ge.iopt(52)) call laggit (phct,gcind,ids,bad)
+c                                 either outcome from laggit requires incementing
+c                                 phct because on a bad outcome laggit decrements
+c                                 phct and resets gcind
+            phct = phct + 1
 
-         if (bad) then
+            if (bad) then
+c                                 laggit has rejected the composition and
+c                                 reset gcind, restore gcind to its former
+c                                 value
+               gcind = icoz(phct)
 
-            jphct = jphct - 1
+            else 
+c                                 laggit has accepted pure solvent, need
+c                                 to pad out counters for a solute cpd
+               if (phct.gt.k21) then
 
-         else
- 
-            quack(jphct) = .false.
+                  if (lopt(52)) then
+                     restrt = .true.
+                     call warn (99,1d0,k21,
+     *                         'number of compositions > k21')
+                  else 
+                     call lpwarn (58,'K21 RESUB')
+                     dead = .true.
+                  end if
+
+                  return
+
+               end if
+
+               jkp(phct) = ids
+               hkp(phct) = kd
+               icoz(phct) = icoz(phct - 1)
+
+            end if
 
          end if
+c                                  solute-bearing compound
+         call aqlagd (1,phct,bad,.false.)
+
+         quack(phct) = .false.
+
+         if (.not.bad.and.phct-ophct.ge.iopt(52)) 
+     *                                  call laggit (phct,gcind,ids,bad)
 
       else 
 c                                 call gsol to get g of the solution, gsol also
 c                                 computes the p compositional coordinates
-         g2(jphct) = gsol1(ids)
+         g2(phct) = gsol1(ids)
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
-         call csol (ids,bad)
+         call csol (phct,ids,bad)
 
-         if (bad) then
+         if (.not.bad.and.phct-ophct.ge.iopt(52)) 
+     *                                  call laggit (phct,gcind,ids,bad)
 
-            gcind = icoz(jphct) - 1
-            jphct = jphct - 1
+      end if
 
-         end if 
-
-      end if 
+      if (bad) call reset (phct,gcind)
 
       end
 
-      subroutine csol (id,bad)
-c-----------------------------------------------------------------------
-c csol computes chemical composition of solution id from the macroscopic
-c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
-c call to function gsol. the composition is loaded into the array cp2 at
-c position jphct.
+      subroutine reset (phct,gcind)
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id
+      integer phct, gcind
+
+      gcind = icoz(phct) - 1
+      phct = phct - 1
+
+      end 
+
+      subroutine csol (phct,id,bad)
+c-----------------------------------------------------------------------
+c csol computes chemical composition of solution id from the macroscopic
+c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
+c call to function gsol. the composition is loaded into the array cp2 at
+c position phct.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, k, id, phct
 
       logical bad, degen
 
@@ -21297,7 +21359,7 @@ c----------------------------------------------------------------------
       ctot2 = 0d0
 
       do i = 1, icp
-         cp2(i,jphct) = 0d0
+         cp2(i,phct) = 0d0
       end do  
 
       if (lrecip(id).or.lorder(id)) then 
@@ -21307,7 +21369,7 @@ c                                 reformulation of the p's to eliminate the orde
 c                                 endmembers. p0a is constructed in function gsol.
          do i = 1, lstot(id)
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + pp(i) * cp(j,jend(id,2+i))
+               cp2(j,phct) = cp2(j,phct) + pp(i) * cp(j,jend(id,2+i))
             end do 
             ctot2 = ctot2 + pp(i)*ctot(jend(id,2+i))
          end do
@@ -21319,7 +21381,7 @@ c                                 endmembers. p0a is constructed in function gso
             k = jnd(i) - aqst
 
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * aqcp(j,k)
+               cp2(j,phct) = cp2(j,phct) + y(i) * aqcp(j,k)
             end do 
 
             ctot2 = ctot2 + y(i)*aqtot(k)
@@ -21329,7 +21391,7 @@ c                                 endmembers. p0a is constructed in function gso
          do i = 1, ns 
 
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jnd(i))
+               cp2(j,phct) = cp2(j,phct) + y(i) * cp(j,jnd(i))
             end do 
 
             ctot2 = ctot2 + y(i)*ctot(jnd(i))
@@ -21341,7 +21403,7 @@ c                                 general case (y coordinates)
          do i = 1, mstot(id)
 
             do j = 1, icp 
-               cp2(j,jphct) = cp2(j,jphct) + y(i) * cp(j,jend(id,2+i))
+               cp2(j,phct) = cp2(j,phct) + y(i) * cp(j,jend(id,2+i))
             end do
 
             ctot2 = ctot2 + y(i)*ctot(jend(id,2+i)) 
@@ -21360,11 +21422,11 @@ c                                  date along with degeneracy check.
 
       if (ctot2.ne.0d0) then
 c                                  normalize the composition and free energy
-         g2(jphct) = g2(jphct)/ctot2
-         c2tot(jphct) = ctot2
+         g2(phct) = g2(phct)/ctot2
+         c2tot(phct) = ctot2
 
          do j = 1, icp
-            cp2(j,jphct) = cp2(j,jphct)/ctot2
+            cp2(j,phct) = cp2(j,phct)/ctot2
          end do
 
       else 
@@ -25444,8 +25506,6 @@ c                                  set y = 0 ti be the top
 
       end
 
-c routines common to psect and werami and NOT called by vertex/meemum
-
       subroutine  mkcomp (jcomp,ids)
 c----------------------------------------------------------------
 c mkcomp makes the jcomp'th user defined compositional variable
@@ -25878,3 +25938,122 @@ c                              so why the j-loop?
       end if
 
       end 
+
+      subroutine laggit (phct,gcind,ids,bad)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ii, i, j, imax, old, gcind, ids, jpos, phct
+
+      logical bad
+
+      double precision gpr
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      double precision x
+      common/ scrtch /x(k21)
+
+      double precision p,t,xco2,mmu,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      save imax
+c-----------------------------------------------------------------------
+      if (mus) then
+
+         gpr = 0d0
+
+         do j = 1, icp
+            gpr = g2(phct) - cp2(j,phct)*mu(j)
+         end do
+
+         if (phct - ophct.eq.iopt(52)) then
+c                                 store the first iopt(52) delta_g's
+            imax = 1
+
+            do i = 1, iopt(52)
+
+               ii = ophct + i
+
+               gpr = 0d0
+
+               do j = 1, icp
+                  gpr = g2(ii) - cp2(j,ii)*mu(j)
+               end do
+
+               x(i) = gpr
+
+               if (gpr.gt.x(imax)) imax = i
+
+            end do
+
+         else if (gpr.lt.x(imax)) then
+c                                 replace data for imax with 
+c                                 data for phct, decrement phct
+            old = ophct + imax
+            x(imax) = gpr
+            g2(old) = g2(phct)
+
+            do j = 1, icp
+               cp2(j,old) = cp2(j,phct)
+            end do
+
+            c2tot(old) = c2tot(phct)
+            quack(old) = quack(phct)
+c                                 copy the polytopic indices
+c                                 the polytope weights are at:
+            jpos = 0
+
+            if (pop1(ids).gt.1) then 
+c                                 the polytope weights are at:
+               jcoz(icoz(old)) = jcoz(icoz(phct))
+               jpos = 1
+
+            end if
+c                                 the remaining coordinates are
+            do ii = 1, poly(ids)
+
+               do j = 1, istg(ids,ii)
+
+                  if (ndim(j,ii,ids).eq.0) cycle
+
+                  jcoz(icoz(old)+jpos) = jcoz(icoz(phct)+jpos)
+
+                  jpos = jpos + 1
+
+               end do
+
+            end do
+
+            call reset (phct,gcind)
+c                                 locate the new max
+            imax = 1
+
+            do j = 1, iopt(52)
+               if (x(j).gt.x(imax)) imax = j
+            end do
+
+         else
+
+            bad = .true.
+
+         end if
+
+      else
+
+         write (*,*) ' no mus, what to do pt: ',p,t
+
+      end if
+
+      end
