@@ -1402,12 +1402,12 @@ mats_d  fats_d
 cenjh   cfsg
 di      hed_d
                                   | Simplex 1
-X_Mg     .3  .8   .1  0           | X(1,1) => bulk Mg/M
+X_Mg     .1  .8   .1  0           | X(1,1) => bulk Mg/M
 X_Fe     by difference
                                   | Simplex 2
 X_MFeTs  0  .2  .1  0             | X(2,1) - M-Fe3+
 X_MAlTs  0  .1  .1  0             | X(2,2) - M-Ts
-X_MMPx   0  .2  .1  0             | X(2,3) - M-M
+X_MMPx   0   1  .1  0             | X(2,3) - M-M
 X-MCPx   by difference 
 
 begin_ordered_endmembers

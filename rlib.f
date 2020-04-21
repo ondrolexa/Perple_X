@@ -21211,6 +21211,10 @@ c----------------------------------------------------------------------
 
       external gsol1
 
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
@@ -21234,7 +21238,8 @@ c                                 solute free cpd
 
             quack(phct) = .true.
 
-            if (phct-ophct.ge.iopt(52)) call laggit (phct,gcind,ids,bad)
+            if (phct-ophct.ge.iopt(52).and.lopt(52).and.mus) 
+     *                                 call laggit (phct,gcind,ids,bad)
 c                                 either outcome from laggit requires incementing
 c                                 phct because on a bad outcome laggit decrements
 c                                 phct and resets gcind
@@ -21276,7 +21281,7 @@ c                                  solute-bearing compound
 
          quack(phct) = .false.
 
-         if (.not.bad.and.phct-ophct.ge.iopt(52)) 
+         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus) 
      *                                  call laggit (phct,gcind,ids,bad)
 
       else 
@@ -21287,7 +21292,7 @@ c                                 use the coordinates to compute the composition
 c                                 of the solution
          call csol (phct,ids,bad)
 
-         if (.not.bad.and.phct-ophct.ge.iopt(52)) 
+         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus) 
      *                                  call laggit (phct,gcind,ids,bad)
 
       end if
@@ -25970,9 +25975,7 @@ c-----------------------------------------------------------------------
 
       save imax
 c-----------------------------------------------------------------------
-      if (mus) then
-
-         gpr = 0d0
+      gpr = 0d0
 
          do j = 1, icp
             gpr = g2(phct) - cp2(j,phct)*mu(j)
@@ -26050,10 +26053,97 @@ c                                 locate the new max
 
          end if
 
-      else
+      end
 
-         write (*,*) ' no mus, what to do pt: ',p,t
+
+      subroutine lpwarn (idead,char)
+c----------------------------------------------------------------------
+c write warning messages from lpnag as called by routine 'char',
+c set flags ier and idead, the optimization is a total fail if
+c idead set to 1.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer idead, iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, 
+     *        iwarn03, iwarn05, iwarn58
+
+      character char*(*)
+
+      double precision c
+
+      save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
+     *     iwarn05, iwarn58
+
+      data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
+     *     iwarn05, iwarn58/8*0/
+c----------------------------------------------------------------------
+c                                             look for errors
+      if (idead.eq.2.or.idead.gt.4.and.idead.lt.100
+     *                            .and.iwarn91.lt.6) then 
+c                                             unbounded solution, or
+c                                             other programming error.
+         call warn (91,c,idead,char) 
+         iwarn91 = iwarn91 + 1
+         if (iwarn91.eq.5) call warn (49,c,91,'LPWARN')
+
+      else if (idead.eq.3.and.iwarn42.lt.6) then 
+c                                             no feasible solution
+         call warn (42,c,idead,char)
+         iwarn42 = iwarn42 + 1
+         if (iwarn42.eq.6) call warn (49,c,42,'LPWARN')
+
+      else if (idead.eq.4.and.iwarn90.lt.6) then 
+c                                             iteration count exceeded,
+c                                             probable cause no feasible
+c                                             solution.
+         call warn (90,c,idead,char) 
+         iwarn90 = iwarn90 + 1
+         if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
+
+      else if (iwarn58.lt.11.and.(idead.eq.58.or.idead.eq.59)) then 
+
+         if (idead.eq.58) then 
+            call warn (58,c,k21,char)
+         else 
+            call warn (58,c,k25,char)
+         end if 
+
+         iwarn58 = iwarn58 + 1
+
+         if (iwarn58.eq.10) call warn (49,c,58,'LPWARN')
+
+      else if (idead.eq.101.and.iwarn01.lt.10) then
+
+          iwarn01 = iwarn01 + 1
+          call warn (100,c,101,'under-saturated solute-component.'
+     *              //' To output result set aq_bad_result to 102')
+          if (iwarn01.eq.10) call warn (49,c,101,'LPWARN')
+
+      else if (idead.eq.102.and.iwarn02.lt.10) then
+
+          iwarn02 = iwarn02 + 1
+          call warn (100,c,102,'pure and impure solvent phases '//
+     *              'coexist within solvus_tolerance. '//
+     *              'To output result set aq_bad_result to 101')
+          if (iwarn02.eq.10) call warn (49,c,102,'LPWARN')
+
+      else if (idead.eq.103.and.iwarn03.lt.10) then
+
+          iwarn03 = iwarn03 + 1
+          call warn (100,c,103,'pure and impure solvent phases '//
+     *              'coexist. To output result set aq_bad_result.')
+          if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
+
+      else if (idead.eq.105.and.iwarn05.lt.10) then
+
+          iwarn05 = iwarn05 + 1
+          call warn (100,c,105,'ran out of memory during optimization.'
+     *                   //' On excessive failure increase k21 or k25')
+          if (iwarn05.eq.20) call warn (49,c,105,'LPWARN')
 
       end if
 
-      end
+      end 
+
