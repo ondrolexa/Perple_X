@@ -20381,6 +20381,7 @@ c---------------------------------------------------------------------
 c---------------------------------------------------------------------
 
       dynam = resub
+      dead = .false.
 
       if (ksmod(ids).eq.20) then
 c                                 subdivision with charge balance
@@ -20912,8 +20913,6 @@ c                                 polytopic wts
 c                                 save location of each set of simplicial
 c                                 coordinates in each polytope
          do ii = 1, poly(ids)
-c load 0-wt polytopes so the number of coordinates for a given solution are cst.
-c DEBUG   if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
@@ -20976,8 +20975,6 @@ c                                 polytopic wts
 c                                 save location of each set of simplicial
 c                                 coordinates in each polytope
          do ii = 1, poly(ids)
-
-            if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 

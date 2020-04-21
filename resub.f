@@ -243,7 +243,6 @@ c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
       quit = .false.
       restrt = .false.
-      dead = .false.
       opt = npt
       kterat = .false.
       kitmax = 0
