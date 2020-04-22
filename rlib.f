@@ -20764,7 +20764,8 @@ c                                 weights
          end if
 
          do ii = 1, poly(ids)
-
+c                                  cycle on 0-wt polytopes for static composiions
+c                                  because don't need absolute positions
             if (pwt(ii).eq.0d0) cycle
 c                                 recover the polytope compositions
             do i = 1, istg(ids,ii)
@@ -20913,6 +20914,8 @@ c                                 polytopic wts
 c                                 save location of each set of simplicial
 c                                 coordinates in each polytope
          do ii = 1, poly(ids)
+c load 0-wt polytopes so the number of coordinates for a given solution are cst.
+c DEBUG   if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
@@ -20975,6 +20978,8 @@ c                                 polytopic wts
 c                                 save location of each set of simplicial
 c                                 coordinates in each polytope
          do ii = 1, poly(ids)
+
+            if (pwt(ii).le.0d0) cycle
 
             pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
 
