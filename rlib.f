@@ -5759,7 +5759,7 @@ c---------------------------------------------------------------------
       integer jsp,jtic,morder,jend,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
      *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
-     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,mord
+     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,tord
 c                                 dqf variables
       integer indq,idqf
       double precision dqf
@@ -5985,7 +5985,7 @@ c                                 endmember
 c                               the term is acceptable
          itic = itic + 1
 
-         mord = iord
+         tord = iord
 
          do j = 1, iord
             if (isub(i,j).eq.0) then
@@ -6001,7 +6001,7 @@ c                                save the coefficient
                wg(itic,j) = wg(i,j)
             end do
 c                                find highest order term
-            if (mord.gt.maxord) maxord = mord
+            if (tord.gt.maxord) maxord = tord
 
          else
 c                                 redlich kistler
@@ -19927,7 +19927,7 @@ c---------------------------------------------------------------------
       integer jsp,jtic,morder,pkill,ii,ivct,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
      *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
-     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,mord
+     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,tord
 c                                 dqf variables
       integer indq,idqf
       double precision dqf
@@ -20158,7 +20158,7 @@ c                                 endmember
 c                               the term is acceptable
          itic = itic + 1
 
-         mord = iord
+         tord = iord
 
          do j = 1, iord
             if (isub(i,j).eq.0) then
@@ -20174,7 +20174,7 @@ c                                save the coefficient
                wg(itic,j) = wg(i,j)
             end do
 c                                find highest order term
-            if (mord.gt.maxord) maxord = mord
+            if (tord.gt.maxord) maxord = tord
 
          else
 c                                 redlich kistler
@@ -23856,9 +23856,6 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxbox,lay, mpol, mord
-      parameter (maxbox=1760,lay=6,mpol=3,mord=4) 
-
       logical dynam, titrat, qfile 
 
       integer i,j,k,ier
@@ -24078,8 +24075,8 @@ c                                 read header info
      *      /' coordinates, increase k2 to ncol*nrow in routine FRAC2D')
 
          if (i.ne.ncol) call error (72,b(1),i,'the number of'//
-     *     'nodes in a column specified in: '//cfname//'must equal the'/
-     *    /' number of nodes specified in the aux file.')
+     *     'nodes in a column specified in: '//cfname//' must equal the'
+     *   //' number of nodes specified in the aux file.')
 
          do i = 1, nrow
 
@@ -24106,9 +24103,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer lay,i,j,mpol,mord
-
-      parameter (lay=6,mpol=3,mord=4) 
+      integer i,j
 
       double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2,aa,bb
 
@@ -25317,9 +25312,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,lay,mpol,mord
-
-      parameter (lay=6,mpol=3,mord=4) 
+      integer i
 
       integer iam
       common/ cst4 /iam

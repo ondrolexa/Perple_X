@@ -609,9 +609,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer maxbox,lay,mpol,mord
 
-      parameter (maxbox=1760,lay=6,mpol=3,mord=4) 
 
       character*100 n6name, n5name
 

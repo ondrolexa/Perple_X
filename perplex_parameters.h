@@ -198,8 +198,12 @@ c----------------------------------------------------------------------
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)
-c                                 lchar - maximum length of character strings
+!                                 lchar - maximum length of character strings
       parameter (lchar=400)
+!                                 frac2d parameters:
+      integer maxbox,lay,mpol,mord
+      parameter (maxbox=1760,lay=6,mpol=7,mord=mpol-1) 
+
 
 ! NOTE: increasing parameter K5 requires changes to the following
 ! format statements:
