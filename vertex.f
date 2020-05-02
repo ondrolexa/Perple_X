@@ -727,16 +727,16 @@ c                                 get the phase to be fractionated
 c                                 check for consistent input if fileio
          if (fileio) then 
 
-            if (loopx.ne.nrow) then 
-               write (*,'(2(/,a,i4,a,a))') 
-     *         '** error ** the number of columns (',nrow,
-     *         ') specified in the coordinate file must equal the',
-     *         'number of z increments (',loopx,
-     *        ')specified in the aux file.'
-              
-              stop
+c           if (loopx.ne.nrow) then 
+c               write (*,'(2(/,a,i4,a,a))') 
+c     *         '** error ** the number of columns (',nrow,
+c     *         ') specified in the coordinate file must equal the',
+c     *         'number of z increments (',loopx,
+c     *        ')specified in the aux file.'
+c              
+              loopx = nrow
 
-            end if
+c          end if
 
          end if
 c                                 work out the oxide stoichiometries for excess O 

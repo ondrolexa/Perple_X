@@ -537,6 +537,10 @@ c                                 gsol1, don't call if the previous
 c                                 refinement point was the same solution.
          if (ids.ne.lds) call ingsol (ids)
 
+c        lopt(29) = .true.
+
+c        if (lopt(29)) call minime (ids,jphct)
+
          lds = ids
 c                                 get the subdivision limits:
          call sublim (ids,res0)

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated Apr 27, 2020.',
+     *      'Perple_X version 6.9.0, source updated May 2, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -313,7 +313,7 @@ c                                 interim_results, 1 - auto, 0 - off, 2 - man
       iopt(34) = 1
       valu(34) = 'aut'
 c                                 keep_max
-      iopt(52) = 10000
+      iopt(52) = 20000
 c                                 -------------------------------------
 c                                 closed or open compositional space
       lopt(1) = .true.
@@ -1726,7 +1726,7 @@ c                                 thermo options for frendly
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
      *        4x,'keep_auto               ',l1,9x,'[T] F',/,
      *        4x,'keep_max              ',i7,5x,
-     *           '[10000], ~100 < keep_max < ~k21/10 =',i7,/,
+     *           '[20000], ~100 < keep_max < ~k21/10 =',i7,/,
      *        4x,'solvus_tolerance_II     ',a7,3x,'0->1 [0.2]',/,
      *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
      *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,

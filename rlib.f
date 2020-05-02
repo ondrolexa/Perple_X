@@ -24129,6 +24129,9 @@ c----------------------------------------------------------------------
       common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
+      integer jvar
+      double precision var,dvr,vmn,vmx
+      common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -24136,8 +24139,8 @@ c----------------------------------------------------------------------
       if (fileio) then 
 c                                convert p0-dz coordinate to nodal 
 c                                values
-         i = idint((p0 - vmin(1))/dv(1)) + 1
-         j = ncol - idint(dz/vz(1))
+         i = idint((p0 - vmn(1))/dvr(1)) + 1
+         j = ncol + idint(dz/vz(1))
 
          v(1) = vn((i-1)*ncol + j, 1)
          v(2) = vn((i-1)*ncol + j, 2)
