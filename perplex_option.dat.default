@@ -69,7 +69,7 @@ initial_resolution        default | [1/16 1/48]* >0, <1, resolution for static c
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 keep_auto                 default | [T] F; automatically reduce # of compositions kept per refinement point if > keep_max
-keep_max                  default | [50000], > ~100, < ~k21/k5; maximum # of compositions kept per refinement point if keep_auto
+keep_max                  default | [20000], > ~100, < ~k21/k5; maximum # of compositions kept per refinement point if keep_auto
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output

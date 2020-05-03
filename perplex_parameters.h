@@ -142,7 +142,7 @@ c----------------------------------------------------------------------
 !                                    memory = k1 + k21 + k18 + k20 + k24 + k25 + k1;
 !                                  and solving for k21 
 !                                    k21 = (memory - k1*(2*k31 + k32 + 2))/(k32+1)
-      parameter(memory=78000000,k31=2,k32=10,k1=4500000)
+      parameter(memory=82000000,k31=2,k32=10,k1=4800000)
 !                                  static
       parameter(k18=k1*k31,k24=k1*k32,k13=k1)
 !                                  dynamic

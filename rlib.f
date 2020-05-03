@@ -26078,8 +26078,8 @@ c----------------------------------------------------------------------
      *     iwarn05, iwarn58/8*0/
 c----------------------------------------------------------------------
 c                                             look for errors
-      if (idead.eq.2.or.idead.gt.4.and.idead.lt.100
-     *                            .and.iwarn91.lt.6) then 
+      if (idead.eq.2.or.idead.gt.4.and.idead.lt.8.and.
+     *                                 iwarn91.lt.6) then 
 c                                             unbounded solution, or
 c                                             other programming error.
          call warn (91,c,idead,char) 
