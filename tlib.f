@@ -1374,7 +1374,7 @@ c                                 -------------------------------------
 c                                 check dynamic memory allocation:
       if (iam.lt.3) then
 
-         write (*,*) k21, k19
+c        write (*,*) k21, k19
 c                                 recommended value for k21, to be absolutely 
 c                                 safe multiply by 2.
          ik21 = iopt(52)*icp

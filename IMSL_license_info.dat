@@ -1,0 +1,37 @@
+"license key" from ITSHOP
+
+SERVER lic-vni.ethz.ch any 3000
+USE_SERVER
+
+VNI_LICENSE_FILE after installation:
+
+[IMSL Fortran Numerical Library]
+   Version=7.0.0
+   VNI license number=3000@lic-vni.ethz.ch
+
+
+server for instalation key:
+
+3000@lic-vni.ethz.ch
+
+
+LM_LICENSE_FILE environment variable:
+
+LM_LICENSE_FILE=C:\Program Files (x86)\VNI\license
+
+
+
+C:\Program Files (x86)\VNI\imsl\fnl700\winin111e64\notes -> readme.txt
+
+key seems to be to put the 
+
+SERVER lic-vni.ethz.ch any 3000
+USE_SERVER
+
+in 
+
+C:\Program Files (x86)\VNI\license\imsl_license.lic
+
+also need to set the include path in visual studio explicitly to
+
+C:\Program Files (x86)\VNI\imsl\fnl700\winin111e64\include\dll
