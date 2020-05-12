@@ -8,9 +8,10 @@ c nag documentation or source comments.
       subroutine lpnag (n,nclin,a,lda,bl,cvec,istate,x,ax,
      *                  clamda,iw,leniw,w,lenw,idead,itmax,istart)
 c----------------------------------------------------------------------
-c     a  is a constant  nclin by n  matrix.
+c     a  is a constant  nclin by n matrix.
 c     n  is the number of variables (dimension of x).
-c     nclin  is the number of general linear constraints (rows of  a).
+c     nclin  is the number of general linear constraints (rows of a).
+c----------------------------------------------------------------------
 
       implicit none
 
@@ -35,7 +36,7 @@ c     nclin  is the number of general linear constraints (rows of  a).
       common/ ae04mf /loclc(15)
 
       double precision  wmach(9)
-      common/ ax02za /wmach
+      common/ cstmch /wmach
 
       integer ldq,ldt
       common/ be04nb /ldt,ldq
@@ -80,7 +81,8 @@ c                                 (idead = -1)
 
       idead = 0 
 c                                     define the initial feasibility tolerances in clamda.
-      call f06fbf(n+nclin,wmach(4),w(1),1)
+      call sload (n+nclin,wmach(4),w(1),1)
+
       call e04mfr('i',n,nclin,nmoved,iter,numinf,istate,clamda,w(1),x)
 
       if (istart.eq.0) then
@@ -91,10 +93,10 @@ c                                     true cold start initialization
             ianrmj = ianrmj + 1
          end do 
 
-         call f06flf(nclin,w(lanorm),1,asize,amin)
-         call f06flf(nctotl,w(1),1,feamax,feamin)
-         call dcopy(nctotl,w(1),1,w(lwtinf),1)
-         call dscal(nctotl,1d0/feamin,w(lwtinf),1)
+         call scond (nclin,w(lanorm),1,asize,amin)
+         call scond (nctotl,w(1),1,feamax,feamin)
+         call dcopy (nctotl,w(1),1,w(lwtinf),1)
+         call dscal (nctotl,1d0/feamin,w(lwtinf),1)
 
 c        define the initial working set.
 
@@ -140,8 +142,8 @@ c                                 warm start
 
 c        install the transformed linear term in cq.
 
-      call dcopy(n,cvec,1,w(lcq),1)
-      call e04nbw(6,n,nz,nfree,ldq,unitq,iw(lkx),w(lcq),w(lq),w(lwrk))
+      call dcopy (n,cvec,1,w(lcq),1)
+      call cmqmul (6,n,nz,nfree,ldq,unitq,iw(lkx),w(lcq),w(lq),w(lwrk))
 
       jinf = 0
       nrz = 0
@@ -207,7 +209,6 @@ c     move x onto the constraints in the working set.
       subroutine e04mfk(nfree,n,nctotl,nactiv,kactiv,kx,
      *           clamda,rlamda)
 c----------------------------------------------------------------------
-c     mark 16 release. nag copyright 1992.
 c     e04mfk   creates the expanded lagrange multiplier vector clamda.
 
       integer           n, nactiv, nctotl, nfree
@@ -216,14 +217,12 @@ c     e04mfk   creates the expanded lagrange multiplier vector clamda.
       double precision  rlam
       integer           j, k, nfixed, nz
 c----------------------------------------------------------------------
-
-
       nz = nfree - nactiv
 
 c     expand multipliers for bounds, linear and nonlinear constraints
 c     into the  clamda  array.
 
-      call f06fbf (nctotl,0d0,clamda,1)
+      call sload (nctotl,0d0,clamda,1)
 
       nfixed = n - nfree
 
@@ -310,10 +309,10 @@ c----------------------------------------------------------------------
       logical           firstv, hitlow, move, onbnd, overfl,
      *                  unbndd, fail
 
-      double precision  ddot, dnrm2, adivb
+      double precision  ddot1, dnrm2, adivb
 
       common            /ae04mf/loclc(15)
-      common            /ax02za/wmach
+      common/ cstmch /wmach
       common            /be04nb/ldt,ldq
       common            /de04nb/asize, dtmax, dtmin
 
@@ -351,17 +350,17 @@ c     use the multiplier array.
       nviol = 0
       condmx = flmax
 
-      call e04mfh(n,nclin,lda,istate,numinf,suminf,bl,a,
+      call e04mfh (n,nclin,lda,istate,numinf,suminf,bl,a,
      *            featol,w(lgq),x,w(lwtinf))
 
       if (numinf.gt.0) then
-         call e04nbw(6,n,nz,nfree,ldq,unitq,kx,w(lgq),w(lq),w(lwrk))
+         call cmqmul (6,n,nz,nfree,ldq,unitq,kx,w(lgq),w(lq),w(lwrk))
       else 
-         call dcopy(n,w(lcq),1,w(lgq),1)
+         call dcopy (n,w(lcq),1,w(lgq),1)
       end if
 
       if (numinf.eq.0) then
-         obj = ddot(n,cvec,1,x)
+         obj = ddot1 (n,cvec,1,x)
       else
          obj = suminf
       end if
@@ -373,7 +372,7 @@ c     +    do while (msg .eq. empty)
    20 if (msg.eq.empty) then
 
          gznorm = 0d0
-         if (nz.gt.0) gznorm = dnrm2(nz,w(lgq),1)
+         if (nz.gt.0) gznorm = dnrm2 (nz,w(lgq),1)
 
          if (nrz.eq.nz) then
             grznrm = gznorm
@@ -488,13 +487,13 @@ c           compute a search direction.
 
             iter = iter + 1
 
-            call dcopy(nrz,w(lgq),1,w(ld),1)
-            call dscal(nrz,-1d0,w(ld),1)
+            call dcopy (nrz,w(lgq),1,w(ld),1)
+            call dscal (nrz,-1d0,w(ld),1)
 
-            dnorm = dnrm2(nrz,w(ld),1)
+            dnorm = dnrm2 (nrz,w(ld),1)
 
-            call e04nbw(1,n,nrz,nfree,ldq,unitq,kx,w(ld),w(lq),w(lwrk))
-            call dgemv('n',nclin,n,a,lda,w(ld),0d0,w(lad))
+            call cmqmul (1,n,nrz,nfree,ldq,unitq,kx,w(ld),w(lq),w(lwrk))
+            call dgemv ('n',nclin,n,1d0,a,lda,w(ld),0d0,w(lad))
 
 c           find the constraint we bump into along d.
 c           update  x  and  ax  if the step alfa is nonzero.
@@ -514,9 +513,10 @@ c           after the call to  e04mfs, it is regarded as infinite.
             end if
 
             alfa = alfhit
-            call daxpy(n,alfa,w(ld),1,x)
+            call daxpy (n,alfa,w(ld),1,x,1)
 
-            call daxpy(nclin,alfa,w(lad),1,ax)
+            call daxpy (nclin,alfa,w(lad),1,ax,1)
+
             xnorm = dnrm2(n,x,1)
 
 c           add a constraint to the working set.
@@ -567,7 +567,7 @@ c              a general constraint has been added.
 
 c           increment featol.
 
-            call daxpy(nctotl,0d0,featlu,1,featol)
+            call daxpy1 (nctotl,0d0,featlu,1,featol)
 
             if (mod(iter,50).eq.0) then
 
@@ -576,7 +576,7 @@ c              negative istate values.  if some violations have
 c              occurred.  set inform to force iterative
 c              refinement and a switch to phase 1.
 
-               call e04mfq(n,nclin,istate,nviol,jmax,errmax,ax,
+               call e04mfq (n,nclin,istate,nviol,jmax,errmax,ax,
      *                     bl,featol,x)
 
             end if
@@ -602,15 +602,15 @@ c              move  x  on to the working set if it is close.
      *                     a,featol,w(lgq),x,w(lwtinf))
 
                if (numinf.gt.0) then
-                  call e04nbw(6,n,nz,nfree,ldq,unitq,kx,w(lgq),w(lq),
-     *                        w(lwrk))
+                  call cmqmul (6,n,nz,nfree,ldq,unitq,kx,w(lgq),w(lq),
+     *                         w(lwrk))
                else 
-                  call dcopy(n,w(lcq),1,w(lgq),1)
+                  call dcopy (n,w(lcq),1,w(lgq),1)
                end if
             end if
 
             if (numinf.eq.0) then
-               obj = ddot(n,cvec,1,x)
+               obj = ddot1 (n,cvec,1,x)
             else
                obj = suminf
             end if
@@ -639,12 +639,10 @@ c     ======================end of main loop============================
 
       end
 
-      subroutine e04mfj(rowerr,unitq,nclin,nactiv,nfree,nz,n,ldq,lda,
+      subroutine e04mfj (rowerr,unitq,nclin,nactiv,nfree,nz,n,ldq,lda,
      *                  ldt,istate,kactiv,kx,jmax,errmax,xnorm,a,ax,bl,
      *                  featol,t,x,q,p,work)
-c     mark 16 release. nag copyright 1992.
 
-c     ******************************************************************
 c     e04mfj  computes the point on a working set that is closest in the
 c     least-squares sense to the input vector x.
 
@@ -652,10 +650,6 @@ c     if the computed point gives a row error of more than the
 c     feasibility tolerance, an extra step of iterative refinement is
 c     used.  if  x  is still infeasible,  the logical variable rowerr
 c     is set.
-
-c     original version derived from lssetx january-1987.
-c     this version of  e04mfj  dated   5-jul-1989.
-c     ******************************************************************
 
       integer           ntry
       parameter         (ntry=5)
@@ -668,21 +662,15 @@ c     ******************************************************************
      *                  featol(n+nclin), p(n), q(ldq,*), t(ldt,*),
      *                  work(n), x(n)
       integer           istate(n+nclin), kactiv(n), kx(n)
-c     .. scalars in common ..
-      
-
-c     .. arrays in common ..
-
-c     .. local scalars ..
       double precision  bnd
       integer           i, is, j, k, ktry
-c     .. external functions ..
-      double precision  ddot, dnrm2
-      integer           idamax
+      double precision  ddot1, dnrm2
+      integer           idamx1
+      external ddot1, dnrm2, idamx1
+c-----------------------------------------------------------------------
 
-c     ------------------------------------------------------------------
 c     move  x  onto the simple bounds in the working set.
-c     ------------------------------------------------------------------
+
       do 20 k = nfree + 1, n
          j = kx(k)
          is = istate(j)
@@ -690,10 +678,10 @@ c     ------------------------------------------------------------------
          if (is.ge.2) bnd = 1d0
          if (is.ne.4) x(j) = bnd
    20 continue
-c     ------------------------------------------------------------------
+
 c     move  x  onto the general constraints in the working set.
 c     ntry  attempts are made to get acceptable row errors.
-c     ------------------------------------------------------------------
+
       ktry = 1
       jmax = 1
       errmax = 0d0
@@ -707,26 +695,26 @@ c        where  py  solves the triangular system  t*(py) = residuals.
 
 40       do 60 i = 1, nactiv
             k = kactiv(i)
-            work(nactiv-i+1) = bl(k) - ddot(n,a(k,1),lda,x)
+            work(nactiv-i+1) = bl(k) - ddot1(n,a(k,1),lda,x)
    60    continue
 
-         call dtrsv('n',nactiv,t(1,nz+1),ldt,work)
-         call f06fbf(n,0d0,p,1)
-         call dcopy(nactiv,work,1,p(nz+1),1)
-         call e04nbw(2,n,nz,nfree,ldq,unitq,kx,p,q,work)
-         call daxpy(n,1d0,p,1,x)
+         call dtrsv1 ('n',nactiv,t(1,nz+1),ldt,work)
 
+         call sload (n,0d0,p,1)
 
-c     ---------------------------------------------------------------
+         call dcopy (nactiv,work,1,p(nz+1),1)
+
+         call cmqmul (2,n,nz,nfree,ldq,unitq,kx,p,q,work)
+
+         call daxpy1 (n,1d0,p,1,x)
+
 c     compute the 2-norm of  x.
 c     initialize  ax  for all the general constraints.
-c     ---------------------------------------------------------------
-      xnorm = dnrm2(n,x,1)
-      call dgemv('n',nclin,n,a,lda,x,0d0,ax)
 
-c     ---------------------------------------------------------------
+      xnorm = dnrm2 (n,x,1)
+      call dgemv ('n',nclin,n,1d0,a,lda,x,0d0,ax)
+
 c     check the row residuals.
-c     ---------------------------------------------------------------
 
          do k = 1, nactiv
             i = kactiv(k)
@@ -734,7 +722,7 @@ c     ---------------------------------------------------------------
             if (is.ge.1) work(k) = bl(i) - ax(i)
          end do
 
-         jmax = idamax(nactiv,work)
+         jmax = idamx1 (nactiv,work)
          errmax = dabs(work(jmax))
 
       ktry = ktry + 1
@@ -745,98 +733,6 @@ c     ---------------------------------------------------------------
 
       end
 
-      subroutine e04nbw(mode,n,nz,nfree,nq,unitq,kx,v,zy,wrk)
-
-      integer           mode, n, nfree, nq, nz
-      logical           unitq
-      double precision  v(n), wrk(n), zy(nq,*)
-      integer           kx(n)
-      integer           j, j1, j2, k, l, lenv, nfixed
-
-
-      nfixed = n - nfree
-      j1 = 1
-      j2 = nfree
-      if (mode.eq.1 .or. mode.eq.4) j2 = nz
-      if (mode.eq.2 .or. mode.eq.5 .or. mode.eq.7) j1 = nz + 1
-      lenv = j2 - j1 + 1
-
-      if (mode.le.3) then
-
-         if (nfree.gt.0) call f06fbf(nfree,0d0,wrk,1)
-
-c        copy  v(fixed)  into the end of  wrk.
-
-         if (mode.ge.2.and.nfixed.gt.0) call dcopy(nfixed,v(nfree+1),
-     *       1,wrk(nfree+1),1)
-
-c        set  wrk  =  relevant part of  zy * v.
-
-         if (lenv.gt.0) then
-            if (unitq) then
-               call dcopy(lenv,v(j1),1,wrk(j1),1)
-            else
-               call dgemv('n',nfree,j2-j1+1,zy(1,j1),nq,v(j1),1d0,wrk)
-            end if
-         end if
-
-c        expand  wrk  into  v  as a full n-vector.
-
-         call f06fbf(n,0d0,v,1)
-         do 20 k = 1, nfree
-            j = kx(k)
-            v(j) = wrk(k)
-   20    continue
-
-c        copy  wrk(fixed)  into the appropriate parts of  v.
-
-         if (mode.gt.1) then
-            do 40 l = 1, nfixed
-               j = kx(nfree+l)
-               v(j) = wrk(nfree+l)
-   40       continue
-         end if
-
-      else
-c        ===============================================================
-c        mode = 4, 5, 6, 7  or  8.
-c        ===============================================================
-c        put the fixed components of  v  into the end of  wrk.
-
-         if (mode.eq.5 .or. mode.eq.6) then
-            do 60 l = 1, nfixed
-               j = kx(nfree+l)
-               wrk(nfree+l) = v(j)
-   60       continue
-         end if
-
-c        put the free  components of  v  into the beginning of  wrk.
-
-         if (nfree.gt.0) then
-            do 80 k = 1, nfree
-               j = kx(k)
-               wrk(k) = v(j)
-   80       continue
-
-c           set  v  =  relevant part of  zy' * wrk.
-
-            if (lenv.gt.0) then
-               if (unitq) then
-                  call dcopy(lenv,wrk(j1),1,v(j1),1)
-               else
-                  call dgemv('t',nfree,j2-j1+1,zy(1,j1),nq,wrk,
-     *                       0d0,v(j1))
-               end if
-            end if
-         end if
-
-c        copy the fixed components of  wrk  into the end of  v.
-
-         if (nfixed.gt.0.and.(mode.eq.5 .or. mode.eq.6))
-     *       call dcopy(nfixed,wrk(nfree+1),1,v(nfree+1),1)
-      end if
-
-      end
 
 
       subroutine e04nfq(unitq,k1,k2,it,nactiv,nartif,nz,nfree,
@@ -875,7 +771,7 @@ c     ******************************************************************
      *                  jt, k, l, nzadd
       logical           overfl
       double precision  dnrm2, adivb
-      common            /ax02za/wmach
+      common/ cstmch /wmach
       common            /de04nb/asize, dtmax, dtmin
 
 
@@ -894,11 +790,12 @@ c     factorized.
 
 c           first general constraint added.  set  q = i.
 
-            call f06qhf(nfree,nfree,q,ldq)
+            call smlod1 (nfree,nfree,q,ldq)
             unitq = .false.
          end if
+
       else
-         call f06flf(nactiv,t(it,jt),ldt+1,dtmax,dtmin)
+         call scond (nactiv,t(it,jt),ldt+1,dtmax,dtmin)
       end if
 
       do k = k1, k2
@@ -908,8 +805,8 @@ c           first general constraint added.  set  q = i.
 
 c           transform the incoming row of  a  by  q'.
 
-            call dcopy(n,a(iadd,1),lda,w,1)
-            call e04nbw(8,n,nz,nfree,ldq,unitq,kx,w,q,s)
+            call dcopy (n,a(iadd,1),lda,w,1)
+            call cmqmul (8,n,nz,nfree,ldq,unitq,kx,w,q,s)
 
 c           check that the incoming row is not dependent upon those
 c           already in the working set.
@@ -957,16 +854,16 @@ c                 is used.
 
                   delta = w(nz)
 
-                  call f06frf(nz-1,delta,w,w(nz))
+                  call sgrfg1 (nz-1,delta,w,w(nz))
 
                   if (w(nz).gt.0d0) then
 
-                     call dgemv ('n',nfree,nz,q,ldq,w,0d0,s)
-                     call dger (nfree,nz,s,w,q,ldq)
+                     call dgemv ('n',nfree,nz,1d0,q,ldq,w,0d0,s)
+                     call dger1 (nfree,nz,s,w,q,ldq)
 
                      if (ngq.gt.0) then
-                        call dgemv('t',nz,ngq,gqm,n,w,0d0,s)
-                        call dger (nz,ngq,w,s,gqm,n)
+                        call dgemv ('t',nz,ngq,1d0,gqm,n,w,0d0,s)
+                        call dger1 (nz,ngq,w,s,gqm,n)
                      end if
 
                   end if
@@ -979,7 +876,7 @@ c                 is used.
                jt = jt - 1
                nactiv = nactiv + 1
                nz = nz - 1
-               call dcopy(nactiv,w(jt),1,t(it,jt),ldt)
+               call dcopy (nactiv,w(jt),1,t(it,jt),ldt)
                dtmax = tdtmax
                dtmin = tdtmin
 
@@ -1164,7 +1061,8 @@ c        variables exactly on their bounds.
       integer           nfix(2)
       double precision  d, tolz
       integer           is, j, maxfix
-      common            /ax02za/wmach/ce04mf/tolx0, ndegen, itnfix, nfix
+      common/ cstmch /wmach
+      common/ce04mf/tolx0, ndegen, itnfix, nfix
       save              tolz
 
       nmoved = 0
@@ -1479,10 +1377,10 @@ c     gamma = 0.001 seems to be safe.
       integer           i, j, jhitf, jhiti, js
       logical           blockf, blocki
 
-      common            /ce04mf/tolx0, ndegen, itnfix, nfix
+      common/ce04mf/tolx0, ndegen, itnfix, nfix
 
       double precision wmach(9)
-      common/ax02za/wmach
+      common/ cstmch /wmach
 
 c     tolpiv is a tolerance to exclude negligible elements of a'p.
 
@@ -1737,9 +1635,8 @@ c                 value of firstv.
          end if
    40 continue
 
-c     ------------------------------------------------------------------
 c     see if a feasible and/or infeasible constraint blocks.
-c     ------------------------------------------------------------------
+
       blockf = jhitf .gt. 0
       blocki = jhiti .gt. 0
       unbndd = .not. (blockf .or. blocki)
@@ -1880,7 +1777,7 @@ c     columns of the  (ngq x n)  matrix  gqm'.
       common            /de04nb/asize, dtmax, dtmin
 
       double precision wmach(9)
-      common/ax02za/wmach
+      common/ cstmch /wmach
 
       overfl = .false.
       bound = jadd .le. n
@@ -1888,9 +1785,9 @@ c     columns of the  (ngq x n)  matrix  gqm'.
 
       if (bound) then
 
-c        ===============================================================
+
 c        a simple bound has entered the working set.  iadd is not used.
-c        ===============================================================
+
 
          nanew = nactiv
 
@@ -1927,22 +1824,20 @@ c           move the  (nfree)-th  row of  q  to position ifix.
 
       else
 
-c        ===============================================================
 c        a general constraint has entered the working set.
 c        ifix is not used.
-c        ===============================================================
 
          nanew = nactiv + 1
 
 c                                 transform the incoming row of a by q'.
-         call dcopy(n,a(iadd,1),lda,w,1)
-         call e04nbw(8,n,nz,nfree,ldq,unitq,kx,w,q,c)
+         call dcopy (n,a(iadd,1),lda,w,1)
+         call cmqmul (8,n,nz,nfree,ldq,unitq,kx,w,q,c)
 c                                 check that the incoming row is not dependent upon those
 c                                 already in the working set.
-         dtnew = dnrm2(nz,w,1)
+         dtnew = dnrm2 (nz,w,1)
          if (nactiv.eq.0) then
 c                                 this is the only general constraint in the working set.
-            cond = adivb(asize,dtnew,overfl)
+            cond   = adivb (asize,dtnew,overfl)
             tdtmax = dtnew
             tdtmin = dtnew
          else
@@ -1952,7 +1847,7 @@ c           set.  update the estimate of the condition number.
 
             tdtmax = max(dtnew,dtmax)
             tdtmin = min(dtnew,dtmin)
-            cond = adivb(tdtmax,tdtmin,overfl)
+            cond   = adivb (tdtmax,tdtmin,overfl)
          end if
 
          if (cond.gt.condmx .or. overfl) go to 80
@@ -1961,7 +1856,7 @@ c           set.  update the estimate of the condition number.
 
 c           first general constraint added.  set  q = i.
 
-            call f06qhf (nfree,nfree,q,ldq)
+            call smlod1 (nfree,nfree,q,ldq)
             unitq = .false.
             it = 0
          end if
@@ -1979,13 +1874,15 @@ c        the orthogonal matrix  q  (i.e.,  q) is not stored explicitly.
 c        apply  p, the sequence of pairwise interchanges that moves the
 c        newly-fixed variable to position  nfree.
 
-         if (ngq.gt.0) call f06qkf(nfree-1,w,ngq,gqm,n)
+         if (ngq.gt.0) call sgeap1 (nfree-1,w,ngq,gqm,n)
+
       else
 
-         call f06fqf (npiv-1,w(npiv),w,c,s)
+         call ssrot1 (npiv-1,w(npiv),w,c,s)
 
-         if (ngq.gt.0) call f06qxf ('l','f',npiv,ngq,1,npiv,c,s,gqm,n)
-         call f06qxf ('r','f',nfree,nfree,1,npiv,c,s,q,ldq)
+         if (ngq.gt.0) call sgesr1 ('l','f',npiv,ngq,1,npiv,c,s,gqm,n)
+         call sgesr1 ('r','f',nfree,nfree,1,npiv,c,s,q,ldq)
+
       end if
 
       if (.not. unitq) then
@@ -1999,8 +1896,7 @@ c           or minus the unit vector  e(nfree).  we can reconstitute the
 c           column of gqm' corresponding to the new fixed variable.
 
             if (w(nfree).lt.wmach(3).and.ngq.gt.0) 
-     *          call dscal(ngq,-1d0,gqm(nfree,1),n)
-
+     *          call dscal (ngq,-1d0,gqm(nfree,1),n)
 
             if (nactiv.gt.0) then
 
@@ -2011,15 +1907,17 @@ c           column of gqm' corresponding to the new fixed variable.
                t(it,jt) = c(jt-1)*t(it,jt)
 
                if (nactiv.gt.1) then
-                  call f06qvf('right',nactiv,1,nactiv,c(jt),s(jt),
+                  call SUTSRH ('right',nactiv,1,nactiv,c(jt),s(jt),
      *                        t(it,jt),ldt)
-                  call dcopy(nactiv-1,s(jt),1,t(it+1,jt),ldt+1)
+                  call dcopy (nactiv-1,s(jt),1,t(it+1,jt),ldt+1)
                end if
 
                jt = jt - 1
-               call f06flf(nactiv,t(it,jt),ldt+1,tdtmax,tdtmin)
-               cond = adivb(tdtmax,tdtmin,overfl)
+               call scond (nactiv,t(it,jt),ldt+1,tdtmax,tdtmin)
+               cond = adivb (tdtmax,tdtmin,overfl)
+
             end if
+
          else
 
 c           general constraint added.  install  w  at the front of  t.
@@ -2073,7 +1971,7 @@ c           the proposed working set appears to be linearly dependent.
       double precision  a(lda,*), c(n), gqm(n,*), q(ldq,*), s(n), 
      *                  t(ldt,*), asize, dtmax, dtmin, cs, sn
       integer           i, ir, itdel, j, jart, jt, k, l, npiv, nrz1,
-     *                  nsup, idamax
+     *                  nsup, idamx1
       common            /de04nb/asize, dtmax, dtmin
 
       jt = nz + 1
@@ -2119,9 +2017,9 @@ c                    call warn (999,zero,nfree,'NLIB')
 
                   end if 
 
-                  call f06fbf (nfree-1,0d0,q(nfree,1),ldq)
+                  call sload (nfree-1,0d0,q(nfree,1),ldq)
 
-                  call f06fbf (nfree-1,0d0,q(1,nfree),1)
+                  call sload (nfree-1,0d0,q(1,nfree),1)
 
                end if
                q(nfree,nfree) = 1d0
@@ -2167,34 +2065,35 @@ c           t  becomes lower hessenberg.
 
                if (nsup.gt.1) then
 
-                  call dcopy(nsup-1,t(it+1,jt+1),ldt+1,s(jt+1),1)
+                  call dcopy (nsup-1,t(it+1,jt+1),ldt+1,s(jt+1),1)
 
-                  call f06qrf('right',nactiv,1,nsup,c(jt+1),s(jt+1),
+                  call SUHQR ('right',nactiv,1,nsup,c(jt+1),s(jt+1),
      *                        t(it,jt+1),ldt)
 
                end if
 
-               call f06baf(t(it,jt+1),t(it,jt),cs,sn)
+               call srotg1 (t(it,jt+1),t(it,jt),cs,sn)
 
                t(it,jt) = 0d0
                s(jt) = -sn
                c(jt) = cs
 
-               call f06qxf('r','b',nfree,nfree,nz,npiv,c,s,q,ldq)
-               call f06qxf('l','b',npiv,ngq,nz,npiv,c,s,gqm,n)
+               call sgesr1 ('r','b',nfree,nfree,nz,npiv,c,s,q,ldq)
+               call sgesr1 ('l','b',npiv,ngq,nz,npiv,c,s,gqm,n)
 
             end if
 
             jt = jt + 1
-            call f06flf(nactiv,t(it,jt),ldt+1,dtmax,dtmin)
+            call scond (nactiv,t(it,jt),ldt+1,dtmax,dtmin)
          end if
       end if
 
       nrz1 = nrz + 1
 
       if (nz.gt.nrz) then
+
          if (jdel.gt.0) then
-            jart = nrz1 - 1 + idamax(nz-nrz1+1,gqm(nrz1,1))
+            jart = nrz1 - 1 + idamx1 (nz-nrz1+1,gqm(nrz1,1))
          else
             jart = -jdel
          end if
@@ -2206,11 +2105,13 @@ c           t  becomes lower hessenberg.
                kx(nrz1) = kx(jart)
                kx(jart) = k
             else
-               call dswap(nfree,q(1,nrz1),1,q(1,jart),1)
+               call dswap (nfree,q(1,nrz1),1,q(1,jart),1)
             end if
 
-            call dswap(ngq,gqm(nrz1,1),n,gqm(jart,1),n)
+            call dswap (ngq,gqm(nrz1,1),n,gqm(jart,1),n)
+
          end if
+
       end if
 
       nrz = nrz1
@@ -2274,8 +2175,8 @@ c----------------------------------------------------------------------
       jbigst = 0
       kbigst = 0
 
-      if (n.gt.nz) call dcopy(n-nz,gq(nz+1),1,rlamda,1)
-      if (nactiv.gt.0) call dtrsv('t',nactiv,t(1,nz+1),ldt,rlamda)
+      if (n.gt.nz) call dcopy (n-nz,gq(nz+1),1,rlamda,1)
+      if (nactiv.gt.0) call dtrsv1 ('t',nactiv,t(1,nz+1),ldt,rlamda)
 
       do 40 l = 1, nfixed
          j = kx(nfree+l)
@@ -2346,14 +2247,15 @@ c----------------------------------------------------------------------
       implicit none
 
       integer lda, n, nclin, numinf, j, k, istate(*)
-
       double precision  a(lda,*), bl(*), cvec(n), featol(*), suminf,
-     *                  wtinf(*), x(n), ctx, feasj, s, weight,  ddot
+     *                  wtinf(*), x(n), ctx, feasj, s, weight,  ddot1
+
+      external ddot1
 c----------------------------------------------------------------------
       numinf = 0
       suminf = 0d0
 
-      call f06fbf(n,0d0,cvec,1)
+      call sload (n,0d0,cvec,1)
 
       do 40 j = 1, n + nclin
 
@@ -2365,7 +2267,7 @@ c----------------------------------------------------------------------
                ctx = x(j)
             else
                k = j - n
-               ctx = ddot(n,a(k,1),lda,x)
+               ctx = ddot1 (n,a(k,1),lda,x)
             end if
 
             istate(j) = 0
@@ -2408,1144 +2310,11 @@ c                                 add the infeasibility.
             if (j.le.n) then
                cvec(j) = weight
             else
-               call daxpy(n,weight,a(k,1),lda,cvec)
+               call daxpy1 (n,weight,a(k,1),lda,cvec)
             end if
 
          end if
 
    40 continue
-
-      end
-
-      subroutine f06baf(a, b, c, s)
-c----------------------------------------------------------------------
-      double precision   a, b, c, s, t, abst
-
-      logical            fail
-      double precision   adivb
-
-      double precision wmach(9)
-      common /ax02za/wmach
-c----------------------------------------------------------------------
-      if (b.eq.0d0) then
-
-         c  = 1d0
-         s  = 0d0
-
-      else
-
-         t  = adivb (b,a,fail)
-
-         abst = dabs(t)
-
-         if (abst.lt.wmach(4)) then
-c                                 wmach(4) = sqrt(epsmch)
-            c = 1d0
-            s = t
-
-         else if (abst*wmach(4).gt.1d0) then
-
-            c = 1d0/abst
-            s = sign (1d0,t)
-
-         else
-
-            c = 1d0 / dsqrt(1d0 + abst**2)
-            s = c*t
-
-         end if
-
-         a  = c*a + s*b
-         b  = t
-
-      end if
-
-      end
-
-      subroutine f06fqf (n, alpha, x, c, s)
-      implicit none
-      double precision   c(*), s(*), x(*), alpha
-      integer            n, i, ix
-
-      if (n.gt.0) then
-
-            ix = 1
-
-         do i = 1, n - 1
-                  call f06baf(x(ix + 1), x(ix), c(i), s(i))
-                  s(i)  = -s(i)
-                  x(ix) = -x(ix)
-                  ix      =  ix + 1
-         end do 
-               call f06baf(alpha, x(ix), c(n), s(n))
-               s(n)  = -s(n)
-               x(ix) = -x(ix)
-
-      end if
-
-      end
-
-      subroutine f06qrf(side, n, k1, k2, c, s, a, lda)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer  k1, k2, lda, n, i, j
-
-      character*1 side
-
-      double precision a(lda,*), c(*), s(*), aij, ctemp, stemp, subh, 
-     *                 temp
-
-      double precision wmach(9)
-      common/ax02za/wmach
-c----------------------------------------------------------------------
-      if ((min(n, k1).lt.1).or.(k2.le.k1).or.(k2.gt.n))return
-
-      if (side.eq.'l') then
-
-         do 20 j = k1, n
-            aij = a(k1,j)
-            do 10 i = k1, min(j, k2) - 1
-               temp = a(i + 1,j)
-               a(i,j) = s(i)*temp + c(i)*aij
-               aij = c(i)*temp - s(i)*aij
-   10       continue
-            if (j.lt.k2) then
-
-               subh = s(j)
-               call f06baf(aij, subh, c(j), s(j))
-               a(j,j) = aij
-            else
-               a(k2,j) = aij
-            end if
-   20    continue
-
-      else if (side.eq.'r') then
-
-         do 40 j = k2 - 1, k1, -1
-
-            subh = s(j)
-
-            call f06baf(a(j + 1, j + 1), subh, ctemp, stemp)
-
-            stemp = -stemp
-
-            if (dabs(ctemp).lt.wmach(3)) ctemp = 0d0
-
-            s(j) = stemp
-            c(j) = ctemp
-
-            if ((ctemp.ne.1d0).or.(stemp.ne.0d0)) then
-
-               do 30 i = j, 1, -1
-                  temp = a(i, j + 1)
-                  a(i, j + 1) = ctemp*temp - stemp*a(i,j)
-                  a(i,j) = stemp*temp + ctemp*a(i,j)
-   30          continue
-
-            end if
-
-   40    continue
-
-      end if
-
-      end
-
-      subroutine f06qvf(side, n, k1, k2, c, s, a, lda)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer            k1, k2, lda, n, i, j
-
-      character*1        side
-
-      double precision   a(lda, *), c(*), s(*), aij, ctemp, stemp, temp
-
-      double precision wmach(9)
-      common /ax02za/wmach
-c----------------------------------------------------------------------
-      if (min(n,k1).lt.1.or.k2.le.k1.or.k2.gt.n) return
-
-      if (side.eq.'l') then
-
-         do 20 j = n, k1, -1
-
-            if (j.ge.k2) then
-               aij = a(k2,j)
-            else
-               aij = c(j)*a(j,j)
-               s(j) = -s(j)*a(j,j)
-            end if
-
-            do 10 i = min(k2,j) - 1, k1, -1
-               temp = a(i,j)
-               a(i + 1,j) = c(i)*aij - s(i)*temp
-               aij = s(i)*aij + c(i)*temp
-   10       continue
-            a(k1,j) = aij
-   20    continue
-
-      else if (side.eq.'r') then
-
-         do j = k1, k2 - 1
-
-            if (c(j).ne.1d0.or.s(j).ne.0d0) then
-               stemp = s(j)
-               ctemp = c(j)
-
-               if (dabs(ctemp).lt.wmach(3)) ctemp = 0d0
-
-               do i = 1, j
-
-                  temp = a(i, j + 1)
-c                                        could check for underflow.
-c                                 added following line 11/06
-                  if (dabs(a(i,j)).lt.wmach(3)) a(i,j) = 0d0                            
-                  a(i, j + 1) = ctemp*temp - stemp*a(i,j)
-                  a(i,j) = stemp*temp + ctemp*a(i,j)
-
-               end do
-
-               s(j) = stemp*a(j + 1, j + 1)
-               a(j + 1, j + 1) = ctemp*a(j + 1, j + 1)
-
-            end if
-         end do 
-      end if
-
-      end
-
-      subroutine f06qxf(side, direct, m, n, k1, k2, c, s, a, lda)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer            k1, k2, lda, m, n, i, j
-
-      character*1        direct, side
-
-      double precision   a(lda, *), c(*), s(*), aij, ctemp, stemp, temp
-
-      logical            left, right
-
-      double precision wmach(9)
-      common/ax02za/wmach
-c----------------------------------------------------------------------
-      left = (side.eq.'l')
-      right = (side.eq.'r')
-
-      if ((min(m, n, k1).lt.1).or.(k2.le.k1).or.
-     $    (left .and.k2.gt.m).or.(right.and.k2.gt.n)) return
-
-      if (left) then
-
-            if (direct.eq.'f') then
-
-               do j = 1, n
-                  aij = a(k1,j)
-                  do i = k1, k2 - 1
-                     temp = a(i + 1,j)
-
-                     if (c(i).lt.wmach(3)) c(i) = 0d0
-
-                     a(i,j) = s(i)*temp + c(i)*aij
-                     aij = c(i)*temp - s(i)*aij
-                  end do 
-                  a(k2,j) = aij
-               end do
-
-            else if (direct.eq.'b') then
-
-               do j = 1, n
-                  aij = a(k2,j)
-
-                  do i = k2 - 1, k1, -1
-                     temp = a(i,j)
-                     if (c(i).lt.wmach(3)) c(i) = 0d0
-                     a(i + 1,j) = c(i)*aij - s(i)*temp
-                     aij = s(i)*aij + c(i)*temp
-                  end do
-
-                  a(k1,j) = aij
-               end do
-
-            end if
-
-      else if (right) then
-
-            if (direct.eq.'f') then
-
-               do 140 j = k1, k2 - 1
-
-                  if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
-                     ctemp = c(j)
-
-                     if (dabs(ctemp).lt.wmach(3)) ctemp = 0d0
-
-                     stemp = s(j)
-
-                     do 130 i = 1, m
-                        temp = a(i, j + 1)
-                        a(i, j + 1) = ctemp*temp - stemp*a(i,j)
-                        a(i,j) = stemp*temp + ctemp*a(i,j)
-  130                continue
-
-                  end if
-
-  140          continue
-
-            else if (direct.eq.'b') then
-
-               do j = k2 - 1, k1, -1
-
-                  if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
-
-                     ctemp = c(j)
-
-                     if (dabs(ctemp).lt.wmach(3)) ctemp = 0d0
-
-                     stemp = s(j)
-
-                     do i = m, 1, -1
-                        temp = a(i,j + 1)
-                        a(i,j + 1) = ctemp*temp - stemp*a(i,j)
-                        a(i,j) = stemp*temp + ctemp*a(i,j)
-                     end do
-
-                  end if
-
-               end do
-
-            end if
-
-      end if
-
-      end
-
-
-      subroutine f06qkf (n, perm, k, b, ldb)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer            k, ldb, n, i, j, l
-
-      double precision   perm(*), b(ldb, *), temp
-c----------------------------------------------------------------------
-      if (min(n, k).eq.0) return
-
-            do i = 1, n
-
-               l = idint(perm(i))
-
-               if (l.ne.i) then
-
-                  do j = 1, k
-                     temp = b(i,j)
-                     b(i,j) = b(l,j)
-                     b(l,j) = temp
-                  end do
-
-               end if
-
-             end do
-
-      end
-
-      subroutine f06frf(n, alpha, x, zeta)
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision   alpha, zeta, beta, scale, ssq, x(*)
-
-      integer n
-
-      double precision wmach(9)
-      common /ax02za/wmach
-c----------------------------------------------------------------------
-      if (n.lt.1) then
-
-         zeta = 0d0
-
-      else if (n.eq.1.and.x(1).eq.0d0) then
-
-         zeta = 0d0
-
-      else
-c        treat case where p is a 2 by 2 matrix specially.
-
-         if (n.eq.1) then
-
-c           deal with cases where  alpha = zero  and
-c           dabs(x(1)) .le. max(eps*abs(alpha), tol)  first.
-
-            if (alpha.eq.0d0) then
-               zeta   =  1d0
-               alpha  =  dabs (x(1))
-               x(1) = -dsign(1d0, x(1))
-            else if (dabs(x(1)).le.max(wmach(3)*dabs(alpha),0d0)) then
-               zeta   =  0d0
-            else
-
-               if (dabs(alpha).ge.dabs(x(1))) then
-                  beta = dabs(alpha)*dsqrt(1d0 + (x(1)/alpha)**2)
-               else
-                  beta = dabs(x(1))*dsqrt(1d0 + (alpha/x(1))**2)
-               end if
-
-               zeta = dsqrt((dabs(alpha) + beta)/beta)
-               if (alpha.ge.0d0) beta = -beta
-               x(1) = -x(1)/(zeta*beta)
-               alpha  = beta
-
-            end if
-         else
-
-c           now p is larger than 2 by 2.
-
-            ssq   = 1d1
-            scale = 0d0
-
-            call f06fjf(n, x, 1, scale, ssq)
-
-c           treat cases where  scale = zero,
-c           scale .le. max(eps*abs(alpha), tol)  and
-c           alpha = zero  specially.
-c           note that  scale = max(abs(x(i))).
-
-            if ((scale.eq.0d0).or.
-     $          (scale.le.max(wmach(3)*dabs(alpha),0d0))) then
-
-               zeta  = 0d0
-
-            else if (alpha.eq.0d0) then
-
-               zeta  = 1d0
-               alpha = scale*dsqrt(ssq)
-               call dscal(n, -1d0/alpha, x, 1)
-
-            else
-
-               if (scale.lt.dabs(alpha)) then
-                  beta = dabs(alpha)*dsqrt(1d0 + ssq*(scale/alpha)**2)
-               else
-                  beta = scale       *dsqrt(ssq +   (alpha/scale)**2)
-               end if
-
-               zeta = dsqrt((beta + dabs(alpha))/beta)
-               if (alpha.gt.0d0) beta = -beta
-               call dscal(n,-1d0/(zeta*beta), x, 1)
-               alpha = beta
-
-            end if
-
-         end if
-
-      end if
-
-      end
-
-
-      subroutine f06flf(n, x, incx, xmax, xmin)
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision   xmax, xmin, x(*)
-      integer            incx, n, ix
-c----------------------------------------------------------------------
-      if (n.lt.1) then
-
-         xmax = 0d0
-         xmin = 0d0
-
-      else
-
-         xmax = dabs(x(1))
-         xmin = xmax
-
-         do ix = 1 + incx, 1 + (n - 1)*incx, incx
-            xmax = max(xmax,dabs(x(ix)))
-            xmin = min(xmin,dabs(x(ix)))
-         end do
-
-      end if
-
-      end
-
-      subroutine f06fbf(n, const, x, incx)
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision   const, x(*)
-
-      integer            incx, n, ix
-c----------------------------------------------------------------------
-      if (n.gt.0) then
-
-         if (const.ne.0d0) then
-
-            do ix = 1, 1 + (n - 1)*incx, incx
-               x(ix) = const
-            end do
-
-         else
-
-            do ix = 1, 1 + (n - 1)*incx, incx
-               x(ix) = 0d0
-            end do
-
-         end if
-
-      end if
-
-      end
-
-      subroutine f06fjf(n, x, incx, scale, sumsq)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer            incx, n, ix
-
-      double precision   scale, sumsq, x(*), absxi
-c----------------------------------------------------------------------
-      if (n.gt.0) then
-
-         do ix = 1, 1 + (n-1)*incx, incx
-
-            if (x(ix).ne.0d0) then
-
-               absxi = dabs(x(ix))
-
-               if (scale.lt.absxi) then
-                  sumsq = 1d0 + sumsq*(scale/absxi)**2
-                  scale = absxi
-               else
-                  sumsq = sumsq + (absxi/scale)**2
-               end if
-
-            end if
-
-         end do
-
-      end if
-
-      end
-
-      double precision function adivb (a,b,fail)
-c----------------------------------------------------------------------
-c former f06blf
-c
-c orginal code was using 
-
-c flmin = 1/flmax ~= wmach(3) = epsmch
-c flmax = wmach(7) = huge()
-c----------------------------------------------------------------------
-      implicit none
-
-      logical fail
-
-      double precision a, b, absb, absa, div
-
-      double precision wmach(9)
-      common /ax02za/wmach
-c----------------------------------------------------------------------
-      absa = dabs(a)
-      absb = dabs(b)
-
-      if (absa.le.wmach(3)) then
-c                                 a is < machine eps
-         div = 0d0
-
-         if (absb.le.wmach(3)) then
-c                                 b is also < machine eps
-            fail = .true.
-         else
-            fail = .false.
-         end if
-
-      else
-c                                 a is > eps
-         if (absb.le.wmach(3)) then
-c                                 b is < eps, div = sign(a)*huge
-            div  =  dsign(wmach(7),a)
-c                                 this doesn't make sense, but it's the
-c                                 original code. JADC, Jul 4, 2019.
-            fail = .true.
-
-         else
-c                                 b is > eps
-            if (absb.ge.1d0) then
-c                                 |b| > 1
-               fail = .false.
-
-               if (absa.ge.absb*wmach(3)) then
-                  div = a/b
-               else
-                  div = 0d0
-               end if
-
-            else
-c                                 |b| < 1
-               if (absa.le.absb*wmach(7)) then
-
-                  fail = .false.
-                  div  =  a/b
-
-               else
-
-                  fail = .true.
-                  div  = wmach(7)
-
-                  if (((a.lt.0d0).and.(b.gt.0d0)).or.
-     *                ((a.gt.0d0).and.(b.lt.0d0))) div = -div
-
-               end if
-
-            end if
-
-         end if
-
-      end if
-
-      adivb = div
-
-      end
-
-
-      subroutine f06qhf (m, n, a, lda)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer i, j, lda, m, n
-
-      double precision a(lda, *)
-c----------------------------------------------------------------------
-         do j = 1, n
-            do i = 1, m
-               a(i,j) = 0d0
-            end do
-         end do
-
-         do i = 1, min(m,n)
-            a(i,i) = 1d0
-         end do
-
-      end
-
-      double precision function dnrm2 (n, x, incx)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer incx, n
-
-      double precision x(*), norm, scale, ssq, f06bmf
-c----------------------------------------------------------------------
-      if (n.lt.1) then
-
-         norm  = 0d0
-
-      else if (n.eq.1) then
-
-         norm  = dabs(x(1))
-
-      else
-
-         scale = 0d0 
-         ssq   = 1d0
-
-         call f06fjf(n, x, incx, scale, ssq)
-
-         norm  = f06bmf(scale, ssq)
-
-      end if
-
-      dnrm2 = norm
-
-      end
-
-      subroutine dscal (n, alpha, x, incx)
-c----------------------------------------------------------------------
-c     x := alpha*x
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision   alpha, x(*)
-
-      integer            incx, n, ix
-c----------------------------------------------------------------------
-      if (n.gt.0) then
-
-         if (alpha.eq.0d0) then
-
-            do ix = 1, 1 + (n - 1)*incx, incx
-               x(ix) = 0d0
-            end do
-
-         else if (alpha.ne.1d0) then
-
-            do ix = 1, 1 + (n - 1)*incx, incx
-               x(ix) = alpha*x(ix)
-            end do 
-
-         end if
-
-      end if
-
-      end
-
-
-      double precision function ddot  (n, x, incx, y)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer   i, ix, iy, incx, n
-
-      double precision x(*), y(*), sum
-c----------------------------------------------------------------------
-      sum = 0d0
-
-      if (n.gt.0) then
-
-         if ((incx.eq.1).and.(incx.gt.0)) then
-
-            do ix = 1, 1 + (n - 1)*incx, incx
-               sum = sum + x(ix)*y(ix)
-            end do
-
-         else
-
-            iy = 1    
-            if (incx.gt.0) then
-
-               do ix = 1, 1 + (n - 1)*incx, incx
-                  sum = sum + x(ix)*y(iy)
-                  iy  = iy  + 1
-               end do
-
-            else
-
-               ix = 1 - (n - 1)*incx
-
-               do i = 1, n
-                  sum = sum + x(ix)*y(iy)
-                  ix  = ix  + incx
-                  iy  = iy  + 1
-               end do 
-
-            end if
-         end if
-      end if
-
-      ddot = sum
-
-      end
-
-      double precision function f06bmf (scale, ssq)
-c----------------------------------------------------------------------
-c original code was using
-
-c flmax = wmach(7) = huge
-c flmin = 1/flmax ~= wmach(3) = epsmch
-      implicit none
-
-      double precision scale, ssq, sqt, norm
-
-      double precision wmach(9)
-      common /ax02za/wmach
-c----------------------------------------------------------------------
-      sqt = dsqrt(ssq)
-
-      if (scale.lt.wmach(7)/sqt) then
-         norm = scale*sqt
-      else
-         norm = wmach(7)
-      end if
-
-      f06bmf = norm
-
-      end
-
-      subroutine dgemv (trans, m, n, a, lda, x, beta, y)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer lda, m, n, i, info, j, jx, kx, leny, m4, n4
-
-      character*1 trans
-
-      double precision a(lda, *), x(*), y(*), beta, temp, temp1, 
-     *                 temp2, temp3, temp4      
-c----------------------------------------------------------------------
-
-      info = 0
-
-      if (m.lt.0) then
-         info = 2
-      else if (n.lt.0) then
-         info = 3
-      else if (lda.lt.max(1, m)) then
-         info = 6
-      end if
-      if (info.ne.0) then
-         return
-      end if
-
-      if (m.eq.0.or.n.eq.0) return
-
-      if (trans.eq.'n') then
-         leny = m
-      else
-         leny = n
-      end if
-
-         kx = 1
-
-      if (beta.ne.1d0) then
-
-         if (beta.eq.0d0) then
-
-            do i = 1, leny
-               y(i) = 0d0
-            end do
-
-         else
-
-            do i = 1, leny
-               y(i) = beta*y(i)
-            end do
-
-         end if
-
-      end if
-
-      jx = kx
-
-      if (trans.eq.'n') then
-
-            n4 = 4*(n/4)
-            do j = 1, n4, 4
-               temp1 = x(jx)
-               temp2 = x(jx + 1)
-               temp3 = x(jx + 2)
-               temp4 = x(jx + 3)
-
-               if (temp1.ne.0d0.or.temp2.ne.0d0.or.temp3.ne.0d0.or.
-     *             temp4.ne.0d0) then
-
-                  do i = 1, m
-                     y(i) = ((((y(i) + temp1*a(i,j))
-     *                        + temp2*a(i,j + 1))
-     *                        + temp3*a(i,j + 2))
-     *                        + temp4*a(i,j + 3))
-                  end do
-
-               end if
-
-               jx = jx + 4
-
-            end do 
-
-            do j = n4 + 1, n, 1
-
-               temp = x(jx)
-
-               if (temp.ne.0d0) then
-
-                  do i = 1, m
-                     y(i) = y(i) + temp*a(i,j)
-                  end do 
-
-               end if
-
-               jx = jx + 1
-
-            end do 
-
-      else
-
-            m4 = 4*(m/4)
-
-            do j = 1, m4, 4
-               temp1 = x(jx)
-               temp2 = x(jx + 1)
-               temp3 = x(jx + 2)
-               temp4 = x(jx + 3)
-
-               if (temp1.ne.0d0.or.temp2.ne.0d0.or.temp3.ne.0d0.or.
-     $             temp4.ne.0d0) then
-
-                  do i = 1, n
-                     y(i) = ((((y(i) + temp1*a(j, i))
-     $                        + temp2*a(j + 1, i))
-     $                        + temp3*a(j + 2, i))
-     $                        + temp4*a(j + 3, i))
-                  end do
-
-               end if
-
-               jx = jx + 4
-
-            end do
-c                                 clean-up
-            do j = m4 + 1, m, 1
-
-               temp = x(jx)
-               if (temp.ne.0d0) then
-
-                  do i = 1, n
-                     y(i) = y(i) + temp*a(j, i)
-                  end do
-
-               end if
-
-               jx = jx + 1
-
-            end do
-
-      end if
-
-      end
-
-      subroutine dcopy (n, x, incx, y, incy)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer i, ix, iy, incx, incy, n
-
-      double precision x(*), y(*)
-c----------------------------------------------------------------------
-      if (n.gt.0) then
-         if (incx.eq.incy.and.incy.gt.0) then
-            do iy = 1, 1 + (n - 1)*incy, incy
-               y(iy) = x(iy)
-            end do
-         else
-            if (incx.ge.0) then
-               ix = 1
-            else
-               ix = 1 - (n - 1)*incx
-            end if
-            if (incy.gt.0) then
-               do iy = 1, 1 + (n - 1)*incy, incy
-                  y(iy) = x(ix)
-                  ix      = ix      + incx
-               end do 
-            else
-               iy = 1 - (n - 1)*incy
-               do i = 1, n
-                  y(iy) = x(ix)
-                  iy      = iy      + incy
-                  ix      = ix      + incx
-               end do 
-            end if
-         end if
-      end if
-
-      end
-
-      subroutine daxpy (n, alpha, x, incx, y)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer incx, n, i, ix, iy
-
-      double precision x(*), y(*), alpha
-c----------------------------------------------------------------------
-      if (n.gt.0) then
-
-         if (alpha.ne.0d0) then
-
-            if (incx.eq.1.and.incx.gt.0) then
-
-               do ix = 1, 1 + (n - 1)*incx, incx
-                  y(ix) = alpha*x(ix) + y(ix)
-               end do
-
-            else
-              
-               iy = 1
-
-               if (incx.gt.0) then
-
-                  do ix = 1, 1 + (n - 1)*incx, incx
-                     y(iy) = alpha*x(ix) + y(iy)
-                     iy      = iy            + 1
-                  end do
-
-               else
-
-                  ix = 1 - (n - 1)*incx
-
-                  do i = 1, n
-                     y(iy) = alpha*x(ix) + y(iy)
-                     ix      = ix            + incx
-                     iy      = iy            + 1
-                  end do 
-
-               end if
-            end if
-         end if
-      end if
-
-      end
-
-      subroutine dtrsv (trans, n, a, lda, x)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer lda, n,  i, j
-
-      character*1 trans
-
-      double precision  a(lda,*), x(*), temp
-c----------------------------------------------------------------------
-      if (n.eq.0) return
-
-      if (trans.eq.'n') then
-
-               do j = n, 1, -1
-                  if (x(j).ne.0d0) then
-                     x(j) = x(j)/a(j,j)
-                     temp = x(j)
-                     do i = j - 1, 1, -1
-                        x(i) = x(i) - temp*a(i,j)
-                     end do 
-                  end if
-               end do 
-
-      else
-               do j = 1, n
-                  temp = x(j)
-                  do i = 1, j - 1
-                     temp = temp - a(i,j)*x(i)
-                  end do 
-                  temp = temp/a(j,j)
-                  x(j) = temp
-               end do 
-
-      end if
-
-      end
-
-      subroutine dger (m, n, x, y, a, lda)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer lda, m, n, i, j, jy
-
-      double precision a(lda,*), x(*), y(*), alpha, temp
-c----------------------------------------------------------------------
-c     quick return if possible.
-
-      if (m.eq.0 .or. n.eq.0 ) return
-
-c     start the operations. in this version the elements of a are
-c     accessed sequentially with one pass through a.
-
-
-      jy = 1
-      alpha = -1d0
-
-      do j = 1, n
-            if (y(jy).ne.0d0) then
-               temp = alpha*y(jy)
-               do i = 1, m
-                  a(i,j) = a(i,j) + x(i)*temp
-               end do
-            end if
-            jy = jy + 1
-      end do 
-
-      end
-
-      subroutine dswap (n, x, incx, y, incy)
-c----------------------------------------------------------------------
-      implicit none
-
-      integer incx, incy, n, i, ix, iy
-
-      double precision x(*), y(*), temp 
-c----------------------------------------------------------------------
-
-      if (n.gt.0) then
-
-         if ((incx.eq.incy).and.(incy.gt.0)) then
-
-            do iy = 1, 1 + (n - 1)*incy, incy
-               temp    = x(iy)
-               x(iy) = y(iy)
-               y(iy) = temp
-            end do
-
-         else
-
-            if (incx.ge.0) then
-               ix = 1
-            else
-               ix = 1 - (n - 1)*incx
-            end if
-
-            if (incy.gt.0) then
-
-               do iy = 1, 1 + (n - 1)*incy, incy
-                  temp    = x(ix)
-                  x(ix) = y(iy)
-                  y(iy) = temp
-                  ix      = ix      + incx
-               end do 
-
-            else
-
-               iy = 1 - (n - 1)*incy
-
-               do i = 1, n
-                  temp    = x(ix)
-                  x(ix) = y(iy)
-                  y(iy) = temp
-                  iy      = iy      + incy
-                  ix      = ix      + incx
-               end do 
-
-            end if
-         end if
-      end if
-
-      end
-
-      integer function idamax (n, x)
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision  x(*), xmax
-
-      integer i, imax, ix, n
-c----------------------------------------------------------------------
-      if (n.gt.0) then
-
-         imax = 1
-
-         if (n.gt.1) then
-
-            xmax = dabs(x(1))
-            ix   = 1
-
-            do i = 2, n
-
-               ix = ix + 1
-
-               if (xmax.lt.dabs(x(ix))) then
-                  xmax = dabs(x(ix))
-                  imax = i
-               end if
-
-            end do
-
-         end if
-
-      else
-
-         imax = 0
-
-      end if
-
-      idamax = imax
 
       end

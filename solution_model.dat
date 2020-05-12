@@ -5921,7 +5921,7 @@ end_excess function
 
 3 1                         | 3 species on A, 1 site per formula unit.
 
-z(a,k) = 1 mu  + 1 cel + 1 fcel
+z(a,k) = 1 mu  + 1 cel + 1 fcel + 1 tip
 z(a,na) = 1 pa
 
 3 1                         | 3 species on M2a, 1 site per formula unit.

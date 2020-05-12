@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated May 2, 2020.',
+     *      'Perple_X version 6.9.0, source updated May 11, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -130,7 +130,7 @@ c----------------------------------------------------------------------
       common/ cst6 /icomp,istct,iphct,icp
 
       double precision wmach(9)
-      common /ax02za/wmach
+      common/ cstmch /wmach
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0

@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.7.8
+# makefile for Perple_X 6.9.0
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -87,8 +87,8 @@ frendly: frendly.o tlib.o rlib.o flib.o olib.o
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
-meemum: meemum.o resub.o nlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o -o $@   
+meemum: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
@@ -105,8 +105,8 @@ pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-vertex: vertex.o rlib.o tlib.o flib.o resub.o nlib.o olib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o resub.o nlib.o olib.o -o $@
+vertex: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o $@
 
 werami: werami.o rlib.o tlib.o flib.o olib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o -o $@

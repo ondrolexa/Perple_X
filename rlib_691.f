@@ -7877,7 +7877,7 @@ c                                 endmember corrections
 
       end
 
-      subroutine snorm0 (id,tname)
+      subroutine snorm (id,tname)
 c------------------------------------------------------------------------
 c compute endmember configurational entropies
 c site fractions expressed as a function of end-member proportions.

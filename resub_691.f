@@ -247,7 +247,11 @@ c                                 are identified in jdv(1..npt)
       kterat = .false.
       kitmax = 0
       kter = 0
-      idead1 = 0 
+      idead1 = 0
+
+      jphct = jpoint
+c                                 global composition coordinate counter
+      icoct = 0
 c                                 --------------------------------------
 c                                 generate pseudo compounds for the first 
 c                                 iteration from static arrays
@@ -441,9 +445,7 @@ c----------------------------------------------------------------------
 
       logical kterat
 
-      integer i, ids, lds, id, kd, iter, gcind
-
-      double precision res0
+      integer i, ids, lds, id, kd, iter
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -468,14 +470,6 @@ c----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 c----------------------------------------------------------------------
-c                                 iteration dependent resolution
-      res0 = nopt(24)/nopt(21)**iter
-c                                 set dynamic array counters:
-      jphct = jpoint
-c                                 global compositional index counter
-      gcind = 0
-c                                 compositional coordinate counter
-      icoct = 0
 c                                 reset refinement point flags
       do i = 1, jpoint
          hkp(i) = 0
@@ -537,28 +531,11 @@ c                                 gsol1, don't call if the previous
 c                                 refinement point was the same solution.
          if (ids.ne.lds) call ingsol (ids)
 
+         call setxyp (ids,id,.false.,kterat)
+
+         call minime (ids)
+
          lds = ids
-c                                 get the subdivision limits:
-         call sublim (ids,res0)
-
-         ophct = jphct 
-c                                  do the subdivision and load the data
-         call subdiv (ids,kd,gcind,jphct,.true.)
-
-         if (restrt.or.dead) return
-c                                  special call to make H2O for
-c                                  lagged speciation, this is necessary
-c                                  because non-linear stretching can prevent
-c                                  fluid composition from reaching pure water.
-         if (ophct.eq.jphct.and.ksmod(ids).eq.39) then 
-
-            write (*,'(3(a,/))') '688 version error: resub failed to ',
-     *           'gnerate pure water solvent, use 687 to avoid this ',
-     *           'problem, please report this error. CARTES needs to ',
-     *           'be modified to output sum(min) composition.'
-            call errpau
-
-         end if
 
       end do
 
@@ -3202,97 +3179,246 @@ c                                 for optimization.
 
       end
 
-      subroutine sublim (ids,res0) 
-c----------------------------------------------------------------------
-      implicit none 
+
+      subroutine minime (ids)
+c-----------------------------------------------------------------------
+
+      INCLUDE 'link_fnl_shared.h'
+
+      USE LCONF_INT
+
+      implicit none
 
       include 'perplex_parameters.h'
 
-      integer ii, i, j, ids
+      logical bad
 
-      double precision res0, xxnc, stinc
+      integer ids, i, j, k, l, ncon, ocon, nact, iact(2*m4),
+     *        maxfcn, neq, nvar, ntot
 
-      external stinc
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      double precision lambda(m4), plb(m4), gsol1, gval, sum,
+     *                 pub(m4), gfinal, dbz, acc, ppp(m4)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c----------------------------------------------------------------------
-      if (ksmod(ids).ne.20) then 
-c                                normal models
-         do ii = 1, pop1(ids)
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
-            do i = 1, istg(ids,ii)
+      integer jds, tphct
+      double precision az, bz
+      common/ cstexp /az(2*m4,m4),bz(2*m4),jds,tphct
 
-               do j = 1, ndim(i,ii,ids)
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
 
-                  pxnc(ii,i,j) = xncg(ids,ii,i,j)*res0
-                  xxnc = pxnc(ii,i,j)*reachg(ids)
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 
-                  if (imdg(j,i,ii,ids).eq.0) then 
-c                                 cartesian
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-                     pxmn(ii,i,j) = x(ii,i,j) - xxnc
-                     pxmx(ii,i,j) = x(ii,i,j) + xxnc
+      external gsol2
 
-                  else
-c                                 conformal, xnc is the number 
-c                                 of intervals for 0->1 resolution
-                     pxmn(ii,i,j) = stinc (x(ii,i,j),-xxnc,ids,ii,i,j)
-                     pxmx(ii,i,j) = stinc (x(ii,i,j),xxnc,ids,ii,i,j)
+      external gsol1 
+c-----------------------------------------------------------------------
+c                                 create constraint matrix z
+c                                 --------------------------
+      ntot = nstot(ids)
+      nvar = ntot - 1
+c                                 initialize bounds
+      do i = 1, nvar
+         pub(i) = 1d99
+         plb(i) = -1d99
+      end do 
 
-                  end if
-c                                 changed feb 6, 2012 from xmng/xmxg
-c                                 to allow hardlimits. JADC
-                  if (pxmn(ii,i,j).lt.xmno(ids,ii,i,j)) 
-     *                                   pxmn(ii,i,j) = xmno(ids,ii,i,j)
-                  if (pxmx(ii,i,j).gt.xmxo(ids,ii,i,j)) 
-     *                                   pxmx(ii,i,j) = xmxo(ids,ii,i,j)
+      if (.not.mus) then 
+         write (*,*) 'no mus'
+         call errpau
+      end if 
 
-               end do
+      jds = ids
+c----------------------------------------------------------
+c                                call gsol1 to get equilibrium ps
+      gval = gsol1 (jds)
+c                                copy into pp, p0a for old gsol1
+c                                routine
+      do i = 1, nstot(jds)
+         p0a(i) = pa(i)
+         pp(i) = pa(i)
+      end do
+c                                convert pp to true pp
+      call makepp (jds)
+c                                save the old refine point
+      jphct = jphct + 1
+
+      g2(jphct) = gval
+
+      call csol (jphct,jds,bad)
+c----------------------------------------------------------
+c                                 tolerance
+      acc = 1d-5
+c                                 no linear constraint
+      neq = 0
+c                                 ncon - neq linear inequalities,
+c                                 to be counted:
+      ncon = neq
+c                                 for each site
+      do i = 1, msite(ids)
+c                                 for each species
+         do j = 1, zsp(ids,i) + 1
+c                                 initial az, bz
+            ncon = ncon + 1
+            dbz = 0d0
+c                                 both Temkin and non-Temkin have
+c                                 -Az*p <= 0 constraints:
+            bz(ncon) = dcoef(0,j,i,ids) - acc
+
+            do k = 1, nvar
+
+               az(ncon,k) = 0d0
 
             end do
 
-         end do
+            do k = 1, lterm(j,i,ids)
 
-      else 
-c                                 charge balance model
-         do i = 1, nqs1
+               if (ksub(k,j,i,ids).ne.ntot) then 
 
-            if (i.eq.ns) cycle
+                  az(ncon,ksub(k,j,i,ids)) = az(ncon,k) 
+     *                                     - dcoef(k,j,i,ids)
 
-            pxnc(1,1,i) = xncg(ids,1,1,i)*res0
-            xxnc = pxnc(1,1,i)*reachg(ids)
+               else 
+c                                 decompose p(ntot) into 1 - p(1) - ...- p(nvar)
+                  dbz = dcoef(k,j,i,ids)
 
-            if (imdg(i,1,1,ids).eq.0) then 
-c                                 cartesian
-               pxmn(1,1,i) = x(1,1,i) - xxnc
-               pxmx(1,1,i) = x(1,1,i) + xxnc
+                  do l = 1, nvar
 
-            else
-c                                 conformal
-               pxmn(1,1,i) = stinc (x(1,1,i),-xxnc,ids,1,1,i)
-               pxmx(1,1,i) = stinc (x(1,1,i), xxnc,ids,1,1,i)
+                     az(ncon,l) = az(ncon,l) + dbz
 
-            end if 
+                  end do
 
-            if (pxmn(1,1,i).lt.xmno(ids,1,1,i)) then
-               pxmn(1,1,i) = xmno(ids,1,1,i)
-            else if (pxmx(1,1,i).gt.xmxo(ids,1,1,i)) then 
-               pxmx(1,1,i) = xmxo(ids,1,1,i)
-            end if 
+               end if 
 
-         end do
+            end do
 
-      end if
+            bz(ncon) = bz(ncon) + dbz
+c                                 non-Temkin have the Az*p <= 1 constraint
+            if (zmult(ids,i).ne.0d0) then
+
+               ocon = ncon
+
+               ncon = ncon + 1
+
+               bz(ncon) =  1d0 - dcoef(0,j,i,ids) - dbz - acc
+
+               do k = 1, nvar
+
+                  az(ncon,k) = -az(ocon,k)
+
+               end do
+
+            end if
+
+         end do 
+
+      end do
+
+      maxfcn = 400
+
+c lconf f77
+c     CALL LCONF (gsol2, NVAR, NCON, NEQ, Az, LDA, Bz, pLB, pUB,
+c    *         ppp, ACC, MAXFCN, ppp, gfinal, NACT, IACT, lambda)
+
+c lconf f90:
+      call lconf (gsol2,neq,az,bz,plb,pub,ppp,xguess=ppp,
+     *            maxfcn = maxfcn, acc = acc, obj = gfinal,
+     *            nact = nact, iact = iact, alamda = lambda)
 
       end 
+
+      subroutine gsol2 (nstt,ppp,gval)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, nstt
+
+      logical bad
+
+      double precision ppp(*), gval, gsol1, psum
+
+      external gsol1 
+
+      integer jds, tphct
+      double precision az, bz
+      common/ cstexp /az(2*m4,m4),bz(2*m4),jds,tphct
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c-----------------------------------------------------------------------
+      psum = 0d0
+
+      do i = 1, nstot(jds) - 1
+         psum = psum + ppp(i)
+         p0a(i) = ppp(i)
+      end do
+
+      p0a(nstot(jds)) = 1d0 - psum
+      
+      do i = 1, nstot(jds)
+         pp(i)  = p0a(i)
+         pa(i)  = p0a(i)
+      end do
+
+      call makepp (jds)
+
+c     do i = 1, 36
+c        psum = 0d0
+c        do j = 1, nstot(jds)-1
+c           psum = psum + pp(j)*az(i,j)
+c        end do 
+c        write (*,1010) psum, bz(i)
+c        if (psum.gt.bz(i)) write (*,*) 'oink'
+c     end do 
+
+      write (*,1000) 0, (pa(i),i=1,nstot(jds))
+
+      jphct = jphct + 1
+
+      g2(jphct) = gsol1(jds)
+
+      call csol (jphct,jds,bad)
+
+      write (*,1000) 0, (cp2(i,jphct),i=1,icp)
+
+      gval = g2(jphct)
+
+      do i = 1, icp
+         gval = gval - cp2(i,jphct)*mu(i)
+      end do
+
+      write (*,1000) gval, (pa(i),i=1,nstot(jds))
+
+1000  format (g12.6,1x,12(f7.5,1x))
+1010  format (2(g14.7,2x))
+
+      end
 
       logical function degen (index,array)
 c----------------------------------------------------------------------

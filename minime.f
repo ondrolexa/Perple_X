@@ -10,6 +10,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical bad
+
       integer ids, i, j, k, l, ncon, ocon, nact, iact(2*m4),
      *        maxfcn, neq, nvar, ntot, phct, lda
 
@@ -31,6 +33,14 @@ c-----------------------------------------------------------------------
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
 
       external gsol2
 
@@ -65,14 +75,27 @@ c----------------------------------------------------------
       sum = 0d0 
 
       do i = 1, nstot(jds)
-         pp(i) = pa(i)
          sum = sum + pa(i)
          p0a(i) = pa(i)
-      end do 
+         pp(i) = pa(i)
+      end do
 
-      write (*,*) sum
+      call makepp (jds)
 
-      gval = gsol1 (jds)
+      write (*,*) sum, g2(phct)
+      
+      g2(tphct) = gsol1 (jds)
+
+      call csol (tphct,jds,bad)
+
+      gval = g2(tphct)
+
+      do i = 1, icp
+         gval = gval - cp2(i,tphct)*mu(i)
+      end do
+
+      write (*,1000) g2(tphct), (cp2(i,tphct),i=1,icp)
+
       write (*,1000) gval, (pp(i),i=1,nstot(jds))
       write (*,1000) gval, (p0a(i),i=1,nstot(jds))
       write (*,1000) gval, (pa(i),i=1,nstot(jds))
@@ -148,10 +171,6 @@ c                                 non-Temkin have the Az*p <= 1 constraint
 
       maxfcn = 400
 
-      do i = 1, nvar
-         ppp(i) = pp(i)
-      end do
-
 c lconf f77
 c     CALL LCONF (gsol2, NVAR, NCON, NEQ, Az, LDA, Bz, pLB, pUB,
 c    *         ppp, ACC, MAXFCN, ppp, gfinal, NACT, IACT, lambda)
@@ -201,29 +220,41 @@ c-----------------------------------------------------------------------
 
       do i = 1, nstot(jds) - 1
          psum = psum + ppp(i)
-         pp(i) = ppp(i)
+         p0a(i) = ppp(i)
       end do
 
-      pp(nstot(jds)) = 1d0 - psum
+      p0a(nstot(jds)) = 1d0 - psum
+      
+      do i = 1, nstot(jds)
+         pp(i)  = p0a(i)
+         pa(i)  = p0a(i)
+      end do
+
+      call makepp (jds)
 
       do i = 1, 36
          psum = 0d0
          do j = 1, nstot(jds)-1
             psum = psum + pp(j)*az(i,j)
          end do 
-         write (*,1010) psum, bz(i)
-         if (psum.gt.bz(i)) write (*,*) 'oink'
+c        write (*,1010) psum, bz(i)
+c        if (psum.gt.bz(i)) write (*,*) 'oink'
       end do 
 
-      gval = gsol1(jds)
+      write (*,1000) 0, (pa(i),i=1,nstot(jds))
+
+      g2(tphct) = gsol1(jds)
+      gval = g2(tphct)
 
       call csol (tphct,jds,bad)
+
+      write (*,1000) 0, (cp2(i,tphct),i=1,icp)
 
       do i = 1, icp
          gval = gval - cp2(i,tphct)*mu(i)
       end do
 
-      write (*,1000) gval, (pp(i),i=1,nstot(jds))
+      write (*,1000) gval, (pa(i),i=1,nstot(jds))
 
 1000  format (g12.6,1x,12(f7.5,1x))
 1010  format (2(g14.7,2x))
