@@ -63,7 +63,7 @@ grid_levels               default | [1 4] exploratory and auto-refine (grid para
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
 hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
-hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
+hybrid_EoS_CH4            7 default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
 initial_resolution        1/8 1/8 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
