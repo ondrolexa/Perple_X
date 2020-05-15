@@ -3395,6 +3395,7 @@ c----------------------------------------------------------------------
       laar = .false.
       stck = .true.
       norf = .true.
+      badx = .false.
 
       do
 
@@ -3428,6 +3429,10 @@ c                              read dqf data:
          else if (key.eq.'low_reach') then
 
             lowrch = .true.
+
+         else if (key.eq.'reject_bad_composition') then
+
+            badx = .true.
 
          else if (key.eq.'begin_flagged_endmembe') then
 
@@ -7914,7 +7919,7 @@ c                                 zero y-array
 
          pa(h) = 1d0
 c                                 check for valid site fractions
-         if (sck(id).and.zbad(pa,id,zsite,tname,.false.,tname)) 
+         if (stck.and.zbad(pa,id,zsite,tname,.false.,tname)) 
      *                                     call error (125,z(1),h,tname)
 c                                 evaluate S
          scoef(h,id) = omega(id,pa)
@@ -8465,9 +8470,10 @@ c                                 number of independent + ordered endmembers
       nstot(im) = kstot + norder
 c                                 number of independent disordered endmembers
       lstot(im) = kstot
-c                                 site check override
-      sck(im) = stck
-c                                 low-reach flag, not actually used.
+c                                 reject bad compositions, only relevant
+c                                 for relict equipartition models
+      sck(im) = badx
+c                                 low-reach flag, lorch is NOT used.
       lorch(im) = lowrch
 c                                 non-equimolar speciation reaction
       dnu(im) = 0d0
@@ -11642,7 +11648,7 @@ c                                 write reach_increment
                if (int(reachg(im)*2d0/nopt(21)-1d0).gt.0)
      *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
 c                                 indicate site_check_override and refine endmembers
-               if (.not.sck(im)) write (*,1080) tname
+               if (bdx(im)) write (*,1080) tname
                if (.not.nrf(im).and..not.lopt(39)) write (*,1090) tname
 
             end if
@@ -11752,7 +11758,7 @@ c                              close solution model file
 1040  format (/,'no models will be considered.',/)
 1060  format (/,'Solution: ',a,/,12x,'Endmember fractions:',
      *        /,12x,20(a,1x))
-1080  format (9x,'site_check_override is on for ',a)
+1080  format (9x,'reject_bad_compositions is on for ',a)
 1090  format (9x,'refine_endmembers is on for ',a)
 1100  format (i8,' pseudocompounds generated for: ',a)
 1110  format (/,'Total number of pseudocompounds:',i8)
@@ -21075,7 +21081,7 @@ c                                 xtoy sets the y's for the composite polytopic
 c                                 composition.
       if (bad) return
 
-      if (.not.sck(ids)) then
+      if (bdx(ids)) then
 c                                 as ridiculous as this may seem, if ~sck, then this
 c                                 is a relict equipartition model, BUT because people 
 c                                 prefer the result that they get with site-checking do

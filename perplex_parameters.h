@@ -369,9 +369,9 @@ c poly(i) - number of polytopes for solution i, i = h0 local value for input.
       common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),pop1(h9),nsum(h9),
      *               imdg(ms1,mst,h4,h9),poly(h0),pvert(h9,h4,2)
 
-      logical sck, nrf
+      logical bdx, nrf
       integer ldsol
-      common/ cxt36 /ldsol(m4,h9),sck(h9),nrf(h9)
+      common/ cxt36 /ldsol(m4,h9),bdx(h9),nrf(h9)
 c                                 -------------------------------
 c                                  variables set from perplex_option.dat
       integer iopt
@@ -381,10 +381,10 @@ c                                  variables set from perplex_option.dat
       common/ opts /nopt(i10),iopt(i10),lopt(i10),valu(i10)
 c                                 -------------------------------
 c                                 local solution model variables:
-      logical stck, norf, lowrch
+      logical stck, norf, lowrch, badx
       integer xtyp
       double precision reach
-      common/ cxt61 /reach,xtyp,stck,norf,lowrch
+      common/ cxt61 /reach,xtyp,stck,norf,lowrch,badx
 
       integer jsmod
       double precision vlaar

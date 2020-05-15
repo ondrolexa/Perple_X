@@ -1,4 +1,4 @@
-689 DO NOT DELETE THIS LINE
+690 DO NOT DELETE THIS LINE
 
                             ---------------------------------------------------------------------------
                              FOR MODEL DEFINITIONS AND REFERENCES READ THE MODEL COMMENTARY OR REFER TO
@@ -6043,7 +6043,7 @@ end_excess function
 
 3 1                         | 3 species on A, 1 site per formula unit.
 
-z(a,k) = 1 mu  + 1 cel + 1 fcel
+z(a,k) = 1 mu  + 1 cel + 1 fcel + 1 tip
 z(a,na) = 1 pa
 
 3 1                         | 3 species on M2a, 1 site per formula unit.
@@ -13270,6 +13270,8 @@ z(mg,m4) = 1 afchl
 z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
 
 site_check_override
+
+reject_bad_compositions
 
 end_of_model
                               --------------------------------------------------------
