@@ -1309,11 +1309,16 @@ c----------------------------------------------------------------------
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 set stable flag
       stable(ids) = .true.
 c                                 check x-ranges
       do ii = 1, pop1(ids)
+
+         if (pwt(ii).lt.zero) cycle
 
          do i = 1, istg(ids,ii)
 

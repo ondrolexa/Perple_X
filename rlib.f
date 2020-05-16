@@ -10234,8 +10234,8 @@ c-----------------------------------------------------------------------
 
       double precision a(m,m),d(m),rmax,tmax,temp,ratio
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d

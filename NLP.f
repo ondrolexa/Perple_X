@@ -227,7 +227,7 @@ c     the array  r).
       logical           cmdbg, incrun, lsdbg, npdbg, unitq
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
-     *                  rpsvnp(mxparm), wmach(15)
+     *                  rpsvnp(mxparm), wmach
       integer icmdbg(ldbg), ilsdbg(ldbg), inpdbg(ldbg),
      *                  ipadls(18), ipadnp(12), ipsvls(mxparm),
      *                  ipsvnp(mxparm), jverfy(4), locls(lenls),
@@ -266,7 +266,7 @@ c     .. intrinsic functions ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
       common            /ae04uc/locnp
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /be04nb/lennam, ldt, ncolt, ldq
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
@@ -298,12 +298,10 @@ c     .. intrinsic functions ..
 
 c     set the machine-dependent constants.
 
-      call x02zaz
-c
       epsmch = wmach(3)
       rteps = wmach(4)
-      nout = wmach(11)
-      nerr = wmach(12)
+      nout = 6
+      nerr = 6
 c
       epspt3 = epsmch**point3
       epspt5 = rteps
@@ -642,35 +640,13 @@ c     now we can check the gradients at a feasible x.
 
 c     solve the problem.
 
-      if (ncnln.eq.0) then
-
-c        the problem has only linear constraints and bounds.
 
          call e04ucz (named,names,unitq,inform,iter,n,nclin,ncnln,nctotl
      *               ,nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,nfun,ngrad,
      *               istate,iw(lkactv),iw(lkx),objf,fdnorm,xnorm,confun,
      *               objfun,a,w(lax),bl,bu,c,w(lcjac),cjacu,clamda,
      *               w(lfeatl),w(lgrad),gradu,r,x,iw,w,lenw,iuser,user)
-      else
 
-c        the problem has some nonlinear constraints.
-
-         if (nclin.gt.0) call smcopy('general',nclin,n,a,lda,w(laqp),
-     *                               ldaqp)
-
-c        try and add some nonlinear constraint indices to kactiv.
-
-         call e04ucs(cold,n,nclin,ncnln,nctotl,nactiv,nfree,nz,istate,
-     *               iw(lkactv),bigbnd,tolact,bl,bu,c)
-
-         call e04ucz(named,names,unitq,inform,iter,n,nclin,ncnln,nctotl,
-     *               nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,nfun,ngrad,
-     *               istate,iw(lkactv),iw(lkx),objf,fdnorm,xnorm,confun,
-     *               objfun,w(laqp),w(lax),bl,bu,c,w(lcjac),cjacu,
-     *               clamda,w(lfeatl),w(lgrad),gradu,r,x,iw,w,lenw,
-     *               iuser,user)
-
-      end if
 
 c     if required, form the triangular factor of the hessian.
 
@@ -821,7 +797,7 @@ c     options file.
       logical           cmdbg, lsdbg, newopt, npdbg
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
-     *                  rpsvnp(mxparm), wmach(15)
+     *                  rpsvnp(mxparm), wmach
       integer icmdbg(ldbg), ilsdbg(ldbg), inpdbg(ldbg),
      *                  ipadls(18), ipadnp(12), ipsvls(mxparm),
      *                  ipsvnp(mxparm), jverfy(4)
@@ -840,7 +816,7 @@ c     .. intrinsic functions ..
       intrinsic         dble, len, max, mod
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04nc/ilsdbg, lsdbg
@@ -869,7 +845,7 @@ c     .. intrinsic functions ..
       data              chess(0), chess(1)/' no', 'yes'/
 
       epsmch = wmach(3)
-      nout = wmach(11)
+      nout = 6
 c
       condbd = max(one/(hundrd*epsmch*dble(n)),tenp6)
 c
@@ -7897,7 +7873,7 @@ c     is zero and  objalf will be the merit value at the base point.
      *                  ncdiff, nfdiff, nout
       logical           incrun, npdbg
 
-      double precision wmach(15)
+      double precision wmach
       integer inpdbg(ldbg)
 
       double precision alfbst, cs1jdx, csjdx, curvc, curvlf, epsaf,
@@ -7913,18 +7889,13 @@ c     is zero and  objalf will be the merit value at the base point.
       double precision ddot1
       external          ddot1
 
-c     .. intrinsic functions ..
-      intrinsic         abs, max, min
-
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /de04uc/rhomax, rhonrm, rhodmp, scale, incrun
       common            /npdebg/inpdbg, npdbg
 
-
-c
       epsmch = wmach(3)
 c
       if (.not. needfd.and.ncnln.gt.0) cs1jdx = ddot1 (ncnln,cs1,1,
@@ -8583,195 +8554,6 @@ c     end of e04uct. (npprt)
      *       '===================================',//)
       end
 
-
-
-      subroutine e04ucn(feasqp,n,nclin,ncnln,objalf,grdalf,qpcurv,
-     *                  istate,cjdx,cmul,cs,dlam,rho,violn,work1,work2)
-
-c     e04ucn   computes the value and directional derivative of the
-c     augmented lagrangian merit function.  the penalty parameters
-c     rho(j) are boosted if the directional derivative of the resulting
-c     augmented lagrangian function is not sufficiently negative.  if
-c     rho needs to be increased,  the perturbation with minimum two-norm
-c     is found that gives a directional derivative equal to  - p'hp.
-
-      integer ldbg
-      parameter (ldbg=5)
-      double precision zero, half, one
-      parameter (zero=0.0d+0,half=0.5d+0,one=1.0d+0)
-      double precision two
-      parameter (two=2.0d+0)
-
-      double precision grdalf, objalf, qpcurv
-      integer n, nclin, ncnln
-      logical           feasqp
-
-      double precision cjdx(*), cmul(*), cs(*), dlam(*), rho(*),
-     *                  violn(*), work1(*), work2(*)
-      integer istate(*)
-
-      double precision rhodmp, rhomax, rhonrm, scale
-      integer iprint, isumm, lines1, lines2, nout
-      logical           incrun, npdbg
-
-      double precision wmach(15)
-      integer inpdbg(ldbg)
-
-      double precision pterm, pterm2, qnorm, rho1, rhoi, rhomin,
-     *                  rhonew, rtmin, tscl
-      integer i, l, nplin
-      logical           boost, overfl
-
-      character*80      rec(3)
-
-      double precision ddot1, dnrm2, adivb 
-      external          ddot1, dnrm2, adivb 
-
-c     .. intrinsic functions ..
-      intrinsic         abs, max, min, sqrt
-
-      common            /ae04nb/nout, iprint, isumm, lines1, lines2
-      common/ cstmch /wmach
-      common            /de04uc/rhomax, rhonrm, rhodmp, scale, incrun
-      common            /fe04uc/inpdbg, npdbg
-
-c
-      if (ncnln.eq.0) return
-c
-      rtmin = wmach(6)
-c
-      objalf = objalf - ddot1 (ncnln,cmul,1,cs)
-      grdalf = grdalf - ddot1 (ncnln,dlam,1,cs)
-c
-      call dcopy(ncnln,cs,1,work1,1)
-c
-      if (.not. feasqp) then
-         nplin = n + nclin
-c
-         do 20 i = 1, ncnln
-            if (istate(nplin+i).lt.0.or.violn(i).ne.zero) work1(i)
-     *          = -cjdx(i)
-   20    continue
-      end if
-c
-      grdalf = grdalf + ddot1 (ncnln,work1,1,cmul)
-c
-      if (npdbg.and.inpdbg(1).gt.0) then
-         write (rec,fmt=99999) qpcurv, grdalf
-         call x04bay(iprint,3,rec)
-      end if
-c
-      if (feasqp) then
-c
-c        find the quantities that define  rhomin, the vector of minimum
-c        two-norm such that the directional derivative is one half of
-c        approximate curvature   - (dx)'h(dx).
-c
-         do 40 i = 1, ncnln
-            if (abs(cs(i)).le.rtmin) then
-               work2(i) = zero
-            else
-               work2(i) = cs(i)**2
-            end if
-   40    continue
-c
-         qnorm = dnrm2(ncnln,work2,1)
-         tscl = adivb (grdalf+half*qpcurv,qnorm,overfl)
-         if (abs(tscl).le.rhomax.and..not. overfl) then
-
-c           bounded  rhomin  found.  the final value of  rho(j)  will
-c           never be less than  rhomin(j).  if the  qp  was feasible,  a
-c           trial value  rhonew  is computed that is equal to the
-c           geometric mean of the previous  rho  and a damped value of
-c           rhomin.  the new  rho  is defined as  rhonew  if it is less
-c           than half the previous  rho  and greater than  rhomin.
-
-            scale = one
-            do 60 i = 1, ncnln
-               rhomin = max((work2(i)/qnorm)*tscl,zero)
-               rhoi = rho(i)
-c
-               rhonew = dsqrt(rhoi*(rhodmp+rhomin))
-               if (rhonew.lt.half*rhoi) rhoi = rhonew
-               if (rhoi.lt.rhomin) rhoi = rhomin
-               rho(i) = rhoi
-   60       continue
-c
-            rho1 = rhonrm
-            rhonrm = dnrm2(ncnln,rho,1)
-c
-
-c           if  incrun = .true.,  there has been a run of iterations in
-c           which the norm of  rho  has not decreased.  conversely,
-c           incrun = false  implies that there has been a run of
-c           iterations in which the norm of rho has not increased.  if
-c           incrun changes during this iteration the damping parameter
-c           rhodmp is increased by a factor of two.  this ensures that
-c           rho(j) will oscillate only a finite number of times.
-
-            boost = .false.
-            if (incrun.and.rhonrm.lt.rho1) boost = .true.
-            if (.not. incrun.and.rhonrm.gt.rho1) boost = .true.
-            if (boost) then
-               rhodmp = two*rhodmp
-               incrun = .not. incrun
-            end if
-         end if
-c
-         if (npdbg.and.inpdbg(2).gt.0) then
-            write (rec,fmt=99997)
-            call x04bay(iprint,2,rec)
-            do 80 i = 1, ncnln, 5
-               write (rec,fmt=99996) (rho(l),l=i,min(i+4,ncnln))
-               call x04baf(iprint,rec(1))
-   80       continue
-         end if
-c
-      else
-c
-c        the  qp  was infeasible.  do not alter the penalty parameters,
-c        but compute the scale factor so that the constraint violations
-c        are reduced.
-c
-         call sdscl(ncnln,rho,1,work1,1)
-         pterm2 = ddot1 (ncnln,work1,1,cs)
-c
-         scale = rhomax
-         tscl = adivb (grdalf,pterm2,overfl)
-         if (tscl.gt.scale.and.tscl.le.rhomax/(one+rhonrm)
-     *      .and..not. overfl) scale = tscl
-c
-         call dcopy(ncnln,cs,1,work1,1)
-      end if
-c
-
-c     compute the new value and directional derivative of the
-c     merit function.
-
-      call sdscl(ncnln,rho,1,work1,1)
-c
-      pterm = ddot1 (ncnln,work1,1,cs)
-      objalf = objalf + half*scale*pterm
-c
-      if (feasqp) pterm2 = pterm
-
-      grdalf = grdalf - scale*pterm2
-
-      if (npdbg.and.inpdbg(1).gt.0) then
-         write (rec,fmt=99998) scale, rhonrm, grdalf
-         call x04bay(iprint,3,rec)
-      end if
-
-
-c     end of  e04ucn. (npmrt)
-
-99999 format (/' //e04ucn //        qpcurv        grdalf ',/' //e04ucn',
-     *       ' //',1p,2d14.2)
-99998 format (/' //e04ucn //         scale        rhonrm        grdalf '
-     *       ,/' //e04ucn //',1p,3d14.2)
-99997 format (/' //e04ucn //  penalty parameters =       ')
-99996 format (1p,5d15.6)
-      end
 
 
       subroutine e04ucw(n,nclin,ncnln,istate,bigbnd,cvnorm,errmax,jmax,
@@ -9499,137 +9281,6 @@ c     end of  e04ucu. (npiqp)
       end
 
 
-      subroutine e04ucs(cold,n,nclin,ncnln,nctotl,nactiv,nfree,nz,
-     *                  istate,kactiv,bigbnd,tolact,bl,bu,c)
-
-c     e04ucs  adds indices of nonlinear constraints to the initial
-c     working set.
-
-      integer ldbg
-      parameter (ldbg=5)
-      double precision one
-      parameter (one=1.0d+0)
-
-      double precision bigbnd, tolact
-      integer n, nactiv, nclin, ncnln, nctotl, nfree, nz
-      logical           cold
-
-      double precision bl(nctotl), bu(nctotl), c(*)
-      integer istate(nctotl), kactiv(n)
-
-      integer iprint, isumm, lines1, lines2, nout
-      logical           npdbg
-
-      double precision wmach(15)
-      integer inpdbg(ldbg)
-
-      double precision b1, b2, biglow, bigupp, cmin, res, resl, resu,
-     *                  toobig
-      integer i, imin, is, j, linact, nfixed, nlnact, nplin
-
-      character*80      rec(4)
-c     .. intrinsic functions ..
-      intrinsic         abs, min
-
-      common            /ae04nb/nout, iprint, isumm, lines1, lines2
-      common/ cstmch /wmach
-      common            /fe04uc/inpdbg, npdbg
-
-c
-      nfixed = n - nfree
-      linact = nactiv
-      nplin = n + nclin
-c
-c     if a cold start is being made, initialize the status of the qp
-c     working set.  first,  if  bl(j) = bu(j),  set istate(j)=3.
-c
-      if (cold) then
-         do 20 j = nplin + 1, nctotl
-            istate(j) = 0
-            if (bl(j).eq.bu(j)) istate(j) = 3
-   20    continue
-      end if
-c
-c     increment nactiv and kactiv.
-c     ensure that the number of bounds and general constraints in the
-c     qp  working set does not exceed n.
-c
-      do 40 j = nplin + 1, nctotl
-         if (nfixed+nactiv.eq.n) istate(j) = 0
-         if (istate(j).gt.0) then
-            nactiv = nactiv + 1
-            kactiv(nactiv) = j - n
-         end if
-   40 continue
-c
-      if (cold) then
-c
-
-c        if a cold start is required, an attempt is made to add as many
-c        nonlinear constraints as possible to the working set.
-
-c        the following loop finds the most violated constraint.  if
-c        there is room in kactiv, it will be added to the working set
-c        and the process will be repeated.
-c
-c
-         is = 1
-         biglow = -bigbnd
-         bigupp = bigbnd
-         toobig = tolact + tolact
-c
-c        while (is .gt. 0 .and. nfixed + nactiv .lt. n) do
-   60    if (is.gt.0.and.nfixed+nactiv.lt.n) then
-            is = 0
-            cmin = tolact
-c
-            do 80 i = 1, ncnln
-               j = nplin + i
-               if (istate(j).eq.0) then
-                  b1 = bl(j)
-                  b2 = bu(j)
-                  resl = toobig
-                  resu = toobig
-                  if (b1.gt.biglow) resl = abs(c(i)-b1)/(one+abs(b1))
-                  if (b2.lt.bigupp) resu = abs(c(i)-b2)/(one+abs(b2))
-                  res = min(resl,resu)
-                  if (res.lt.cmin) then
-                     cmin = res
-                     imin = i
-                     is = 1
-                     if (resl.gt.resu) is = 2
-                  end if
-               end if
-   80       continue
-c
-            if (is.gt.0) then
-               nactiv = nactiv + 1
-               kactiv(nactiv) = nclin + imin
-               j = nplin + imin
-               istate(j) = is
-            end if
-            go to 60
-c           end while
-         end if
-      end if
-
-
-c     an initial working set has now been selected.
-
-      nlnact = nactiv - linact
-      nz = nfree - nactiv
-      if (npdbg.and.inpdbg(1).gt.0) then
-         write (rec,fmt=99999) nfixed, linact, nlnact
-         call x04bay(iprint,4,rec)
-      end if
-
-c     end of  e04ucs. (npcrsh)
-
-99999 format (/' //e04ucs//  working set selected....',/' //e04ucs// n',
-     *       'fixed linact nlnact     ',/' //e04ucs//',3i7)
-      end
-
-
       subroutine e04ucz(named,names,unitq,inform,majits,n,nclin,ncnln,
      *                  nctotl,nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,
      *                  nfun,ngrad,istate,kactiv,kx,objf,fdnorm,xnorm,
@@ -9683,7 +9334,7 @@ c     programming (sqp) method for nonlinearly constrained optimization.
       logical           cmdbg, incrun, npdbg
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
-     *                  rpsvnp(mxparm), wmach(15)
+     *                  rpsvnp(mxparm), wmach
       integer icmdbg(ldbg), inpdbg(ldbg), ipadls(18),
      *                  ipadnp(12), ipsvls(mxparm), ipsvnp(mxparm),
      *                  jverfy(4), locls(lenls), locnp(lennp)
@@ -9715,13 +9366,12 @@ c     programming (sqp) method for nonlinearly constrained optimization.
 
       double precision ddot1, dnrm2, adivb 
       external          ddot1, dnrm2, adivb 
-c     .. intrinsic functions ..
-      intrinsic         abs, dble, max, min, sqrt
+
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
       common            /ae04uc/locnp
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /be04nb/lennam, ldt, ncolt, ldzy
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
@@ -10019,21 +9669,9 @@ c
       objalf = objf
       grdalf = gdx
       glf1 = gdx
-      if (ncnln.gt.0) then
-         glf1 = glf1 - ddot1 (ncnln,w(lcjdx),1,clamda(nl))
-c
-c        compute the value and directional derivative of the
-c        augmented lagrangian merit function.
-c        the penalty parameters may be increased or decreased.
-c
-         call e04ucn(feasqp,n,nclin,ncnln,objalf,grdalf,qpcurv,istate,
-     *               w(lcjdx),w(lcmul),w(lcs1),w(ldlam),w(lrho),
-     *               w(lvioln),w(lwrk1),w(lwrk2))
-      end if
-c
-c     ===============================================================
+
 c     print the details of this iteration.
-c     ===============================================================
+
       call e04uct(ktcond,convrg,mjrmsg,msgnp,msgqp,ldr,ldt,n,nclin,
      *            ncnln,nctotl,nactiv,linact,nlnact,nz,nfree,majit0,
      *            majits,minits,istate,alfa,nfun,condhz,condh,condt,
@@ -10488,7 +10126,7 @@ c     constraint j may be violated by as much as featol(j).
      *                  nout, nprob
       logical           cmdbg, lsdbg
 
-      double precision rpadls(23), rpsvls(mxparm), wmach(15)
+      double precision rpadls(23), rpsvls(mxparm), wmach
       integer icmdbg(ldbg), ilsdbg(ldbg), ipadls(18),
      *                  ipsvls(mxparm), locls(lenls)
 
@@ -10518,7 +10156,7 @@ c     .. intrinsic functions ..
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /be04nb/lennam, ldt, ncolt, ldzy
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04nc/ilsdbg, lsdbg
@@ -11157,7 +10795,7 @@ c     a'x lt bl   a'x gt bu   a'x free   a'x = bl   a'x = bu   bl = bu
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      double precision wmach(15)
+      double precision wmach
       integer ilsdbg(ldbg)
 
       double precision b1, b2, biglow, bigupp, colmin, colsiz, flmax,
@@ -11173,7 +10811,7 @@ c     .. intrinsic functions ..
       intrinsic         abs, min
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /ce04nc/ilsdbg, lsdbg
 
       flmax = wmach(7)
@@ -11866,14 +11504,14 @@ c     where  p  is orthogonal.
 
       double precision asize, dtmax, dtmin
 
-      double precision wmach(15)
+      double precision wmach
 
       double precision cndmax, rnorm, rowmax, rtmax
       integer i, iadd, iartif, ifix, iswap, jadd, k, l, nzadd
       double precision dnrm2
       external          dnrm2
 
-      common/ cstmch /wmach
+      common/ cstmch /wmach(9)
       common            /de04nb/asize, dtmax, dtmin
 
       rtmax = wmach(8)
@@ -12135,8 +11773,7 @@ c
 
 
       SUBROUTINE E04UEF(STRING)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
+
 C***********************************************************************
 C     E04UEF  loads the option supplied in STRING into the relevant
 C     element of IPRMLS, RPRMLS, IPRMNP or RPRMNP.
@@ -12147,7 +11784,7 @@ C     .. Scalar Arguments ..
 C     .. Scalars in Common ..
       LOGICAL           NEWOPT
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
+      DOUBLE PRECISION  WMACH
 C     .. Local Scalars ..
       INTEGER           NOUT
       LOGICAL           FIRST, PRNT
@@ -12156,12 +11793,12 @@ C     .. Local Scalars ..
 C     .. Local Arrays ..
       CHARACTER*80      REC(5)
 C     .. External Subroutines ..
-      EXTERNAL          E04UCQ, X02ZAZ, X04BAF, X04BAY
+      EXTERNAL          E04UCQ
 C     .. Common blocks ..
-      COMMON            /AX02ZA/WMACH
+      common/ cstmch /wmach(9)
       COMMON            /EE04UC/NEWOPT
 C     .. Save statement ..
-      SAVE              /EE04UC/, /AX02ZA/, FIRST, NOUT, PRNT
+      SAVE              /EE04UC/
 C     .. Data statements ..
       DATA              FIRST/.TRUE./
 C     .. Executable Statements ..
@@ -12175,8 +11812,8 @@ C
          FIRST = .FALSE.
          NEWOPT = .TRUE.
       END IF
-      CALL X02ZAZ
-      NOUT = WMACH(11)
+
+      NOUT = 6
       BUFFER = STRING
 C
 C     Call E04UCQ to decode the option and set the parameter value.
@@ -12212,5 +11849,4 @@ C
 C     End of  E04UEF. (NPOPTN)
 C
       END
-
 

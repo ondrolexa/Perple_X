@@ -1,7 +1,6 @@
 
       subroutine minime (ids)
 c-----------------------------------------------------------------------
-
       implicit none
 
       include 'perplex_parameters.h'
@@ -100,6 +99,8 @@ c----------------------------------------------------------
 1000  format (g14.6,1x,12(f8.5,1x))
 c----------------------------------------------------------
       call makp2y (ids)
+
+      call maky2x (ids)
 c                                 inequalities, to be counted:
       nclin = 0
 c                                 for each site
@@ -266,17 +267,15 @@ c        if (psum.gt.bz(i)) write (*,*) 'oink'
       subroutine dummy
       end 
 
-
-
       subroutine makp2y (id)
 c----------------------------------------------------------------------
-c subroutine to construct the matrices necessary for the p to x conversion
+c subroutine to construct the Ay matrix for the p to y conversion
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, id
+      integer i, j, k, l, m, id
 
       double precision ay(h9,m14,m4), xt
 
@@ -294,33 +293,26 @@ c                                 assemble Ay
             ay(id,i,j) = 0d0 
          end do 
       end do
-
+c                                 set independent disordered
+c                                 endmember coefficients
       do i = 1, lstot(id)
 c                                 independent endmember i has
 c                                 index k in the y array
-         k = knsp(i,kd)
-c                                 an independent disordered 
-c                                 endmember, which corresponds
-c                                 to knsp(i,id) in y
-         ay(id,i,k) = ay(id,i,k) + 1d0
-c                                 cycle through the dependent
-c                                 endmembers to find its independent
-c                                 consitutents
-         do l = 1, ndep(id)
-c                                 y(knsp(lstot(id)+l) decomposes
-c                                 to p(k) as y2pg(l,k)*y()
-c                                 ergo if k ~= i cycle
-             if (i.ne.k) cycle
-c                                 a dependent endmember m will
-c                                 decompose to 
-             m = knsp(lstot(id)+l)
+         ay(id,i,knsp(i,id)) = 1d0
 
-             ay(id,i,knsp(lstot(id)+l,id)) = 
-     *              ay(id,i,knsp(lstot(id)+k,id)) + y2pg(k,i,id)
-c                                 
-            end do
+      end do
+c                                 fill in contributions from the
+c                                 dependent endmembers:
+      do k = 1, ndep(id)
 
-         end if
+         j = knsp(lstot(id)+k,id)
+c                                 y(j) decomposes
+c                                 to p(i) as y2pg(k,k)*y()
+         do i = 1, nstot(id)
+
+             ay(id,i,j) = ay(id,i,j) + y2pg(k,i,id)
+
+         end do
 
       end do
 c                                  test
@@ -330,7 +322,7 @@ c                                  test
             xt = xt + ay(id,i,j)*y(j)
          end do 
 
-         write (*,1000) i, xt, p0a(i)
+         write (*,1000) i, xt, p0a(i), pa(i)
 
       end do
 
@@ -338,3 +330,122 @@ c                                  test
 
       end
 
+
+      subroutine maky2x (id)
+c----------------------------------------------------------------------
+c subroutine to construct the Ax matrices for the y to x conversion
+c of each subcomposition.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ii, i, j, k, l, m, id, xcomps
+
+      double precision ax(h9,h4,mst*msp,m4), xt
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      do ii = 1, pop1(id)
+c                                 for subcomposition ii 
+c                                 the Ax matrix in Ax*y = x
+c                                 m = sum( ispg(1:istg) )
+c                                 n = pvert(2) - pvert(1) + 1
+
+         xcomps = 0
+
+         do i = 1, istg(id,ii)
+            xcomps = xcomps + ispg(id,ii,i)
+         end do 
+
+         do i = 1, xcomps
+            do j = 1, pvert(id,ii,2) - pvert(id,ii,2) + 1
+               ax(id,ii,i,j) = 0d0 
+            end do 
+         end do
+
+         do k = pvert(id,ii,1), pvert(id,ii,2)
+c                                 for each endmember in the subcomposition
+c                                 load the column of ax:
+            j = k - pvert(id,ii,1) + 1
+
+            i = 0
+
+            do l = 1, istg(id,ii)
+
+               do m = 1, ispg(id,ii,l)
+c                                 kmsol indicates the species on 
+c                                 the site m of endmember k
+                  if (kmsol(id,k,l).eq.m) then
+
+                     ax(id,ii,i+m,j) = 1d0
+
+                     exit 
+
+                  end if
+
+               end do
+
+               i = i + ispg(id,ii,l)
+
+            end do 
+
+         end do 
+
+      end do
+c                                  test
+      do ii = 1, poly(id)
+c                                  get the polytope weight
+         if (pop1(id).eq.1) then 
+
+            pwt(ii) = 1d0
+
+         else
+
+            pwt(ii) = 0d0 
+
+            do k = pvert(id,ii,1), pvert(id,ii,2)
+               pwt(ii) = pwt(ii) + y(k)
+            end do
+
+         end if
+
+         xcomps = 0
+
+         do i = 1, istg(id,ii)
+            xcomps = xcomps + ispg(ii,id,i)
+         end do
+
+         l = 1
+         m = 1
+
+         do i = 1, xcomps
+
+            xt = 0d0
+c                                 the algebra
+            do k = pvert(id,ii,1), pvert(id,ii,2)
+
+               j = k - pvert(id,ii,1) + 1
+
+               xt = xt + ax(id,ii,i,j)*y(k)
+
+            end do
+
+            write (*,1000) ii,l,m,xt,x(ii,l,m)
+
+            m = m + 1
+
+            if (m.gt.ispg(id,ii,l)) then 
+               l = l + 1
+               m = 1
+            end if
+
+         end do
+
+      end do
+
+1000  format (3(i2,1x),3(3x,g14.6))
+
+      end

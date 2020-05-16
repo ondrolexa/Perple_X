@@ -257,20 +257,11 @@ c----------------------------------------------------------------------
 c modified blas routine dgemv
 c assumes incy = incx = 1
 c eliminates trans = 'c'
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision alpha, beta
-      integer lda, m, n
-      character        trans*1
-
-      double precision a(lda, *), x(*), y(*)
-
 
 c  dgemv  performs one of the matrix-vector operations
-c
+
 c     y := alpha*a*x + beta*y,   or   y := alpha*a'*x + beta*y,
-c
+
 c  where alpha and beta are scalars, x and y are vectors and a is an
 c  m by n matrix.
 
@@ -290,27 +281,27 @@ c  m      - integer.
 c           on entry, m specifies the number of rows of the matrix a.
 c           m must be at least zero.
 c           unchanged on exit.
-c
+
 c  n      - integer.
 c           on entry, n specifies the number of columns of the matrix a.
 c           n must be at least zero.
 c           unchanged on exit.
-c
+
 c  alpha  - double precision.
 c           on entry, alpha specifies the scalar alpha.
 c           unchanged on exit.
-c
+
 c  a      - double precision array of dimension (lda, n).
 c           before entry, the leading m by n part of the array a must
 c           contain the matrix of coefficients.
 c           unchanged on exit.
-c
+
 c  lda    - integer.
 c           on entry, lda specifies the first dimension of a as declared
 c           in the calling (sub) program. lda must be at least
 c           max(1, m).
 c           unchanged on exit.
-c
+
 c  x      - double precision array of dimension at least
 c           (1 + (n - 1)*abs(incx)) when trans = 'n' or 'n'
 c           and at least
@@ -323,7 +314,7 @@ c  beta   - double precision.
 c           on entry, beta specifies the scalar beta. when beta is
 c           supplied as zero then y need not be set on input.
 c           unchanged on exit.
-c
+
 c  y      - double precision array of dimension at least
 c           (1 + (m - 1)*abs(incy)) when trans = 'n' or 'n'
 c           and at least
@@ -331,6 +322,17 @@ c           (1 + (n - 1)*abs(incy)) otherwise.
 c           before entry with beta non-zero, the incremented array y
 c           must contain the vector y. on exit, y is overwritten by the
 c           updated vector y.
+
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision alpha, beta
+      integer lda, m, n
+      character        trans*1
+
+      double precision a(lda, *), x(*), y(*)
+
+
 
       double precision temp, temp1, temp2, temp3, temp4
       integer i, info, j, jx, kx, ky, lenx, leny, m4, n4
@@ -988,13 +990,10 @@ c----------------------------------------------------------------------
 
       double precision a(lda,*), x(*), y(*), alpha, temp
 c----------------------------------------------------------------------
-c     quick return if possible.
-
       if (m.eq.0.or.n.eq.0) return
 
 c     start the operations. in this version the elements of a are
 c     accessed sequentially with one pass through a.
-
 
       jy = 1
       alpha = -1d0
@@ -1220,6 +1219,8 @@ c           on entry, incx specifies the increment for the elements of
 c           x. incx must not be 0d0.
 c           unchanged on exit.
 c----------------------------------------------------------------------
+      implicit none
+
       integer incx, lda, n
       character*1 diag, trans, uplo
       double precision a(lda, *), x(*)
@@ -1250,8 +1251,6 @@ c----------------------------------------------------------------------
          call f06aaz('f06pff/dtrmv ', info)
          return
       end if
-
-c     quick return if possible.
 
       if (n.eq.0) return
 
@@ -1488,23 +1487,25 @@ c  overwritten by beta. the cosines and sines are returned in the arrays
 c  c and s and the vector x is overwritten by the tangents of the plane
 c  rotations (t(k) = s(k)/c(k)).
 c----------------------------------------------------------------------
+      implicit none 
+
       double precision alpha
       integer incx, n
-      character*1 direct, pivot
+      character direct*1, pivot*1
       double precision c(*), s(*), x(*)
 
       integer i, ix
 c----------------------------------------------------------------------
       if (n.gt.0) then
-         if ((direct.eq.'b').or.(direct.eq.'b')) then
+         if ((direct.eq.'b').or.(direct.eq.'B')) then
             ix = 1 + (n - 1)*incx
-            if ((pivot.eq.'v').or.(pivot.eq.'v')) then
+            if ((pivot.eq.'v').or.(pivot.eq.'V')) then
                do 10, i = n, 2, -1
                   call srotg1 (x(ix-incx), x(ix), c(i), s(i))
                   ix = ix - incx
    10          continue
                call srotg1 (alpha, x(ix), c(1), s(1))
-            else if ((pivot.eq.'f').or.(pivot.eq.'f')) then
+            else if ((pivot.eq.'f').or.(pivot.eq.'F')) then
 
 c              here choose c and s so that
 c
@@ -1529,9 +1530,9 @@ c
                   ix      =  ix      - incx
    20          continue
             end if
-         else if ((direct.eq.'f').or.(direct.eq.'f')) then
+         else if ((direct.eq.'f').or.(direct.eq.'F')) then
             ix = 1
-            if ((pivot.eq.'v').or.(pivot.eq.'v')) then
+            if ((pivot.eq.'v').or.(pivot.eq.'V')) then
 
 c              here choose c and s so that
 
@@ -1558,7 +1559,7 @@ c                          (-s(i)  c(i))
                call srotg1  (alpha, x(ix), c(n), s(n))
                s(n)  = -s(n)
                x(ix) = -x(ix)
-            else if ((pivot.eq.'f').or.(pivot.eq.'f')) then
+            else if ((pivot.eq.'f').or.(pivot.eq.'F')) then
                do 40, i = 1, n
                   call srotg1 (alpha, x(ix), c(i), s(i))
                   ix = ix + incx
@@ -1653,6 +1654,8 @@ c  if m, n or k1 are less than unity,  or k2 is not greater than k1,  or
 c  side = 'l' or 'l'  and  k2  is greater than  m, or  side = 'r' or 'r'
 c  and  k2  is greater than  n,  then an  immediate return  is effected.
 c----------------------------------------------------------------------
+      implicit none
+
       integer k1, k2, lda, m, n
       character*1 direct, pivot, side
       double precision a(lda, *), c(*), s(*)
@@ -1661,14 +1664,14 @@ c----------------------------------------------------------------------
       logical            left, right
 c----------------------------------------------------------------------
 
-      left = (side.eq.'l').or.(side.eq.'l')
-      right = (side.eq.'r').or.(side.eq.'r')
+      left = (side.eq.'l').or.(side.eq.'L')
+      right = (side.eq.'r').or.(side.eq.'R')
       if ((min(m, n, k1).lt.1).or.(k2.le.k1).or.
      *    ((left).and.(k2.gt.m)).or.
      *    ((right).and.(k2.gt.n)))return
       if (left) then
-         if ((pivot.eq.'v').or.(pivot.eq.'v')) then
-            if ((direct.eq.'f').or.(direct.eq.'f')) then
+         if ((pivot.eq.'v').or.(pivot.eq.'V')) then
+            if ((direct.eq.'f').or.(direct.eq.'F')) then
                do 20 j = 1, n
                   aij = a(k1, j)
                   do 10 i = k1, k2 - 1
@@ -1678,7 +1681,7 @@ c----------------------------------------------------------------------
    10             continue
                   a(k2, j) = aij
    20          continue
-            else if ((direct.eq.'b').or.(direct.eq.'b')) then
+            else if ((direct.eq.'b').or.(direct.eq.'B')) then
                do 40 j = 1, n
                   aij = a(k2, j)
                   do 30 i = k2 - 1, k1, -1
@@ -1689,8 +1692,8 @@ c----------------------------------------------------------------------
                   a(k1, j) = aij
    40          continue
             end if
-         else if ((pivot.eq.'t').or.(pivot.eq.'t')) then
-            if ((direct.eq.'f').or.(direct.eq.'f')) then
+         else if ((pivot.eq.'t').or.(pivot.eq.'T')) then
+            if ((direct.eq.'f').or.(direct.eq.'F')) then
                do 60 j = 1, n
                   temp = a(k1, j)
                   do 50 i = k1, k2 - 1
@@ -1700,7 +1703,7 @@ c----------------------------------------------------------------------
    50             continue
                   a(k1, j) = temp
    60          continue
-            else if ((direct.eq.'b').or.(direct.eq.'b')) then
+            else if ((direct.eq.'b').or.(direct.eq.'B')) then
                do 80 j = 1, n
                   temp = a(k1, j)
                   do 70 i = k2 - 1, k1, -1
@@ -1711,8 +1714,8 @@ c----------------------------------------------------------------------
                   a(k1, j) = temp
    80          continue
             end if
-         else if ((pivot.eq.'b').or.(pivot.eq.'b')) then
-            if ((direct.eq.'f').or.(direct.eq.'f')) then
+         else if ((pivot.eq.'b').or.(pivot.eq.'B')) then
+            if ((direct.eq.'f').or.(direct.eq.'F')) then
                do 100 j = 1, n
                   temp = a(k2, j)
                   do 90 i = k1, k2 - 1
@@ -1722,7 +1725,7 @@ c----------------------------------------------------------------------
    90             continue
                   a(k2, j) = temp
   100          continue
-            else if ((direct.eq.'b').or.(direct.eq.'b')) then
+            else if ((direct.eq.'b').or.(direct.eq.'B')) then
                do 120 j = 1, n
                   temp = a(k2, j)
                   do 110 i = k2 - 1, k1, -1
@@ -1735,8 +1738,8 @@ c----------------------------------------------------------------------
             end if
          end if
       else if (right) then
-         if ((pivot.eq.'v').or.(pivot.eq.'v')) then
-            if ((direct.eq.'f').or.(direct.eq.'f')) then
+         if ((pivot.eq.'v').or.(pivot.eq.'V')) then
+            if ((direct.eq.'f').or.(direct.eq.'F')) then
                do 140 j = k1, k2 - 1
                   if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
                      ctemp = c(j)
@@ -1748,7 +1751,7 @@ c----------------------------------------------------------------------
   130                continue
                   end if
   140          continue
-            else if ((direct.eq.'b').or.(direct.eq.'b')) then
+            else if ((direct.eq.'b').or.(direct.eq.'B')) then
                do 160 j = k2 - 1, k1, -1
                   if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
                      ctemp = c(j)
@@ -1761,8 +1764,8 @@ c----------------------------------------------------------------------
                   end if
   160          continue
             end if
-         else if ((pivot.eq.'t').or.(pivot.eq.'t')) then
-            if ((direct.eq.'f').or.(direct.eq.'f')) then
+         else if ((pivot.eq.'t').or.(pivot.eq.'T')) then
+            if ((direct.eq.'f').or.(direct.eq.'F')) then
                do 180 j = k1 + 1, k2
                   ctemp = c(j - 1)
                   stemp = s(j - 1)
@@ -1774,7 +1777,7 @@ c----------------------------------------------------------------------
   170                continue
                   end if
   180          continue
-            else if ((direct.eq.'b').or.(direct.eq.'b')) then
+            else if ((direct.eq.'b').or.(direct.eq.'B')) then
                do 200 j = k2, k1 + 1, -1
                   ctemp = c(j - 1)
                   stemp = s(j - 1)
@@ -1787,8 +1790,8 @@ c----------------------------------------------------------------------
                   end if
   200          continue
             end if
-         else if ((pivot.eq.'b').or.(pivot.eq.'b')) then
-            if ((direct.eq.'f').or.(direct.eq.'f')) then
+         else if ((pivot.eq.'b').or.(pivot.eq.'B')) then
+            if ((direct.eq.'f').or.(direct.eq.'F')) then
                do 220 j = k1, k2 - 1
                   if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
                      ctemp = c(j)
@@ -1800,7 +1803,7 @@ c----------------------------------------------------------------------
   210                continue
                   end if
   220          continue
-            else if ((direct.eq.'b').or.(direct.eq.'b')) then
+            else if ((direct.eq.'b').or.(direct.eq.'B')) then
                do 240 j = k2 - 1, k1, -1
                   if ((c(j).ne.1d0).or.(s(j).ne.0d0)) then
                      ctemp = c(j)
@@ -2023,16 +2026,18 @@ c           side = 'l' or 'l'   then  ldb  must  be  at  least  m,  when
 c           side = 'r' or 'r'   then  ldb  must  be  at  least  k.
 c           unchanged on exit.
 c----------------------------------------------------------------------
+      implicit none
+
       integer k, ldb, n
-      character*1 side, trans
+      character side*1, trans*1
       double precision perm(*), b(ldb, *)
       logical            left, null, right, trnsp
       integer i, j, l
       double precision temp
 c----------------------------------------------------------------------
 
-      if (min(n, k).eq.0)
-     *   return
+      if (min(n, k).eq.0) return
+
       left = (side.eq.'l').or.(side.eq.'l')
       right = (side.eq.'r').or.(side.eq.'r')
       null = (trans.eq.'n').or.(trans.eq.'n')
@@ -2148,6 +2153,8 @@ c  beta is overwritten on alpha and z is overwritten on x.
 c  the routine may be called with  n = 0  and advantage is taken of the
 c  case where  n = 1.
 c----------------------------------------------------------------------
+      implicit none 
+
       double precision alpha, tol, zeta
       integer incx, n
       double precision x(*)
@@ -2156,7 +2163,7 @@ c----------------------------------------------------------------------
 
       save               eps, first
       data               first/ .true. /
-
+c----------------------------------------------------------------------
       if (n.lt.1) then
          zeta = 0d0
       else if ((n.eq.1).and.(x(1).eq.0d0)) then
@@ -4568,22 +4575,7 @@ c
 
       end
 
-      logical function x02daf(x)
 
-c     returns .false. if the system sets underflowing quantities
-c     to zero, without any error indication or undesirable warning
-c     or system overhead.
-c     returns .true. otherwise, in which case certain 
-c     routines will take special precautions to avoid underflow
-c     (usually at some cost in efficiency).
-
-c     x is a dummy argument
-
-      double precision x
-
-      x02daf = .false.
-
-      end
 
       integer function p01abf(ifail,ierror,srname,nrec,rec)
 
@@ -4653,96 +4645,6 @@ c                 soft failure
 
 99999 format (' ** abnormal exit from routine ',a,': ifail',
      *  ' =',i6)
-      end
-
-      subroutine x02zaz
-
-c     x02zaz sets machine parameters as follows:
-c
-c     wmach( 1) = nbase  = base of floating-point arithmetic.
-c     wmach( 2) = ndigit = no. of base (nbase) digits in the
-c                            mantissa
-c     wmach( 3) = eps    = relative machine accuracy. (x02ajf.)
-c     wmach( 4) = rteps  = sqrt(eps).
-c     wmach( 5) = rmin   = small positive floating-point number whose
-c                             reciprocal does not overflow.
-c     wmach( 6) = rtrmin = sqrt(rmin).
-c     wmach( 7) = rmax   = 1/rmin
-c     wmach( 8) = rtrmax = sqrt(rmax).
-c     wmach( 9) = undflw = 0 if underflow is not fatal, +ve otherwise.
-c     wmach(10) = nin    = input  stream unit number. (5.)
-c     wmach(11) = nout   = output stream unit number.
-c                          = advisory message unit number. (x04abf.)
-c     wmach(12) = nerr   = error    message unit number. (x04aaf.)
-c     wmach(13)
-c     wmach(14)   not currently used.
-c     wmach(15)
-c
-c     note that constants that represent integers may hold a number just
-c     less than the integer, so that the integer should be recovered by
-c     adding, say, 0.25. e.g.
-c
-c     ibase = wmach(1) + 0.25
-
-      double precision wmach(15)
-      double precision eps, rmax, rmin, undflw
-      integer nbase, ndigit, nerr, nout
-      logical          first
-      integer x02bhf
-      logical          x02daf
-      external         x02bhf, x02daf
-
-      common/ cstmch /wmach
-      save             first
-      data             first/.true./
-
-      if (first) then
-         first = .false.
-c
-         if (x02daf(0d0)) then
-            undflw = 1
-         else
-            undflw = 0
-         end if
-         nbase = 2
-         ndigit = 53
-c                                this should be (1/2)*b**(1-p)
-c                                or maybe b**(1-p), p = ndigit?
-         eps = 1.11022302462516d-16
-c     rmin is the 'safe range' parameter
-c     i.e. the smallest positive model number z such that
-c     for any x which satisfies x.ge.z and x.le.1/z
-c     the following can be computed without overflow, underflow or other
-c     error
-c
-c        -x
-c        1.0/x
-c        sqrt(x)
-c        log(x)
-c        exp(log(x))
-c        y**(log(x)/log(y)) for any y
-c
-         rmin = 2.22507385850721d-308
-         rmax = 1/rmin
-c
-         wmach(1) = nbase
-         wmach(2) = ndigit
-         wmach(3) = eps
-         wmach(4) = dsqrt(eps)
-         wmach(5) = rmin
-         wmach(6) = dsqrt(rmin)
-         wmach(7) = rmax
-         wmach(8) = dsqrt(rmax)
-         wmach(9) = undflw
-      end if
-      call x04abf(0,nout)
-      wmach(10) = 5
-      wmach(11) = nout
-      call x04aaf(0,nerr)
-      wmach(12) = nerr
-
-c     end of  x02zaz. (mchpar)
-
       end
 
       subroutine cmqmul (mode,n,nz,nfree,nq,unitq,kx,v,zy,wrk)

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated May 15, 2020.',
+     *      'Perple_X version 6.9.0, source updated May 16, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -154,17 +154,23 @@ c                                 for nag)
 
       if (r2.eq.0d0) call error (72,r1,i,
      *                         'starting precision for r1 < zero')
-
-
-      wmach(3) = r2
-      wmach(5) = 1d0 + r2
-      wmach(2) = r2**0.8d0
+c                                 wmach(1-2,5-6,9) do not have the 
+c                                 standard BLAS values, additionally
+c                                 BLAS routines may assume a dimension
+c                                 of 15 for wmach.
+c                                 as currently set wmach(1,2) are
+c                                 function precision and and optimality
+c                                 tolerance.
       wmach(1) = r2**0.9d0
+      wmach(2) = r2**0.8d0
+c                                 relative precision (eps)
+      wmach(3) = r2
       wmach(4) = dsqrt(r2)
-      wmach(9) = max(1d0/wmach(4),1d2)
+      wmach(5) = 1d0 + r2
 c                                 largest number
       wmach(7) = huge(0d0)
       wmach(8) = dsqrt(wmach(7))
+      wmach(9) = max(1d0/wmach(4),1d2)
 c                                 solution composition zero and one
       r2 = 1d2 * r2
 

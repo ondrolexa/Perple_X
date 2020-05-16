@@ -8472,7 +8472,7 @@ c                                 number of independent disordered endmembers
       lstot(im) = kstot
 c                                 reject bad compositions, only relevant
 c                                 for relict equipartition models
-      sck(im) = badx
+      bdx(im) = badx
 c                                 low-reach flag, lorch is NOT used.
       lorch(im) = lowrch
 c                                 non-equimolar speciation reaction
