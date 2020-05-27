@@ -14,7 +14,7 @@ c-----------------------------------------------------------------------
      *                 bl(m21), bu(m21), gfinal, dbz, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(1),
 c                                 dummies for NCNLN > 0
-     *                 c(1),cjac(1,1)
+     *                 c(1),cjac(1,1),yt(m14)
 
       integer jds, tphct
       double precision az, bz
@@ -56,6 +56,8 @@ c                                 initialize bounds
          write (*,*) 'no mus'
          call errpau
       end if 
+
+      call setpyx (ids)
 
       jds = ids
       tphct = jphct
@@ -101,6 +103,7 @@ c----------------------------------------------------------
       call makp2y (ids)
 
       call maky2x (ids)
+
 c                                 inequalities, to be counted:
       nclin = 0
 c                                 for each site
@@ -141,7 +144,7 @@ c                                 decompose p(ntot) into 1 - p(1) - ...- p(nvar)
 
             end do
 
-            bl(nvar+nclin) = bz(nvar+nclin) - dbz
+            bl(nvar+nclin) = bl(nvar+nclin) - dbz
 c                                 non-Temkin have the Az*p <= 1 constraint
             if (zmult(ids,i).ne.0d0) then
 
@@ -275,21 +278,31 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, m, id
+      integer i, j, k, l, m, id, rank
 
-      double precision ay(h9,m14,m4), xt
+      double precision xt
+
+      double precision ay
+      common/ cstp2y /ay(h9,m4+j3,m4+j3)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      integer mdep,idep,jdep,ndph
+      double precision nu,y2p
+      common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
+     *                idep(m15,j4),ndph(m15)
 c----------------------------------------------------------------------
 c                                 the Ay matrix in Ay*y = p
 c                                 y is dimension mstot < m4
-c                                 p is dimension nstot < m14
+c                                 true p is dimension nstot < m14
 c                                 Ay(nstot,mstot)
 c                                 assemble Ay
-      do i = 1, nstot(id)
-         do j = 1, mstot(id)
+      rank = mstot(id) + nord(id)
+
+      do i = 1, rank
+         do j = 1, rank
             ay(id,i,j) = 0d0 
          end do 
       end do
@@ -315,18 +328,26 @@ c                                 to p(i) as y2pg(k,k)*y()
          end do
 
       end do
-c                                  test
-      do i = 1, nstot(id)
-         xt = 0d0
-         do j = 1, mstot(id)
-            xt = xt + ay(id,i,j)*y(j)
-         end do 
+c                                 add dependent endmeber constraints
+c                                 rows nstot+1..nstot+ndep (= mstot + nord)
+      do i = nstot(id) + 1, rank
 
-         write (*,1000) i, xt, p0a(i), pa(i)
+         do k = 1, ndep(id)
+c                                 set the stoichiometric coefficient of the
+c                                 dependent endmember
+            ay(id,i,lstot(id)+k) = -1
+c                                 next load the disordered reactants
+            do j = 1, lstot(id)
+               ay(id,i,j) = y2pg(k,j,id)
+            end do
+c                                 finally load the ordered reactants
+            do j = 1, nord(id)
+               ay(id,i,mstot(id)+j) = y2pg(k,lstot(id)+j,id)
+            end do
+
+         end do
 
       end do
-
-1000  format (i,3(3x,g14.6))
 
       end
 
@@ -340,9 +361,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ii, i, j, k, l, m, id, xcomps
+      integer ii, i, j, k, l, m, id
 
-      double precision ax(h9,h4,mst*msp,m4), xt
+      double precision xt
+
+      integer mx
+      double precision ax
+      common/ cstp2y /ax(h9,h4,mst*msp,m4),mx(h9,h4)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -354,13 +379,13 @@ c                                 the Ax matrix in Ax*y = x
 c                                 m = sum( ispg(1:istg) )
 c                                 n = pvert(2) - pvert(1) + 1
 
-         xcomps = 0
+         mx(id,ii) = 0
 
          do i = 1, istg(id,ii)
-            xcomps = xcomps + ispg(id,ii,i)
+            mx(id,ii) = mx(id,ii) + ispg(id,ii,i)
          end do 
 
-         do i = 1, xcomps
+         do i = 1, ncoor(id)
             do j = 1, pvert(id,ii,2) - pvert(id,ii,2) + 1
                ax(id,ii,i,j) = 0d0 
             end do 
@@ -412,16 +437,10 @@ c                                  get the polytope weight
 
          end if
 
-         xcomps = 0
-
-         do i = 1, istg(id,ii)
-            xcomps = xcomps + ispg(ii,id,i)
-         end do
-
          l = 1
          m = 1
 
-         do i = 1, xcomps
+         do i = 1, mx(id,ii)
 
             xt = 0d0
 c                                 the algebra
@@ -447,5 +466,139 @@ c                                 the algebra
       end do
 
 1000  format (3(i2,1x),3(3x,g14.6))
+
+      end
+
+      subroutine makp2z (id)
+c----------------------------------------------------------------------
+c subroutine to construct the Az matrix for the p to z limits
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id, i, j, k, l, nvar
+
+      double precision dbz
+
+      integer ncon
+      double precision az, zl, zu
+      common/ cstp2z /az(h9,m20,m19), zl(h9,m20), zu(h9,m20), ncon(h9)
+
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+c---------------------------------------------------------
+      nvar = nstot(id) - 1
+c                                 to be counted:
+      ncon(id) = 0
+c                                 for each site
+      do i = 1, msite(id)
+c                                 for each species
+         do j = 1, zsp(id,i) + 1
+c                                 initial az, bz
+            ncon(id) = ncon(id) + 1
+
+            dbz = 0d0
+c                                 both Temkin and non-Temkin have
+c                                 Az*p >= 0 constraints:
+            zl(id,ncon(id)) = -dcoef(0,j,i,id)
+
+            do k = 1, nvar
+
+               az(id,ncon(id),k) = 0d0
+
+            end do
+
+            do k = 1, lterm(j,i,id)
+
+               if (ksub(k,j,i,id).ne.nstot(id)) then 
+
+                  az(id,ncon(id),ksub(k,j,i,id)) = az(id,ncon(id),k) 
+     *                                             + dcoef(k,j,i,id)
+
+               else 
+c                                 decompose p(ntot) into 1 - p(1) - ...- p(nvar)
+                  dbz = dcoef(k,j,i,id)
+
+                  do l = 1, nvar
+
+                     az(id,ncon(id),l) = az(id,ncon(id),l) - dbz
+
+                  end do
+
+               end if 
+
+            end do
+
+            zl(id,ncon(id)) = zl(id,ncon(id)) - dbz
+c                                 non-Temkin have the Az*p <= 1 constraint
+            if (zmult(id,i).ne.0d0) then
+
+               zu(id,ncon(id)) =  1d0 - dcoef(0,j,i,id) + dbz
+
+            else 
+
+               zu(id,ncon(id)) = 1d20
+
+            end if
+
+         end do
+
+      end do
+
+      end
+
+      subroutine setpyx (id)
+c----------------------------------------------------------------------
+c subroutine to convert p to y to x.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical error
+
+      integer i, j, k, l, m, id, pivot(m4), rank
+
+      double precision xt, a(m4,m4), yt(m4)
+
+      double precision ay
+      common/ cstp2y /ay(h9,m4,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+c                                 solve Ay*y=p for y.
+      rank = mstot(id) + nord(id)
+c                                 zero extra p's
+      do i = nstot(id) + 1, rank
+         pa(i) = 0d0
+      end do
+c                                 copy ay into local matrix,
+c                                 could use equivalence?
+      do i = 1, rank
+         do j = 1, rank
+            a(i,j) = ay(id,i,j)
+         end do
+      end do
+
+      call factr2 (a,m4,rank,pivot,error)
+
+      if (.not.error) then
+         do i = 1, rank
+            yt(i) = pa(i)
+         end do 
+
+         call subst2 (a,pivot,m4,rank,yt,error)
+
+         do i = 1, rank
+
+            write (*,1000) i, yt(i), pa(i)
+c                                 need the pp array?
+         end do
+      end if
+
+1000  format (i2,3(3x,g14.6))
 
       end

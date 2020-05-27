@@ -191,6 +191,8 @@ tlib.o: tlib.f
 	$(COMP77) $(FFLAGS) -c tlib.f
 olib.o: olib.f
 	$(COMP77) $(FFLAGS) -c olib.f
+BLASlib.o: BLASlib.f
+	$(COMP77) $(FFLAGS) -c BLASlib.f
 
 # WFM 2007Sep05
 .c.o:

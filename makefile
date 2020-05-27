@@ -52,9 +52,10 @@ COMP77 = gfortran
 # G. Helffrich/30 Nov. '15
 # FFLAGS =  -O3 -static-libgfortran
 
-FFLAGS = -O3
+FFLAGS = -O3 -Wpedantic
 FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
+#-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
 MYOBJ = actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
 all: $(MYOBJ)
@@ -191,6 +192,8 @@ tlib.o: tlib.f
 	$(COMP77) $(FFLAGS) -c tlib.f
 olib.o: olib.f
 	$(COMP77) $(FFLAGS) -c olib.f
+BLASlib.o: BLASlib.f
+	$(COMP77) $(FFLAGS) -c BLASlib.f
 
 # WFM 2007Sep05
 .c.o:

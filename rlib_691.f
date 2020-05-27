@@ -549,7 +549,7 @@ c                                 and eos is set by ifug
 
             end if
 
-         else if (eos(id).lt.117) then
+         else if (eos(id).lt.118) then
 c                                 call appropriate pure fluid EoS
             gval = gval + r*t * lnfpur(eos(id))
 
@@ -8856,7 +8856,7 @@ c                                 pad zuffix with the remaining species
                zuffix(h0) = text
                zuffix(im) = text
                cycle
-               cycle
+
             end if
          end if
 
@@ -9526,6 +9526,12 @@ c                                 BCC Fe-Cr Andersson and Sundman (32)
          end if
 
       end if
+c                                 p2y transformation matrix
+      call makp2y (im)
+c                                 y2x transformation matrix
+      call maky2x (im)
+c                                 p2z transformation matrix
+      call makp2z (im)
 
       end
 
@@ -16475,7 +16481,7 @@ c                                 local variables:
 
       logical bad1, bad2, good, reech, lrch
 
-      double precision num
+      double precision num, mnsum, mxsum
 c                                 -------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -16592,6 +16598,29 @@ c                                 solutions on internal limits
          if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reech = .true.
 
          ipop = pop1(i)
+
+         if (ipop.gt.1) then
+c                                 composite composition space, check
+c                                 for 0-wt subcompositions
+            mnsum = 0d0
+            mxsum = 0d0
+
+            do k = 1, ndim(1,ipop,i)
+               if (xlo(k,1,ipop,i).gt.xhi(k,1,ipop,i)) then 
+                  xlo(k,1,ipop,i) = 0d0
+                  xhi(k,1,ipop,i) = 0d0
+               else
+                  mnsum = mnsum + xlo(k,1,ipop,i)
+                  mxsum = mxsum + xhi(k,1,ipop,i)
+               end if
+            end do
+
+            if (xlo(k,1,ipop,i).gt.xhi(k,1,ipop,i)) then
+               xlo(k,1,ipop,i) = 1d0 - mxsum
+               xhi(k,1,ipop,i) = 1d0 - mnsum
+            end if
+
+         end if
 
          if (.not.refine) then
 
@@ -16738,7 +16767,7 @@ c                                 charge balance model:
 
       else if (ipop.eq.1) then 
 c                                 single polytope
-         write (lun,1040) 'single-polytope model: '//fname(i)
+         write (lun,1040) 'prismatic model: '//fname(i)
 
          do j = 1, istg(i,1)
 
@@ -16767,7 +16796,8 @@ c                                 single polytope
 
       else
 c                                 composite polytope
-         write (lun,1160) 'multi-polytope model: '//fname(i)
+         write (lun,1160) 'composite composition space model: '
+     *                    //fname(i)
 c                                  polytope weights:
          do ii = 1, poly(i)
 
@@ -16780,12 +16810,12 @@ c                                  individual polytope compositions
 
 c                                  polytope
                write (lun,'(/,a)') ' '//poname(i,pop1(i),1,ii)//
-     *                             ' Polytope:'
+     *                             ' Subcomposition:'
 
                do j = 1, istg(i,ii)
 
                   if (ispg(i,ii,j).eq.1) then
-                     write (lun,'(/,a)') ' Polytope '//
+                     write (lun,'(/,a)') ' Subcomposition '//
      *                     poname(i,pop1(i),1,ii)//' is 0-dimensional'
                      cycle
                   end if 
@@ -16803,7 +16833,7 @@ c                                  polytope
 
       end if
 
-1020  format (/,'Endmember fractions for model: ',a,//,5x,
+1020  format (/,'Endmember fractions for simplicial model: ',a,//,5x,
      *          'Endmember     Minimum         Maximum')
 1030  format (5x,a8,4x,g12.5,4x,g12.5)
 1040  format (/,'Compositions for ',a)
@@ -16813,7 +16843,7 @@ c                                  polytope
 1070  format (8x,i2,7x,g12.5,4x,g12.5)
 1080  format (5x,a10,2x,g12.5,4x,g12.5)
 1160  format (/,a,//,
-     *          ' Polytopes        Minimum         Maximum')
+     *          ' Subcomposition   Minimum         Maximum')
 1170  format (4x,a,3x,g12.5,4x,g12.5)
 
       end
@@ -17012,10 +17042,11 @@ c                                 composite polytope
      *       ,'composition X(',i1,',',i2')*.')
 1050  format (/,'**error ver993** the composition of solution '
      *       ,a,' is too far beyond',/,'the subdivision range of'
-     *       ,' composition variable ',a,' of the ',a,' polytope.')
+     *       ,' composition variable ',a,' of the ',a
+     *       ,' subcomposition.')
 1060  format (/,'**error ver993** the composition of solution: '
      *       ,a,/'is too far beyond the subdivision range limits for '
-     *       ,'polytope: ',a)
+     *       ,'subcomposition: ',a)
 1070  format (/,'refer to: ',//,a,//'for additional information.',/)
 1080  format (/,'**error ver993** the composition of solution '
      *       ,a,' is too far beyond',/,'the subdivision range of'
@@ -19300,7 +19331,7 @@ c                                composite compositional simplex
       ivert(poly(h0)+1,1) = poly(h0)
 
       if (poly(h0).gt.h4) call error (1,rnums(1),poly(h0),
-     *    'h4 (maximum number of sub-polytopes for solution model: '
+     *    'h4 (maximum number of subcompositions for solution model: '
      *     //tname//')')
 c                                read subdivision ranges for the polytopes
       if (poly(h0).gt.1) then 
@@ -19318,7 +19349,7 @@ c                                number of simplices
          isimp(i) = idint(rnums(1))
 
          if (isimp(i).gt.mst) call error (1,rnums(1),isimp(i),
-     *      'mst (maximum number of simplices in a polytope for '//
+     *      'mst (maximum number of simplices in a prism for '//
      *      'solution model: '//tname//')')
 
 c                                number of vertices on each simplex:
@@ -19790,7 +19821,8 @@ c                                 has been identified.
                dedpol(ii) = .true.
 
                if (first) call warn (100,0d0,101,
-     *             'eliminated polytope '//poname(h0,poly(h0)+1,1,ii)/
+     *             'eliminated subcomposition '
+     *             //poname(h0,poly(h0)+1,1,ii)/
      *             /'during reformulation of '//tname//
      *             ' due to missing endmembers.')
                exit
@@ -19801,7 +19833,8 @@ c                                 has been identified.
 
          if (ipvert(ii).gt.0.and.killed.and.first) 
      *      call warn (100,0d0,102,
-     *          'reformulated polytope '//poname(h0,poly(h0)+1,1,ii)/
+     *          'reformulated subcomposition '
+     *          //poname(h0,poly(h0)+1,1,ii)/
      *          /' of '//tname//' due to missing endmembers.')
 c                                 next polytope
       end do
@@ -20413,6 +20446,9 @@ c---------------------------------------------------------------------
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c---------------------------------------------------------------------
 
       dynam = resub
@@ -20498,7 +20534,8 @@ c                                 compositions
 c                                 do the subdivisions for each polytope
          do ii = 1, poly(ids)
 
-            if (pwt(ii).le.0d0) then
+            if (pwt(ii).le.zero) then
+               pwt(ii) = 0d0
                npol(ii) = 0
                cycle
             end if

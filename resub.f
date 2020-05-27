@@ -1318,7 +1318,7 @@ c                                 set stable flag
 c                                 check x-ranges
       do ii = 1, pop1(ids)
 
-         if (pwt(ii).lt.zero) cycle
+         if (pwt(ii).le.zero.and.ii.lt.pop1(ids)) cycle 
 
          do i = 1, istg(ids,ii)
 

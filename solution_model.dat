@@ -11425,6 +11425,11 @@ begin_model
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
 
+                                  The geikielite and most of the pyrhophanite excess terms were accidentally deleted
+                                  (by me) ca Feb 6, 2017 at the same time that the Ilm(W) and Ilm(WPH0) equivalents
+                                  of Ilm(WPH) were deleted from this file. Correction courtesy of Bob Myhill and 
+                                  the perplex discussion group (groups.io/g/PerpleX/topic/74420499). JADC, May 27, 2020.
+
 Ilm(WPH)
 abbreviation Ilm
 full_name    ilmenite
@@ -11446,12 +11451,17 @@ oilm = 1 dilm   enthalpy_of_ordering = -15600 + 11.52565132 T_K
 1d-3 .2  .1 1              | subdivision range, X(geik)
 0     1  .1 0              | subdivision range, X(hem)
 
-
 begin_excess_function
 W(oilm dilm)    15600
 W(oilm hem)     26600
+W(oilm geik)      4000
+W(oilm pnt)      2000
 W(dilm hem)     11000
-W(oilm pnt)      1760
+W(dilm geik)     4000
+W(dilm pnt)       2000
+W(hem geik)     36000
+W(hem pnt)       25000
+W(geik pnt)        4000
 end_excess_function
 
 2                          | 2 site model
