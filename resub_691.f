@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
-      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp
+      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot
 
       integer is(k1+k5),iw(liw)
 
@@ -122,7 +122,7 @@ c                                 necessary?
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
-         call rebulk (.true.,abort)
+         call rebulk (abort)
 
       else
 c                                 save lphct to recover static solution if
@@ -132,14 +132,14 @@ c                                 find discretization points
 c                                 for refinement
 c        if (lopt(28)) call begtim (3)
 
-         call yclos1 (clamda,x,is,jphct,quit)
+         call yclos1 (clamda,x,gtot,is,jphct,quit)
 
 c        if (lopt(28)) call endtim (3,.true.,'Static YCLOS1 ')
 
 c                                 returns quit if nothing to refine
          if (quit) then 
 c                                 final processing, .true. indicates static
-            call rebulk (.true.,abort)
+            call rebulk (abort)
 
          else
 c                                 initialize refinement point pointers
@@ -149,7 +149,7 @@ c                                 initialize refinement point pointers
 
 c            if (lopt(28)) call begtim (4)
 c                                 reoptimize with refinement
-            call reopt (idead)
+            call reopt (idead,gtot)
 
 c            if (lopt(28)) call endtim (4,.true.,'Dynamic optimization ')
 
@@ -162,7 +162,7 @@ c                                 ran out of dynamic memory
 
             else if (idead.eq.0) then 
 
-               call rebulk (.false.,abort)
+               call rebulk (abort)
 
                if (abort) then
 c                                 bad solution (lagged speciation) identified
@@ -184,7 +184,7 @@ c                                 hail mary
                idead = 0
 
                call yclos0 (x,is,jphct) 
-               call rebulk (.true.,abort)
+               call rebulk (abort)
 
             end if 
 
@@ -198,7 +198,7 @@ c                                 hail mary
 
       end 
 
-      subroutine reopt (idead)
+      subroutine reopt (idead,ogtot)
 c-----------------------------------------------------------------------
 c reopt - given the results of an initial optimization for lpopt, reopt
 c iteratively refines the solution by generating pseudocompounds in the
@@ -215,7 +215,8 @@ c-----------------------------------------------------------------------
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
-      double precision ax(k5), clamda(k21+k5), w(lw), tot(k5)
+      double precision ax(k5), clamda(k21+k5), w(lw), tot(k5), gtot,
+     *                 ogtot
 
       integer is(k21+k5), iw(liw)
 
@@ -251,11 +252,11 @@ c                                 are identified in jdv(1..npt)
 
       jphct = jpoint
 c                                 global composition coordinate counter
-      icoct = 0
+      zcoct = 0
 c                                 --------------------------------------
 c                                 generate pseudo compounds for the first 
 c                                 iteration from static arrays
-      call cresub (1,5,kterat)
+      call resub (1,kterat)
 
       if (dead) then
 c                                 ran out of dynamic memory.
@@ -357,7 +358,9 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
 c        if (lopt(28)) call begtim (7)
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,is,iter,opt,idead,quit)
+         call yclos2 (clamda,x,gtot,is,iter,opt,idead,quit)
+
+         write (*,'(2(g16.8,1x))') ogtot, gtot
 
 c        if (lopt(28)) call endtim (7,.true.,'YCLOS2 ')
 
@@ -370,67 +373,16 @@ c        if (lopt(28)) call endtim (7,.true.,'YCLOS2 ')
 c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
-c                                 the xcoor array.
-         call saver
+c                                 the zco array.
+         call savpa
 
          if (quit) exit
 c                                 generate new pseudocompounds
-         call cresub (iter,6,kterat)
+         call resub (iter,kterat)
 
          if (dead) exit
 
       end do
-
-      end
-
-      subroutine cresub (iter,itim,kterat)
-c-----------------------------------------------------------------------
-c cresub shell to call resub but allow iterative reduction of keep_max
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer iter, itim
-
-      logical kterat
-c-----------------------------------------------------------------------
-      if (lopt(28)) call begtim (itim)
-
-      do
-
-         call resub (iter,kterat)
-
-         if (restrt) then
-
-            iopt(52) = 0.9*iopt(52)
-            write (*,1000) iopt(52)
-            restrt = .false.
-
-         else
-
-            exit 
-
-         end if
-
-      end do
-
-      if (lopt(28)) then
-
-         if (itim.eq.5) then
-            call endtim (5,.true.,'1st RESUB call ')
-         else
-            call endtim (6,.true.,'Nth RESUB call ')
-         end if
-
-      end if
-
-1000  format (/,'**warning ver058** the number of compositions or ',
-     *       'compositional coordinates',/,'exceeds the allocated ',
-     *       'memory (k21 or k25), the keep_max option value will be',/,
-     *       'reduced to ',i7,' to circumvent the problem. Reducing ',
-     *       'keep_max may lower',/,'optimization quality to avoid '
-     *       'this effect increase k21 or k25 and recompile Perple_X',/)
 
       end
 
@@ -477,6 +429,7 @@ c                                 reset refinement point flags
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
+      write (*,*) jpoint, jphct, zcoct
 
       do kd = 1, npt
 
@@ -499,6 +452,8 @@ c                                 get the refinement point composition
                call endmmx (kd,id,ids)
             end if
 
+            call setxyp (ids,id,.false.,kterat)
+
          else
 c                                 use pointer array lkp this uses 
 c                                 negative values to index static
@@ -516,12 +471,14 @@ c                                 point to solution models
 c                                 endmember refinement point:
 c                                 get refine point composition
                call endmmx (kd,-id,ids)
+               write (*,*) 'wugga wugga'
+               call errpau
 
             else
 
                ids = id
 c                                 solution refinement point:
-               call getxy0 (ids,kd)
+               call getpa (ids,kd)
 
             end if 
 
@@ -531,13 +488,13 @@ c                                 gsol1, don't call if the previous
 c                                 refinement point was the same solution.
          if (ids.ne.lds) call ingsol (ids)
 
-         call setxyp (ids,id,.false.,kterat)
-
-         call minime (ids)
+         call minfrc (ids,kd)
 
          lds = ids
 
       end do
+
+      write (*,*) jpoint, jphct, zcoct
 
       end
 
@@ -636,11 +593,11 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine saver
+      subroutine savpa
 c----------------------------------------------------------------------
-c subroutine to save a copy of adaptive pseudocompound x(i,j) compositions
+c subroutine to save a copy of adaptive pseudocompound endmember fractions
 c in the temporary array ycoor (also lcoor) used by resub to generate
-c the new zcoor array for the subsequent iteration.  
+c the new zcoor array for the subsequent iteration.
 
 c iter = 2 - refinement points were static compositions
 c iter > 2 - refinement points were dynamic compositions
@@ -650,13 +607,9 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables
-      integer ii, i, j, k, kcoct, id, ids, itic
-c                                 -------------------------------------
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
+      integer i, kcoct, id, ids, j
 
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
+      double precision sum
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -681,58 +634,36 @@ c----------------------------------------------------------------------
          lkp(i) = ids
 c                                 cycle on a compound
          if (ids.lt.0) cycle
-c                                 it's a solution:
+
          lcoor(i) = kcoct
+c                                 it's a solution:
+         ycoor(kcoct+1:kcoct+nstot(ids)) = 
+     *                            zco(icoz(id)+1:icoz(id)+nstot(ids))
 
-         itic = 0
-c                                 set the polytopic composition
-         call setexs (ids,id,.true.)
+         kcoct = kcoct + nstot(ids)
 
-         do ii = 1, poly(ids)
-
-            do j = 1, istg(ids,ii)
-
-               do k = 1, ispg(ids,ii,j)
-
-                  itic = itic + 1
-
-                  if (kcoct+itic.gt.k22) 
-     *                                call error (60,ctotal,k22,'saver')
-
-                  ycoor(lcoor(i)+itic) = x(ii,j,k)
-
-               end do
-
-            end do
-
+         sum = 0d0
+         do j = 1, nstot(ids)
+            sum = sum + ycoor(lcoor(i)+j)
          end do
-
-         kcoct = kcoct + itic + poly(ids)
-c                                 save polytope weights
-         do ii = 1, poly(ids)
-
-            itic = itic + 1
-
-            if (kcoct+itic.gt.k22) call error (60,ctotal,k22,'saver')
-
-             ycoor(lcoor(i)+itic) = pwt(ii)
-
-         end do 
+         if (sum.lt.0.9999999) call errpau
 
       end do 
 
-      end 
+      end
 
-      subroutine getxy0 (ids,id)
+      subroutine getpa (ids,id)
 c----------------------------------------------------------------------
-c subroutine to recover geometric reciprocal solution compositions (x(i,j))
-c from the ycoor array loaded in saver
+c subroutine to recover independent endmember fractions from
+c from the ycoor array loaded in savpa
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer ii, i, j, id, ids, ipop, kcoor
+      integer id, ids, kcoor, j
+
+      double precision sum
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -740,24 +671,11 @@ c                                 working arrays
 c----------------------------------------------------------------------
       kcoor = lcoor(id)
 
-      do ii = 1, poly(ids)
-         do i = 1, istg(ids,ii)
-            do j = 1, ispg(ids,ii,i)
-               kcoor = kcoor + 1
-               x(ii,i,j) = ycoor(kcoor)
-            end do 
-         end do
-      end do
+      pa(1:nstot(ids)) = ycoor(kcoor+1:kcoor+nstot(ids))
 
-      ipop = ii 
-c                                 polytope weights
-      do ii = 1, poly(ids)
-         kcoor = kcoor + 1
-         pwt(ii) = ycoor(kcoor)
-         x(ipop,1,ii) = pwt(ii)
-      end do 
+      if (lorder(ids)) call makepp (ids)
 
-      end 
+      end
 
       logical function solvs1 (id1,id2,ids)
 c-----------------------------------------------------------------------
@@ -858,11 +776,12 @@ c----------------------------------------------------------------------
 
       logical check, bad, quit, notaq, abort
 
-      integer idsol(k5),ksol(k5,k5),ids,xidsol,xksol,irep,ii,
+      integer idsol(k5),ksol(k5,k5),ids,xidsol,xksol,irep,
      *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
-     *                 bnew(k5),xnew(k5,h4,mst,msp),ncaq(k5,l10),ximp
+     *                 bnew(k5),pnew(k5,m14),ncaq(k5,l10),ximp
+     * , sum, sumx
 
       logical solvs1, solvs4
       external solvs1, solvs4
@@ -909,6 +828,9 @@ c                                  x-coordinates for the final solution
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      double precision pa3
+      common/ cstpa3 /pa3(k5,m14)
 
       logical abort1
       common/ cstabo /abort1
@@ -1123,25 +1045,11 @@ c                                 initialize
          bnew(i) = 0d0
          ids = ksol(i,1)
 
-         do j = 1, icomp
-            cpnew(j,i) = 0d0
-         end do 
+         cpnew(1:icomp,i) = 0d0
 
-         do ii = 1, pop1(ids)
-            do j = 1, istg(ids,ii)
-               do k = 1, ispg(ids,ii,j)
-                  xnew(i,ii,j,k) = 0d0
-               end do 
-            end do
-         end do 
-
-         if (lopt(32).and.ksmod(ids).eq.39) then 
+         pnew(i,1:nstot(ids)) = 0d0
 c                               lagged speciation
-            do k = 1, nat
-               ncaq(i,k) = 0d0
-            end do 
-
-         end if 
+         if (lopt(32).and.ksmod(ids).eq.39) ncaq(i,1:nat) = 0d0
 
          do j = 1, idsol(i)
             bnew(i) = bnew(i) + amt(jdsol(i,j))
@@ -1149,6 +1057,7 @@ c                               lagged speciation
 c                                in case pure and impure solvent is going to be averaged
 c                                count fraction of impure solvent
          ximp = 0d0
+         sumx = 0d0
 
          do j = 1, idsol(i)
 
@@ -1165,13 +1074,15 @@ c                                save the new compositions
                cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
             end do
 
-            do ii = 1, pop1(ids)
-               do k = 1, istg(ids,ii)
-                  do l = 1, ispg(ids,ii,k)
-                     xnew(i,ii,k,l) = xnew(i,ii,k,l) + xx*x3(jd,ii,k,l)
-                  end do
-               end do
+            sum = 0d0
+            sumx = sumx + xx
+            
+            do k = 1, nstot(ids)
+               sum = sum + pa3(jd,k)
+               pnew(i,k) = pnew(i,k) + xx*pa3(jd,k)
             end do
+
+            if (sum.lt.0.999999) call errpau
 
             if (lopt(32).and.ksmod(ids).eq.39) then
 
@@ -1186,6 +1097,10 @@ c                                pH, Delta_pH, solute molality, epsilon (nat)
             end if
 
          end do
+
+         if (sumx.lt.0.9999) then 
+            write (*,*) 'wugga'
+         end if 
 
 c         if (lopt(32).and.ksmod(ids).eq.39.and.ximp.gt.0d0) then
 c                                 renomalize err_log_kw, pH, Delta_pH, epsilon
@@ -1204,36 +1119,15 @@ c                                 now reform the arrays kdv and b
          kkp(i) = ksol(i,1)
          ids = kkp(i)
 
-         do j = 1, icomp
-            cp3(j,i) = cpnew(j,i)
-         end do
+         cp3(1:icomp,i) = cpnew(1:icomp,i)
 
-         do ii = 1, pop1(ids)
-
-            pwt(ii) = xnew(i,pop1(ids),1,ii)
-
-            do j = 1, istg(ids,ii)
-               do k = 1, ispg(ids,ii,j)
-c                                 set x's for sollim
-                  x(ii,j,k) = xnew(i,ii,j,k)
-c                                 set x's for global storage
-                  x3(i,ii,j,k) = x(ii,j,k) 
-               end do 
-            end do
-
-         end do
-
-         if (lopt(32).and.ksmod(ids).eq.39) then 
+         pa3(i,1:nstot(ids)) = pnew(i,1:nstot(ids))
 c                               lagged speciation, ionic strength, tot molality
 c                               and solvent mass.
-            do k = 1, nat
-               caq(i,k) = ncaq(i,k)
-            end do 
-
-         end if 
+         if (lopt(32).and.ksmod(ids).eq.39) caq(i,1:nat) = ncaq(i,1:nat)
 c                                 check composition against solution model ranges
 c                                 if auto_refine is on:
-         call sollim (ids)
+c        call sollim (ids)
 
       end do
 
@@ -1245,9 +1139,7 @@ c                                 if auto_refine is on:
          kkp(k) = l
 c                                for the sake of completeness load
 c                                compound composition into cp3 array
-         do j = 1, icomp
-            cp3(j,k) = cp(j,-l)
-         end do
+         cp3(1:icomp,k) = cp(1:icomp,-l)
 
       end do
 
@@ -1654,7 +1546,7 @@ c                                dependent potentials
 
       end 
 
-      subroutine yclos1 (clamda,x,is,jphct,quit)
+      subroutine yclos1 (clamda,x,gtot,is,jphct,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement. this routine is only called as preparation
@@ -1671,7 +1563,7 @@ c----------------------------------------------------------------------
 
       logical degen, solvus, quit, news, solvnt(1)
 
-      double precision clamda(*), x(*), slam(h9)
+      double precision clamda(*), x(*), slam(h9), gtot
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -1723,6 +1615,7 @@ c----------------------------------------------------------------------
       nsol = 0
       quit = .true.
       soltol = nopt(25)
+      gtot = 0d0
 
       do i = 1, jphct
 
@@ -1769,6 +1662,7 @@ c                                 new point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
+            gtot = gtot + x(i)*c(i)
 
             if (lopt(34)) then
 
@@ -2103,8 +1997,8 @@ c---------------------------------------------------------------------
       integer jphct,istart
       common/ cst111 /jphct,istart
 
-      integer ldt,ldq
-      common /be04nb/ldt,ldq
+      integer ldt,ncolt,ldq
+      common/ be04nb /ldt,ncolt,ldq
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -2243,7 +2137,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,is,iter,opt,idead,quit)
+      subroutine yclos2 (clamda,x,gtot,is,iter,opt,idead,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. quit is true for final
@@ -2260,7 +2154,7 @@ c----------------------------------------------------------------------
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead, j, k
 
-      double precision clamda(*), clam(k19), x(*)
+      double precision clamda(*), clam(k19), x(*), gtot
 
       logical stabl(k19), solvnt(k19), quit, abort, test, good, bad
 
@@ -2327,18 +2221,28 @@ c                                 solution.
 
       npt = 0
       mpt = 0
+      gtot = 0d0 
 
       do i = 1, jphct
 c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
 
-         if (is(i).ne.1) then
+         if (is(i).eq.4) then 
+
+            if (x(i).gt.zero) then
+               write (*,*) 'wonka wonak'
+               call errpau
+            end if
+
+         else if (is(i).ne.1) then
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
             if (id.gt.0) stabl(id) = .true.
+
+            gtot = gtot + x(i)*g2(i)
 
             if (lopt(32)) then
 c                                 for lagged aq speciation
@@ -2549,7 +2453,8 @@ c                                 check zero modes the amounts
 
       end
 
-      subroutine rebulk (static,abort)
+
+      subroutine rebulk (abort)
 c----------------------------------------------------------------------
 c upon successful completion of an optimization with either static or
 c dynamic pseudocompounds rebulk:
@@ -2561,11 +2466,11 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i, j, k, id, tictoc
+      integer i, j, k, id, jds, tictoc
 
-      logical static, abort, bad
+      logical abort
 
-      double precision c(k5)
+      double precision c(k5), scp(k5)
  
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2600,10 +2505,22 @@ c                                 hcp is different from icp only if usv
       double precision mu
       common/ cst330 /mu(k8),mus
 
+      double precision pa3
+      common/ cstpa3 /pa3(k5,m14)
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
       save tictoc
       data tictoc/0/
 c----------------------------------------------------------------------
       do i = 1, npt
+
+         jds = jkp(jdv(i))
 
          if (jdv(i).le.jpoint) then
 c                                 stoichiometric compound or endmember
@@ -2616,10 +2533,18 @@ c                                 load compositional data
             end do
 c                                 set identifier flag
             if (ikp(id).ne.0) then
+
+               jds = ikp(id)
 c                                 an endmember
-               kkp(i) = ikp(id)
-c                                 load the solution composition in x3
-               call endx3 (i,id,ikp(id))
+               kkp(i) = jds
+c                                 load the solution composition in pa3
+               pa3(i,1:nstot(jds)) = 0d0
+c                                 figure out which endmember
+               do j = 1, nstot(jds)
+                  if (id.eq.jend(jds,2+j)) exit
+               end do
+
+               pa3(i,j) = 1d0
 
             else
 c                                 a compound
@@ -2628,13 +2553,18 @@ c                                 a compound
             end if
 
          else
-c                                 static or dynamic solution composition:
-c                                 set endmember compositional coordinates
-           call setxyp (jkp(jdv(i)),jdv(i),.not.static,bad)
-c                                 save in the indexed x3 array
-           call setex3 (i,jkp(jdv(i)))
-c                                 getcmp assigns cp3, cptot, and kkp
-           call getcmp (i,jdv(i),jkp(jdv(i)),.not.static)
+c                                 save the solution model pointer
+            kkp(i) = jds
+c                                 get and save endmember fractions
+            call getpa (jds,i)
+
+            pa3(i,1:nstot(jds)) = pa(1:nstot(jds))
+c                                 get and save the composition
+c                                 nothing special needs to be done
+c                                 here for lagged speciation
+            call getscp (scp,cptot(i),jds,1,.false.)
+
+            cp3(1:icomp,i) = scp(1:icomp)
 
          end if
 c                                 convert normalized amounts to molar 
@@ -2696,7 +2626,7 @@ c                                  load the saturated phase composition
 
          end do
 
-      end if 
+      end if
 
       ntot = npt
 c                                 test for solvi and average

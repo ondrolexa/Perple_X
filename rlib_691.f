@@ -643,6 +643,9 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       if (z.gt.-zero.and.z.le.r1) then
          badz = .false.
+      else if (z.gt.-1d4*zero) then
+         z = 0d0
+         badz = .false.
       else
          badz = .true.
       end if
@@ -5524,7 +5527,7 @@ c         used in the computation (i.e., excluding missing endmembers)
 c global variables
 
 c indx(i,j,k,l) - for solution i, pointer to the l'th original endmember
-c                 index with species k on site j.
+c                 index with species k on site j. eliminated in 6.9.1.
 c mstot(i) - istot globally
 c jgsol(i,j,k) - k species indices of endmember j in solution i (jmsol globally)
 c knsp(i=1:mstot,ids) - points to the original (?) index of endmember i in ids
@@ -7516,7 +7519,7 @@ c----------------------------------------------------------------------
 c                                 special is reserved for special models 
 c                                 that set standard flags (lorder and/or lrecip)
 c                                 currently only Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-            gg =  gfesic (y(1),y(3),y(4),
+            gg =  gfesic (pa(1),pa(3),pa(4),
      *                    g(jend(id,3)),g(jend(id,4)),
      *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
@@ -7550,10 +7553,10 @@ c                                 are not dqf'd. gex not neccessary as computed 
       else if (ksmod(id).eq.0) then
 c                                 ------------------------------------
 c                                 internal fluid eos
-         gg = gfluid(y(1))
+         gg = gfluid(pa(1))
 
          do k = 1, 2
-            gg = gg + gzero(jnd(k))*y(k)
+            gg = gg + gzero(jnd(k))*pa(k)
          end do
 
       else if (ksmod(id).eq.20) then
@@ -7567,21 +7570,21 @@ c                                 partial molar volumes.
       else if (ksmod(id).eq.26) then
 c                                 ------------------------------------
 c                                 andreas salt model
-         call hcneos (gg,y(1),y(2),y(3))
+         call hcneos (gg,pa(1),pa(2),pa(3))
 
          do k = 1, 3
-            gg = gg + y(k) * g(jend(id,2+k))
+            gg = gg + pa(k) * g(jend(id,2+k))
          end do
 
       else if (ksmod(id).eq.29) then
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
-         gg =  gfesi(y(1),g(jend(id,3)),g(jend(id,4)))
+         gg =  gfesi(pa(1),g(jend(id,3)),g(jend(id,4)))
 
       else if (ksmod(id).eq.32) then
 c                                 -------------------------------------
 c                                 BCC Fe-Cr Andersson and Sundman
-         gg =  gfecr1(y(1),g(jend(id,3)),g(jend(id,4)))
+         gg =  gfecr1(pa(1),g(jend(id,3)),g(jend(id,4)))
 
       else if (ksmod(id).eq.39) then
 c                                 -------------------------------------
@@ -7589,7 +7592,7 @@ c                                 generic hybrid EoS
 c                                 initialize pointer array
          do k = 1, nstot(id)
 c                                 sum pure species g's
-            gg = gg + g(jnd(k)) * y(k)
+            gg = gg + g(jnd(k)) * pa(k)
 
          end do
 c                                 compute and add in activities
@@ -7597,16 +7600,16 @@ c                                 compute and add in activities
 
       else if (ksmod(id).eq.41) then
 c                                 hybrid MRK ternary COH fluid
-         call rkcoh6 (y(2),y(1),gg)
+         call rkcoh6 (pa(2),pa(1),gg)
 
          do k = 1, 3
-            gg = gg + g(jnd(k)) * y(k)
+            gg = gg + g(jnd(k)) * pa(k)
          end do
 
       else if (ksmod(id).eq.40) then
 c                                 MRK silicate vapor
          do k = 1, nstot(id)
-            gg = gg + gzero (jnd(k)) * y(k)
+            gg = gg + gzero (jnd(k)) * pa(k)
          end do
 
          gg = gg + gerk(y)
@@ -7614,7 +7617,7 @@ c                                 MRK silicate vapor
       else if (ksmod(id).eq.42) then
 c                                 ------------------------------------
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
-         gg =  gfes(y(2),g(jend(id,3)),g(jend(id,4)))
+         gg =  gfes(pa(2),g(jend(id,3)),g(jend(id,4)))
 
       else
 
@@ -7664,7 +7667,7 @@ c----------------------------------------------------------------------
 
       external badz
 
-      double precision y(m4), zt, z(m10,m11)
+      double precision y(*), zt, z(m10,m11)
 
       integer i,j,k,ids
 
@@ -8209,52 +8212,6 @@ c                                 macroscopic margules formulation by default
 
       end
 
-      subroutine endx3 (jd,id,ids)
-c------------------------------------------------------------------------
-c compute the composition of endmember id, for solution ids and load it
-c into the jd'th position of the x3 array.
-c------------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer jd, ii, h, i, j, id, ids
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-c----------------------------------------------------------------------
-c                                 figure out which endmember we
-c                                 are looking at:
-      do h = 1, mstot(ids)
-         if (id.eq.jend(ids,2+h)) exit
-      end do
-
-      do ii = 1, poly(ids)
-c                                 initialize wt 
-         x3(jd,pop1(ids),1,ii) = 0d0
-
-         do i = 1, istg(ids,ii)
-c                                 initialize polytope x's
-            do j = 1, ispg(ids,ii,i)
-               x3(jd,ii,i,j) = 0d0
-            end do
-
-            if (h.lt.pvert(ids,ii,1).or.h.gt.pvert(ids,ii,2)) cycle
-c                                 assign endmember fractions
-            x3(jd,ii,i,kmsol(ids,knsp(h,ids),i)) = 1d0
-c                                 assign polytope weight
-            if (pop1(ids).gt.1) x3(jd,pop1(ids),1,ii) = 1d0
-
-         end do 
-
-      end do
-
-      end
-
       subroutine gmodel (im,wham)
 c---------------------------------------------------------------------
 c gmodel - stores ALL solution model parameters in global arrays
@@ -8267,11 +8224,11 @@ c---------------------------------------------------------------------
 
       logical add, wham, zbad, bad
 
-      integer im, nloc, i, j, ind, id, jd, k, l,itic, ii, imatch, 
-     *        killct, killid(20), il, ik, kk, jp1
+      integer im, nloc, i, j, id, jd, k, l, ii, 
+     *        killct, killid(20)
 
-      double precision dinc, dzt, dx, gcpd, stinc, getstr, delta,
-     *                 c0(0:20), c1(0:20), zij, zsite(m10,m11)
+      double precision dinc, dx, gcpd, stinc, getstr,
+     *                 zsite(m10,m11)
 
       external gcpd, zbad, stinc, getstr
 
@@ -8345,9 +8302,6 @@ c                                 excess energy variables
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-c                                 convert y -> x array
-      integer indx
-      common/ cxt5i /indx(h9,h4,mst,msp)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -8972,332 +8926,8 @@ c                                 if msite(h0) ne 0 get "normalization" constant
 c                                 configurational entropies) for entropy model:
       if (msite(im).ne.0) call snorm0 (im,tname)
 c                                 -------------------------------------
-      if (order) then
-c                                 models with speciation:
-         do j = 1, norder
-
-            do i = 1, 3
-               deph(i,j,im) = denth(j,i)
-            end do
-
-            nrct(j,im) = nr(j)
-
-            do i = 1, nr(j)
-               ideps(i,j,im) = iy2p(iddeps(i,j))
-            end do
-
-         end do
-c                                 classify multiple species models according
-c                                 to whether the disordered reactants are
-c                                 partially or completely correlated, assume
-c                                 anti-correlation is not a possible case.
-         icase(im) = 0
-
-         if (norder.gt.1) then
-
-            imatch = 0
-
-            do j = 1, nr(1)
-
-               id = ideps(j,1,im)
-
-               do i = 1, nr(2)
-                  if (id.eq.ideps(i,2,im)) then
-                     imatch = imatch + 1
-                     exit
-                  end if
-               end do
-
-            end do
-
-            if (imatch.eq.1) then
-c                                 if match = 1 one species didn't match
-c                                 assume partial correlation
-               icase(im) = 2
-            else if (imatch.ge.2) then
-               icase(im) = 1
-            end if
-
-         end if
-c                                first create derivatives of endmember
-c                                fractions with respect to the ordered
-c                                species:
-         do j = 1, norder
-
-            do i = 1, nstot(im)
-               dydy(i,j,im) = 0d0
-            end do
-c                                derivative of the ordered species with
-c                                respect to itself:
-            dydy(kstot+j,j,im) = 1d0
-c                                each ordered species decomposes to
-c                                two disordered species iddeps(1-2,j)
-c                                depnu is the stoichiometric coefficient
-c                                of the disordered species in the ordered
-c                                species.
-
-c                                derivatives of the consituent species
-c                                with respect to the ordered species
-            dnu(im) = 1d0
-
-            do i = 1, nr(j)
-               dydy(ideps(i,j,im),j,im) = dydy(ideps(i,j,im),j,im)
-     *                                  - depnu(i,j)
-               dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
-            end do
-c                                dnu ~0 => speciation reaction is not equimolar
-            if (dabs(dnu(im)).gt.1d4*zero) then
-               if (norder.gt.1) call error (72,r,i,
-     *              'ordering schemes with > 1 non-equi'//
-     *              'molar reaction have not been anticipated: '//tname)
-            else
-               dnu(im) = 0d0
-            end if
-
-         end do
-c                                evaluate the second derivative of each
-c                                pi*pj term in the excess function with
-c                                respect to kth species
-         do i = 1, iterm
-            do j = 1, norder
-               do k = 1, norder
-
-                  dppp(k,j,i,im) =  dydy(jsub(1,i,im),k,im)
-     *                             *dydy(jsub(2,i,im),j,im)
-     *                           +
-     *                              dydy(jsub(2,i,im),k,im)
-     *                             *dydy(jsub(1,i,im),j,im)
-               end do
-            end do
-         end do
-c                                 site fractions as a function of bulk
-c                                 y's and dependent species y:
-         do i = 1, msite(im)
-c                                 for each species, read
-c                                 function to define the
-c                                 site fraction of the species:
-            if (zsp(im,i)+1.gt.m11) call error (1,dx,zsp(im,i)+1,'m11')
-
-            do k = 1, norder
-               sdzdp(k,zsp(im,i)+1,i,im) = 0d0
-            end do
-
-            do j = 1, zsp(im,i)
-c                                 # of terms in the
-c                                 site fraction function and a0.
-               do l = 1, norder
-                  sdzdp(l,j,i,im) = 0d0
-               end do
-c                                 for each term:
-               do k = 1, lterm(j,i,im)
-c                                 endmember indexes
-                  ind = ksub(k,j,i,im)
-c                                 get derivatives, of species fractions
-c                                 with respect to ordered species
-                  do l = 1, norder
-                     itic = 0
-                     do ii = 1, nr(l)
-                        if (ind.eq.ideps(ii,l,im)) then
-                           sdzdp(l,j,i,im) = sdzdp(l,j,i,im)
-     *                     + dydy(ideps(ii,l,im),l,im)*dcoef(k,j,i,im)
-                           itic = itic + 1
-c                                 high order terms not allowed
-                           if (itic.gt.1)
-     *                        call error (999,r,801,'GMODEL')
-                        end if
-                     end do
-c                                 the derivative of a term with the
-c                                 ordered species.
-                     if (ind.eq.kstot+l)
-     *                  sdzdp(l,j,i,im) = sdzdp(l,j,i,im)
-     *                                  + dcoef(k,j,i,im)
-
-                  end do
-               end do
-            end do
-         end do
-c                                 multiply each dzdp by qmult (R*site
-c                                 multiplicity) to reduce operation
-c                                 count in evaluating derivatives.
-         do k = 1, norder
-            do i = 1, msite(h0)
-
-               dzt = 0d0
-
-               do j = 1, zsp(im,i)
-                  if (dabs(sdzdp(k,j,i,im)).lt.zero)
-     *                     sdzdp(k,j,i,im) = 0d0
-                  dzt = dzt + sdzdp(k,j,i,im)
-               end do
-
-               if (dabs(dzt).lt.zero) dzt = 0d0
-               sdzdp(k,j,i,im) = -dzt
-
-            end do
-         end do
-
-      end if
-
-c                                 ----------------------------------------------
-c                                 derive limit expressions for O/D models
-      if (order) then
-
-         do k = 1, nord(im)
-c                                 number of limits for ordered species k
-            ln(k,im) = 0
-         end do
-c                                 all z expressions may be necessary to
-c                                 formulate limits, make the ksp'th + 1
-c                                 species expression by differnce
-         do i = 1, msite(im)
-c                                 qmult = 0, temkin, all expressions are
-c                                 available
-            if (zmult(im,i).eq.0) cycle
-
-            jp1 = zsp(im,i) + 1
-c                                 initialize the term counter
-            lterm(jp1,i,im) = 0
-c                                 cycle through the endmembers to work out
-c                                 if it has a non zero fraction
-            do l = 1, nstot(im)
-
-               call zmake (zij,i,l,im)
-
-               if (dabs(zij).lt.zero) cycle
-
-               lterm(jp1,i,im) = lterm(jp1,i,im) + 1
-               dcoef(lterm(jp1,i,im),jp1,i,im) = zij
-               ksub(lterm(jp1,i,im),jp1,i,im) = l
-
-            end do
-         end do
-
-         do i = 1, msite(im)
-
-            if (zmult(im,i).eq.0) then
-               jp1 = 0
-            else
-               jp1 = 1
-            end if
-
-            do j = 1, zsp(im,i) + jp1
-
-               do k = 1, nord(im)
-
-                  c0 = 0d0
-                  c1 = 0d0
-
-                  if (dcoef(0,j,i,im).ne.0d0) call error (72,c0(0),i,
-     *           'solution '//tname//': constants not allowed in '//
-     *           'O/D model configurational entropy site fraction '//
-     *           'expressions')
-
-                  do l = 1, lterm(j,i,im)
-
-                     il = ksub(l,j,i,im)
-
-                     if (il.le.lstot(im)) then
-
-                        c0(il) = c0(il) + dcoef(l,j,i,im)
-
-                        do ik = 1, nord(im)
-
-                           kk = lstot(im) + ik
-c                                  coefficient on p0
-                           c0(kk) = c0(kk) - dydy(il,ik,im)
-     *                                     * dcoef(l,j,i,im)
-c                                  coefficient on p
-                           c1(kk) = c1(kk) + dydy(il,ik,im)
-     *                                     * dcoef(l,j,i,im)
-
-                        end do
-
-                     else
-
-                        c1(il) = c1(il) + dcoef(l,j,i,im)
-
-                     end if
-c                                 at this point the c's are the coefficients for a
-c                                 z(p,p0), below they are rearranged to get p(kk) = f(p0,p[~kk],z[0,1])
-c                                 in other words the loop on mord(im) is superfluous, but what the heck...
-                     kk = lstot(im)+k
-
-                     if (l.eq.lterm(j,i,im).and.c1(kk).ne.0d0) then
-
-                        do ik = 0, nstot(im)
-                           c0(ik) = -c0(ik)/c1(kk)
-                        end do
-c                                the constant for the p(k) limit when z(j) = 1
-                        c1(0) = c0(0) + 1d0/c1(kk)
-
-                        do ik = lstot(im) + 1, nstot(im)
-                           if (ik.eq.kk) cycle
-                           c1(ik) = -c1(ik)/c1(kk)
-                        end do
-
-                        c1(kk) = 0d0
-
-                        if  (c1(0).gt.c0(0)) then
-c                                 z = 1 is the upper limit, the constant is c0(0) and
-                           delta = c1(0)-c0(0)
-
-                        else
-c                                 z = 0 is the upper limit, the constant is c1(0) and
-                           delta = c0(0)-c1(0)
-                           c0(0) = c1(0)
-
-                        end if
-c                                 increment limit counter
-                        ln(k,im) = ln(k,im) + 1
-c                                 initialize p0 term counter for limit
-                        lt(ln(k,im),k,im) = 0
-c                                 load the p0 coefficients, if simplicial p0 > lstot(im) = 0
-                        do ik = 1, nstot(im)
-
-                           if (jsmod.eq.6.and.ik.gt.lstot(im)) exit
-                           if (c0(ik).eq.0d0) cycle
-c                                 increment term counter:
-                           lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
-c                                 save the coefficient and index:
-                           lc(lt(ln(k,im),k,im),ln(k,im),k,im) = c0(ik)
-                           lid(lt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,ln(k,im),lt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-                        end do
-c                                 initialize p term counter for limit
-                        jt(ln(k,im),k,im) = 0
-c                                 load the p coefficients
-                        do ik = lstot(im) + 1, nstot(im)
-
-                           if (c0(ik).eq.0d0) cycle
-c                                 increment term counter:
-                           jt(ln(k,im),k,im) = jt(ln(k,im),k,im) + 1
-c                                 save the coefficient and index:
-                           jc(jt(ln(k,im),k,im),ln(k,im),k,im) = c1(ik)
-                           jid(jt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,jt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-
-                        end do
-c                                load the constant and delta:
-                       l0c(1,ln(k,im),k,im) = c0(0)
-                       l0c(2,ln(k,im),k,im) = delta
-
-c                       write (*,*) 'cst delta ', c0(0),delta
-c                       write (*,*) ' '
-
-                     end if
-
-                  end do
-
-               end do
-            end do
-         end do
-      end if
+c                                 organize O/D model parameters
+      call setord (im)
 c                                 ----------------------------------------------
 c                                 models with special endmember indexing:
       if (jsmod.eq.0) then
@@ -9361,25 +8991,6 @@ c                                 of endmember i in the solution model input:
                ifp(kdsol(knsp(i,im))) = 1
             end if
 
-         end do
-
-      end if
-
-      if (jsmod.ne.20) then
-c                                 -------------------------------------
-c                                 create a y -> x array, this array is
-c                                 to be used to convert endmember fractions (y's)
-c                                 back to geometric coordinates (x's).
-         do i = 1, isimp(1)
-            do j = 1, ivert(1,i)
-c                                 now find all endmembers with
-c                                 species j on site i, this method
-c                                 is inefficient but idependent of
-c                                 endmember order.
-               do k = 1, istot
-                  if (jmsol(k,i).eq.j) indx(im,1,i,j) = k
-               end do
-            end do
          end do
 
       end if
@@ -9526,12 +9137,18 @@ c                                 BCC Fe-Cr Andersson and Sundman (32)
          end if
 
       end if
-c                                 p2y transformation matrix
-      call makp2y (im)
-c                                 y2x transformation matrix
-      call maky2x (im)
-c                                 p2z transformation matrix
-      call makp2z (im)
+c                                 make transformation matrices, p' is 
+c                                 the nstot-1 independent p variables.
+c                                 y2x
+      call makayx (im)
+c                                 p'2z 
+      call makapz (im)
+c                                 y2z, ayz must be called after makapz 
+      call makayz (im)
+c                                 y2c
+      call makayc (im)
+c                                 p'2c
+      call makapc (im)
 
       end
 
@@ -9722,13 +9339,7 @@ c                                 amounts of disordered species.
 
       subroutine makepp (id)
 c-----------------------------------------------------------------------
-c y2p0 converts the y array of disordered dependent and independent
-c species abundance to the p0 array of the independent (ordered and
-c disordered) species. the p0 array gives the minimum possible
-c concentrations of the ordered species (the stable abundances are
-c determined by solving the speciation problem).
-
-c for non-reciprocal solutions the y and p0 arrays are identical.
+c
 c-----------------------------------------------------------------------
       implicit none
 
@@ -9745,12 +9356,25 @@ c-----------------------------------------------------------------------
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-      do k = 1, nord(id)
-         do l = 1, nrct(k,id)
-            ind = ideps(l,k,id)
-            pp(ind) = pp(ind) - dydy(ind,k,id) * pp(lstot(id)+k)
+c----------------------------------------------------------------------
+c                                 order-disorder, need initial speciation
+c                                 usually fully disordered
+      p0a(1:nstot(id)) = pa(1:nstot(id))
+
+      if (lrecip(id)) then
+c                                 non-simplicial composition space
+         pp(1:nstot(id)) = pa(1:nstot(id))
+
+         do k = 1, nord(id)
+            do l = 1, nrct(k,id)
+               ind = ideps(l,k,id)
+               pp(ind) = pp(ind) - dydy(ind,k,id) * pp(lstot(id)+k)
+            end do
          end do
-      end do
+c                                 zero ordered pp's
+         pp( lstot(id) + 1: nstot(id) ) = 0d0
+
+      end if
 
       end
 
@@ -18209,15 +17833,13 @@ c                                 initialize p-t dependent coefficients
 
          if (specil(id)) then
 
-            g =  gfesic (y(1),y(3),y(4),
+            g =  gfesic (pa(1),pa(3),pa(4),
      *           gcpd(jend(id,3),.true.),gcpd(jend(id,4),.true.),
      *           gcpd(jend(id,5),.true.),gcpd(jend(id,6),.true.),
      *           ksmod(id))
 
          else if (lorder(id)) then
 c                                 -------------------------------------
-c                                 convert y coordinates to independent p coordinates
-            call y2p0 (id)
 c                                 get the speciation, excess and entropy effects.
             call specis (g,id)
 
@@ -18233,27 +17855,23 @@ c                                 are not dqf'd. gex not neccessary as computed 
          else if (lrecip(id)) then
 c                                 -------------------------------------
 c                                 macroscopic reciprocal solution w/o order-disorder
-
-c                                 convert y's to p's (p0a here).
-            call y2p0 (id)
-
             do k = 1, lstot(id)
-               g = g + gcpd (jend(id,2+k),.true.) * p0a(k)
+               g = g + gcpd (jend(id,2+k),.true.) * pa(k)
             end do
 c                                 get the dqf
-            call gdqf (id,g,p0a)
+            call gdqf (id,g,pa)
 c                                 and excess contributions
-            g = g - t * omega (id,p0a) + gex (id,p0a)
+            g = g - t * omega (id,pa) + gex (id,pa)
 
          else if (simple(id)) then
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
-            call gdqf (id,g,y)
+            call gdqf (id,g,pa)
 c                                 add entropy and excess contributions
-            g = g - t * omega (id,y) + gex (id,y)
+            g = g - t * omega (id,pa) + gex (id,pa)
 c                                 get mechanical mixture contribution
             do k = 1, mstot(id)
-               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+               g = g + pa(k) * gcpd (jend(id,2+k),.true.)
             end do
 
          else if (ksmod(id).eq.20) then
@@ -18276,23 +17894,23 @@ c                                 add in solute properties
          else if (ksmod(id).eq.26) then
 c                                 ------------------------------------
 c                                 andreas salt model
-            call hcneos (g,y(1),y(2),y(3))
+            call hcneos (g,pa(1),pa(2),pa(3))
 
             do k = 1, 3
-               g = g + y(k) * gcpd (jend(id,2+k),.true.)
+               g = g + pa(k) * gcpd (jend(id,2+k),.true.)
             end do
 
          else if (ksmod(id).eq.29) then
 c                                 -------------------------------------
 c                                 BCC Fe-Si Lacaze and Sundman
-            g = gfesi(y(1), gcpd (jend(id,3),.true.),
-     *                      gcpd (jend(id,4),.true.) )
+            g = gfesi(pa(1), gcpd (jend(id,3),.true.),
+     *                       gcpd (jend(id,4),.true.) )
 
          else if (ksmod(id).eq.32) then
 c                                 -------------------------------------
 c                                 BCC Fe-Cr Andersson and Sundman
-            g =  gfecr1(y(1), gcpd (jend(id,3),.true.),
-     *                        gcpd (jend(id,4),.true.) )
+            g =  gfecr1(pa(1), gcpd (jend(id,3),.true.),
+     *                         gcpd (jend(id,4),.true.) )
 
          else if (ksmod(id).eq.39) then
 c                                 -------------------------------------
@@ -18323,34 +17941,34 @@ c                                 solute species (caq => molality)
 
                do k = 1, mstot(id)
 c                                 sum pure species g's
-                  g = g + gcpd(jnd(k),.true.) * y(k)
+                  g = g + gcpd(jnd(k),.true.) * pa(k)
 
                end do
 c                                 compute and add in activities
-               g = g + ghybrid (y)
+               g = g + ghybrid (pa)
 
             end if
 
          else if (ksmod(id).eq.41) then
 c                                 hybrid MRK ternary COH fluid
-            call rkcoh6 (y(2),y(1),g)
+            call rkcoh6 (pa(2),pa(1),g)
 
             do k = 1, nstot(id)
-               g = g + gcpd(jnd(k),.true.) * y(k)
+               g = g + gcpd(jnd(k),.true.) * pa(k)
             end do
 
          else if (ksmod(id).eq.40) then
 c                                 MRK silicate vapor
             do k = 1, nstot(id)
-               g = g + gzero(jnd(k)) * y(k)
+               g = g + gzero(jnd(k)) * pa(k)
             end do
 
-            g = g + gerk(y)
+            g = g + gerk(pa)
 
          else if (ksmod(id).eq.42) then
 c                                 ------------------------------------
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
-            g = gfes(y(2), gcpd (jend(id,3),.true.),
+            g = gfes(pa(2), gcpd (jend(id,3),.true.),
      *                      gcpd (jend(id,4),.true.) )
 
          else if (ksmod(id).eq.0) then
@@ -18359,7 +17977,7 @@ c                                 internal fluid eos. hardwired to special
 c                                 component choices
             do k = 1, 2
 
-               g = g + gzero (jnd(k))*y(k)
+               g = g + gzero (jnd(k))*pa(k)
 
             end do
 c                                 don't know whether it's a speciation routine
@@ -18367,7 +17985,7 @@ c                                 so set the fluid species fractions just in cas
 c                                 this is only necessay for species output by
 c                                 WERAMI/MEEMUM, these will be reset if it actually
 c                                 is a speciation routine.
-            yf(2) = y(1)
+            yf(2) = pa(1)
             yf(1) = 1d0 - yf(2)
 c
             g = g + gfluid (yf(2))
@@ -21573,9 +21191,7 @@ c-----------------------------------------------------------------------
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c-----------------------------------------------------------------------
 
-      do j = 1, icomp
-         scp(j) = 0d0 
-      end do
+      scp(1:icomp) = 0d0
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
@@ -23684,103 +23300,6 @@ c                                 set dependent potential, if it exists
       call incdp0
 
       end
-
-      subroutine getcmp (jd,id,ids,dynam)
-c-----------------------------------------------------------------------
-c getcmp gets the composition of pseudocompund id, where:
-c  if ids < 0, -ids points to the composition of a true compound in array cp
-c  if ids > 0, id points to the composition of a solution defined in terms
-c              on endmember fractions
-
-c the composition is saved in arrays cp3 and x3, entry jd
-
-c getcmp is called by FRENDLY, WERAMI, MEEMUM and VERTEX
-c-----------------------------------------------------------------------
-      implicit none
- 
-      include 'perplex_parameters.h'
-
-      logical bad, dynam
-
-      integer i, id, jd, ids
-
-      double precision scp(k5), scptot
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      double precision cp0
-      common/ cst71 /cp0(k0,k5)
-
-      integer kkp,np,ncpd,ntot
-      double precision cp3,amt
-      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
-
-      integer ikp
-      common/ cst61 /ikp(k1)
-
-      integer iam
-      common/ cst4 /iam
-
-      integer npt,jdv
-      logical fulrnk
-      double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
-c----------------------------------------------------------------------
-      kkp(jd) = ids
-
-      if (ids.lt.0) then
-c                                 simple compounds and endmembers:
-         if (iam.ne.5) then
-c                                 all programs except frendly
-            do i = 1, icomp
-               cp3(i,jd) = cp(i,-ids)
-            end do
-c                                 set solution composition 
-c                                 if it's a solution endmember
-            if (ikp(-ids).ne.0) call endx3 (jd,-ids,ikp(-ids))
-
-         else 
-c                                 frendly 
-            do i = 1, k0
-               cp3(i,jd) = cp0(i,-ids)
-            end do 
-
-         end if
-
-      else
-c                                 solutions:
-         if (iam.ne.3) then
-c                                 getcmp is being called by MEEMUM/VERTEX:
-c                                 solution endmember fractions are recovered by 
-c                                 setxyp.
-            call setxyp (ids,id,dynam,bad)
-
-            call setex3 (jd,ids)
-
-         else
-c                                 getcmp is being called by WERAMI:
-c                                 xtoy recovers y from the x3 array.
-            call xtoy (ids,jd,.false.,bad)
-c                                 set pa/p0a/pp arrays
-            call y2p0 (ids)
-
-         end if
-
-         call getscp (scp,scptot,ids,jd,.false.)
-
-         do i = 1, icomp
-            cp3(i,jd) = scp(i)
-         end do
-
-         cptot(jd) = scptot
-
-      end if
-
-      end 
 
       subroutine inblnk (text,char)
 c----------------------------------------------------------------------

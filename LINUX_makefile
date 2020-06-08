@@ -31,7 +31,11 @@ COMP77 = gfortran
 # pappel: for use with gfortran
 # JADC 1/21/13: O2 and O3 cause fp errors in the speciation routine speci2 in gfortran, the optimization
 # seems to work if local variables are initialized to zero (even though there are no uninitialized variables).
-# use -ffpe-trap=zero,overflow,underflow to catch fp errors.
+# use -ffpe-trap=zero,overflow,underflow to catch fp errors or maybe ...=[invalid,zero,overflow,underflow,precision]
+# use -ffpe-trap 
+# use -fbounds-check array bound checking
+# use -finit-real=snan -fpe=trap check for unitialized variables
+# use -Wall -Wextra for extensive warnings
 
 # Mark Caddick's OSX generic gfortran compilation flags:
 

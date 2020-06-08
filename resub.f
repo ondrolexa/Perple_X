@@ -2126,8 +2126,8 @@ c---------------------------------------------------------------------
       integer jphct,istart
       common/ cst111 /jphct,istart
 
-      integer ldt,ldq
-      common /be04nb/ldt,ldq
+      integer ldt,ncolt,ldq
+      common /be04nb/ldt,ncolt,ldq
 
       integer npt,jdv
       double precision cptot,ctotal

@@ -11425,8 +11425,8 @@ begin_model
 
                                   Make definitions corrected from the raw thermocalc versions. JADC, Jun 19, 2013.
 
-                                  The geikielite and most of the pyrhophanite excess terms were accidentally deleted
-                                  (by me) ca Feb 6, 2017 at the same time that the Ilm(W) and Ilm(WPH0) equivalents
+                                  The geikielite and most of the pyrophanite excess terms were accidentally deleted
+                                  (by me) ca Feb 6, 2017 at the same time that the correct Ilm(W) and Ilm(WPH0) equivalents
                                   of Ilm(WPH) were deleted from this file. Correction courtesy of Bob Myhill and 
                                   the perplex discussion group (groups.io/g/PerpleX/topic/74420499). JADC, May 27, 2020.
 

@@ -38,8 +38,8 @@ c----------------------------------------------------------------------
       double precision  wmach(9)
       common/ cstmch /wmach
 
-      integer ldq,ldt
-      common/ be04nb /ldt,ldq
+      integer ldq,ldt,ncolt
+      common/ be04nb /ldt,ncolt,ldq
 
       double precision  asize,dtmax, dtmin
       common/ de04nb /asize, dtmax, dtmin
@@ -54,6 +54,8 @@ c----------------------------------------------------------------------
 c                                 cold start (istart = 0) or reusing 
 c                                 matrices from a prior optimization 
 c                                 (idead = -1)
+         ldt = nclin + 1
+         ldq = ldt
          nctotl = n + nclin
          lkx = 4 + n
          lanorm = 1 + nclin + n
@@ -278,14 +280,13 @@ c     constraint j may be violated by as much as featol(j).
 c----------------------------------------------------------------------
       implicit none 
 
-      character*6       empty
-      parameter         (empty='      ')
+      character empty*6, msg*6
+      parameter (empty='      ')
+
       double precision  obj, xnorm
       integer           iter, jinf, lda, n, nactiv, nclin, nfree,
      *                  nrz, numinf, nviol, nz
       logical           unitq
-
-      character*6       msg
 
       double precision  a(lda,*), ax(*), bl(nclin), 
      *                  cvec(*), featlu(n+nclin), featol(n+nclin), w(*),
@@ -304,17 +305,17 @@ c----------------------------------------------------------------------
       integer           iadd, ifix, inform, is, it, j, jbigst,
      *                  jmax, jsmlst, jtiny, kbigst, kdel, ksmlst, lad,
      *                  lanorm, lcq, ld, lgq, lq, lrlam, lt,
-     *                  lwrk, lwtinf,
+     *                  lwrk, lwtinf, ncolt,
      *                  nctotl, ngq, nmoved, notopt, ntfixd
       logical           firstv, hitlow, move, onbnd, overfl,
      *                  unbndd, fail
 
       double precision  ddot1, dnrm2, adivb
 
-      common            /ae04mf/loclc(15)
+      common/ ae04mf /loclc(15)
       common/ cstmch /wmach
-      common            /be04nb/ldt,ldq
-      common            /de04nb/asize, dtmax, dtmin
+      common/ be04nb /ldt,ncolt,ldq
+      common/ de04nb /asize, dtmax, dtmin
 
       save              firstv, alfa, jdel, jadd
 c----------------------------------------------------------------------

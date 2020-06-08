@@ -6,7 +6,7 @@
       integer k0,k1,k2,k3,k4,k5,k7,k8,k9,k10,k13,k14,k15
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2,k25
       integer l2,l3,l5,l6,l7,l8,l9,l10,lchar
-      integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15
+      integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m14,m15
       integer m16,m17,m18,m19,m20,m21,m22,m23
       integer msp,mst,mdim,ms1
       integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,nsp,nx,ny
@@ -184,7 +184,7 @@ c----------------------------------------------------------------------
 !                                m10 - maximum number of mixing sites in Sconf model
 !                                m11 - maximum number of species + 1 in Sconf model
 !                                m12 - maximum order of terms in Sconf model
-!                                m13 - maximum number of sites in a solution model
+!                                m13 - 
 !                                m14 - maximum number of independent endmembers
 !                                m15 - maximum number of dependent endmembers
 !                                m16 - max number of parameters in a redkich-kistler L
@@ -196,8 +196,8 @@ c----------------------------------------------------------------------
 !                                m22 - 3*m19 + m20, NLP integer workspace
 !                                m23 - 2*m19**2 + 20*m19 + 11*m20, NLP real workspace
       parameter (m0=12,m1=60,m2=8,m3=3,m4=96,m6=6,m7=15,m8=9,m9=10,
-     *           m10=6,m11=11,m12=4,m13=8,m14=14,m15=85,m16=6,m17=5,
-     *           m18=6,m19=m14-1,m20=m10*(m11-1),m21=m20+m19,
+     *           m10=6,m11=11,m12=4,m14=14,m15=85,m16=6,m17=5,
+     *           m18=6,m19=m14-1,m20=m10*(m11-2)+1,m21=m20+m19,
      *           m22=3*m19+m20,m23=2*m19**2+20*m19+11*m20)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
@@ -239,8 +239,8 @@ c npoly(ii) - number of compositions in polytope ii
       common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k24)
 
       double precision zco
-      integer icoz, jcoz, jkp
-      common/ cxt13 /zco(k20),icoz(k21),jkp(k21),jcoz(k25)
+      integer icoz, jcoz, jkp, zcoct
+      common/ cxt13 /zco(k20),icoz(k21),jkp(k21),jcoz(k25), zcoct
 
       double precision simp
       common/ cxt86 /simp(k13)

@@ -1,151 +1,22 @@
-      subroutine junkkk
 
-      implicit none 
 
-      integer nin, nout
-      parameter (nin=15,nout=6)
-      integer nmax, nclmax, ncnmax
-      parameter (nmax=10,nclmax=10,ncnmax=10)
-      integer lda, ldcj, ldr
-      parameter (lda=nclmax,ldcj=ncnmax,ldr=nmax)
-      integer liwork, lwork
-      parameter (liwork=100,lwork=1000)
-
-      double precision objf
-      integer i, ifail, iter, j, n, nclin, ncnln
-
-      external objfun, confun
-
-      double precision a(lda,nmax), bl(nmax+nclmax+ncnmax),
-     * bu(nmax+nclmax+ncnmax), c(ncnmax),
-     * cjac(ldcj,nmax), clamda(nmax+nclmax+ncnmax),
-     * objgrd(nmax), r(ldr,nmax), user(1), work(lwork),
-     * x(nmax)
-      integer istate(nmax+nclmax+ncnmax), iuser(1),
-     * iwork(liwork)
-
-      open (nin,file='NLP_test.dat',status='old')
-
-      read (nin,*) 
-      read (nin,*) n, nclin, ncnln
-      if (n.le.nmax.and.nclin.le.nclmax.and.ncnln.le.ncnmax) then
-c
-c read a, bl, bu and x from data file
-c
-      if (nclin.gt.0) read (nin,*) ((a(i,j),j=1,n),i=1,nclin)
-      read (nin,*) (bl(i),i=1,n+nclin+ncnln)
-      read (nin,*) (bu(i),i=1,n+nclin+ncnln)
-      read (nin,*) (x(i),i=1,n)
-c
-c solve the problem
-c
-      ifail = -1
-
-      CALL E04UEF ('derivative level = 0')
-
-      call e04ucf(n,nclin,ncnln,lda,ldcj,ldr,a,bl,bu,confun,objfun,
-     * iter,istate,c,cjac,clamda,objf,objgrd,r,x,iwork,
-     * liwork,work,lwork,iuser,user,ifail)
-c
-      end if
-      stop
-      end
-
-      subroutine objfun (mode,n,x,objf,objgrd,nstate,iuser,user)
-c----------------------------------------------------------------------
-c routine to evaluate objective function and its 1st derivatives.
-c----------------------------------------------------------------------
-      double precision one, two
-      parameter (one=1.0e0,two=2.0e0)
-      double precision objf
-      integer mode, n, nstate
-      double precision objgrd(n), user(*), x(n)
-      integer iuser(*)
-
-      if (mode.eq.0.or.mode.eq.2) objf = x(1)*x(4)*(x(1)+x(2)+x(3)) +
-     * x(3)
-
-      if (mode.eq.1.or.mode.eq.2) then
-      objgrd(1) = x(4)*(two*x(1)+x(2)+x(3))
-      objgrd(2) = x(1)*x(4)
-      objgrd(3) = x(1)*x(4) + one
-      objgrd(4) = x(1)*(x(1)+x(2)+x(3))
-      end if
-
-      end
-c
-      subroutine confun(mode,ncnln,n,ldcj,needc,x,c,cjac,nstate,iuser,
-     * user)
-c routine to evaluate the nonlinear constraints and their 1st
-c derivatives.
-
-      double precision zero, two
-      parameter (zero=0.0e0,two=2.0e0)
-
-      integer ldcj, mode, n, ncnln, nstate
-
-      double precision c(*), cjac(ldcj,*), user(*), x(n)
-
-      integer iuser(*), needc(*)
-
-      integer i, j
-
-      if (nstate.eq.1) then
-c first call to confun. set all jacobian elements to zero.
-c note that this will only work when ’derivative level = 3’
-c (the default; see section 11.2).
-      do 40 j = 1, n
-      do 20 i = 1, ncnln
-      cjac(i,j) = zero
-20    continue
- 40   continue
-      end if
-c
-      if (needc(1).gt.0) then
-      if (mode.eq.0.or.mode.eq.2) c(1) = x(1)**2 + x(2)**2 + x(3)
-     * **2 + x(4)**2
-      if (mode.eq.1.or.mode.eq.2) then
-      cjac(1,1) = two*x(1)
-      cjac(1,2) = two*x(2)
-      cjac(1,3) = two*x(3)
-      cjac(1,4) = two*x(4)
-      end if
-      end if
-c
-      if (needc(2).gt.0) then
-      if (mode.eq.0.or.mode.eq.2) c(2) = x(1)*x(2)*x(3)*x(4)
-      if (mode.eq.1.or.mode.eq.2) then
-      cjac(2,1) = x(2)*x(3)*x(4)
-      cjac(2,2) = x(1)*x(3)*x(4)
-      cjac(2,3) = x(1)*x(2)*x(4)
-      cjac(2,4) = x(1)*x(2)*x(3)
-      end if
-      end if
-
-      end
-
-      subroutine e04ucf(n,nclin,ncnln,lda,ldcju,ldr,a,bl,bu,confun,
-     *                  objfun,iter,istate,c,cjacu,clamda,objf,gradu,r,
+      subroutine e04ucf(n,nclin,lda,ldr,a,bl,bu,
+     *                  objfun,iter,istate,clamda,objf,gradu,r,
      *                  x,iw,leniw,w,lenw,iuser,user,ifail)
 
 c     n        the number of variables (dimension of  x)
 c     nclin    the number of linear constraints (rows of the matrix  a)
-c     ncnln    the number of nonlinear constraints (dimension of  c(x))
 c     lda      leading dimension of a
-c     ldcju    leading dimension of cjac
 c     ldr      dimension of r
 c     a        linear constraint matrix
 c     bl       lower bounds on variables, linear constraints, non-linear constraints
 c     bu       upper bounds, check bigbnd, -bigbnd
-c     confun   computes non-linear constraints
 c     objfun   computes objective function
 c     iter     output, number of major iterations
 c     istate   output (cold start), constraint state (-2 violated lower, 
 c              -1 violated upper, 0 inactive, 1 lower, 2 upper, 3 equality)
-c              n+nclin+ncnln
-c     c        values of the c non-linear constraints
-c     cjacu    jacobian of c, ldcju x n (or 1)
-c     clamda   output (cold start), lagrangian multipliers, n+nclin+ncnln
+c              n+nclin
+c     clamda   output (cold start), lagrangian multipliers, n+nclin
 c     objf     output, value of objfun
 c     gradu    output, grad objfun
 c     r        output (cold start), upper triangular cholesky factor of r
@@ -182,6 +53,7 @@ c     positive-definite quasi-newton approximation to the transformed
 c     hessian  q'hq  of the lagrangian function (which will be stored in
 c     the array  r).
 
+      implicit none 
 
       character*6       srname
       parameter (srname='e04ucf')
@@ -191,8 +63,7 @@ c     the array  r).
       parameter (lenls=20)
       integer lennp
       parameter (lennp=35)
-      integer ldbg
-      parameter (ldbg=5)
+
       double precision zero, point3, point8
       parameter (zero=0.0d+0,point3=3.3d-1,point8=0.8d+0)
       double precision point9, one
@@ -201,15 +72,15 @@ c     the array  r).
       parameter (growth=1.0d+2)
 
       double precision objf
-      integer ifail, iter, lda, ldcju, ldr, leniw, lenw, n,
-     *                  nclin, ncnln
+      integer ifail, iter, lda, ldr, leniw, lenw, n,
+     *                  nclin
 
-      double precision a(lda,*), bl(n+nclin+ncnln), bu(n+nclin+ncnln),
-     *                  c(*), cjacu(ldcju,*), clamda(n+nclin+ncnln),
+      double precision a(lda,*), bl(n+nclin), bu(n+nclin),
+     *                  clamda(n+nclin),
      *                  gradu(n), r(ldr,*), user(*), w(lenw), x(n)
-      integer istate(n+nclin+ncnln), iuser(*), iw(leniw)
+      integer istate(n+nclin), iuser(*), iw(leniw)
 
-      external          confun, objfun
+      external objfun
 
       double precision asize, bigbnd, bigdx, bndlow, bndupp, cdint,
      *                  ctol, drmax, drmin, dtmax, dtmin, dxlim, epspt3,
@@ -219,7 +90,7 @@ c     the array  r).
       integer idbgls, idbgnp, iprint, iprnt, isumm, isumry,
      *                  itmax1, itmax2, itmxnp, jvrfy1, jvrfy2, jvrfy3,
      *                  jvrfy4, ksave, lcrash, ldbgls, ldbgnp, ldq, ldt,
-     *                  lennam, lfdset, lformh, lines1, lines2, lprob,
+     *                  lfdset, lformh, lines1, lines2, lprob,
      *                  lverfy, lvlder, lvldif, lvrfyc, msgls, msgnp,
      *                  nactiv, ncdiff, ncolt, nfdiff, nfree, nlnf,
      *                  nlnj, nlnx, nload, nn, nnclin, nncnln, nout,
@@ -228,7 +99,7 @@ c     the array  r).
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
      *                  rpsvnp(mxparm), wmach
-      integer icmdbg(ldbg), ilsdbg(ldbg), inpdbg(ldbg),
+      integer icmdbg(5), ilsdbg(5), inpdbg(5),
      *                  ipadls(18), ipadnp(12), ipsvls(mxparm),
      *                  ipsvnp(mxparm), jverfy(4), locls(lenls),
      *                  locnp(lennp)
@@ -267,7 +138,7 @@ c     .. intrinsic functions ..
       common            /ae04nc/locls
       common            /ae04uc/locnp
       common/ cstmch /wmach(9)
-      common            /be04nb/lennam, ldt, ncolt, ldq
+      common/ be04nb /ldt, ncolt, ldq
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04nc/ilsdbg, lsdbg
@@ -315,19 +186,21 @@ c     default names will be provided for variables during printing.
 c
       named = .false.
       inform = 0
+c                                 print flags
+      msgnp = 0
+      msgqp = 0 
 c
 c     set the default values for the parameters.
 c
-      call e04ucx(n,nclin,ncnln,title)
+      call e04ucx(n,nclin,title)
 c
-      needfd = lvlder .eq. 0.or.lvlder .eq. 2 .or.
-     *         (lvlder.eq.1.and.ncnln.gt.0)
+      needfd = lvlder .eq. 0.or.lvlder .eq. 2
       cold = lcrash .eq. 0
       lvldif = 0
       if (needfd) lvldif = 1
 c
       nplin = n + nclin
-      nctotl = nplin + ncnln
+      nctotl = nplin
 c
 c     assign the dimensions of arrays in the parameter list of e04ucz.
 c     economies of storage are possible if the minimum number of active
@@ -342,7 +215,7 @@ c
       maxact = max(1,min(n,nclin))
       maxnz = n - (minfxd+minact)
 c
-      if (nclin+ncnln.eq.0) then
+      if (nclin.eq.0) then
          ldq = 1
          ldt = 1
          ncolt = 1
@@ -352,19 +225,18 @@ c
          ncolt = mxfree
       end if
 
-      lennam = 1
       m = 1
       ldfju = 2
 
-      ldaqp = max(nclin+ncnln,1)
-      if (ncnln.eq.0.and.nclin.gt.0) ldaqp = lda
+      ldaqp = max(nclin,1)
+      if (nclin.gt.0) ldaqp = lda
 
 c     e04ucp  defines the arrays that contain the locations of various
 c     work arrays within  w  and  iw.
 
       litotl = 0
       lwtotl = 0
-      call e04ucp(n,nclin,ncnln,nctotl,litotl,lwtotl)
+      call e04ucp(n,nclin,nctotl,litotl,lwtotl)
 
 c     allocate certain addresses that are not allocated in e04ucp.
 
@@ -375,8 +247,8 @@ c     allocate certain addresses that are not allocated in e04ucp.
 c     check input parameters and storage limits.
 
       call e04nbz(nerror,msgnp,lcrash,leniw,lenw,litotl,lwtotl,n,nclin,
-     *            ncnln,istate,iw,named,names,bigbnd,bl,bu,x,m,lda,ldr,
-     *            ldcju,ldfju,nerr,ifail)
+     *            istate,iw,named,names,bigbnd,bl,bu,x,m,lda,ldr,
+     *            ldfju,nerr,ifail)
 
       if (nerror.gt.0) then
          inform = 9
@@ -411,17 +283,19 @@ c
       lcjac = locnp(27)
       lgrad = locnp(28)
 c
-      ldcj = max(ncnln,1)
+      ldcj = 1
 c
       tolrnk = zero
       rcndbd = dsqrt(hcndbd)
+c                                 print flags
+      msgnp = 0
+      msgqp = 0 
 
 c     load the arrays of feasibility tolerances.
 
       if (tolfea.gt.zero) call sload (nplin,tolfea,w(lfeatl),1)
 
-      if (ncnln.gt.0.and.ctol.gt.zero) call sload (ncnln,ctol,
-     *    w(lfeatl+nplin),1)
+
 
       if (lfdset.eq.0) then
          fdchk = dsqrt(epsrf)
@@ -445,10 +319,10 @@ c     the jacobian (with constant elements set) is placed in  cjacu.
          xnorm = dnrm2(n,x,1)
          lvrfyc = lverfy - 10
 
-         call e04ucy(info,msgnp,nstate,lvlder,nfun,ngrad,ldcj,ldcju,n,
-     *               ncnln,confun,objfun,iw(lneedc),bigbnd,epsrf,cdint,
-     *               fdint,fdchk,fdnorm,objf,xnorm,bl,bu,c,w(lwrk3),
-     *               w(lcjac),cjacu,w(lcjdx),w(ldx),w(lgrad),gradu,
+         call e04ucy(info,msgnp,nstate,lvlder,nfun,ngrad,n,
+     *               objfun,iw(lneedc),bigbnd,epsrf,cdint,
+     *               fdint,fdchk,fdnorm,objf,xnorm,bl,bu,
+     *               w(ldx),w(lgrad),gradu,
      *               w(lhfrwd),w(lhctrl),x,w(lwrk1),w(lwrk2),w,lenw,
      *               iuser,user)
 
@@ -461,7 +335,7 @@ c     the jacobian (with constant elements set) is placed in  cjacu.
 
       end if
 
-      call icopy (ldbg,ilsdbg,1,icmdbg,1)
+      call icopy (5,ilsdbg,1,icmdbg,1)
 
       if (nclin.gt.0) then
          ianrmj = lanorm
@@ -508,23 +382,22 @@ c        of an approximate lagrangian hessian.
             rfrobn = rootn
 
             nrank = 0
-            if (ncnln.gt.0) call sload (ncnln,(zero),w(lcmul),1)
+
          else
 
 c           r will be updated while finding a feasible x.
 
             nrank = nlnx
             call sload (nlnx,(zero),w(lres0),1)
-            if (ncnln.gt.0) call dcopy (ncnln,clamda(nplin+1),1,w(lcmul)
-     *                                  ,1)
-c
+
          end if
 c
          incrun = .true.
          rhonrm = zero
          rhodmp = one
          scale = one
-         call sload (ncnln,(zero),w(lrho),1)
+c ncnln
+         call sload (0,(zero),w(lrho),1)
 c
 
 c        re-order kx so that the free variables come first.
@@ -591,7 +464,7 @@ c        find a feasible point.
          end if
 
          idbg = idbgsv
-         call icopy(ldbg,inpdbg,1,icmdbg,1)
+         call icopy(5,inpdbg,1,icmdbg,1)
 
       end if
 
@@ -622,10 +495,10 @@ c     now we can check the gradients at a feasible x.
       lvrfyc = lverfy
       if (lverfy.ge.10) lvrfyc = -1
 
-      call e04ucy (info,msgnp,nstate,lvlder,nfun,ngrad,ldcj,ldcju,n,
-     *            ncnln,confun,objfun,iw(lneedc),bigbnd,epsrf,cdint,
-     *            fdint,fdchk,fdnorm,objf,xnorm,bl,bu,c,w(lwrk3),
-     *            w(lcjac),cjacu,w(lcjdx),w(ldx),w(lgrad),gradu,
+      call e04ucy (info,msgnp,nstate,lvlder,nfun,ngrad,n,
+     *            objfun,iw(lneedc),bigbnd,epsrf,cdint,
+     *            fdint,fdchk,fdnorm,objf,xnorm,bl,bu,
+     *            w(ldx),w(lgrad),gradu,
      *            w(lhfrwd),w(lhctrl),x,w(lwrk1),w(lwrk2),w,lenw,iuser,
      *            user)
 
@@ -640,11 +513,12 @@ c     now we can check the gradients at a feasible x.
 
 c     solve the problem.
 
+      iuser(2) = 1
 
-         call e04ucz (named,names,unitq,inform,iter,n,nclin,ncnln,nctotl
-     *               ,nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,nfun,ngrad,
-     *               istate,iw(lkactv),iw(lkx),objf,fdnorm,xnorm,confun,
-     *               objfun,a,w(lax),bl,bu,c,w(lcjac),cjacu,clamda,
+         call e04ucz (named,names,unitq,inform,iter,n,nclin,nctotl
+     *               ,nactiv,nfree,nz,ldaqp,ldr,nfun,ngrad,
+     *               istate,iw(lkactv),iw(lkx),objf,fdnorm,xnorm,
+     *               objfun,a,w(lax),bl,bu,clamda,
      *               w(lfeatl),w(lgrad),gradu,r,x,iw,w,lenw,iuser,user)
 
 
@@ -706,12 +580,10 @@ c     recover the optional parameters set by the user.
       call dcopy(mxparm,rpsvnp,1,rprmnp,1)
 
       if (inform.lt.9) then
-         if (ncnln.gt.0) call smcopy('general',ncnln,n,w(lcjac),ldcj,
-     *                               cjacu,ldcju)
          call dcopy(n,w(lgrad),1,gradu,1)
       end if
-
-      if (inform.ne.0.and.(ifail.eq.0.or.ifail.eq.-1)) then
+c     if (msgnp.gt.0) then
+         if (inform.ne.0.and.(ifail.eq.0.or.ifail.eq.-1)) then
          if (inform.lt.0) write (rec,fmt=99985)
          if (inform.eq.1) write (rec,fmt=99984)
          if (inform.eq.2) write (rec,fmt=99983)
@@ -721,8 +593,11 @@ c     recover the optional parameters set by the user.
          if (inform.eq.7) write (rec,fmt=99979)
          if (inform.eq.9) write (rec,fmt=99978) nerror
          call x04bay(nerr,2,rec)
-      end if
-      ifail = p01abf(ifail,inform,srname,0,rec)
+         end if
+ 
+         ifail = p01abf(ifail,inform,srname,0,rec)
+c     end if
+
       return
 c
 c     end of  e04ucf. (npsol)
@@ -758,13 +633,13 @@ c
       end
 
 
-      subroutine e04ucx(n,nclin,ncnln,title)
+      subroutine e04ucx(n,nclin,title)
 
 c     e04ucx  loads the default values of parameters not set in the
 c     options file.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       integer mxparm
       parameter (mxparm=30)
       double precision zero, one
@@ -782,7 +657,7 @@ c     options file.
       parameter (gigant=1.0d+20*0.99999d+0)
       double precision wrktol
       parameter (wrktol=1.0d-2)
-      integer n, nclin, ncnln
+      integer n, nclin
       character*(*)     title
       double precision bigbnd, bigdx, bndlow, bndupp, cdint, ctol,
      *                  dxlim, epspt3, epspt5, epspt8, epspt9, epsrf,
@@ -798,7 +673,7 @@ c     options file.
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
      *                  rpsvnp(mxparm), wmach
-      integer icmdbg(ldbg), ilsdbg(ldbg), inpdbg(ldbg),
+      integer icmdbg(5), ilsdbg(5), inpdbg(5),
      *                  ipadls(18), ipadnp(12), ipsvls(mxparm),
      *                  ipsvnp(mxparm), jverfy(4)
 
@@ -850,7 +725,7 @@ c
       condbd = max(one/(hundrd*epsmch*dble(n)),tenp6)
 c
       nplin = n + nclin
-      nctotl = nplin + ncnln
+      nctotl = nplin
 
 c     make a dummy call e04ucq to ensure that the defaults are set.
 
@@ -876,7 +751,7 @@ c
       if (lvlder.lt.0.or.lvlder.gt.3) lvlder = 3
       if (lformh.lt.0.or.lformh.gt.1) lformh = 0
 c
-      if (nmajor.lt.0) nmajor = max(50,3*nplin+10*ncnln)
+      if (nmajor.lt.0) nmajor = max(50,3*nplin)
       if (nminor.lt.1) nminor = max(50,3*nctotl)
       if (mjrdbg.lt.0) mjrdbg = 0
       if (mnrdbg.lt.0) mnrdbg = 0
@@ -920,7 +795,7 @@ c
       if (lvlder.lt.2) dctol = epspt3
       if (ctol.lt.epsmch.or.ctol.ge.one) ctol = dctol
 c
-      itmax1 = max(50,3*(n+nclin+ncnln))
+      itmax1 = max(50,3*(n+nclin))
       jverfy(1) = jvrfy1
       jverfy(2) = jvrfy2
       jverfy(3) = jvrfy3
@@ -933,7 +808,7 @@ c
       k = 1
       msg1 = mjrdbg
       msg2 = mnrdbg
-      do 20 i = 1, ldbg
+      do 20 i = 1, 5
          inpdbg(i) = mod(msg1/k,10)
          icmdbg(i) = inpdbg(i)
          ilsdbg(i) = mod(msg2/k,10)
@@ -957,17 +832,14 @@ c
             write (rec,fmt=99997) bigbnd, icrsh(lcrash), bigdx, epsmch,
      *        dxlim, chess(lformh)
             call x04bay(iprint,4,rec)
-            write (rec,fmt=99996) ncnln, ctol, nlnf, ftol, nlnj, eta
+            write (rec,fmt=99996) 0, ctol, nlnf, ftol, nlnj, eta
             call x04bay(iprint,4,rec)
             write (rec,fmt=99995) lvlder, epsrf, lverfy, isumry
             call x04bay(iprint,3,rec)
             if (lverfy.gt.0) then
                write (rec,fmt=99994) jvrfy1, jvrfy2
                call x04bay(iprint,2,rec)
-               if (ncnln.gt.0) then
-                  write (rec,fmt=99993) jvrfy3, jvrfy4
-                  call x04baf(iprint,rec(1))
-               end if
+
             end if
             write (rec,fmt=99992) nmajor, msgnp, nminor, msgqp
             call x04bay(iprint,3,rec)
@@ -1028,24 +900,24 @@ c     end of  e04ucx. (npdflt)
 99987 format (/11a1,' monitoring information ')
       end
 
-      subroutine e04ucp(n,nclin,ncnln,nctotl,litotl,lwtotl)
+      subroutine e04ucp(n,nclin,nctotl,litotl,lwtotl)
 
 c     e04ucp   allocates the addresses of the work arrays for e04ucz and
 c     e04ncz.
+
+      implicit none
 
       integer lenls
       parameter (lenls=20)
       integer lennp
       parameter (lennp=35)
-      integer ldbg
-      parameter (ldbg=5)
 
-      integer litotl, lwtotl, n, nclin, ncnln, nctotl
+      integer litotl, lwtotl, n, nclin, nctotl
 
-      integer ldt, ldzy, lennam, ncolt
+      integer ldt, ldzy, ncolt
       logical           npdbg
 
-      integer inpdbg(ldbg), locls(lenls), locnp(lennp)
+      integer inpdbg(5), locls(lenls), locnp(lennp)
 
       integer ladx, lanorm, laqp, lbl, lbu, lc1mul, lcjac,
      *                  lcjdx, lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
@@ -1057,7 +929,7 @@ c     e04ncz.
 
       common            /ae04nc/locls
       common            /ae04uc/locnp
-      common            /be04nb/lennam, ldt, ncolt, ldzy
+      common/ be04nb /ldt, ncolt, ldzy
       common            /fe04uc/inpdbg, npdbg
 
       miniw = litotl + 1
@@ -1065,30 +937,27 @@ c     e04ncz.
 
 c     assign array lengths that depend upon the problem dimensions.
 
-      if (nclin+ncnln.eq.0) then
+      if (nclin.eq.0) then
          lent = 0
          lenzy = 0
       else
          lent = ldt*ncolt
          lenzy = ldzy*ldzy
       end if
-c
-      if (ncnln.eq.0) then
-         lenaqp = 0
-      else
-         lenaqp = (nclin+ncnln)*n
-      end if
+
+      lenaqp = 0
+
 c
       lkactv = miniw
       lkx = lkactv + n
       lneedc = lkx + n
-      liperm = lneedc + ncnln
+      liperm = lneedc
       miniw = liperm + nctotl
 c
       lhfrwd = minw
       lhctrl = lhfrwd + n
       lanorm = lhctrl + n
-      lqpgq = lanorm + nclin + ncnln
+      lqpgq = lanorm + nclin 
       lgq = lqpgq + n
       lrlam = lgq + n
       lt = lrlam + n
@@ -1106,7 +975,7 @@ c
 c     assign the addresses for the workspace arrays used by  e04ucu.
 
       lqpadx = minw
-      lqpdx = lqpadx + nclin + ncnln
+      lqpdx = lqpadx + nclin 
       lrpq = lqpdx + n
       lrpq0 = lrpq + n
       lqphz = lrpq0 + n
@@ -1128,7 +997,7 @@ c     assign the addresses for arrays used in e04ucz.
 
       laqp = minw
       ladx = laqp + lenaqp
-      lbl = ladx + nclin + ncnln
+      lbl = ladx + nclin 
       lbu = lbl + nctotl
       ldx = lbu + nctotl
       lgq1 = ldx + n
@@ -1150,17 +1019,17 @@ c
       locnp(12) = lwrk2
 c
       lcs1 = minw
-      lcs2 = lcs1 + ncnln
-      lc1mul = lcs2 + ncnln
-      lcmul = lc1mul + ncnln
-      lcjdx = lcmul + ncnln
-      ldlam = lcjdx + ncnln
-      ldslk = ldlam + ncnln
-      lrho = ldslk + ncnln
-      lwrk3 = lrho + ncnln
-      lslk1 = lwrk3 + ncnln
-      lslk = lslk1 + ncnln
-      minw = lslk + ncnln
+      lcs2 = lcs1
+      lc1mul = lcs2 
+      lcmul = lc1mul 
+      lcjdx = lcmul
+      ldlam = lcjdx 
+      ldslk = ldlam 
+      lrho = ldslk 
+      lwrk3 = lrho 
+      lslk1 = lwrk3 
+      lslk = lslk1 
+      minw = lslk 
 c
       locnp(13) = lcs1
       locnp(14) = lcs2
@@ -1176,7 +1045,7 @@ c
       locnp(24) = lneedc
 c
       lcjac = minw
-      lgrad = lcjac + ncnln*n
+      lgrad = lcjac 
       minw = lgrad + n
 c
       locnp(25) = lhfrwd
@@ -1192,18 +1061,19 @@ c     end of  e04ucp. (nploc)
       end
 
       subroutine e04nbz(nerror,msglvl,lcrash,liwork,lwork,litotl,lwtotl,
-     *                  n,nclin,ncnln,istate,kx,named,names,bigbnd,bl,
-     *                  bu,x,m,lda,ldr,ldcj,ldfj,nerr,ifail)
+     *                  n,nclin,istate,kx,named,names,bigbnd,bl,
+     *                  bu,x,m,lda,ldr,ldfj,nerr,ifail)
 
 c     e04nbz   checks the input data for e04ucf and e04upf.
+      implicit none
 
       double precision bigbnd
-      integer ifail, lcrash, lda, ldcj, ldfj, ldr, litotl,
+      integer ifail, lcrash, lda, ldfj, ldr, litotl,
      *                  liwork, lwork, lwtotl, m, msglvl, n, nclin,
-     *                  ncnln, nerr, nerror
+     *                  nerr, nerror
       logical           named
-      double precision bl(n+nclin+ncnln), bu(n+nclin+ncnln), x(n)
-      integer istate(n+nclin+ncnln), kx(n)
+      double precision bl(n+nclin), bu(n+nclin), x(n)
+      integer istate(n+nclin), kx(n)
       character*8       names(*)
       integer iprint, isumm, lines1, lines2, nout
       double precision b1, b2
@@ -1245,23 +1115,6 @@ c     check  n.
 
 c     check  nclin and ncnln.
 
-      if (nclin.lt.0.or.ncnln.lt.0) then
-         if (nclin.lt.0) then
-            nerror = nerror + 1
-            if (ifail.eq.0.or.ifail.eq.-1) then
-               write (rec,fmt=99995) nclin
-               call x04bay(nerr,3,rec)
-            end if
-         end if
-
-         if (ncnln.lt.0) then
-            nerror = nerror + 1
-            if (ifail.eq.0.or.ifail.eq.-1) then
-               write (rec,fmt=99994) ncnln
-               call x04bay(nerr,3,rec)
-            end if
-         end if
-      end if
 
 
 c     check  lda.
@@ -1273,17 +1126,7 @@ c     check  lda.
             call x04bay(nerr,3,rec)
          end if
       end if
-c
 
-c     check  ldcj.
-
-      if (ldcj.lt.max(1,ncnln)) then
-         nerror = nerror + 1
-         if (ifail.eq.0.or.ifail.eq.-1) then
-            write (rec,fmt=99992) ldcj, ncnln
-            call x04bay(nerr,3,rec)
-         end if
-      end if
 
 
 c     check  ldfj.
@@ -1329,7 +1172,7 @@ c     check if there is enough workspace to solve the problem.
 
 c        check the bounds on all variables and constraints.
 
-         do 20 j = 1, n + nclin + ncnln
+         do 20 j = 1, n + nclin
             b1 = bl(j)
             b2 = bu(j)
             ok = b1 .lt. b2.or.(b1.eq.b2.and.abs(b1).lt.bigbnd)
@@ -1377,7 +1220,7 @@ c        check the bounds on all variables and constraints.
 c        if warm start, check  istate.
 
          if (lcrash.eq.1) then
-            do 40 j = 1, n + nclin + ncnln
+            do 40 j = 1, n + nclin
                is = istate(j)
                ok = is .ge. (-2).and.is .le. 4
                if (.not. ok) then
@@ -1712,16 +1555,6 @@ c
             end if
          else if (key.eq.'monitoring  ') then
             isumry = rvalue
-         else if (key.eq.'nonlinear   ') then
-            if (key2.eq.'constraints ') nncnln = rvalue
-            if (key2.eq.'feasibility ') ctol = rvalue
-            if (key2.eq.'jacobian    ') nlnj = rvalue
-            if (key2.eq.'objective   ') nlnf = rvalue
-            if (key2.eq.'variables   ') nlnx = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
          else if (key.eq.'optimality  ') then
             ftol = rvalue
          else
@@ -2261,10 +2094,10 @@ c
 c     end of e04udy.  (cmlook/oplook)
       end
 
-      subroutine e04ucy(inform,msgnp,nstate,lvlder,nfun,ngrad,ldcj,
-     *                  ldcju,n,ncnln,confun,objfun,needc,bigbnd,epsrf,
-     *                  cdint,fdint,fdchk,fdnorm,objf,xnorm,bl,bu,c,c1,
-     *                  cjac,cjacu,cjdx,dx,grad,gradu,hforwd,hcntrl,x,
+      subroutine e04ucy(inform,msgnp,nstate,lvlder,nfun,ngrad,
+     *                  n,objfun,needc,bigbnd,epsrf,
+     *                  cdint,fdint,fdchk,fdnorm,objf,xnorm,bl,bu,
+     *                  dx,grad,gradu,hforwd,hcntrl,x,
      *                  wrk1,wrk2,w,lenw,iuser,user)
 
 
@@ -2281,16 +2114,16 @@ c     (6)  computes the missing gradient elements.
 
       double precision bigbnd, cdint, epsrf, fdchk, fdint, fdnorm,
      *                  objf, xnorm
-      integer inform, ldcj, ldcju, lenw, lvlder, msgnp, n,
-     *                  ncnln, nfun, ngrad, nstate
+      integer inform, lenw, lvlder, msgnp, n,
+     *                 nfun, ngrad, nstate
 
-      double precision bl(n), bu(n), c(*), c1(*), cjac(ldcj,*),
-     *                  cjacu(ldcju,*), cjdx(*), dx(n), grad(n),
+      double precision bl(n), bu(n), 
+     *                  dx(n), grad(n),
      *                  gradu(n), hcntrl(*), hforwd(*), user(*),
-     *                  w(lenw), wrk1(n+ncnln), wrk2(n+ncnln), x(n)
+     *                  w(lenw), wrk1(n), wrk2(n), x(n)
       integer iuser(*), needc(*)
 
-      external          confun, objfun
+      external          objfun
 
       double precision epspt3, epspt5, epspt8, epspt9
       integer iprint, isumm, lfdset, lines1, lines2, lvldif,
@@ -2314,73 +2147,22 @@ c
       infoj = 0
       nfdiff = 0
       ncdiff = 0
-      ncset = n*ncnln
-c
-      if (ncnln.gt.0) then
-
-c        compute the constraints and jacobian matrix.
-
-c        if some derivatives are missing, load the jacobian with dummy
-c        values.  any elements left unaltered after the call to confun
-c        must be estimated.  a record of the missing jacobian elements
-c        is stored in  cjacu.
-c
-         needfd = lvlder .eq. 0.or.lvlder .eq. 1
-c
-         if (needfd) call smload('general',ncnln,n,rdummy,rdummy,cjacu,
-     *                           ldcju)
-c
-         call iload(ncnln,(1),needc,1)
-c
-         mode = 2
-         call confun(mode,ncnln,n,ldcju,needc,x,c,cjacu,nstate,iuser,
-     *               user)
-         if (mode.lt.0) go to 80
-c
-         call smcopy('general',ncnln,n,cjacu,ldcju,cjac,ldcj)
-c
-         if (needfd) then
-c
-c           count the number of missing jacobian elements.
-c
-            do 40 j = 1, n
-               do 20 i = 1, ncnln
-                  if (cjacu(i,j).eq.rdummy) ncdiff = ncdiff + 1
-   20          continue
-   40       continue
-c
-            ncset = ncset - ncdiff
-            if (nstate.eq.1) then
-               if (ncdiff.eq.0) then
-                  if (lvlder.eq.0) lvlder = 2
-                  if (lvlder.eq.1) lvlder = 3
-                  if (msgnp.gt.0) then
-                     write (rec,fmt=99999) lvlder
-                     call x04bay(iprint,3,rec)
-                  end if
-               else
-                  if (msgnp.gt.0) then
-                     write (rec,fmt=99998) ncset, n*ncnln, ncdiff
-                     call x04bay(iprint,3,rec)
-                  end if
-               end if
-            end if
-         end if
-      end if
-c
 
 c     repeat the procedure above for the objective function.
 
       needfd = lvlder .eq. 0.or.lvlder .eq. 2
 c
       if (needfd) call sload (n,rdummy,gradu,1)
-c
-      mode = 2
+c                                 output the initial value
+      iuser(2) = 1
+
       call objfun(mode,n,x,objf,gradu,nstate,iuser,user)
-      if (mode.lt.0) go to 80
-c
+c                                 shut off output for derivative
+c                                 evaluation
+      iuser(2) = 0 
+
       call dcopy(n,gradu,1,grad,1)
-c
+
       if (needfd) then
 c
 c        count the number of missing gradient elements.
@@ -2408,58 +2190,39 @@ c
 c
       nfun = nfun + 1
       ngrad = ngrad + 1
-c
 
 c     check whatever gradient elements have been provided.
 
       if (lvrfyc.ge.0) then
-         if (ncset.gt.0) then
-            call e04xaw(mode,lvlder,msgnp,ncset,n,ncnln,ldcj,ldcju,
-     *                  bigbnd,epsrf,epspt3,fdchk,xnorm,confun,needc,bl,
-     *                  bu,c,c1,cjac,cjacu,cjdx,dx,wrk2,x,wrk1,iuser,
-     *                  user)
-            if (mode.lt.0) go to 80
-            infoj = mode
-         end if
-c
-         if (nfdiff.lt.n) then
+
+         if (needfd) then
             call e04xax(mode,msgnp,n,bigbnd,epsrf,epspt3,fdchk,objf,
      *                  xnorm,objfun,bl,bu,grad,gradu,dx,x,wrk1,iuser,
      *                  user)
-            if (mode.lt.0) go to 80
+
             infog = mode
          end if
       end if
-c
-      needfd = ncdiff .gt. 0.or.nfdiff .gt. 0
+
       if (needfd) then
 
 c        compute the missing gradient elements.
 
-         call e04xay(mode,msgnp,lvlder,n,ncnln,ldcj,ldcju,bigbnd,epsrf,
-     *               fdnorm,objf,confun,objfun,needc,bl,bu,c,c1,cjdx,
-     *               cjac,cjacu,grad,gradu,hforwd,hcntrl,x,dx,iuser,
-     *               user)
-c
-         if (mode.lt.0) go to 80
-c
+         call fdinc (mode,msgnp,lvlder,n,bigbnd,epsrf,
+     *               fdnorm,objf,objfun,needc,bl,bu,
+     *               grad,gradu,hforwd,hcntrl,x,dx,iuser,user)
+
          if (lfdset.gt.0) then
             centrl = lvldif .eq. 2
-            call e04uds(centrl,mode,ldcj,ldcju,n,ncnln,bigbnd,cdint,
-     *                  fdint,fdnorm,objf,confun,objfun,needc,bl,bu,c,
-     *                  c1,cjdx,cjac,cjacu,grad,gradu,hforwd,hcntrl,x,w,
+            call evalfd (centrl,mode,n,bigbnd,cdint,
+     *                  fdint,fdnorm,objf,objfun,needc,bl,bu,
+     *                  grad,gradu,hforwd,hcntrl,x,w,
      *                  lenw,iuser,user)
-c
-            if (mode.lt.0) go to 80
+
          end if
       end if
-c
+
       inform = infoj + infog
-      return
-c
-c     the user requested termination.
-c
-   80 inform = mode
 
 c     end of  e04ucy. (npchkd)
 
@@ -2665,410 +2428,6 @@ c     end of  e04udu. (opuppr)
       end
 
 
-      subroutine e04xaw(inform,lvlder,msglvl,ncset,n,ncnln,ldcj,ldcju,
-     *                  bigbnd,epsrf,oktol,fdchk,xnorm,confun,needc,bl,
-     *                  bu,c,c1,cjac,cjacu,cjdx,dx,err,x,y,iuser,user)
-
-c     e04xaw  checks if the gradients of the constraints have been coded
-c     correctly.
-c
-c     on input,  the values of the constraints at the point x are stored
-c     in c.  their corresponding gradients are stored in cjacu.  if any
-c     jacobian element has not been specified,  it will have a dummy
-c     value.  missing values are not checked.
-c
-c     a cheap test is first undertaken by calculating the directional
-c     derivative using two different methods.  if this proves
-c     satisfactory and no further information is desired, e04xaw is
-c     terminated. otherwise, e04xaz is called to give optimal
-c     step-sizes and a central-difference approximation to each
-c     element of the jacobian for which a test is deemed necessary,
-c     either by the program or the user.
-c
-c     lvrfyc has the following meaning...
-c
-c     -1        do not perform any check.
-c     0        do the cheap test only.
-c     2 or 3   do both cheap and full test.
-
-      integer ldbg
-      parameter (ldbg=5)
-      double precision rdummy
-      parameter (rdummy=-11111.0d+0)
-      double precision zero, half, point9
-      parameter (zero=0.0d+0,half=0.5d+0,point9=0.9d+0)
-      double precision one, two, ten
-      parameter (one=1.0d+0,two=2.0d+0,ten=1.0d+1)
-      character*4       lbad, lgood
-      parameter (lbad='bad?',lgood='  ok')
-
-      double precision bigbnd, epsrf, fdchk, oktol, xnorm
-      integer inform, ldcj, ldcju, lvlder, msglvl, n, ncnln,
-     *                  ncset
-
-      double precision bl(n), bu(n), c(*), c1(*), cjac(ldcj,*),
-     *                  cjacu(ldcju,*), cjdx(*), dx(n), err(*), user(*),
-     *                  x(n), y(n)
-      integer iuser(*), needc(*)
-
-      external          confun
-
-      double precision epspt3, epspt5, epspt8, epspt9
-      integer iprint, isumm, lines1, lines2, lvrfyc, nout
-      logical           npdbg
-
-      integer inpdbg(ldbg), jverfy(4)
-
-      double precision biglow, bigupp, cdest, cij, cjdiff, cjsize,
-     *                  colmax, dxj, dxmult, emax, epsaci, errbnd, f1,
-     *                  f2, fdest, h, hopt, hphi, sdest, signh, stepbl,
-     *                  stepbu, xj
-      integer i, imax, info, irow, iter, itmax, j, j3, j4,
-     *                  jcol, mode, ncheck, ncolj, ngood, nstate, nwrong
-      logical           const, debug, done, first, headng, needed, ok
-      character*4       key
-
-      character*18      result(0:4)
-      character*120     rec(4)
-
-      integer idamx1
-      external          idamx1
-
-c     .. intrinsic functions ..
-      intrinsic         abs, max, min, sqrt
-
-      common            /ae04nb/nout, iprint, isumm, lines1, lines2
-      common            /ce04nb/epspt3, epspt5, epspt8, epspt9
-      common            /ce04uc/lvrfyc, jverfy
-      common            /fe04uc/inpdbg, npdbg
-
-      data              result/'                 ', 'constant?      ',
-     *                  'linear or odd?   ', 'too nonlinear?',
-     *                  'small derivative?'/
-
-c
-      inform = 0
-      needed = ncnln .gt. 0.and.lvrfyc .eq. 0.or.lvrfyc .eq. 2 .or.
-     *         lvrfyc .eq. 3
-      if (.not. needed) return
-c
-      if (msglvl.gt.0) then
-         write (rec,fmt=99999)
-         call x04bay(iprint,4,rec)
-      end if
-      debug = npdbg.and.inpdbg(5) .gt. 0
-      nstate = 0
-c
-      biglow = -bigbnd
-      bigupp = bigbnd
-c
-
-c     perform the cheap test.
-
-      h = (one+xnorm)*fdchk
-c
-      if (n.le.100) then
-         dxmult = 0.9
-      else if (n.le.250) then
-         dxmult = 0.99
-      else
-         dxmult = 0.999
-      end if
-c
-      dxj = one/n
-      do 20 j = 1, n
-         dx(j) = dxj
-         dxj = -dxj*dxmult
-   20 continue
-c
-
-c     do not perturb  x(j)  if the  j-th  column contains any
-c     unknown elements.  compute the directional derivative for each
-c     constraint gradient.
-
-      ncheck = 0
-      do 60 j = 1, n
-         do 40 i = 1, ncnln
-            if (cjac(i,j).eq.rdummy) then
-               dx(j) = zero
-               go to 60
-            end if
-   40    continue
-         ncheck = ncheck + 1
-c
-         xj = x(j)
-         stepbl = -one
-         stepbu = one
-         if (bl(j).gt.biglow) stepbl = max(stepbl,bl(j)-xj)
-         if (bu(j).lt.bigupp.and.bu(j).gt.bl(j)) stepbu = min(stepbu,
-     *       bu(j)-xj)
-c
-         if (half*(stepbl+stepbu).lt.zero) then
-            dx(j) = dx(j)*stepbl
-         else
-            dx(j) = dx(j)*stepbu
-         end if
-   60 continue
-c
-      if (ncheck.eq.0) then
-         if (msglvl.gt.0) then
-            write (rec,fmt=99995)
-            call x04bay(iprint,2,rec)
-         end if
-      else
-c
-c        compute  (jacobian)*dx.
-c
-         call dgemv ('n',ncnln,n,one,cjacu,ldcju,dx,zero,cjdx)
-
-
-c        make forward-difference approximation along dx.
-
-         call dcopy (n,x,1,y,1)
-         call daxpy (n,h,dx,1,y,1)
-c
-         call iload(ncnln,(1),needc,1)
-c
-         mode = 0
-         call confun(mode,ncnln,n,ldcju,needc,y,c1,cjacu,nstate,iuser,
-     *               user)
-         if (mode.lt.0) go to 160
-c
-c        set  err = (c1 - c)/h  - jacobian*dx.  this should be small.
-c
-         do 80 i = 1, ncnln
-            err(i) = (c1(i)-c(i))/h - cjdx(i)
-   80    continue
-         imax = idamx1 (ncnln,err)
-         emax = abs(err(imax))/(abs(cjdx(imax))+one)
-c
-         if (msglvl.gt.0) then
-            if (emax.le.oktol) then
-               write (rec,fmt=99998)
-               call x04bay(iprint,2,rec)
-            else
-               write (rec,fmt=99997)
-               call x04bay(iprint,2,rec)
-            end if
-            write (rec,fmt=99996) emax, imax
-            call x04bay(iprint,3,rec)
-         end if
-         if (emax.ge.point9) inform = 1
-      end if
-c
-
-c     element-wise check.
-
-      if (lvrfyc.ge.2) then
-         if (lvlder.eq.3) then
-c
-c           recompute the jacobian to find the non-constant elements.
-c
-            call smload('general',ncnln,n,rdummy,rdummy,cjacu,ldcju)
-c
-            call iload(ncnln,(1),needc,1)
-            nstate = 0
-            mode = 2
-c
-            call confun(mode,ncnln,n,ldcju,needc,x,c1,cjacu,nstate,
-     *                  iuser,user)
-            if (mode.lt.0) go to 160
-c
-         end if
-c
-         call iload(ncnln,(0),needc,1)
-c
-         itmax = 3
-         ncheck = 0
-         nwrong = 0
-         ngood = 0
-         colmax = -one
-         jcol = 0
-         irow = 0
-         mode = 0
-         j3 = jverfy(3)
-         j4 = jverfy(4)
-c
-
-c        loop over each column.
-
-         do 140 j = j3, j4
-c
-            call sload (ncnln,zero,err,1)
-            ncolj = 0
-            headng = .true.
-            xj = x(j)
-c
-            stepbl = biglow
-            stepbu = bigupp
-            if (bl(j).gt.biglow) stepbl = bl(j) - xj
-            if (bu(j).lt.bigupp) stepbu = bu(j) - xj
-c
-            signh = one
-            if (half*(stepbl+stepbu).lt.zero) signh = -one
-c
-            do 120 i = 1, ncnln
-               epsaci = epsrf*(one+abs(c(i)))
-c
-               if (cjacu(i,j).ne.rdummy) then
-c                 ------------------------------------------------------
-c                 check this jacobian element.
-c                 ------------------------------------------------------
-                  ncheck = ncheck + 1
-                  ncolj = ncolj + 1
-                  needc(i) = 1
-c
-                  cij = cjac(i,j)
-                  cjsize = abs(cij)
-c                 ------------------------------------------------------
-c                 find a finite-difference interval by iteration.
-c                 ------------------------------------------------------
-                  iter = 0
-                  hopt = two*(one+abs(xj))*dsqrt(epsrf)
-                  h = ten*hopt*signh
-                  cdest = zero
-                  sdest = zero
-                  first = .true.
-c
-c                 +                repeat
-  100             x(j) = xj + h
-                  call confun(mode,ncnln,n,ldcju,needc,x,c1,cjacu,
-     *                        nstate,iuser,user)
-                  if (mode.lt.0) go to 160
-                  f1 = c1(i)
-c
-                  x(j) = xj + h + h
-                  call confun(mode,ncnln,n,ldcju,needc,x,c1,cjacu,
-     *                        nstate,iuser,user)
-                  if (mode.lt.0) go to 160
-                  f2 = c1(i)
-c
-                  call e04xaz(debug,done,first,epsaci,epsrf,c(i),info,
-     *                        iter,itmax,cdest,fdest,sdest,errbnd,f1,f2,
-     *                        h,hopt,hphi)
-c
-c                 +                until     done
-                  if (.not. done) go to 100
-c
-c                 ------------------------------------------------------
-c                 exit for this element.
-c                 ------------------------------------------------------
-                  cjdiff = cdest
-                  err(i) = abs(cjdiff-cij)/(cjsize+one)
-c
-                  ok = err(i) .le. oktol
-                  if (ok) then
-                     key = lgood
-                     ngood = ngood + 1
-                  else
-                     key = lbad
-                     nwrong = nwrong + 1
-                  end if
-c
-                  if (msglvl.gt.0) then
-                     const = ok.and.info .eq. 1.and.abs(cij)
-     *                       .lt. epspt8
-                     if (.not. const) then
-                        if (headng) then
-                           write (rec,fmt=99994)
-                           call x04bay(iprint,4,rec)
-                           if (ok) then
-                              write (rec,fmt=99993) j, xj, hopt, i, cij,
-     *                          cjdiff, key, iter
-                           else
-                              write (rec,fmt=99992) j, xj, hopt, i, cij,
-     *                          cjdiff, key, iter, result(info)
-                           end if
-                           call x04baf(iprint,rec(1))
-                           headng = .false.
-                        else
-                           if (ok) then
-                              write (rec,fmt=99991) hopt, i, cij,
-     *                          cjdiff, key, iter
-                           else
-                              write (rec,fmt=99990) hopt, i, cij,
-     *                          cjdiff, key, iter, result(info)
-                           end if
-                           call x04baf(iprint,rec(1))
-                        end if
-                     end if
-                  end if
-                  needc(i) = 0
-               end if
-  120       continue
-c
-
-c           finished with this column.
-
-            if (ncolj.gt.0) then
-               imax = idamx1 (ncnln,err)
-               emax = abs(err(imax))
-c
-               if (emax.ge.colmax) then
-                  irow = imax
-                  jcol = j
-                  colmax = emax
-               end if
-            end if
-            x(j) = xj
-c
-  140    continue
-c
-         inform = 0
-         if (colmax.ge.point9) inform = 1
-c
-         if (msglvl.gt.0) then
-            if (ncheck.eq.0) then
-               write (rec,fmt=99986) ncset
-               call x04baf(iprint,rec(1))
-            else
-               if (nwrong.eq.0) then
-                  write (rec,fmt=99989) ngood, ncheck, j3, j4
-               else
-                  write (rec,fmt=99988) nwrong, ncheck, j3, j4
-               end if
-               call x04bay(iprint,3,rec)
-               write (rec,fmt=99987) colmax, irow, jcol
-               call x04bay(iprint,3,rec)
-            end if
-         end if
-c
-      end if
-c
-c     copy  (constants + gradients + dummy values)  back into cjacu.
-c
-      call smcopy('general',ncnln,n,cjac,ldcj,cjacu,ldcju)
-c
-      return
-c
-  160 inform = mode
-      return
-c
-c
-c     end of  e04xaw. (chcjac)
-c
-99999 format (//' verification of the constraint gradients.',/' ------',
-     *       '-----------------------------------')
-99998 format (/' the constraint jacobian seems to be ok.')
-99997 format (/' xxx  the constraint jacobian seems to be incorrect.')
-99996 format (/' the largest relative error was',1p,d12.2,'  in constr',
-     *       'aint',i5,/)
-99995 format (/' every column contains a constant or missing element.')
-99994 format (//' column    x(j)     dx(j)    row    jacobian value   ',
-     *       '   difference approxn  itns',/)
-99993 format (i7,1p,2d10.2,i5,1p,2d18.8,2x,a4,i6)
-99992 format (i7,1p,2d10.2,i5,1p,2d18.8,2x,a4,i6,2x,a18)
-99991 format (17x,1p,d10.2,i5,1p,2d18.8,2x,a4,i6)
-99990 format (17x,1p,d10.2,i5,1p,2d18.8,2x,a4,i6,2x,a18)
-99989 format (/i7,'  constraint jacobian elements out of the',i6,/9x,
-     *       'set in cols',i6,'  through',i6,'  seem to be ok.')
-99988 format (/' xxx  there seem to be',i6,'  incorrect jacobian eleme',
-     *       'nts out of the',i6,/8x,'set in cols',i6,'  through',i6)
-99987 format (/' the largest relative error was',1p,d12.2,'  in row',i5,
-     *       ',  column',i5,/)
-99986 format (' all',i6,'   assigned jacobian elements are constant.')
-      end
-
       subroutine e04xax(inform,msglvl,n,bigbnd,epsrf,oktol,fdchk,objf,
      *                  xnorm,objfun,bl,bu,grad,gradu,dx,x,y,iuser,user)
 
@@ -3083,7 +2442,7 @@ c
 c     a cheap test is first undertaken by calculating the directional
 c     derivative using two different methods. if this proves
 c     satisfactory and no further information is desired, e04xax is
-c     terminated. otherwise, the routine e04xaz is called to give
+c     terminated. otherwise, the routine fdinc1 is called to give
 c     optimal step-sizes and a forward-difference approximation to
 c     each element of the gradient for which a test is deemed
 c     necessary, either by the program or the user.
@@ -3104,8 +2463,7 @@ c     -1        do not perform any check.
 c     0        do the cheap test only.
 c     1 or 3   do both cheap and full test.
 
-      integer ldbg
-      parameter (ldbg=5)
+
       double precision rdummy
       parameter (rdummy=-11111.0d+0)
       double precision zero, half, point9
@@ -3128,7 +2486,7 @@ c     1 or 3   do both cheap and full test.
       integer iprint, isumm, lines1, lines2, lvrfyc, nout
       logical           npdbg
 
-      integer inpdbg(ldbg), jverfy(4)
+      integer inpdbg(5), jverfy(4)
 
       double precision biglow, bigupp, cdest, dxj, dxmult, emax, epsa,
      *                  errbnd, error, f1, f2, fdest, gdiff, gdx, gj,
@@ -3171,7 +2529,7 @@ c
 c
       biglow = -bigbnd
       bigupp = bigbnd
-c
+      iuser(2) = 0
 
 c     perform the cheap test.
 
@@ -3234,7 +2592,6 @@ c     make forward-difference approximation along  p.
 c
       mode = 0
       call objfun(mode,n,y,objf1,gradu,nstate,iuser,user)
-      if (mode.lt.0) go to 100
 c
       gdiff = (objf1-objf)/h
       error = abs(gdiff-gdx)/(abs(gdx)+one)
@@ -3303,13 +2660,11 @@ c
 c              +             repeat
    60          x(j) = xj + h
                call objfun(mode,n,x,f1,gradu,nstate,iuser,user)
-               if (mode.lt.0) go to 100
-c
+
                x(j) = xj + h + h
                call objfun(mode,n,x,f2,gradu,nstate,iuser,user)
-               if (mode.lt.0) go to 100
-c
-               call e04xaz(debug,done,first,epsa,epsrf,objf,info,iter,
+
+               call fdinc1 (done,first,epsa,epsrf,objf,info,iter,
      *                     itmax,cdest,fdest,sdest,errbnd,f1,f2,h,hopt,
      *                     hphi)
 c
@@ -3408,33 +2763,31 @@ c
 99989 format (/' no gradient elements assigned.')
       end
 
-      subroutine e04xay(inform,msglvl,lvlder,n,ncnln,ldcj,ldcju,bigbnd,
-     *                  epsrf,fdnorm,objf,confun,objfun,needc,bl,bu,c,
-     *                  c1,c2,cjac,cjacu,grad,gradu,hforwd,hcntrl,x,y,
+      subroutine fdinc (inform,msglvl,lvlder,n,bigbnd,
+     *                  epsrf,fdnorm,objf,objfun,needc,bl,bu,
+     *                  grad,gradu,hforwd,hcntrl,x,y,
      *                  iuser,user)
 
-c     e04xay  computes difference intervals for the missing gradients of
-c     f(x) and c(x). intervals are computed using a procedure that
+c     computes difference intervals for the missing gradients of
+c     f(x). intervals are computed using a procedure that
 c     usually requires about two function evaluations if the function
 c     is well scaled.  central-difference gradients are obtained as a
 c     by-product of the algorithm.
 c
 c     on entry...
-c     objf and c contain the problem functions at the point x.
-c     an element of cjac or grad not equal to rdummy signifies a known
+c     objf contain the problem functions at the point x.
+c     an element of grad not equal to rdummy signifies a known
 c     gradient value.  such values are not estimated by differencing.
-c     cjacu and gradu have dummy elements in the same positions as
-c     cjac and gradu.
+c     gradu have dummy elements in the same positions as gradu.
 c
 c     on exit...
-c     cjac and grad contain central-difference derivative estimates.
-c     elements of cjacu and gradu are unaltered except for those
+c     grad contain central-difference derivative estimates.
+c     elements of gradu are unaltered except for those
 c     corresponding to constant derivatives, which are given the same
-c     values as cjac or grad.
+c     values as grad.
 
+      implicit none
 
-      integer ldbg
-      parameter (ldbg=5)
       double precision rdummy
       parameter (rdummy=-11111.0d+0)
       double precision factor
@@ -3445,21 +2798,20 @@ c     values as cjac or grad.
       parameter (two=2.0d+0,four=4.0d+0,ten=1.0d+1)
 
       double precision bigbnd, epsrf, fdnorm, objf
-      integer inform, ldcj, ldcju, lvlder, msglvl, n, ncnln
+      integer inform, ldcj, lvlder, msglvl, n
 
-      double precision bl(n), bu(n), c(*), c1(*), c2(*), cjac(ldcj,*),
-     *                  cjacu(ldcju,*), grad(n), gradu(n), hcntrl(*),
+      double precision bl(n), bu(n), grad(n), gradu(n), hcntrl(*),
      *                  hforwd(*), user(*), x(n), y(n)
       integer iuser(*), needc(*)
 
-      external          confun, objfun
+      external          objfun
 
       double precision epspt3, epspt5, epspt8, epspt9
       integer iprint, isumm, lfdset, lines1, lines2, lvldif,
      *                  ncdiff, nfdiff, nout
       logical           npdbg
 
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
 
       double precision biglow, bigupp, cdest, cjdiff, d, dx, epsa,
      *                  errbnd, errmax, errmin, f1, f2, fdest, fx,
@@ -3472,20 +2824,14 @@ c     values as cjac or grad.
 
       character*80      rec(4)
 
-c     .. intrinsic functions ..
-      intrinsic         abs, max, min, sqrt
-
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /fe04uc/inpdbg, npdbg
 
       inform = 0
-      needed = lvlder .eq. 0.or.lvlder .eq. 2.or.lvlder .eq. 1 .and.
-     *         ncnln .gt. 0
-      if (.not. needed) return
-c
-      debug = npdbg.and.inpdbg(5) .gt. 0
+
+
       if (lfdset.eq.0) then
          if (msglvl.gt.0) then
             write (rec,fmt=99999)
@@ -3501,21 +2847,15 @@ c
          headng = .true.
 c
          fdnorm = zero
-c
+         iuser(2) = 0
 
 c        for each column of the jacobian augmented by the transpose of
 c        the objective gradient, rows irow1 thru irow2 are searched for
 c        missing elements.
 
-         irow1 = 1
-         irow2 = ncnln + 1
-         if (lvlder.eq.1) irow2 = ncnln
-         if (lvlder.eq.2) irow1 = ncnln + 1
 c
          biglow = -bigbnd
          bigupp = bigbnd
-c
-         if (ncnln.gt.0) call iload(ncnln,(0),needc,1)
 c
          do 60 j = 1, n
             xj = x(j)
@@ -3537,29 +2877,15 @@ c
             signh = one
             if (half*(stepbl+stepbu).lt.zero) signh = -one
 c
-            do 40 i = irow1, irow2
-c
-               if (i.le.ncnln) then
-                  test = cjacu(i,j)
-               else
                   test = gradu(j)
-               end if
-c
+
                if (test.eq.rdummy) then
 c                 ======================================================
 c                 get the difference interval for this element.
 c                 ======================================================
                   ncolj = ncolj + 1
-c
-                  if (i.le.ncnln) then
-                     needc(i) = 1
-                     fx = c(i)
-                     epsa = epsrf*(one+abs(c(i)))
-                  else
                      fx = objf
                      epsa = epsrf*(one+abs(fx))
-                  end if
-c
 c                 ------------------------------------------------------
 c                 find a finite-difference interval by iteration.
 c                 ------------------------------------------------------
@@ -3570,52 +2896,28 @@ c                 ------------------------------------------------------
                   sdest = zero
                   first = .true.
 c
-c                 +                repeat
    20             x(j) = xj + h
-                  if (i.le.ncnln) then
-                     call confun(mode,ncnln,n,ldcju,needc,x,c1,cjacu,
-     *                           nstate,iuser,user)
-                     if (mode.lt.0) go to 200
-                     f1 = c1(i)
-                  else
                      call objfun(mode,n,x,f1,gradu,nstate,iuser,user)
-                     if (mode.lt.0) go to 200
-                  end if
+
 c
                   x(j) = xj + h + h
-                  if (i.le.ncnln) then
-                     call confun(mode,ncnln,n,ldcju,needc,x,c1,cjacu,
-     *                           nstate,iuser,user)
-                     if (mode.lt.0) go to 200
-                     f2 = c1(i)
-                  else
                      call objfun(mode,n,x,f2,gradu,nstate,iuser,user)
-                     if (mode.lt.0) go to 200
-                  end if
+
 c
-                  call e04xaz(debug,done,first,epsa,epsrf,fx,info,iter,
+                  call fdinc1 (done,first,epsa,epsrf,fx,info,iter,
      *                        itmax,cdest,fdest,sdest,errbnd,f1,f2,h,
      *                        hopt,hphi)
 c
 c                 +                until     done
                   if (.not. done) go to 20
-c
-                  if (i.le.ncnln) then
-                     cjac(i,j) = cdest
-                     if (info.eq.1.or.info.eq.2) then
-                        nccnst = nccnst + 1
-                        ncdiff = ncdiff - 1
-                        cjacu(i,j) = -rdummy
-                     end if
-                  else
+
                      grad(j) = cdest
                      if (info.eq.1.or.info.eq.2) then
                         nfcnst = nfcnst + 1
                         nfdiff = nfdiff - 1
                         gradu(j) = -rdummy
                      end if
-                  end if
-c
+
                   sumsd = sumsd + abs(sdest)
                   sumeps = sumeps + epsa
                   if (hopt.gt.hmax) then
@@ -3629,7 +2931,7 @@ c
 c
                   if (info.eq.0) hcd = max(hcd,hphi)
                end if
-   40       continue
+
 c
             if (ncolj.gt.0) then
                if (hmin.gt.hmax) then
@@ -3685,20 +2987,10 @@ c
                else
                   y(j) = xj + d*stepbu
                end if
-c
                d = factor*d
    80       continue
-c
-            if (ncnln.gt.0) then
-               call iload(ncnln,(1),needc,1)
-               call confun(mode,ncnln,n,ldcju,needc,y,c2,cjacu,nstate,
-     *                     iuser,user)
-               if (mode.lt.0) go to 200
-            end if
-c
+
             call objfun(mode,n,y,objf2,gradu,nstate,iuser,user)
-            if (mode.lt.0) go to 200
-c
 
 c           loop over each of the elements of  x.
 
@@ -3706,45 +2998,13 @@ c           loop over each of the elements of  x.
                yj = y(j)
                dx = half*(x(j)-yj)
                y(j) = yj + dx
-c
-               if (ncnln.gt.0) then
-                  ncolj = 0
-                  do 100 i = 1, ncnln
-                     if (cjacu(i,j).eq.-rdummy) then
-                        needc(i) = 1
-                        ncolj = ncolj + 1
-                     else
-                        needc(i) = 0
-                     end if
-  100             continue
-c
-                  if (ncolj.gt.0) then
-                     call confun(mode,ncnln,n,ldcju,needc,y,c1,cjacu,
-     *                           nstate,iuser,user)
-                     if (mode.lt.0) go to 200
-c
-                     do 120 i = 1, ncnln
-                        if (needc(i).eq.1) then
-                           cjdiff = (c1(i)-c2(i))/dx
-                           if (cjdiff.eq.cjac(i,j)) then
-                              cjacu(i,j) = cjdiff
-                           else
-                              cjacu(i,j) = rdummy
-                              nccnst = nccnst - 1
-                              ncdiff = ncdiff + 1
-                           end if
-                        end if
-  120                continue
-                  end if
-               end if
-c
+
 c              now check the objective gradient element.
-c
+
                if (gradu(j).eq.-rdummy) then
-c
+
                   call objfun(mode,n,y,f1,gradu,nstate,iuser,user)
-                  if (mode.lt.0) go to 200
-c
+
                   gdiff = (f1-objf2)/dx
                   if (gdiff.eq.grad(j)) then
                      gradu(j) = gdiff
@@ -3754,7 +3014,7 @@ c
                      nfcnst = nfcnst - 1
                   end if
                end if
-c
+
                y(j) = yj
   140       continue
 c
@@ -3813,8 +3073,6 @@ c
       end if
 c
       return
-c
-  200 inform = mode
 
 c     end of  e04xay. (chfd)
 
@@ -3833,13 +3091,14 @@ c     end of  e04xay. (chfd)
      *       'ed by ',1p,d10.2)
 99991 format (' xxx  ',i4,'-th central-difference interval ',1p,d10.2,
      *       ' replaced by ',1p,d10.2)
+
       end
 
 
-      subroutine e04xaz(debug,done,first,epsa,epsr,fx,inform,iter,itmax,
-     *                  cdest,fdest,sdest,errbnd,f1,f2,h,hopt,hphi)
+      subroutine fdinc1 (done,first,epsa,epsr,fx,inform,iter,itmax,
+     *                   cdest,fdest,sdest,errbnd,f1,f2,h,hopt,hphi)
 
-c     e04xaz  implements algorithm  fd, the method described in
+c     implements algorithm  fd, the method described in
 c     gill, p.e., murray, w., saunders, m.a., and wright, m. h.,
 c     computing forward-difference intervals for numerical optimization,
 c     siam journal on scientific and statistical computing, vol. 4,
@@ -3855,11 +3114,10 @@ c     respect to an upper or lower bound on x. if x is close to an upper
 c     bound, the trial intervals will be negative. the final interval is
 c     always positive.
 c
-c     e04xaz has been designed to use a reverse communication
+c     fdinc has a reverse communication
 c     control structure, i.e., all evaluations of the function occur
-c     outside this routine. the calling routine repeatedly calls  e04xaz
+c     outside this routine. the calling routine repeatedly calls fdinc1
 c     after computing the indicated function values.
-
 
       double precision bndlo, bndup
       parameter (bndlo=1.0d-3,bndup=1.0d-1)
@@ -3872,7 +3130,7 @@ c     after computing the indicated function values.
       double precision cdest, epsa, epsr, errbnd, f1, f2, fdest, fx, h,
      *                  hopt, hphi, sdest
       integer inform, iter, itmax
-      logical           debug, done, first
+      logical done, first
       integer iprint, isumm, lines1, lines2, nout
       double precision afdmin, cdsave, err1, err2, fdcerr, fdest2,
      *                  fdsave, hsave, oldcd, oldh, oldsd, rho, sdcerr,
@@ -3888,8 +3146,6 @@ c     after computing the indicated function values.
       save              cdsave, fdsave, hsave, oldh, rho, sdsave,
      *                  ce1big, ce2big, te2big
 
-c     explanation of local variables...
-c
 c     bndlo, bndup, and rho control the logic of the routine.
 c     bndlo and bndup are the lower and upper bounds that define an
 c     acceptable value of the bound on the relative condition error in
@@ -3898,10 +3154,7 @@ c
 c     the scalar rho is the factor by which the interval is multiplied
 c     or divided, and also the multiple of the well-scaled interval
 c     that is used as the initial trial interval.
-c
-c     all these values are discussed in the documentation.
 
-c
       iter = iter + 1
 c
 c     compute the forward-,  backward-,  central-  and second-order
@@ -3922,13 +3175,6 @@ c
       afdmin = min(abs(fdest),abs(fdest2))
       fdcerr = adivb (epsa,half*abs(h)*afdmin,overfl)
       sdcerr = adivb (epsa,fourth*abs(sdest)*h*h,overfl)
-c
-      if (debug) then
-         write (rec,fmt=99999) iter, fx, h, f1, fdest, f2, fdest2,
-     *     cdest, sdest, fdcerr, sdcerr
-         call x04bay(iprint,6,rec)
-      end if
-
 
 c     select the correct case.
 
@@ -3997,14 +3243,14 @@ c        to reduce the truncation error.
 c
 c           sdcerr has jumped from being too small to being too
 c           large.  accept the previous value of h.
-c
+
             h = oldh
             sdest = oldsd
             cdest = oldcd
          else
-c
+
 c           test whether fdcerr is sufficiently small.
-c
+
             if (fdcerr.le.bndup) then
                ce1big = .false.
                hsave = h
@@ -4027,7 +3273,6 @@ c
          end if
 c
       end if
-c
 
 c     we have either finished or have a new estimate of h.
 
@@ -4098,17 +3343,6 @@ c
             end if
          end if
       end if
-c
-      if (debug) then
-         write (rec,fmt=99998) ce1big, ce2big, te2big
-         call x04baf(iprint,rec(1))
-         if (done) then
-            write (rec,fmt=99997) inform, hopt, errbnd
-            call x04baf(iprint,rec(1))
-         end if
-      end if
-
-c     end of  e04xaz. (chcore)
 
 99999 format (/' //e04xaz//  itn ',i3,' fx     h',11x,1p,2d16.6,/' //e',
      *       '04xaz//  f1      fdest',14x,1p,2d16.6,/' //e04xaz//  f2 ',
@@ -4118,16 +3352,13 @@ c     end of  e04xaz. (chcore)
 99997 format (' //e04xaz//  inform  hopt    errbnd',i5,1p,2d16.6)
       end
 
-      subroutine e04uds(centrl,inform,ldcj,ldcju,n,ncnln,bigbnd,cdint,
-     *                  fdint,fdnorm,objf,confun,objfun,needc,bl,bu,c,
-     *                  c1,c2,cjac,cjacu,grad,gradu,hforwd,hcntrl,x,w,
+      subroutine evalfd (centrl,inform,n,bigbnd,cdint,
+     *                  fdint,fdnorm,objf,objfun,needc,bl,bu,
+     *                  grad,gradu,hforwd,hcntrl,x,w,
      *                  lenw,iuser,user)
 
-c     e04uds evaluates any missing gradients.
+c evaluates any missing gradients.
 
-
-      integer ldbg
-      parameter (ldbg=5)
       double precision rdummy
       parameter (rdummy=-11111.0d+0)
       double precision zero, half, one
@@ -4135,17 +3366,17 @@ c     e04uds evaluates any missing gradients.
       double precision three, four
       parameter (three=3.0d+0,four=4.0d+0)
       double precision bigbnd, cdint, fdint, fdnorm, objf
-      integer inform, ldcj, ldcju, lenw, n, ncnln
+      integer inform, lenw, n
       logical           centrl
-      double precision bl(n), bu(n), c(*), c1(*), c2(*), cjac(ldcj,*),
-     *                  cjacu(ldcju,*), grad(n), gradu(n), hcntrl(n),
+      double precision bl(n), bu(n), 
+     *                  grad(n), gradu(n), hcntrl(n),
      *                  hforwd(n), user(*), w(lenw), x(n)
       integer iuser(*), needc(*)
-      external          confun, objfun
+      external          objfun
       double precision epspt3, epspt5, epspt8, epspt9
       integer lfdset, lvldif, ncdiff, nfdiff
       logical           npdbg
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
       double precision biglow, bigupp, delta, objf1, objf2, stepbl,
      *                  stepbu, xj
       integer i, j, mode, ncolj, nstate
@@ -4155,7 +3386,7 @@ c     e04uds evaluates any missing gradients.
       common            /fe04uc/inpdbg, npdbg
 
       inform = 0
-c
+      iuser(2) = 0
 
 c     use the pre-assigned difference intervals to approximate the
 c     derivatives.
@@ -4173,19 +3404,8 @@ c
 c
       do 80 j = 1, n
          xj = x(j)
-         ncolj = 0
-         if (ncdiff.gt.0) then
-            do 20 i = 1, ncnln
-               if (cjacu(i,j).eq.rdummy) then
-                  needc(i) = 1
-                  ncolj = ncolj + 1
-               else
-                  needc(i) = 0
-               end if
-   20       continue
-         end if
-c
-         if (ncolj.gt.0.or.gradu(j).eq.rdummy) then
+
+         if (gradu(j).eq.rdummy) then
             stepbl = biglow
             stepbu = bigupp
             if (bl(j).gt.biglow) stepbl = bl(j) - xj
@@ -4210,15 +3430,9 @@ c
             if (half*(stepbl+stepbu).lt.zero) delta = -delta
 c
             x(j) = xj + delta
-            if (ncolj.gt.0) then
-               call confun(mode,ncnln,n,ldcju,needc,x,c1,cjacu,nstate,
-     *                     iuser,user)
-               if (mode.lt.0) go to 100
-            end if
-c
+
             if (gradu(j).eq.rdummy) then
                call objfun(mode,n,x,objf1,gradu,nstate,iuser,user)
-               if (mode.lt.0) go to 100
             end if
 c
             if (centrl) then
@@ -4226,35 +3440,15 @@ c              ---------------------------------------------------------
 c              central differences.
 c              ---------------------------------------------------------
                x(j) = xj + delta + delta
-c
-               if (ncolj.gt.0) then
-                  call confun(mode,ncnln,n,ldcju,needc,x,c2,cjacu,
-     *                        nstate,iuser,user)
-                  if (mode.lt.0) go to 100
-c
-                  do 40 i = 1, ncnln
-                     if (needc(i).eq.1) cjac(i,j) = (four*c1(i)
-     *                   -three*c(i)-c2(i))/(delta+delta)
-   40             continue
-               end if
-c
+
                if (gradu(j).eq.rdummy) then
                   call objfun(mode,n,x,objf2,gradu,nstate,iuser,user)
-                  if (mode.lt.0) go to 100
-c
                   grad(j) = (four*objf1-three*objf-objf2)/(delta+delta)
-c
                end if
             else
 c              ---------------------------------------------------------
 c              forward differences.
 c              ---------------------------------------------------------
-               if (ncolj.gt.0) then
-                  do 60 i = 1, ncnln
-                     if (needc(i).eq.1) cjac(i,j) = (c1(i)-c(i))/delta
-   60             continue
-               end if
-c
                if (gradu(j).eq.rdummy) grad(j) = (objf1-objf)/delta
 c
             end if
@@ -4262,10 +3456,6 @@ c
          x(j) = xj
 c
    80 continue
-c
-      return
-c
-  100 inform = mode
 
 c     end of  e04uds. (npfd)
 
@@ -4495,9 +3685,9 @@ c
       end
 
 
-      subroutine e04ucl(lsumry,unitq,n,ncnln,nfree,nz,ldcj1,ldcj2,ldzy,
-     *                  ldr,kx,alfa,glf1,glf2,qpcurv,cjac1,cjac2,cjdx1,
-     *                  cjdx2,cs1,cs2,gq1,gq2,hpq,rpq,qpmul,r,omega,zy,
+      subroutine e04ucl(lsumry,unitq,n,nfree,nz,ldzy,
+     *                  ldr,kx,alfa,glf1,glf2,qpcurv,
+     *                  cs1,cs2,gq1,gq2,hpq,rpq,qpmul,r,omega,zy,
      *                  wrk1,wrk2)
 
 c     e04ucl  computes the bfgs update for the approximate hessian of
@@ -4514,8 +3704,6 @@ c     times the transformed search direction.  the vectors gq1 and hpq
 c     are not saved.  if the regular bfgs quasi-newton update could not
 c     be performed, the first character of lsumry is loaded with 'm'.
 
-      integer ldbg
-      parameter (ldbg=5)
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
       double precision tolg
@@ -4524,16 +3712,15 @@ c     be performed, the first character of lsumry is loaded with 'm'.
       integer ldcj1, ldcj2, ldr, ldzy, n, ncnln, nfree, nz
       logical           unitq
       character*5       lsumry
-      double precision cjac1(ldcj1,*), cjac2(ldcj2,*), cjdx1(*),
-     *                  cjdx2(*), cs1(*), cs2(*), gq1(n), gq2(n),
+      double precision cs1(*), cs2(*), gq1(n), gq2(n),
      *                  hpq(n), omega(*), qpmul(*), r(ldr,*), rpq(n),
-     *                  wrk1(n+ncnln), wrk2(n), zy(ldzy,*)
+     *                  wrk1(n), wrk2(n), zy(ldzy,*)
       integer kx(n)
       double precision drmax, drmin, rcndbd, rfrobn, rhodmp, rhomax,
      *                  rhonrm, scale
       integer iprint, isumm, lines1, lines2, nout
       logical           incrun, npdbg
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
       double precision beta, curvl, eta, qi, qmax, qnorm, rtgtp, rtyts,
      *                  test, tinycl, trace1, trace2
       integer i, imax, j
@@ -4547,9 +3734,6 @@ c     be performed, the first character of lsumry is loaded with 'm'.
       common            /de04uc/rhomax, rhonrm, rhodmp, scale, incrun
       common            /ee04nb/rcndbd, rfrobn, drmax, drmin
       common            /fe04uc/inpdbg, npdbg
-
-      if (ncnln.gt.0) call sload (ncnln,zero,omega,1)
-
 
 c     set curvl = (g2 - g1)'dx,  the approximate curvature along dx of
 c     the (augmented) lagrangian.  at first, the curvature is not scaled
@@ -4569,68 +3753,6 @@ c     constraints,  no update can be performed.
 
       if (curvl.lt.tinycl) then
          lsumry(1:1) = 'modified bfgs'
-         if (ncnln.gt.0) then
-            qmax = zero
-            do 20 i = 1, ncnln
-               qi = cjdx2(i)*cs2(i) - cjdx1(i)*cs1(i)
-               qmax = max(qmax,qi)
-               if (qi.le.zero) wrk1(i) = zero
-               if (qi.gt.zero) wrk1(i) = qi
-   20       continue
-
-            qnorm = dnrm2 (ncnln,wrk1,1)
-
-            test = max(tinycl-curvl,zero)
-            beta = adivb (qmax*test,qnorm*qnorm,overfl)
-            if (beta.lt.rhomax.and..not. overfl) then
-               lsumry(1:1) = ' '
-               beta = test/(qnorm*qnorm)
-               do 40 i = 1, ncnln
-                  qi = wrk1(i)
-                  omega(i) = beta*qi
-                  curvl = curvl + beta*qi*qi
-   40          continue
-c
-               if (npdbg) then
-                  imax = idamx1 (ncnln,omega)
-                  if (inpdbg(1).gt.0) then
-                     write (rec,fmt=99997) omega(imax)
-                     call x04bay(iprint,3,rec)
-                  end if
-c
-                  if (inpdbg(2).gt.0) then
-                     write (rec,fmt=99996)
-                     call x04bay(iprint,2,rec)
-                     do 60 j = 1, ncnln, 5
-                        write (rec,fmt=99995) (omega(i),i=j,
-     *                    min(j+4,ncnln))
-                        call x04baf(iprint,rec(1))
-   60                continue
-                  end if
-               end if
-            end if
-         end if
-      end if
-c
-
-c     compute the difference in the augmented lagrangian gradient.
-
-c     update gq1 to include the augmented lagrangian terms.
-c
-      if (ncnln.gt.0) then
-c
-         do 80 i = 1, ncnln
-            wrk1(i) = -qpmul(i) + omega(i)*cs1(i)
-   80    continue
-         call dgemv ('t',ncnln,n,one,cjac1,ldcj1,wrk1,zero,wrk2)
-c
-         do 100 i = 1, ncnln
-            wrk1(i) = qpmul(i) - omega(i)*cs2(i)
-  100    continue
-         call dgemv ('t',ncnln,n,one,cjac2,ldcj2,wrk1,one,wrk2)
-c
-         call cmqmul (6,n,nz,nfree,ldzy,unitq,kx,wrk2,zy,wrk1)
-         call daxpy (n,one,wrk2,1,gq1,1)
       end if
 c
       if (npdbg.and.inpdbg(1).gt.0) then
@@ -4695,7 +3817,6 @@ c     end of  e04ucl. (npupdt)
 99995 format (1p,5d15.6)
       end
 
-
       subroutine e04ucm(unitq,ncqp,nactiv,nfree,nz,n,nlnx,nctotl,ldzy,
      *                  ldaqp,ldr,ldt,istate,kactiv,kx,dxnorm,gdx,aqp,
      *                  adx,bl,bu,rpq,rpq0,dx,gq,r,t,zy,work)
@@ -4705,8 +3826,8 @@ c     the qp subproblem.  this routine is similar to e04nch except
 c     that advantage is taken of the fact that the initial estimate of
 c     the solution of the least-squares subproblem is zero.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none 
+
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
       double precision dxnorm, gdx
@@ -4719,7 +3840,7 @@ c     the solution of the least-squares subproblem is zero.
       integer istate(nctotl), kactiv(n), kx(n)
       integer iprint, isumm, lines1, lines2, nout
       logical           npdbg
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
       double precision bnd
       integer i, j, k, nfixed, nr
       character*80      rec(2)
@@ -4817,7 +3938,7 @@ c     end of  e04ucm. (npsetx)
 
 
       subroutine e04nbx(msglvl,nfree,nrowa,n,nclin,nctotl,bigbnd,named,
-     *                  names,nactiv,istate,kactiv,kx,a,bl,bu,c,clamda,
+     *                  names,nactiv,istate,kactiv,kx,a,bl,bu,clamda,
      *                  rlamda,x)
 
 c     e04nbx   creates the expanded lagrange multiplier vector clamda.
@@ -4836,7 +3957,7 @@ c     e04nbx is called by e04ncz, e04ucz and e04upz just before exiting.
       integer msglvl, n, nactiv, nclin, nctotl, nfree, nrowa
       logical           named
 
-      double precision a(nrowa,*), bl(nctotl), bu(nctotl), c(*),
+      double precision a(nrowa,*), bl(nctotl), bu(nctotl),
      *                  clamda(nctotl), rlamda(n), x(n)
       integer istate(nctotl), kactiv(n), kx(n)
       character*8       names(*)
@@ -4867,14 +3988,12 @@ c     e04nbx is called by e04ncz, e04ucz and e04upz just before exiting.
       data              lstate(5)/'ul'/, lstate(6)/'eq'/
       data              lstate(7)/'tf'/
 
-c
-c
       nplin = n + nclin
       nz = nfree - nactiv
-c
+
 c     expand multipliers for bounds, linear and nonlinear constraints
 c     into the  clamda  array.
-c
+
       call sload (nctotl,zero,clamda,1)
       nfixed = n - nfree
       do 20 k = 1, nactiv + nfixed
@@ -4914,19 +4033,7 @@ c           -----------------------------------------
 c
             k = j - n
             v = ddot1 (n,a(k,1),nrowa,x)
-         else
 
-c           section 3 -- the nonlinear constraints  c(x).
-c           ---------------------------------------------
-
-            if (j.eq.nplin+1) then
-               write (rec,fmt=99997)
-               call x04bay(iprint,4,rec)
-               id3 = id(3)
-            end if
-
-            k = j - nplin
-            v = c(k)
          end if
 
 c        print a line for the j-th variable or constraint.
@@ -4994,8 +4101,8 @@ c     e04ncr  computes the following...
 c     (1)  the number of constraints that are violated by more
 c          than  featol  and the 2-norm of the constraint violations.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       double precision zero
       parameter (zero=0.0d+0)
 
@@ -5008,7 +4115,7 @@ c          than  featol  and the 2-norm of the constraint violations.
 
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
       double precision biglow, bigupp, con, feasj, res, tolj
       integer i, is, j
       character*80      rec(2)
@@ -5096,8 +4203,8 @@ c     if a bound was added to the working set,  move x exactly on to it,
 c     except when a negative step was taken (e04ucg may have had to move
 c     to some other closer constraint.)
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none 
+
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
 
@@ -5111,7 +4218,7 @@ c     to some other closer constraint.)
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision bnd
 
@@ -5489,8 +4596,8 @@ c         otherwise,  x  is the solution of the  nrz*nrz  triangular
 c         system   (rz1)*(pz1) = (hz1).
 c     (3) the vector ap,  where a is the matrix of linear constraints.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none 
+
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
 
@@ -5506,7 +4613,7 @@ c     (3) the vector ap,  where a is the matrix of linear constraints.
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision gtp
       integer i, j
@@ -5515,9 +4622,6 @@ c     (3) the vector ap,  where a is the matrix of linear constraints.
 
       double precision ddot1, dnrm2
       external          ddot1, dnrm2
-
-c     .. intrinsic functions ..
-      intrinsic         min
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ce04nc/ilsdbg, lsdbg
@@ -5646,8 +4750,8 @@ c                  auxiliaries.
 c     t  set 'on'  gives a trace of which routine was called and an
 c                  indication of the progress of the run.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none 
+
       integer mline1, mline2
       parameter (mline1=50000,mline2=50000)
 
@@ -5663,7 +4767,7 @@ c                  indication of the progress of the run.
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision obj
       integer i, itn, j, k, kadd, kdel, nart, ndf
@@ -7386,9 +6490,8 @@ c     end of  e04nbu
 c     e04nct  updates the least-squares factor r and the factorization
 c     a(free) (z y) = (0 t) when a regular, temporary or artificial
 c     constraint is deleted from the working set.
+      implicit none
 
-      integer ldbg
-      parameter (ldbg=5)
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
 
@@ -7404,7 +6507,7 @@ c     constraint is deleted from the working set.
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision cs, sn
       integer i, ir, itdel, jart, k, ka, ld, npiv, nrz1, nsup,
@@ -7630,8 +6733,8 @@ c     on exit,  elements 1 thru nactiv of rlamda contain the unadjusted
 c     multipliers for the general constraints.  elements nactiv onwards
 c     of rlamda contain the unadjusted multipliers for the bounds.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       double precision one
       parameter (one=1.0d+0)
 
@@ -7648,16 +6751,13 @@ c     of rlamda contain the unadjusted multipliers for the bounds.
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision anormj, biggst, blam, rlam, scdlam, smllst,
      *                  tinylm
       integer i, is, j, k, l, nfixed
 
       character*80      rec(80)
-
-c     .. intrinsic functions ..
-      intrinsic         abs, min
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ce04nc/ilsdbg, lsdbg
@@ -7700,9 +6800,7 @@ c
    40          continue
             end if
          end if
-c
       end if
-c
 c     ---------------------------------------------------------------
 c     compute jsmlst for regular constraints and temporary bounds.
 c     ---------------------------------------------------------------
@@ -7711,7 +6809,6 @@ c     constraints in the working set, by solving  t'*lamda = y'g.
 c
       if (n.gt.nz) call dcopy(n-nz,gq(nz+1),1,rlamda,1)
       if (nactiv.gt.0) call e04nbt(2,ldt,nactiv,t(1,nz+1),rlamda)
-c
 c     --------------------------------------------------------------
 c     now set elements nactiv, nactiv+1,... of  rlamda  equal to
 c     the multipliers for the bound constraints.
@@ -7826,10 +6923,10 @@ c     end of  e04nck. (lsmuls)
 
 
 
-      subroutine e04ucr(needfd,inform,n,ncnln,ldcj,ldcju,nfun,ngrad,
-     *                  needc,confun,objfun,alfa,alfbnd,alfmax,alfsml,
+      subroutine e04ucr(needfd,inform,n,nfun,ngrad,
+     *                  needc,objfun,alfa,alfbnd,alfmax,alfsml,
      *                  dxnorm,epsrf,eta,gdx,grdalf,glf1,glf,objf,
-     *                  objalf,qpcurv,xnorm,c,c2,cjac,cjacu,cjdx,cjdx2,
+     *                  objalf,qpcurv,xnorm,
      *                  cmul1,cmul,cs1,cs,dx,dlam,dslk,grad,gradu,qpmul,
      *                  rho,slk1,slk,x1,x,work,w,lenw,iuser,user)
 
@@ -7841,8 +6938,8 @@ c     with an associated merit function value  objalf  which is lower
 c     than that at the base point. if  inform = 4, 5, 6, 7 or 8,  alfa
 c     is zero and  objalf will be the merit value at the base point.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       double precision zero, half, one
       parameter (zero=0.0d+0,half=0.5d+0,one=1.0d+0)
       double precision two
@@ -7855,17 +6952,16 @@ c     is zero and  objalf will be the merit value at the base point.
       double precision alfa, alfbnd, alfmax, alfsml, dxnorm, epsrf,
      *                  eta, gdx, glf, glf1, grdalf, objalf, objf,
      *                  qpcurv, xnorm
-      integer inform, ldcj, ldcju, lenw, n, ncnln, nfun, ngrad
+      integer inform, ldcj, lenw, n, nfun, ngrad
       logical           needfd
 
-      double precision c(*), c2(*), cjac(ldcj,*), cjacu(ldcju,*),
-     *                  cjdx(*), cjdx2(*), cmul(*), cmul1(*), cs(*),
+      double precision cmul(*), cmul1(*), cs(*),
      *                  cs1(*), dlam(*), dslk(*), dx(n), grad(n),
      *                  gradu(n), qpmul(*), rho(*), slk(*), slk1(*),
      *                  user(*), w(lenw), work(*), x(n), x1(n)
       integer iuser(*), needc(*)
 
-      external          confun, objfun
+      external          objfun
 
       double precision epspt3, epspt5, epspt8, epspt9, rhodmp, rhomax,
      *                  rhonrm, scale
@@ -7874,7 +6970,7 @@ c     is zero and  objalf will be the merit value at the base point.
       logical           incrun, npdbg
 
       double precision wmach
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
 
       double precision alfbst, cs1jdx, csjdx, curvc, curvlf, epsaf,
      *                  epsmch, fbest, fterm, ftry, g0, gbest, gtry,
@@ -7897,9 +6993,6 @@ c     is zero and  objalf will be the merit value at the base point.
       common            /npdebg/inpdbg, npdbg
 
       epsmch = wmach(3)
-c
-      if (.not. needfd.and.ncnln.gt.0) cs1jdx = ddot1 (ncnln,cs1,1,
-     *    cjdx)
 c
 
 c     set the input parameters and tolerances for e04uck and e04ucj.
@@ -7958,9 +7051,7 @@ c
       gbest = (one-rmu)*oldg
       targtg = (rmu-eta)*oldg
       g0 = gbest
-c
-      if (ncnln.gt.0) call iload(ncnln,(1),needc,1)
-c
+
       if (needfd) then
          mode = 0
       else
@@ -8004,17 +7095,11 @@ c
          objf = tobj
          objalf = tobjm
 c
-         if (ncnln.gt.0) call dcopy(ncnln,c2,1,c,1)
-c
          if (.not. needfd) then
             call dcopy(n,gradu,1,grad,1)
             gdx = tgdx
             glf = tglf
-c
-            if (ncnln.gt.0) then
-               call dcopy(ncnln,cjdx2,1,cjdx,1)
-               call smcopy('general',ncnln,n,cjacu,ldcju,cjac,ldcj)
-            end if
+
          end if
       end if
 c
@@ -8027,49 +7112,14 @@ c     ---------------------------------------------------------------
 c
          call dcopy (n,x1,1,x,1)
          call daxpy (n,alfa,dx,1,x,1)
-c
-         if (ncnln.gt.0) then
-c
-c           compute the new estimates of the multipliers and slacks.
-c           if the step length is greater than one,  the multipliers
-c           are fixed as the qp-multipliers.
-c
-            if (alfa.le.one) then
-               call dcopy (ncnln,cmul1,1,cmul,1)
-               call daxpy (ncnln,alfa,dlam,1,cmul,1)
-            end if
-            call dcopy (ncnln,slk1,1,slk,1)
-            call daxpy (ncnln,alfa,dslk,1,slk,1)
-c
-c           ---------------------------------------------------------
-c           compute the new constraint vector and jacobian.
-c           ---------------------------------------------------------
-            call confun(mode,ncnln,n,ldcju,needc,x,c2,cjacu,nstate,
-     *                  iuser,user)
-            if (mode.lt.0) go to 60
-c
-            call dcopy (ncnln,c2,1,cs,1)
-            call daxpy (ncnln,(-one),slk,1,cs,1)
-c
-            call dcopy (ncnln,cs,1,work,1)
-            call sdscl (ncnln,rho,1,work,1)
-c
-            fterm = ddot1 (ncnln,cmul,1,cs) - half*scale*ddot1 (ncnln,
-     *              work,1,cs)
-         end if
-c
 c        ------------------------------------------------------------
 c        compute the value and gradient of the objective function.
 c        ------------------------------------------------------------
+         iuser(2) = 1
          call objfun(mode,n,x,tobj,gradu,nstate,iuser,user)
-         if (mode.lt.0) go to 60
-c
-         if (ncnln.gt.0) then
-            tobjm = tobj - fterm
-         else
+
             tobjm = tobj
-         end if
-c
+
          ftry = tobjm - oldf - rmu*oldg*alfa
 c
 c        ------------------------------------------------------------
@@ -8079,53 +7129,6 @@ c        ------------------------------------------------------------
             gtry = ddot1 (n,gradu,1,dx)
             tgdx = gtry
             tglf = gtry
-            if (ncnln.gt.0) then
-c
-c              compute the jacobian times the search direction.
-c
-               call dgemv('n',ncnln,n,one,cjacu,ldcju,dx,zero,cjdx2)
-c
-               call dcopy (ncnln,cjdx2,1,work,1)
-               call daxpy (ncnln,(-one),dslk,1,work,1)
-c
-               gtry = gtry - ddot1 (ncnln,cmul,1,work)
-               if (alfa.le.one) gtry = gtry - ddot1 (ncnln,dlam,1,cs)
-c
-               call sdscl(ncnln,rho,1,work,1)
-               gtry = gtry + scale*ddot1 (ncnln,work,1,cs)
-c
-               tglf = tgdx - ddot1 (ncnln,cjdx2,1,qpmul)
-c
-c              ------------------------------------------------------
-c              if alfbnd .le. alfa .lt. alfmax and the norm of the
-c              quasi-newton update is bounded, set alfmax to be alfa.
-c              this will cause the linesearch to stop if the merit
-c              function is decreasing at the boundary.
-c              ------------------------------------------------------
-               if (alfbnd.le.alfa.and.alfa.lt.alfmax) then
-c
-                  csjdx = ddot1 (ncnln,cs,1,cjdx2)
-c
-                  if (npdbg.and.inpdbg(1).gt.0) then
-                     write (rec,fmt=99997) csjdx, cs1jdx, curvlf
-                     call x04bay(iprint,3,rec)
-                  end if
-c
-                  curvlf = tglf - glf1
-                  curvc = abs(csjdx-cs1jdx)
-                  rhobfs = max(qpcurv*tolg-curvlf,zero)
-                  if (rhobfs.le.curvc*rhomax) then
-                     alfmax = alfa
-                  else
-                     alfbnd = min(two*alfa,alfmax)
-                  end if
-                  if (npdbg.and.inpdbg(1).gt.0) then
-                     write (rec,fmt=99998) alfbnd, alfa, alfmax
-                     call x04bay(iprint,3,rec)
-                  end if
-               end if
-            end if
-c
             gtry = gtry - rmu*oldg
 c
          end if
@@ -8140,16 +7143,7 @@ c
       if (.not. imprvd) then
          call dcopy (n,x1,1,x,1)
          call daxpy (n,alfa,dx,1,x,1)
-         if (ncnln.gt.0) then
-            if (alfa.le.one) then
-               call dcopy (ncnln,cmul1,1,cmul,1)
-               call daxpy (ncnln,alfa,dlam,1,cmul,1)
-            end if
-            call dcopy (ncnln,slk1,1,slk,1)
-            call daxpy (ncnln,alfa,dslk,1,slk,1)
-            call dcopy (ncnln,c,1,cs,1)
-            call daxpy (ncnln,(-one),slk,1,cs,1)
-         end if
+
       end if
 c
       if (npdbg.and.inpdbg(1).gt.0) then
@@ -8173,7 +7167,7 @@ c
       end
 
 
-      subroutine e04udt(inform,n,nclin,ncnln,alfa,alfmin,alfmax,bigbnd,
+      subroutine e04udt(inform,n,nclin,alfa,alfmin,alfmax,bigbnd,
      *                  dxnorm,anorm,adx,ax,bl,bu,dslk,dx,slk,x)
 
 c     e04udt  finds a step alfa such that the point x + alfa*p reaches
@@ -8181,13 +7175,15 @@ c     one of the slacks or linear constraints.  the step alfa is the
 c     maximum step that can be taken without violating one of the slacks
 c     or linear constraints that is currently satisfied.
 
+      implicit none
+
       integer lcmdbg
       parameter (lcmdbg=5)
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
 
       double precision alfa, alfmax, alfmin, bigbnd, dxnorm
-      integer inform, n, nclin, ncnln
+      integer inform, n, nclin
 
       double precision adx(*), anorm(*), ax(*), bl(*), bu(*), dslk(*),
      *                  dx(n), slk(*), x(n)
@@ -8219,8 +7215,8 @@ c
       alfa = alfmax
       j = 1
 c
-c     +    while (j .le. n+nclin+ncnln.and.alfa .gt. alfmin) do
-   20 if (j.le.n+nclin+ncnln.and.alfa.gt.alfmin) then
+c     +    while (j .le. n+nclin.and.alfa .gt. alfmin) do
+   20 if (j.le.n+nclin.and.alfa.gt.alfmin) then
 c
          if (j.le.n) then
             axi = x(j)
@@ -8290,10 +7286,10 @@ c     end of  e04udt. (npalf)
 
 
       subroutine e04uct(ktcond,convrg,lsumry,msgnp,msgqp,ldr,ldt,n,
-     *                  nclin,ncnln,nctotl,nactiv,linact,nlnact,nz,
+     *                  nclin,nctotl,nactiv,linact,nlnact,nz,
      *                  nfree,majit0,majits,minits,istate,alfa,nfun,
      *                  condhz,condh,condt,objalf,objf,gfnorm,gznorm,
-     *                  cvnorm,ax,c,r,t,violn,x,work)
+     *                  cvnorm,ax,r,t,violn,x,work)
 
 c     e04uct  prints various levels of output for e04ucz and e04upz.
 c
@@ -8326,18 +7322,17 @@ c                 indication of the progress of the run.
 c     for example, `major debug level 11000' gives much output from
 c                  the checking routines and the linesearch.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none 
 
       double precision alfa, condh, condhz, condt, cvnorm, gfnorm,
      *                  gznorm, objalf, objf
       integer ldr, ldt, linact, majit0, majits, minits, msgnp,
-     *                  msgqp, n, nactiv, nclin, ncnln, nctotl, nfree,
+     *                  msgqp, n, nactiv, nclin, nctotl, nfree,
      *                  nfun, nlnact, nz
       logical           convrg
       character*5       lsumry
 
-      double precision ax(*), c(*), r(ldr,*), t(ldt,*), violn(*),
+      double precision ax(*), r(ldr,*), t(ldt,*), violn(*),
      *                  work(n), x(n)
       integer istate(nctotl)
       logical           ktcond(2)
@@ -8346,7 +7341,7 @@ c                  the checking routines and the linesearch.
       integer iprint, isumm, lines1, lines2, nout
       logical           incrun, npdbg
 
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
 
       double precision cviols
       integer i, inct, j, k, mjr, mnr, ndf, neval
@@ -8375,7 +7370,7 @@ c
          mnr = mod(minits,1000)
          neval = mod(nfun,1000)
          ndf = mod(nz,1000)
-         nlncon = ncnln .gt. 0
+         nlncon = .false.
          first = majits .eq. majit0
 c
 
@@ -8391,30 +7386,21 @@ c           -----------------------------------
      *               newset
 c
             if (prthdr) then
-               if (nlncon) then
-                  write (rec,fmt=99998)
-                  call x04bay(isumm,3,rec)
-               else
+
                   write (rec,fmt=99996)
                   call x04bay(isumm,3,rec)
-               end if
+
                lines1 = 0
             end if
 c
-            if (nlncon) then
-               write (rec,fmt=99997) mjr, mnr, alfa, neval, objalf,
-     *           cvnorm, gznorm, ndf, n - nfree, linact, nlnact,
-     *           scale*rhonrm, gfnorm, condh, condhz, condt, convrg,
-     *           ktcond(1), ktcond(2), lsumry
-               call x04baf(isumm,rec(1))
-            else
+
                write (rec,fmt=99995) mjr, mnr, alfa, neval, objalf,
      *           gznorm, ndf, n - nfree, linact, gfnorm, condh, condhz,
      *           condt, convrg, ktcond(1), ktcond(2), lsumry
                call x04baf(isumm,rec(1))
             end if
             lines1 = lines1 + 1
-         end if
+
 c
          if (iprint.ge.0.and.isumm.ne.iprint) then
 c           ------------------------------
@@ -8424,13 +7410,10 @@ c           ------------------------------
             prthdr = msgqp .gt. 0.or.first.or.newset
 c
             if (prthdr) then
-               if (nlncon) then
-                  write (rec,fmt=99994)
-                  call x04bay(iprint,3,rec)
-               else
+
                   write (rec,fmt=99992)
                   call x04bay(iprint,3,rec)
-               end if
+
                lines2 = 0
             end if
 c
@@ -8448,14 +7431,10 @@ c
 c
          if (msgnp.ge.20) then
             if (isumm.ge.0) then
-               if (ncnln.eq.0) then
+ 
                   write (rec,fmt=99990) objf
                   call x04bay(isumm,2,rec)
-               else
-                  cviols = dnrm2(ncnln,violn,1)
-                  write (rec,fmt=99989) objf, cviols
-                  call x04bay(isumm,2,rec)
-               end if
+
 c
 c              ---------------------------------------------------------
 c              print the constraint values.
@@ -8477,15 +7456,7 @@ c              ---------------------------------------------------------
                      call x04baf(isumm,rec(1))
    40             continue
                end if
-               if (ncnln.gt.0) then
-                  write (rec,fmt=99985)
-                  call x04bay(isumm,2,rec)
-                  do 60 i = 1, ncnln, 5
-                     write (rec,fmt=99982) (c(k),istate(n+nclin+k),k=i,
-     *                 min(i+4,ncnln))
-                     call x04baf(isumm,rec(1))
-   60             continue
-               end if
+
 c
                if (msgnp.ge.30) then
 c                 ------------------------------------------------------
@@ -8556,30 +7527,30 @@ c     end of e04uct. (npprt)
 
 
 
-      subroutine e04ucw(n,nclin,ncnln,istate,bigbnd,cvnorm,errmax,jmax,
-     *                  nviol,ax,bl,bu,c,featol,x,work)
+      subroutine e04ucw(n,nclin,istate,bigbnd,cvnorm,errmax,jmax,
+     *                  nviol,ax,bl,bu,featol,x,work)
 
 c     e04ucw  computes the following...
 c     (1)  the number of constraints that are violated by more
 c          than  featol  and the 2-norm of the constraint violations.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none 
+
       double precision zero
       parameter (zero=0.0d+0)
 
       double precision bigbnd, cvnorm, errmax
-      integer jmax, n, nclin, ncnln, nviol
+      integer jmax, n, nclin, nviol
 
-      double precision ax(*), bl(n+nclin+ncnln), bu(n+nclin+ncnln),
-     *                  c(*), featol(n+nclin+ncnln),
-     *                  work(n+nclin+ncnln), x(n)
-      integer istate(n+nclin+ncnln)
+      double precision ax(*), bl(n+nclin), bu(n+nclin),
+     *                  featol(n+nclin),
+     *                  work(n+nclin), x(n)
+      integer istate(n+nclin)
 
       integer iprint, isumm, lines1, lines2, nout
       logical           npdbg
 
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
 
       double precision biglow, bigupp, con, feasj, res, tolj
       integer is, j
@@ -8607,7 +7578,7 @@ c     violations and residuals of the constraints in the qp working set.
 
       nviol = 0
 c
-      do 40 j = 1, n + nclin + ncnln
+      do 40 j = 1, n + nclin
          feasj = featol(j)
          res = zero
 c
@@ -8622,12 +7593,7 @@ c
             end if
 c
             tolj = feasj
-         else
-c
-c           nonlinear constraint.
-c
-            con = c(j-n-nclin)
-            tolj = zero
+
          end if
 c
 c        check for constraint violations.
@@ -8664,7 +7630,7 @@ c
    20    work(j) = res
    40 continue
 c
-      jmax = idamx1 (n+nclin+ncnln,work)
+      jmax = idamx1 (n+nclin,work)
       errmax = abs(work(jmax))
 c
       if (npdbg.and.inpdbg(1).gt.0) then
@@ -8672,7 +7638,7 @@ c
          call x04bay(iprint,2,rec)
       end if
 c
-      cvnorm = dnrm2(n+nclin+ncnln,work,1)
+      cvnorm = dnrm2(n+nclin,work,1)
 
 c     end of  e04ucw. (npfeas)
 
@@ -8680,18 +7646,13 @@ c     end of  e04ucw. (npfeas)
      *       'constraint',i5)
       end
 
-
-
-
-      subroutine e04ucu(feasqp,unitq,nqperr,majits,minits,n,nclin,ncnln,
-     *                  ldcj,ldaqp,ldr,linact,nlnact,nactiv,nfree,nz,
+      subroutine e04ucu(feasqp,unitq,nqperr,majits,minits,n,nclin,
+     *                  ldaqp,ldr,linact,nlnact,nactiv,nfree,nz,
      *                  numinf,istate,kactiv,kx,dxnorm,gdx,qpcurv,aqp,
-     *                  adx,anorm,ax,bl,bu,c,cjac,clamda,cmul,cs,dlam,
+     *                  adx,anorm,ax,bl,bu,clamda,cmul,cs,dlam,
      *                  dslk,dx,qpbl,qpbu,qptol,r,rho,slk,violn,x,wtinf,
      *                  w)
 
-c     e04ucu   does the following:
-c
 c     (1)  generate the upper and lower bounds for the qp  subproblem.
 c
 c     (2)  compute the  tq  factors of the rows of  aqp  specified by
@@ -8720,10 +7681,11 @@ c
 c     (5)   compute  dslk,  dlam  and  dx,  the search directions for
 c          the slack variables, the multipliers and the variables.
 
+      implicit none
+
       integer lenls
       parameter (lenls=20)
-      integer ldbg
-      parameter (ldbg=5)
+
       integer mxparm
       parameter (mxparm=30)
       logical           qpnamd, vertex
@@ -8735,12 +7697,12 @@ c          the slack variables, the multipliers and the variables.
 
       double precision dxnorm, gdx, qpcurv
       integer ldaqp, ldcj, ldr, linact, majits, minits, n,
-     *                  nactiv, nclin, ncnln, nfree, nlnact, nqperr,
+     *                  nactiv, nclin, nfree, nlnact, nqperr,
      *                  numinf, nz
       logical           feasqp, unitq
 
       double precision adx(*), anorm(*), aqp(ldaqp,*), ax(*), bl(*),
-     *                  bu(*), c(*), cjac(ldcj,*), clamda(*), cmul(*),
+     *                  bu(*), clamda(*), cmul(*),
      *                  cs(*), dlam(*), dslk(*), dx(n), qpbl(*),
      *                  qpbu(*), qptol(*), r(ldr,*), rho(*), slk(*),
      *                  violn(*), w(*), wtinf(*), x(n)
@@ -8754,7 +7716,7 @@ c          the slack variables, the multipliers and the variables.
       integer idbgls, idbgnp, iprint, iprnt, isumm, isumry,
      *                  itmax1, itmax2, itmxnp, jvrfy1, jvrfy2, jvrfy3,
      *                  jvrfy4, ksave, lcrash, ldbgls, ldbgnp, ldt,
-     *                  ldzy, lennam, lformh, lines1, lines2, lprob,
+     *                  ldzy, lformh, lines1, lines2, lprob,
      *                  lverfy, lvlder, msgls, msgnp, ncolt, nlnf, nlnj,
      *                  nlnx, nload, nn, nnclin, nncnln, nout, nprob,
      *                  nsave
@@ -8762,7 +7724,7 @@ c          the slack variables, the multipliers and the variables.
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
      *                  rpsvnp(mxparm)
-      integer icmdbg(ldbg), ilsdbg(ldbg), inpdbg(ldbg),
+      integer icmdbg(5), ilsdbg(5), inpdbg(5),
      *                  ipadls(18), ipadnp(12), ipsvls(mxparm),
      *                  ipsvnp(mxparm), locls(lenls)
 
@@ -8788,7 +7750,7 @@ c     .. intrinsic functions ..
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
-      common            /be04nb/lennam, ldt, ncolt, ldzy
+      common/ be04nb /ldt, ncolt, ldzy
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04nc/ilsdbg, lsdbg
       common            /de04nb/asize, dtmax, dtmin
@@ -8822,7 +7784,7 @@ c     .. intrinsic functions ..
       end if
       lsdbg = npdbg
       cmdbg = npdbg
-      call icopy(ldbg,ilsdbg,1,icmdbg,1)
+      call icopy(5,ilsdbg,1,icmdbg,1)
 c
       lrpq = locls(5)
       lrpq0 = locls(6)
@@ -8844,8 +7806,8 @@ c
       ssq1 = zero
 c
       nplin = n + nclin
-      nctotl = nplin + ncnln
-      ncqp = nclin + ncnln
+      nctotl = nplin
+      ncqp = nclin 
       nrank = n
       nrejtd = 0
 c
@@ -8866,8 +7828,6 @@ c
             con = x(j)
          else if (j.le.nplin) then
             con = ax(j-n)
-         else
-            con = c(j-nplin)
          end if
 c
          blj = bl(j)
@@ -8934,106 +7894,6 @@ c     in the working set.  note that a relatively well-conditioned
 c     working set is used to start the qp iterations.
 c
       condmx = max(one/epspt3,hundrd)
-c
-      if (ncnln.gt.0) then
-
-c        refactorize part of the  qp  constraint matrix.
-
-c        load the new jacobian into the  qp  matrix  a.  compute the
-c        2-norms of the rows of the jacobian.
-c
-         call smcopy('general',ncnln,n,cjac,ldcj,aqp(nclin+1,1),ldaqp)
-c
-         do 80 j = nclin + 1, ncqp
-            anorm(j) = dnrm2(n,aqp(j,1),ldaqp)
-   80    continue
-c
-c        count the number of linear constraints in the working set and
-c        move them to the front of kactiv.  compute the norm of the
-c        matrix of constraints in the working set.
-c        let k1  point to the first nonlinear constraint.  constraints
-c        with indices kactiv(k1),..., kactiv(nactiv)  must be
-c        refactorized.
-c
-         asize = zero
-         linact = 0
-         k1 = nactiv + 1
-         do 100 k = 1, nactiv
-            i = kactiv(k)
-            asize = max(asize,anorm(i))
-c
-            if (i.le.nclin) then
-               linact = linact + 1
-               if (linact.ne.k) then
-                  iswap = kactiv(linact)
-                  kactiv(linact) = i
-                  kactiv(k) = iswap
-               end if
-            else
-c
-c              record the old position of the 1st. nonlinear constraint.
-c
-               if (k1.gt.nactiv) k1 = k
-            end if
-  100    continue
-c
-         if (nactiv.le.1) call scond (ncqp,anorm,1,asize,amin)
-c
-c        compute the absolute values of the nonlinear constraints in
-c        the working set.  use dx as workspace.
-c
-         do 120 k = linact + 1, nactiv
-            j = n + kactiv(k)
-            if (istate(j).eq.1) dx(k) = abs(qpbl(j))
-            if (istate(j).ge.2) dx(k) = abs(qpbu(j))
-  120    continue
-c
-c        sort the elements of kactiv corresponding to nonlinear
-c        constraints in descending order of violation (i.e.,
-c        the first element of kactiv for a nonlinear constraint
-c        is associated with the most violated constraint.)
-c        in this way, the rows of the jacobian corresponding
-c        to the more violated constraints tend to be included
-c        in the  tq  factorization.
-c
-c        the sorting procedure is taken from the simple insertion
-c        sort in d. knuth, acp volume 3, sorting and searching,
-c        page 81.  it should be replaced by a faster sort if the
-c        number of active nonlinear constraints becomes large.
-c
-         do 160 k = linact + 2, nactiv
-            l = k
-            viol = dx(l)
-            kviol = kactiv(l)
-c           while (l .gt. linact+1 .and. dx(l-1) .lt. viol) do
-  140       if (l.gt.linact+1) then
-               if (dx(l-1).lt.viol) then
-                  dx(l) = dx(l-1)
-                  kactiv(l) = kactiv(l-1)
-                  l = l - 1
-                  go to 140
-               end if
-c              end while
-            end if
-            dx(l) = viol
-            kactiv(l) = kviol
-  160    continue
-c
-         k2 = nactiv
-         nactiv = k1 - 1
-         nz = nfree - nactiv
-c
-c        update the factors  r,  t  and  q  to include constraints
-c        k1  through  k2.
-c
-         if (k1.le.k2) call e04ncy(unitq,vertex,inform,k1,k2,nactiv,
-     *                             nartif,nz,nfree,nrank,nrejtd,nrpq,
-     *                             ngq,n,ldzy,ldaqp,ldr,ldt,istate,
-     *                             kactiv,kx,condmx,aqp,r,w(lt),w(lrpq),
-     *                             w(lgq),w(lzy),w(lwrk1),dx,w(lrlam),
-     *                             msgqp)
-      end if
-c
 
 c     solve for dx, the vector of minimum two-norm that satisfies the
 c     constraints in the working set.
@@ -9095,20 +7955,7 @@ c     count the number of nonlinear constraint gradients in the  qp
 c     working set.  make sure that all small  qp  multipliers associated
 c     with nonlinear inequality constraints have the correct sign.
 
-      nlnact = 0
-      if (nactiv.gt.0.and.ncnln.gt.0) then
-         do 220 k = 1, nactiv
-            l = kactiv(k)
-            if (l.gt.nclin) then
-               nlnact = nlnact + 1
-               j = n + l
-               if (istate(j).eq.1) clamda(j) = max(zero,clamda(j))
-               if (istate(j).eq.2) clamda(j) = min(zero,clamda(j))
-            end if
-  220    continue
-      end if
-c
-      linact = nactiv - nlnact
+      linact = nactiv
 c
 
 c     extract various useful quantities from the qp solution.
@@ -9119,154 +7966,8 @@ c
       call dscal (n,(-one),w(lrpq),1)
       call daxpy (n,(-one),w(lgq),1,w(lhpq),1)
       qpcurv = two*ssq
-c
-      if (ncnln.gt.0) then
-         if (numinf.gt.0) then
-            feasqp = .false.
-            call sload (nctotl,(zero),clamda,1)
-c
-            if (nz.gt.0) then
-c              ---------------------------------------------------------
-c              compute a null space element for the search direction
-c              as the solution of  z'hz(pz) = -z'g - z'hy(py).
-c              ---------------------------------------------------------
-c              overwrite dx with the transformed search direction
-c              q'(dx).  the first nz elements of dx are zero.
-c
-               call cmqmul(6,n,nz,nfree,ldzy,unitq,kx,dx,w(lzy),w(lwrk1)
-     *                    )
-c
-c              overwrite the first nz elements of dx with the solution
-c              of  (rz)u = -(v + w),  where  (rz)'w = z'g  and  v  is
-c              vector of first nz elements of  r(pq).
-c
-               call dcopy (nz,w(lgq),1,dx,1)
-               call dtrsv ('u','t','n',nz,r,ldr,dx,1)
-c
-               call daxpy (nz,(one),w(lrpq),1,dx,1)
-c
-               call dtrsv('u','n','n',nz,r,ldr,dx,1)
-               call dscal(nz,(-one),dx,1)
-c
-c              recompute rpq, hpq, gdx and qpcurv.
-c
-               call dcopy(nlnx,dx,1,w(lrpq),1)
-               call dtrmv('u','n','n',nlnx,r,ldr,w(lrpq),1)
-               if (nlnx.lt.n) call dgemv('n',nlnx,n-nlnx,one,r(1,nlnx+1)
-     *                                   ,ldr,dx(nlnx+1),one,w(lrpq))
-c
-               gdx = ddot1 (n,w(lgq),1,dx)
-               qpcurv = ddot1 (n,w(lrpq),1,w(lrpq))
-c
-               call cmqmul(3,n,nz,nfree,ldzy,unitq,kx,dx,w(lzy),w(lwrk1)
-     *                    )
-c
-c              ---------------------------------------------------------
-c              recompute adx and the 2-norm of dx.
-c              ---------------------------------------------------------
-               dxnorm = dnrm2(n,dx,1)
-               if (ncqp.gt.0) call dgemv('n',ncqp,n,one,aqp,ldaqp,dx,
-     *                                   zero,adx)
-c
-               if (npdbg.and.inpdbg(2).gt.0) then
-                  write (rec,fmt=99997)
-                  call x04bay(iprint,2,rec)
-                  do 240 i = 1, n, 5
-                     write (rec,fmt=99993) (dx(j),j=i,min(i+4,n))
-                     call x04baf(iprint,rec(1))
-  240             continue
-               end if
-            end if
-c
-            call dcopy(nlnx,w(lrpq),1,w(lhpq),1)
-            call dtrmv('u','t','n',nlnx,r,ldr,w(lhpq),1)
-            if (nlnx.lt.n) call dgemv('t',nlnx,n-nlnx,one,r(1,nlnx+1),
-     *                                ldr,w(lrpq),zero,w(lhpq+nlnx))
-         end if
-c
 
-c        for given values of the objective function and constraints,
-c        attempt to minimize the merit function with respect to each
-c        slack variable.
-
-         do 280 i = 1, ncnln
-            j = nplin + i
-            con = c(i)
-c
-            if (.not. feasqp.and.violn(i).ne.zero.and.rho(i)
-     *          .le.zero) rho(i) = one
-c
-            quotnt = adivb (cmul(i),scale*rho(i),overfl)
-c
-c           define the slack variable to be  con - mult / rho.
-c           force each slack to lie within its upper and lower bounds.
-c
-            if (bl(j).gt.biglow) then
-               if (qpbl(j).ge.-quotnt) then
-                  slk(i) = bl(j)
-                  go to 260
-               end if
-            end if
-c
-            if (bu(j).lt.bigupp) then
-               if (qpbu(j).le.-quotnt) then
-                  slk(i) = bu(j)
-                  go to 260
-               end if
-            end if
-c
-            slk(i) = con - quotnt
-c
-c           the slack has been set within its bounds.
-c
-  260       cs(i) = con - slk(i)
-c
-
-c           compute the search direction for the slacks and multipliers.
-
-            dslk(i) = adx(nclin+i) + cs(i)
-c
-            if (feasqp) then
-c
-c              if any constraint is such that  (dlam)*(c - s)  is
-c              positive,  the merit function may be reduced immediately
-c              by substituting the qp multiplier.
-c
-               dlam(i) = clamda(j) - cmul(i)
-               if (dlam(i)*cs(i).ge.zero) then
-                  cmul(i) = clamda(j)
-                  dlam(i) = zero
-               end if
-            else
-c
-c              the  qp  subproblem was infeasible.
-c
-               dlam(i) = zero
-c
-               if (istate(j).lt.0.or.violn(i).ne.zero) dslk(i) = zero
-c
-            end if
-  280    continue
-c
-         if (.not. feasqp) rhonrm = dnrm2(ncnln,rho,1)
-c
-         if (npdbg.and.inpdbg(2).gt.0) then
-            write (rec,fmt=99996)
-            call x04bay(iprint,2,rec)
-            do 300 j = 1, ncnln, 5
-               write (rec,fmt=99994) (violn(i),i=j,min(j+4,ncnln))
-               call x04baf(iprint,rec(1))
-  300       continue
-            write (rec,fmt=99995)
-            call x04bay(iprint,2,rec)
-            do 320 j = 1, ncnln, 5
-               write (rec,fmt=99994) (slk(i),i=j,min(j+4,ncnln))
-               call x04baf(iprint,rec(1))
-  320       continue
-         end if
-      end if
-c
-      call icopy(ldbg,inpdbg,1,icmdbg,1)
+      call icopy(5,inpdbg,1,icmdbg,1)
       idbg = idbgsv
 
 c     end of  e04ucu. (npiqp)
@@ -9281,22 +7982,21 @@ c     end of  e04ucu. (npiqp)
       end
 
 
-      subroutine e04ucz(named,names,unitq,inform,majits,n,nclin,ncnln,
-     *                  nctotl,nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,
+      subroutine e04ucz(named,names,unitq,inform,majits,n,nclin,
+     *                  nctotl,nactiv,nfree,nz,ldaqp,ldr,
      *                  nfun,ngrad,istate,kactiv,kx,objf,fdnorm,xnorm,
-     *                  confun,objfun,aqp,ax,bl,bu,c,cjac,cjacu,clamda,
+     *                  objfun,aqp,ax,bl,bu,clamda,
      *                  featol,grad,gradu,r,x,iw,w,lenw,iuser,user)
 
 c     e04ucz  is the core routine for  e04ucf,  a sequential quadratic
 c     programming (sqp) method for nonlinearly constrained optimization.
 
+      implicit none 
 
       integer lenls
       parameter (lenls=20)
       integer lennp
       parameter (lennp=35)
-      integer ldbg
-      parameter (ldbg=5)
       integer mxparm
       parameter (mxparm=30)
       double precision zero, one
@@ -9305,19 +8005,18 @@ c     programming (sqp) method for nonlinearly constrained optimization.
       parameter (growth=1.0d+2)
 
       double precision fdnorm, objf, xnorm
-      integer inform, ldaqp, ldcj, ldcju, ldr, lenw, majits,
-     *                  n, nactiv, nclin, ncnln, nctotl, nfree, nfun,
+      integer inform, ldaqp, ldcj, ldr, lenw, majits,
+     *                  n, nactiv, nclin, nctotl, nfree, nfun,
      *                  ngrad, nz
       logical           named, unitq
 
       double precision aqp(ldaqp,*), ax(*), bl(nctotl), bu(nctotl),
-     *                  c(*), cjac(ldcj,*), cjacu(ldcju,*),
      *                  clamda(nctotl), featol(nctotl), grad(n),
      *                  gradu(n), r(ldr,*), user(*), w(lenw), x(n)
       integer istate(*), iuser(*), iw(*), kactiv(n), kx(n)
       character*8       names(*)
 
-      external          confun, objfun
+      external          objfun
 
       double precision asize, bigbnd, bigdx, bndlow, bndupp, cdint,
      *                  ctol, drmax, drmin, dtmax, dtmin, dxlim, epspt3,
@@ -9327,7 +8026,7 @@ c     programming (sqp) method for nonlinearly constrained optimization.
       integer idbgls, idbgnp, iprint, iprnt, isumm, isumry,
      *                  itmax1, itmax2, itmxnp, jvrfy1, jvrfy2, jvrfy3,
      *                  jvrfy4, ksave, lcrash, ldbgls, ldbgnp, ldt,
-     *                  ldzy, lennam, lfdset, lformh, lines1, lines2,
+     *                  ldzy, lfdset, lformh, lines1, lines2,
      *                  lprob, lverfy, lvlder, lvldif, lvrfyc, msgls,
      *                  msgnp, ncdiff, ncolt, nfdiff, nlnf, nlnj, nlnx,
      *                  nload, nn, nnclin, nncnln, nout, nprob, nsave
@@ -9335,7 +8034,7 @@ c     programming (sqp) method for nonlinearly constrained optimization.
 
       double precision rpadls(23), rpadnp(22), rpsvls(mxparm),
      *                  rpsvnp(mxparm), wmach
-      integer icmdbg(ldbg), inpdbg(ldbg), ipadls(18),
+      integer icmdbg(5), inpdbg(5), ipadls(18),
      *                  ipadnp(12), ipsvls(mxparm), ipsvnp(mxparm),
      *                  jverfy(4), locls(lenls), locnp(lennp)
 
@@ -9367,12 +8066,11 @@ c     programming (sqp) method for nonlinearly constrained optimization.
       double precision ddot1, dnrm2, adivb 
       external          ddot1, dnrm2, adivb 
 
-
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
       common            /ae04uc/locnp
       common/ cstmch /wmach(9)
-      common            /be04nb/lennam, ldt, ncolt, ldzy
+      common/ be04nb /ldt, ncolt, ldzy
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04uc/lvrfyc, jverfy
@@ -9400,7 +8098,7 @@ c     programming (sqp) method for nonlinearly constrained optimization.
 
       flmax = wmach(7)
       rtmax = wmach(8)
-c
+
       lanorm = locls(2)
       lrpq = locls(5)
       lqrwrk = locls(6)
@@ -9436,27 +8134,24 @@ c
       lneedc = locnp(24)
       lhfrwd = locnp(25)
       lhctrl = locnp(26)
-c
+
       lcjac1 = laqp + nclin
       lcjdx = ladx + nclin
       lvioln = lwrk3
-c
-c     initialize
-c
+
       mjrmsg = '     '
       nqpinf = 0
       mnrsum = 0
-c
+
       majit0 = majits
       nplin = n + nclin
-      ncqp = nclin + ncnln
+      ncqp = nclin
       nl = min(nplin+1,nctotl)
-c
+
       ldcj1 = max(ncqp,1)
-c
-      needfd = lvlder .eq. 0.or.lvlder .eq. 2 .or.
-     *         (lvlder.eq.1.and.ncnln.gt.0)
-c
+
+      needfd = lvlder .eq. 0.or.lvlder .eq. 2
+
       alfa = zero
       alfdx = zero
       rtftol = dsqrt(ftol)
@@ -9473,37 +8168,16 @@ c
          msgqp = 0
          if (msgsv2.ge.5) msgqp = 5
       end if
-c
-
 c     information from the feasibility phase will be used to generate a
 c     hot start for the first qp subproblem.
 
       call dcopy(nctotl,featol,1,w(lqptol),1)
-c
+
       nstate = 0
 c
       objalf = objf
-      if (ncnln.gt.0) then
-         objalf = objalf - ddot1 (ncnln,w(lcmul),1,c)
-      end if
-c
       newgq = .false.
-c
-c*    ==================================================================
-c+    repeat                             (until converged or error exit)
-c
-c     ===============================================================
-c     see if we want to save the details of this iteration.
-c     ===============================================================
-c     20 if (mod(majits,ksave).eq.0.and.majits.ne.majit0) then
-c        call npsavr(unitq,n,nclin,ncnln,ldr,ldq,nfree,nsave,majits,
-c    *               istate,kx,w(lhfrwd),w(lhctrl),w(lcmul),r,w(lrho),x,
-c    *               x,w(lq))
-c     end if
-c
-c   *    ===============================================================
-c   +    repeat                         (until a good gradient is found)
-c
+
    20 minits = 0
 c
    40 centrl = lvldif .eq. 2
@@ -9514,9 +8188,9 @@ c           ------------------------------------------------------
 c           compute any missing gradient elements and the
 c           transformed gradient of the objective.
 c           ------------------------------------------------------
-            call e04uds(centrl,mode,ldcj,ldcju,n,ncnln,bigbnd,cdint,
-     *                  fdint,fdnorm,objf,confun,objfun,iw(lneedc),bl,
-     *                  bu,c,w(lwrk2),w(lwrk3),cjac,cjacu,grad,gradu,
+            call evalfd (centrl,mode,n,bigbnd,cdint,
+     *                  fdint,fdnorm,objf,objfun,iw(lneedc),bl,
+     *                  bu,grad,gradu,
      *                  w(lhfrwd),w(lhctrl),x,w,lenw,iuser,user)
             inform = mode
             if (mode.lt.0) go to 60
@@ -9539,10 +8213,10 @@ c         and multipliers.
 c
 c     note that the array violn is wrk3.
 c     ============================================================
-      call e04ucu(feasqp,unitq,nqperr,majits,mnr,n,nclin,ncnln,ldcj,
+      call e04ucu(feasqp,unitq,nqperr,majits,mnr,n,nclin,
      *            ldaqp,ldr,linact,nlnact,nactiv,nfree,nz,numinf,istate,
      *            kactiv,kx,dxnorm,gdx,qpcurv,aqp,w(ladx),w(lanorm),ax,
-     *            bl,bu,c,cjac,clamda,w(lcmul),w(lcs1),w(ldlam),w(ldslk)
+     *            bl,bu,clamda,w(lcmul),w(lcs1),w(ldlam),w(ldslk)
      *            ,w(ldx),w(lbl),w(lbu),w(lqptol),r,w(lrho),w(lslk),
      *            w(lvioln),x,w(lwtinf),w)
 c
@@ -9575,11 +8249,8 @@ c
       goodgq = .true.
       if (needfd.and..not. centrl) then
          glnorm = dnrm2(n,w(lhpq),1)
-         if (ncnln.eq.0) then
+
             cnorm = zero
-         else
-            cnorm = dnrm2(ncnln,c,1)
-         end if
 c
          gltest = (one+abs(objf)+abs(cnorm))*epsrf/fdnorm
          if (glnorm.le.gltest) then
@@ -9606,8 +8277,8 @@ c         than featol.
 c     (2) compute the 2-norm of the residuals of the constraints in
 c         the qp working set.
 c     ===============================================================
-      call e04ucw(n,nclin,ncnln,istate,bigbnd,cvnorm,errmax,jmax,nviol,
-     *            ax,bl,bu,c,featol,x,w(lwrk2))
+      call e04ucw(n,nclin,istate,bigbnd,cvnorm,errmax,jmax,nviol,
+     *            ax,bl,bu,featol,x,w(lwrk2))
 c
 c     define small quantities that reflect the magnitude of objf and
 c     the norm of grad(free).
@@ -9673,9 +8344,9 @@ c
 c     print the details of this iteration.
 
       call e04uct(ktcond,convrg,mjrmsg,msgnp,msgqp,ldr,ldt,n,nclin,
-     *            ncnln,nctotl,nactiv,linact,nlnact,nz,nfree,majit0,
+     *            nctotl,nactiv,linact,nlnact,nz,nfree,majit0,
      *            majits,minits,istate,alfa,nfun,condhz,condh,condt,
-     *            objalf,objf,gfnorm,gznorm,cvnorm,ax,c,r,w(lt),
+     *            objalf,objf,gfnorm,gznorm,cvnorm,ax,r,w(lt),
      *            w(lvioln),x,w(lwrk1))
 c
       alfa = zero
@@ -9695,12 +8366,7 @@ c        make copies of information needed for the bfgs update.
 c
          call dcopy(n,x,1,w(lx1),1)
          call dcopy(n,w(lgq),1,w(lgq1),1)
-c
-         if (ncnln.gt.0) then
-            call dcopy(ncnln,w(lcjdx),1,w(lcjdx1),1)
-            call dcopy(ncnln,w(lcmul),1,w(lc1mul),1)
-            call dcopy(ncnln,w(lslk),1,w(lslk1),1)
-         end if
+
 c
 c        ============================================================
 c        compute the parameters for the linesearch.
@@ -9715,29 +8381,22 @@ c        ------------------------------------------------------------
 c        alfmax is the largest feasible steplength subject to a user-
 c        defined limit alflim on the change in x.
 c        ------------------------------------------------------------
-         if (ncnln.gt.0.and.needfd) then
-            alfmax = one
-         else
+
             alfmax = adivb (bigdx,dxnorm,overfl)
-            call e04udt(info,n,nclin,ncnln,alfa,alfmin,alfmax,bigbnd,
+            call e04udt(info,n,nclin,alfa,alfmin,alfmax,bigbnd,
      *                  dxnorm,w(lanorm),w(ladx),ax,bl,bu,w(ldslk),
      *                  w(ldx),w(lslk),x)
             alfmax = alfa
             if (alfmax.lt.one+epspt3.and.feasqp) alfmax = one
-         end if
-c
+
 c        ------------------------------------------------------------
 c        alfbnd is a tentative upper bound on the steplength.  if the
 c        merit function is decreasing at alfbnd and certain
 c        conditions hold,  alfbnd will be increased in multiples of
 c        two (subject to not being greater than alfmax).
 c        ------------------------------------------------------------
-         if (ncnln.eq.0) then
+
             alfbnd = alfmax
-         else
-            alfbnd = min(one,alfmax)
-         end if
-c
 c        ------------------------------------------------------------
 c        alfsml trips the computation of central differences.  if a
 c        trial steplength falls below alfsml, the linesearch is
@@ -9755,11 +8414,11 @@ c        ============================================================
          alflim = adivb ((one+xnorm)*dxlim,dxnorm,overfl)
          alfa = min(alflim,one)
 c
-         call e04ucr(needfd,nlserr,n,ncnln,ldcj,ldcju,nfun,ngrad,
-     *               iw(lneedc),confun,objfun,alfa,alfbnd,alfmax,alfsml,
+         call e04ucr(needfd,nlserr,n,nfun,ngrad,
+     *               iw(lneedc),objfun,alfa,alfbnd,alfmax,alfsml,
      *               dxnorm,epsrf,eta,gdx,grdalf,glf1,glf2,objf,objalf,
-     *               qpcurv,xnorm,c,w(lwrk1),cjac,cjacu,w(lcjdx),
-     *               w(lwrk3),w(lc1mul),w(lcmul),w(lcs1),w(lcs2),w(ldx),
+     *               qpcurv,xnorm,
+     *               w(lc1mul),w(lcmul),w(lcs1),w(lcs2),w(ldx),
      *               w(ldlam),w(ldslk),grad,gradu,clamda(nl),w(lrho),
      *               w(lslk1),w(lslk),w(lx1),x,w(lwrk2),w,lenw,iuser,
      *               user)
@@ -9821,27 +8480,16 @@ c              compute the missing gradients.
 c              ======================================================
                mode = 1
                ngrad = ngrad + 1
-c
-               if (ncnln.gt.0) then
-                  call iload(ncnln,(1),iw(lneedc),1)
-c
-                  call confun(mode,ncnln,n,ldcju,iw(lneedc),x,w(lwrk1),
-     *                        cjacu,nstate,iuser,user)
-                  inform = mode
-                  if (mode.lt.0) go to 60
-c
-                  call smcopy('general',ncnln,n,cjacu,ldcju,cjac,ldcj)
-               end if
-c
+
+               iuser(2) = 0
+
                call objfun(mode,n,x,obj,gradu,nstate,iuser,user)
-               inform = mode
-               if (mode.lt.0) go to 60
 c
                call dcopy(n,gradu,1,grad,1)
 c
-               call e04uds(centrl,mode,ldcj,ldcju,n,ncnln,bigbnd,cdint,
-     *                     fdint,fdnorm,objf,confun,objfun,iw(lneedc),
-     *                     bl,bu,c,w(lwrk2),w(lwrk3),cjac,cjacu,grad,
+               call evalfd (centrl,mode,n,bigbnd,cdint,
+     *                     fdint,fdnorm,objf,objfun,iw(lneedc),
+     *                     bl,bu,grad,
      *                     gradu,w(lhfrwd),w(lhctrl),x,w,lenw,iuser,
      *                     user)
 c
@@ -9850,11 +8498,7 @@ c
 c
                gdx = ddot1 (n,grad,1,w(ldx))
                glf2 = gdx
-               if (ncnln.gt.0) then
-                  call dgemv ('n',ncnln,n,one,cjac,ldcj,w(ldx),zero,
-     *                       w(lcjdx))
-                  glf2 = glf2 - ddot1 (ncnln,w(lcjdx),1,clamda(nl))
-               end if
+
             end if
 c
             call dcopy(n,grad,1,w(lgq),1)
@@ -9862,10 +8506,7 @@ c
      *                  w(lwrk1))
 c
             xnorm = dnrm2(n,x,1)
-c
-            if (ncnln.gt.0.and.alfa.ge.one) call dcopy(ncnln,
-     *          clamda(nl),1,w(lcmul),1)
-c
+
             if (nclin.gt.0) call daxpy (nclin,alfa,w(ladx),1,ax,1)
             alfdx = alfa*dxnorm
 c
@@ -9873,15 +8514,15 @@ c           =========================================================
 c           update the factors of the approximate hessian of the
 c           lagrangian function.
 c           =========================================================
-            call e04ucl(mjrmsg,unitq,n,ncnln,nfree,nz,ldcj1,ldcj,ldzy,
-     *                  ldr,kx,alfa,glf1,glf2,qpcurv,w(lcjac1),cjac,
-     *                  w(lcjdx1),w(lcjdx),w(lcs1),w(lcs2),w(lgq1),
+            call e04ucl(mjrmsg,unitq,n,nfree,nz,ldzy,
+     *                  ldr,kx,alfa,glf1,glf2,qpcurv,
+     *                  w(lcs1),w(lcs2),w(lgq1),
      *                  w(lgq),w(lhpq),w(lrpq),clamda(nl),r,w(lwrk3),
      *                  w(lzy),w(lwrk2),w(lwrk1))
-c
+ 
             call scond (n,r,ldr+1,drmax,drmin)
             cond = adivb (drmax,drmin,overfl)
-c
+ 
             if (cond.gt.rcndbd.or.rfrobn.gt.rootn*growth*drmax) then
 c              ------------------------------------------------------
 c              reset the condition estimator and range-space
@@ -9935,8 +8576,8 @@ c     set  clamda.  print the full solution.
       end if
 c
       call e04nbx(msgnp,nfree,ldaqp,n,nclin,nctotl,bigbnd,named,names,
-     *            nactiv,istate,kactiv,kx,aqp,bl,bu,c,clamda,w(lrlam),x)
-      if (ncnln.gt.0) call dcopy(ncnln,w(lcmul),1,clamda(n+nclin+1),1)
+     *            nactiv,istate,kactiv,kx,aqp,bl,bu,clamda,w(lrlam),x)
+
 
 c     end of  e04ucz. (npcore)
 
@@ -9962,8 +8603,8 @@ c     of the largest and smallest elements of drz. the qr factorization
 c     with interchanges is used to give diagonals of drz that are
 c     decreasing in modulus.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       double precision zero, half, one
       parameter (zero=0.0d+0,half=0.5d+0,one=1.0d+0)
 
@@ -9977,7 +8618,7 @@ c     decreasing in modulus.
       double precision drmax, drmin, rcndbd, rfrobn
       logical           npdbg
 
-      integer inpdbg(ldbg)
+      integer inpdbg(5)
 
       double precision drgm, drgs, gjmax, scle, sumsq
       integer info, j, jmax, jsave, nrank
@@ -10093,11 +8734,11 @@ c          3    constraint j is in the working set as an equality.
 c
 c     constraint j may be violated by as much as featol(j).
 
+      implicit none 
 
       integer lenls
       parameter (lenls=20)
-      integer ldbg
-      parameter (ldbg=5)
+
       integer mxparm
       parameter (mxparm=30)
       double precision zero, half, one
@@ -10121,13 +8762,13 @@ c     constraint j may be violated by as much as featol(j).
      *                  dtmin, epspt3, epspt5, epspt8, epspt9, tolact,
      *                  tolfea, tolrnk
       integer idbgls, iprint, iprnt, isumm, isumry, itmax1,
-     *                  itmax2, lcrash, ldbgls, ldt, ldzy, lennam,
+     *                  itmax2, lcrash, ldbgls, ldt, ldzy,
      *                  lines1, lines2, lprob, msgls, ncolt, nn, nnclin,
      *                  nout, nprob
       logical           cmdbg, lsdbg
 
       double precision rpadls(23), rpsvls(mxparm), wmach
-      integer icmdbg(ldbg), ilsdbg(ldbg), ipadls(18),
+      integer icmdbg(5), ilsdbg(5), ipadls(18),
      *                  ipsvls(mxparm), locls(lenls)
 
       double precision absrzz, alfa, alfhit, atphit, bigalf, cnorm,
@@ -10157,7 +8798,7 @@ c     .. intrinsic functions ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
       common/ cstmch /wmach(9)
-      common            /be04nb/lennam, ldt, ncolt, ldzy
+      common/ be04nb /ldt, ncolt, ldzy
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04nc/ilsdbg, lsdbg
       common            /de04nb/asize, dtmax, dtmin
@@ -10651,7 +9292,7 @@ c     set   clamda.  print the full solution.
       end if
 c
       call e04nbx(msglvl,nfree,lda,n,nclin,nctotl,bigbnd,named,names,
-     *            nactiv,istate,kactiv,kx,a,bl,bu,x,clamda,w(lrlam),x)
+     *            nactiv,istate,kactiv,kx,a,bl,bu,clamda,w(lrlam),x)
 
 c     end of  e04ncz. (lscore)
 
@@ -10779,8 +9420,8 @@ c
 c        - 2         - 1         0           1          2         3
 c     a'x lt bl   a'x gt bu   a'x free   a'x = bl   a'x = bu   bl = bu
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
 
@@ -10796,7 +9437,7 @@ c     a'x lt bl   a'x gt bu   a'x free   a'x = bl   a'x = bu   bl = bu
       logical           lsdbg
 
       double precision wmach
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision b1, b2, biglow, bigupp, colmin, colsiz, flmax,
      *                  residl, resl, resmin, resu, toobig
@@ -11149,8 +9790,7 @@ c     of the  (n by nres)  matrix  res.
 c     if  ngq .gt. 0,  the column transformations are applied to the
 c     columns of the  (ngq by n)  matrix  gq'.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
       double precision zero, one
       parameter (zero=0.0d+0,one=1.0d+0)
 
@@ -11168,7 +9808,7 @@ c     columns of the  (ngq by n)  matrix  gq'.
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision cond, condbd, dtnew, tdtmax, tdtmin
       integer i, nanew, nfmin, npiv, nt
@@ -11178,23 +9818,19 @@ c     columns of the  (ngq by n)  matrix  gq'.
 
       double precision dnrm2, adivb 
       external          dnrm2, adivb 
-c     .. intrinsic functions ..
-      intrinsic         max, min
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /ce04nc/ilsdbg, lsdbg
       common            /de04nb/asize, dtmax, dtmin
 
-c
 c     if the condition estimator of the updated factors is greater than
 c     condbd,  a warning message is printed.
-c
+
       condbd = one/epspt9
-c
       overfl = .false.
       bound = jadd .le. n
-c
+
       if (bound) then
 
 c        a simple bound has entered the working set.  iadd  is not used.
@@ -11608,6 +10244,7 @@ c
 c     end of  e04ncy. (lsadds)
 c
       end
+
       subroutine e04nch(linobj,rowerr,unitq,nclin,nactiv,nfree,nrank,nz,
      *                  n,nctotl,ldzy,lda,ldr,ldt,istate,kactiv,kx,jmax,
      *                  errmax,ctx,xnorm,a,ax,bl,bu,cq,res,res0,featol,
@@ -11623,8 +10260,8 @@ c     feasibility tolerance, an extra step of iterative refinement is
 c     used.  if  x  is still infeasible,  the logical variable  rowerr
 c     is set.
 
-      integer ldbg
-      parameter (ldbg=5)
+      implicit none
+
       integer ntry
       parameter (ntry=5)
       double precision zero, one
@@ -11643,7 +10280,7 @@ c     is set.
       integer iprint, isumm, lines1, lines2, nout
       logical           lsdbg
 
-      integer ilsdbg(ldbg)
+      integer ilsdbg(5)
 
       double precision bnd
       integer i, is, j, k, ktry
@@ -11654,13 +10291,8 @@ c     is set.
       integer idamx1 
       external          ddot1, dnrm2, idamx1 
 
-c     .. intrinsic functions ..
-      intrinsic         abs, min
-
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ce04nc/ilsdbg, lsdbg
-
-c
 
 c     move  x  onto the simple bounds in the working set.
 
@@ -11824,7 +10456,7 @@ C
          PRNT = .TRUE.
          CALL E04UCQ(NOUT,BUFFER,KEY)
 C
-         IF (KEY.EQ.'NOLIST') THEN
+         IF (KEY.EQ.'nolist') THEN
             PRNT = .FALSE.
          ELSE
             WRITE (REC,FMT='(// A / A /)') ' Calls to E04UEF',
@@ -11840,8 +10472,8 @@ C
          END IF
          CALL E04UCQ(NOUT,BUFFER,KEY)
 C
-         IF (KEY.EQ.'LIST') PRNT = .TRUE.
-         IF (KEY.EQ.'NOLIST') PRNT = .FALSE.
+         IF (KEY.EQ.'list') PRNT = .TRUE.
+         IF (KEY.EQ.'nolist') PRNT = .FALSE.
       END IF
 C
       RETURN
