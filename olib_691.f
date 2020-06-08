@@ -3293,49 +3293,5 @@ c                                 set pa/p0a/pp arrays
 
       end 
 
-      subroutine endx3 (jd,id,ids)
-c------------------------------------------------------------------------
-c compute the composition of endmember id, for solution ids and load it
-c into the jd'th position of the x3 array.
-c------------------------------------------------------------------------
-      implicit none
 
-      include 'perplex_parameters.h'
-
-      integer jd, ii, h, i, j, id, ids
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-c----------------------------------------------------------------------
-c                                 figure out which endmember we
-c                                 are looking at:
-      do h = 1, mstot(ids)
-         if (id.eq.jend(ids,2+h)) exit
-      end do
-
-      do ii = 1, poly(ids)
-c                                 initialize wt 
-         x3(jd,pop1(ids),1,ii) = 0d0
-
-         do i = 1, istg(ids,ii)
-c                                 initialize polytope x's
-            do j = 1, ispg(ids,ii,i)
-               x3(jd,ii,i,j) = 0d0
-            end do
-
-            if (h.lt.pvert(ids,ii,1).or.h.gt.pvert(ids,ii,2)) cycle
-c                                 assign endmember fractions
-            x3(jd,ii,i,kmsol(ids,knsp(h,ids),i)) = 1d0
-c                                 assign polytope weight
-            if (pop1(ids).gt.1) x3(jd,pop1(ids),1,ii) = 1d0
-
-         end do 
-
-      end do
-
-      end
  

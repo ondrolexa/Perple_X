@@ -7736,8 +7736,8 @@ c                                 non-temkin (688)
      *                       ' in '//text//' is invalid.')
 
                   else 
-
-                     call error (72,
+c DEBUG691
+                     call warn (72,
      *                       zt,i,'the expression for z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
      *                       ' in '//text//' is incorrect.')
@@ -7757,8 +7757,8 @@ c                                 non-temkin, fractions must sum to 1
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
                   if (endtst) write (*,1000) text1,zt,text
-
-                  call error (72,zt,i,
+c DEBUG691
+                  call warn (72,zt,i,
      *                       'site fractions on '//znames(ids,i,0)// 
      *                       ' in '//text//' do not sum to 1.')
 
@@ -9419,15 +9419,15 @@ c----------------------------------------------------------------------
          call gpmlt1 (g,id,error)
 
       else
-
-         if (.not.lrecip(id)) then
+c DEBUG691 cannot assume disordered initial p from gsol2
+c        if (.not.lrecip(id)) then
 c                                 non-reciprocal, initialize p0/pa
-            do i = lstot(id)+1, nstot(id)
-               p0a(i) = 0d0
-               pa(i) = p0a(i)
-            end do
+c           do i = lstot(id)+1, nstot(id)
+c              p0a(i) = 0d0
+c              pa(i) = p0a(i)
+c           end do
 
-         end if
+c        end if
 c                                 initialize limit expressions
          call p0limt (id)
 c                                 as most models are single species and
@@ -9451,11 +9451,9 @@ c                                 if speciation returns error, or order_check is
 c                                 i.e., iopt(17).ne.0, compute disordered g.
          gdord =  gex(id,p0a) - t*omega(id,p0a)
 
-         if (lrecip(id)) then
-            do i = 1, nord(id)
-               gdord = gdord + p0a(lstot(id)+i)*enth(i)
-            end do
-         end if
+         do i = 1, nord(id)
+            gdord = gdord + p0a(lstot(id)+i)*enth(i)
+         end do
 
          if (gdord.lt.g) g = gdord
 
@@ -10179,21 +10177,10 @@ c                                 stoichiometric coefficients
 
       error = .false.
 c                                 starting point
-      if (lrecip(id)) then
+
 c                                 reciprocal
-         call plimit (pmin,pmax,k,id)
-         dpmax = pmax - pmin
-
-      else
-c                                 find the maximum proportion of the
-c                                 ordered species cannot be > the amount
-c                                 of reactant initially present.
-         dpmax = 1d0
-         do i = 1, nr
-            if (-p0a(ind(i))/dy(i).lt.dpmax) dpmax = -p0a(ind(i))/dy(i)
-         end do
-
-      end if
+      call plimit (pmin,pmax,k,id)
+      dpmax = pmax - pmin
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
@@ -10282,7 +10269,7 @@ c                                 find a starting point, set
 c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
       if (error) call pincs (dpmax,dy,ind,jd,nr)
-
+c DEBUG691, should this be pa-p0a * enth?
       g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
       end
@@ -25736,3 +25723,48 @@ c                                             solution.
 
       end 
 
+      subroutine endx3 (jd,id,ids)
+c------------------------------------------------------------------------
+c compute the composition of endmember id, for solution ids and load it
+c into the jd'th position of the x3 array.
+c------------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer jd, ii, h, i, j, id, ids
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+c----------------------------------------------------------------------
+c                                 figure out which endmember we
+c                                 are looking at:
+      do h = 1, mstot(ids)
+         if (id.eq.jend(ids,2+h)) exit
+      end do
+
+      do ii = 1, poly(ids)
+c                                 initialize wt 
+         x3(jd,pop1(ids),1,ii) = 0d0
+
+         do i = 1, istg(ids,ii)
+c                                 initialize polytope x's
+            do j = 1, ispg(ids,ii,i)
+               x3(jd,ii,i,j) = 0d0
+            end do
+
+            if (h.lt.pvert(ids,ii,1).or.h.gt.pvert(ids,ii,2)) cycle
+c                                 assign endmember fractions
+            x3(jd,ii,i,kmsol(ids,knsp(h,ids),i)) = 1d0
+c                                 assign polytope weight
+            if (pop1(ids).gt.1) x3(jd,pop1(ids),1,ii) = 1d0
+
+         end do 
+
+      end do
+
+      end

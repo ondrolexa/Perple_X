@@ -10430,6 +10430,7 @@ C     .. Common blocks ..
       common/ cstmch /wmach(9)
       COMMON            /EE04UC/NEWOPT
 C     .. Save statement ..
+      save prnt
       SAVE              /EE04UC/
 C     .. Data statements ..
       DATA              FIRST/.TRUE./

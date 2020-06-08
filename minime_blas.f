@@ -295,7 +295,7 @@ c-----------------------------------------------------------------------
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
 
-      g = gsol1(jds)
+      g = gsol1 (jds)
 
 c     write (*,1000) 1, (pa(i),i=1,nstot(jds))
 c                                 get the bulk composition from pp
@@ -1195,7 +1195,7 @@ c                                 non-temkin, fractions must sum to 1
 
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
-                  call error (72,zt,i,
+                  call warn (72,zt,i,
      *                       'site fractions on '//znames(ids,i,0)// 
      *                       ' in  do not sum to 1.')
 

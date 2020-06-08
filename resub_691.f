@@ -608,8 +608,8 @@ c----------------------------------------------------------------------
 c                                 -------------------------------------
 c                                 local variables
       integer i, kcoct, id, ids, j
-
-      double precision sum
+c DEBUG691
+      double precision zt(m10,m11), sum
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -641,12 +641,14 @@ c                                 it's a solution:
      *                            zco(icoz(id)+1:icoz(id)+nstot(ids))
 
          kcoct = kcoct + nstot(ids)
-
+c DEBUG691
          sum = 0d0
          do j = 1, nstot(ids)
             sum = sum + ycoor(lcoor(i)+j)
+            pa(j) = zco(icoz(id)+j)
          end do
          if (sum.lt.0.9999999) call errpau
+         call p2z(pa,zt,ids)
 
       end do 
 

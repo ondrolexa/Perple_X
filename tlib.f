@@ -2911,6 +2911,9 @@ c----------------------------------------------------------------------
          write (*,63)
       else if (ier.eq.68) then
          write (*,68)
+      else if (ier.eq.72) then
+c                                 generic warning, also 99
+         write (*,72) char
       else if (ier.eq.73) then
          write (*,73) char, realv, int
       else if (ier.eq.74) then
@@ -3177,6 +3180,7 @@ c----------------------------------------------------------------------
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
      *          'COFACE, this should never occur',/,'if you see this ',
      *          'message please report the problem',/)
+72    format (/,'**warning ver072** ',a,/)
 73    format (/,'**warning ver073** an invariant point has been ',
      *          'skipped, routine: ',a,/,
      *          'decreasing DTOL (',g9.3,') in the thermodynamic ', 
