@@ -1,3 +1,5 @@
+      subroutine dummy
+      end 
 
       subroutine minfrc (ids,kds)
 c-----------------------------------------------------------------------
@@ -14,12 +16,14 @@ c-----------------------------------------------------------------------
 
       integer ids, kds, nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), istart, nclin, ntot
+c DEBUG691
+     *         , i, j, iprint
 
       double precision ggrd(m19), lapz(m20,m19),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(1)
-c                                 dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),yt(m14)
+c DEBUG691                    dummies for NCNLN > 0
+     *                 ,c(1),cjac(1,1),yt(m14),zp,zt(m10,m11)
 
       integer nz
       double precision apz, zl, zu
@@ -34,6 +38,10 @@ c                                 dummies for NCNLN > 0
       common/ cst330 /mu(k8),mus
 
       external gsol2, dummy
+
+      data iprint/0/
+
+      save iprint
 c-----------------------------------------------------------------------
       if (.not.mus) then 
          write (*,*) 'no mus'
@@ -95,150 +103,29 @@ c      CALL E04UEF ('function precision = 0.00025')
 
       call e04ucf (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-     *             m22,work,m23,istuff,stuff,istart)
+     *             m22,work,m23,istuff,stuff,istart,iprint)
 
 c     call e04ucf (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
 c    *             iter,istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,
 c    *             m22,work,m23,istuff,stuff,istart)
 
+c     write (*,1000) 'pas',pa(1:3)
+c     write (*,1000) 'p0as',p0a(1:3)
+1000  format (a10,10(g14.7,1x))
 
-      end
+c     do i = 1, nz(ids)
+c        zp = 0d0 
+c        do j = 1, nvar
+c           zp = zp + lapz(i,j) * ppp(j)
+c        end do
 
-      subroutine minfxc (ids,maxs)
-c-----------------------------------------------------------------------
-c optimize solution gibbs energy or configurational entropy at constant 
-c composition subject to site fraction constraints.
+c        write (*,1010) i, bl(i),zp,bu(i)
 
-c     number of compositional constraints -> icomp (<k5)
-c     number of independent endmember fractions -> nstot-1 (<m19)
-c     number of site fractions -> nz (<m20)
-c     closure is forced in the objective function (gsol2) and
-c        by using the complete set of site fraction.
-c     requires that pp has been loaded in cxt7
-c-----------------------------------------------------------------------
-      implicit none
+c     end do
 
-      include 'perplex_parameters.h'
+c     call p2z (pa,zt,ids)
 
-      logical maxs
-
-      integer ids, i, j, k, nvar, iter, iwork(m22),
-     *        istuff(10),istate(m21), istart, nclin, ntot
-
-      double precision sum, ggrd(m19), b(k5),
-     *                 bl(m21), bu(m21), gfinal, ppp(m19), 
-     *                 clamda(m21),r(m19,m19),work(m23),stuff(1),
-     *                 lapz(m20,m19)
-
-      integer nz
-      double precision apz, zl, zu
-      common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
-
-      double precision apc
-      common/ cstp2c /apc(h9,k5,m19)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      external gsol3, dummy
-c-----------------------------------------------------------------------
-c                                 create constraint matrix z
-c                                 --------------------------
-      ntot = nstot(ids)
-      nvar = ntot - 1
-c                                 initialize bounds
-      bu(1:nvar) = 1d20
-      bl(1:nvar) = -1d20
-c                                 load the local constraints 
-c                                 from the global arrays
-      nclin = nz(ids) + icomp
-c                                 first the site fraction constraints
-      lapz(1:nclin,1:nvar) = apz(ids,1:nclin,1:nvar)
-
-      do i = 1, nclin
-         bl(nvar+i) = zl(ids,i)
-         bu(nvar+i) = zu(ids,i)
-      end do
-c                                 get the bulk composition from pp
-      call getscp (b,sum,ids,ids,.false.)
-c                                 the bulk composition constraints
-      do k = 1, icomp
-
-         i = nz(ids) + k
-
-         do j = 1, nvar
-            lapz(i,j) = apc(ids,k,j)
-         end do
-
-         bl(nvar+i) = b(k) - apc(ids,k,ntot)
-         if (dabs(bl(nvar+i)).lt.zero) bl(nvar+i) = 0d0
-         bu(nvar+i) = bl(nvar+i)
-
-      end do
-
-      istart = -1
-c                                 solution model index
-      istuff(1) = ids
-c                                 istuff(2) is set by NLP and is
-c                                 irrelevant.
-c                                 istuff(3) = 0 min g, 1 max entropy
-      if (maxs) then 
-         istuff(3) = 0
-      else 
-         istuff(3) = 1
-      end if
-
-c auto
-c      CALL E04UEF ('difference interval = 1d-3')
-c eps = 1e-5
-c sqrt(eps)
-c      CALL E04UEF ('linear feasibility tolerance = 0.0032')
-c sqrt(eps)
-c      CALL E04UEF ('feasibility tolerance = 0.0032')
-c eps**(0.8)
-c      CALL E04UEF ('optimality tolerance = 1d-4')
-c eps**(0.9)
-c      CALL E04UEF ('function precision = 0.0000316')
-c eps = 1e-4
-c sqrt(eps)
-c      CALL E04UEF ('linear feasibility tolerance = 0.01')
-c sqrt(eps)
-c      CALL E04UEF ('feasibility tolerance = 0.01')
-c eps**(0.8)
-c      CALL E04UEF ('optimality tolerance = 0.00063')
-c eps**(0.9)
-c      CALL E04UEF ('function precision = 0.00025')
-       CALL E04UEF ('derivative level = 0')
-
-c                                 istuff = 0 min g, 1 max entropy
-      if (maxs) then 
-         istuff(1) = 0
-      else 
-         istuff(1) = 1
-      end if 
-
-c      call e04ucf (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
-c     *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-c     *             m22,work,m23,istuff,stuff,istart)
-
+1010  format (i5,1x,10(g14.7,1x))
       end
 
       subroutine gsol2 (mode,nvar,ppp,gval,ggrd,istart,istuff,stuff)
@@ -275,8 +162,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      save g, sum, scp
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
@@ -301,7 +186,7 @@ c     write (*,1000) 1, (pa(i),i=1,nstot(jds))
 c                                 get the bulk composition from pp
       call getscp (scp,sum,jds,jds,.false.)
 
-c     write (*,1000) 0, (cp2(i),i=1,icp)
+c     write (*,1000) 0, (scp(i),i=1,icp)
 
       gval = g
 
@@ -590,8 +475,6 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
 
       end
 
-      subroutine dummy
-      end 
 
 
 
@@ -1174,8 +1057,8 @@ c                                 for each term:
                write (*,1001) i,j,z(i,j)
 c                                 non-temkin (688)
                if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
-
-                     call error (72,
+c DEBUG691
+                     call warn (72,
      *                       zt,i,'the expression for z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
      *                       ' in '//' is incorrect.')
@@ -1906,5 +1789,142 @@ c                       write (*,*) ' '
          end do
 
       end do
+
+      end
+
+      subroutine minfxc (ids,maxs)
+c-----------------------------------------------------------------------
+c optimize solution gibbs energy or configurational entropy at constant 
+c composition subject to site fraction constraints.
+
+c     number of compositional constraints -> icomp (<k5)
+c     number of independent endmember fractions -> nstot-1 (<m19)
+c     number of site fractions -> nz (<m20)
+c     closure is forced in the objective function (gsol2) and
+c        by using the complete set of site fraction.
+c     requires that pp has been loaded in cxt7
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical maxs
+
+      integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
+     *        istuff(10),istate(m21), istart, nclin, ntot
+
+      double precision sum, ggrd(m19), b(k5),
+     *                 bl(m21), bu(m21), gfinal, ppp(m19), 
+     *                 clamda(m21),r(m19,m19),work(m23),stuff(1),
+     *                 lapz(m20,m19)
+
+      integer nz
+      double precision apz, zl, zu
+      common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
+
+      double precision apc
+      common/ cstp2c /apc(h9,k5,m19)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      external gsol3
+c-----------------------------------------------------------------------
+c                                 create constraint matrix z
+c                                 --------------------------
+      ntot = nstot(ids)
+      nvar = ntot - 1
+c                                 initialize bounds
+      bu(1:nvar) = 1d20
+      bl(1:nvar) = -1d20
+c                                 load the local constraints 
+c                                 from the global arrays
+      nclin = nz(ids) + icomp
+c                                 first the site fraction constraints
+      lapz(1:nclin,1:nvar) = apz(ids,1:nclin,1:nvar)
+
+      do i = 1, nclin
+         bl(nvar+i) = zl(ids,i)
+         bu(nvar+i) = zu(ids,i)
+      end do
+c                                 get the bulk composition from pp
+      call getscp (b,sum,ids,ids,.false.)
+c                                 the bulk composition constraints
+      do k = 1, icomp
+
+         i = nz(ids) + k
+
+         do j = 1, nvar
+            lapz(i,j) = apc(ids,k,j)
+         end do
+
+         bl(nvar+i) = b(k) - apc(ids,k,ntot)
+         if (dabs(bl(nvar+i)).lt.zero) bl(nvar+i) = 0d0
+         bu(nvar+i) = bl(nvar+i)
+
+      end do
+
+      istart = -1
+c                                 solution model index
+      istuff(1) = ids
+c                                 istuff(2) is set by NLP and is
+c                                 irrelevant.
+c                                 istuff(3) = 0 min g, 1 max entropy
+      if (maxs) then 
+         istuff(3) = 0
+      else 
+         istuff(3) = 1
+      end if
+
+c auto
+c      CALL E04UEF ('difference interval = 1d-3')
+c eps = 1e-5
+c sqrt(eps)
+c      CALL E04UEF ('linear feasibility tolerance = 0.0032')
+c sqrt(eps)
+c      CALL E04UEF ('feasibility tolerance = 0.0032')
+c eps**(0.8)
+c      CALL E04UEF ('optimality tolerance = 1d-4')
+c eps**(0.9)
+c      CALL E04UEF ('function precision = 0.0000316')
+c eps = 1e-4
+c sqrt(eps)
+c      CALL E04UEF ('linear feasibility tolerance = 0.01')
+c sqrt(eps)
+c      CALL E04UEF ('feasibility tolerance = 0.01')
+c eps**(0.8)
+c      CALL E04UEF ('optimality tolerance = 0.00063')
+c eps**(0.9)
+c      CALL E04UEF ('function precision = 0.00025')
+       CALL E04UEF ('derivative level = 0')
+
+c                                 istuff = 0 min g, 1 max entropy
+      if (maxs) then 
+         istuff(1) = 0
+      else 
+         istuff(1) = 1
+      end if 
+
+      call e04ucf (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
+     *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
+     *             m22,work,m23,istuff,stuff,istart,iprint)
 
       end

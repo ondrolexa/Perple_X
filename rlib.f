@@ -8345,9 +8345,6 @@ c                                 excess energy variables
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-c                                 convert y -> x array
-      integer indx
-      common/ cxt5i /indx(h9,h4,mst,msp)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -9361,25 +9358,6 @@ c                                 of endmember i in the solution model input:
                ifp(kdsol(knsp(i,im))) = 1
             end if
 
-         end do
-
-      end if
-
-      if (jsmod.ne.20) then
-c                                 -------------------------------------
-c                                 create a y -> x array, this array is
-c                                 to be used to convert endmember fractions (y's)
-c                                 back to geometric coordinates (x's).
-         do i = 1, isimp(1)
-            do j = 1, ivert(1,i)
-c                                 now find all endmembers with
-c                                 species j on site i, this method
-c                                 is inefficient but idependent of
-c                                 endmember order.
-               do k = 1, istot
-                  if (jmsol(k,i).eq.j) indx(im,1,i,j) = k
-               end do
-            end do
          end do
 
       end if

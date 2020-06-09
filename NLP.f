@@ -2,7 +2,7 @@
 
       subroutine e04ucf(n,nclin,lda,ldr,a,bl,bu,
      *                  objfun,iter,istate,clamda,objf,gradu,r,
-     *                  x,iw,leniw,w,lenw,iuser,user,ifail)
+     *                  x,iw,leniw,w,lenw,iuser,user,ifail,jprint)
 
 c     n        the number of variables (dimension of  x)
 c     nclin    the number of linear constraints (rows of the matrix  a)
@@ -73,7 +73,7 @@ c     the array  r).
 
       double precision objf
       integer ifail, iter, lda, ldr, leniw, lenw, n,
-     *                  nclin
+     *                  nclin, jprint
 
       double precision a(lda,*), bl(n+nclin), bu(n+nclin),
      *                  clamda(n+nclin),
@@ -187,8 +187,8 @@ c
       named = .false.
       inform = 0
 c                                 print flags
-      msgnp = 0
-      msgqp = 0 
+      msgnp = jprint
+      msgqp = jprint 
 c
 c     set the default values for the parameters.
 c
@@ -7082,6 +7082,7 @@ c                (alfmax le toltny  or  oldg ge 0).
 
 c     +    repeat
    40 if (needfd) then
+         iuser(2) = 0
          call e04ucj(first,debug,done,imprvd,inform,maxf,numf,iprint,
      *               alfmax,alfsml,epsaf,g0,targtg,ftry,tolabs,tolrel,
      *               toltny,alfa,alfbst,fbest)
@@ -7115,7 +7116,11 @@ c
 c        ------------------------------------------------------------
 c        compute the value and gradient of the objective function.
 c        ------------------------------------------------------------
-         iuser(2) = 1
+c        if (done) then 
+            iuser(2) = 1
+c         else 
+c           iuser(2) = 0
+c         end if 
          call objfun(mode,n,x,tobj,gradu,nstate,iuser,user)
 
             tobjm = tobj

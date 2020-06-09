@@ -9361,20 +9361,16 @@ c                                 order-disorder, need initial speciation
 c                                 usually fully disordered
       p0a(1:nstot(id)) = pa(1:nstot(id))
 
-      if (lrecip(id)) then
-c                                 non-simplicial composition space
-         pp(1:nstot(id)) = pa(1:nstot(id))
+      pp(1:nstot(id)) = pa(1:nstot(id))
 
-         do k = 1, nord(id)
-            do l = 1, nrct(k,id)
-               ind = ideps(l,k,id)
-               pp(ind) = pp(ind) - dydy(ind,k,id) * pp(lstot(id)+k)
-            end do
+      do k = 1, nord(id)
+         do l = 1, nrct(k,id)
+            ind = ideps(l,k,id)
+            pp(ind) = pp(ind) - dydy(ind,k,id) * pp(lstot(id)+k)
          end do
+      end do
 c                                 zero ordered pp's
-         pp( lstot(id) + 1: nstot(id) ) = 0d0
-
-      end if
+      pp( lstot(id) + 1: nstot(id) ) = 0d0
 
       end
 
@@ -9455,7 +9451,10 @@ c                                 i.e., iopt(17).ne.0, compute disordered g.
             gdord = gdord + p0a(lstot(id)+i)*enth(i)
          end do
 
-         if (gdord.lt.g) g = gdord
+         if (gdord.lt.g) then 
+            g = gdord
+            pa(1:nstot(id)) = p0a(1:nstot(id))
+         end if 
 
       end if
 
@@ -10269,7 +10268,7 @@ c                                 find a starting point, set
 c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
       if (error) call pincs (dpmax,dy,ind,jd,nr)
-c DEBUG691, should this be pa-p0a * enth?
+
       g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
       end
@@ -21196,7 +21195,7 @@ c                                  meemum, vertex => during dynamic optimization
 c                                  pure solvent, use the y array to be safe
                do i = 1, ns
                   do j = 1, icomp 
-                     scp(j) = scp(j) + y(i) * cp(j,jnd(i))
+                     scp(j) = scp(j) + pa(i) * cp(j,jnd(i))
                   end do 
                end do
 
@@ -21224,7 +21223,7 @@ c                                 convert molality to mole fraction (xx)
 
          end if
 
-      else if (lrecip(ids)) then
+      else if (lorder(ids)) then
 
          do i = 1, lstot(ids)
             do j = 1, icomp 
@@ -21237,22 +21236,22 @@ c                                 electrolyte:
 c                                 solute species  
          do i = sn1, nqs
             do j = 1, icomp
-               scp(j) = scp(j) + y(i) * aqcp(j,jnd(i) - aqst)
+               scp(j) = scp(j) + pa(i) * aqcp(j,jnd(i) - aqst)
             end do
          end do 
 c                                 solvent species 
          do i = 1, ns 
             do j = 1, icomp
-               scp(j) = scp(j) + y(i) * cp(j,jnd(i))
+               scp(j) = scp(j) + pa(i) * cp(j,jnd(i))
             end do
          end do
 
       else
 c                                 solutions with no dependent endmembers:
-c                                 y coordinates used to compute the composition
-         do i = 1, mstot(ids)
+c                                 pa coordinates used to compute the composition
+         do i = 1, nstot(ids)
             do j = 1, icomp
-               scp(j) = scp(j) + y(i) * cp(j,jend(ids,2+i))
+               scp(j) = scp(j) + pa(i) * cp(j,jend(ids,2+i))
             end do
          end do
 
