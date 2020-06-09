@@ -647,8 +647,11 @@ c DEBUG691
             sum = sum + ycoor(lcoor(i)+j)
             pa(j) = zco(icoz(id)+j)
          end do
-         if (sum.lt.0.9999999) call errpau
-         call p2z(pa,zt,ids)
+         if (sum.lt.0.9999999) then
+            write (*,*) 'low sum, savpa, suspect zs:'
+c           call errpau
+            call p2z(pa,zt,ids)
+         end if 
 
       end do 
 
@@ -830,9 +833,6 @@ c                                  x-coordinates for the final solution
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
-
-      double precision pa3
-      common/ cstpa3 /pa3(k5,m14)
 
       logical abort1
       common/ cstabo /abort1
@@ -1532,10 +1532,7 @@ c                                solution phase compositions
 
          ids = kkp(i)
 
-         write (n5,1010) (((x3(i,ii,j,k), k=1,ispg(ids,ii,j)),
-     *                                    j=1,istg(ids,ii)),
-     *                                   ii=1,pop1(ids))
-
+         write (n5,1010) (pa3(i,j),j=1,nstot(ids))
 c                                lagged speciation
          if (ksmod(ids).eq.39.and.lopt(32)) write (n5,1010) 
      *                                            (caq(i,j),j=1,nat)
@@ -2506,9 +2503,6 @@ c                                 hcp is different from icp only if usv
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
-
-      double precision pa3
-      common/ cstpa3 /pa3(k5,m14)
 
       integer jend
       common/ cxt23 /jend(h9,m4)

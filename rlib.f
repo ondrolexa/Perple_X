@@ -24801,7 +24801,7 @@ c                                 only hope is interim results:
 
       if (ier.ne.0) then 
 
-         if (iopt(2).eq.1) then 
+         if (iopt(34).eq.1) then 
 c                                  end of the line
             call error (72,nopt(1),i,'no IRF file: interim '//
      *                               'results are not available')
