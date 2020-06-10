@@ -10503,26 +10503,3 @@ c     if nrec is 0 then no records are output.
          call x04baf(nout,rec(i))
    20 continue
       end
-
-      subroutine x04baf(nout,rec)
-
-c     trailing blanks are not output, except that if rec is entirely
-c     blank, a single blank character is output.
-c     if nout.lt.0, i.e. if nout is not a valid fortran unit identifier,
-c     then no output occurs.
-      integer nout
-      character*(*)     rec
-      integer i
-
-      if (nout.ge.0) then
-c        remove trailing blanks
-         do 20 i = len(rec), 2, -1
-            if (rec(i:i).ne.' ') go to 40
-   20    continue
-c        write record to external file
-   40    write (*,fmt=99999) rec(1:i)
-      end if
-
-99999 format (a)
-      end
-
