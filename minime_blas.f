@@ -101,11 +101,11 @@ c eps**(0.9)
 c      CALL E04UEF ('function precision = 0.00025')
       CALL E04UEF ('derivative level = 0')
 
-      call e04ucf (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
+      call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
      *             m22,work,m23,istuff,stuff,istart,iprint)
 
-c     call e04ucf (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
+c     call nlpopt (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
 c    *             iter,istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,
 c    *             m22,work,m23,istuff,stuff,istart)
 
@@ -180,7 +180,7 @@ c-----------------------------------------------------------------------
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
 
-      g = gsol1 (jds)
+      g = gsol4 (jds)
 
 c     write (*,1000) 1, (pa(i),i=1,nstot(jds))
 c                                 get the bulk composition from pp
@@ -695,7 +695,7 @@ c                                 istuff = 0 min g, 1 max entropy
          istuff(1) = 1
       end if 
 
-      call e04ucf (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
+      call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
      *             m22,work,m23,istuff,stuff,istart,iprint)
 

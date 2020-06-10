@@ -7730,8 +7730,8 @@ c                                 non-temkin (688)
                   if (endtst) then
 
                      write (*,1000) text1,z(i,j),text
-
-                     call error (72,zt,i,' z('//
+c DEBUG691
+                     call warn (72,zt,i,' z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
      *                       ' in '//text//' is invalid.')
 
@@ -18738,7 +18738,7 @@ c                                 site has non-zero multiplicity
 
                   else if (dz.gt.zero) then
 
-                     write (*,*) 'oink'
+                     write (*,*) 'oink temkin dz ',dz
 
                   end if
 

@@ -796,10 +796,7 @@ c----------------------------------------------------------------------
       else if (incx.eq.0) then
          info = 8
       end if
-      if (info.ne.0) then
-         call f06aaz('f06dtrsv90123', info)
-         return
-      end if
+      if (info.ne.0) return
 
 c     quick return if possible.
 
@@ -1010,57 +1007,10 @@ c     accessed sequentially with one pass through a.
 
       end
 
-      subroutine f06aaz (srname, info)
-c----------------------------------------------------------------------
 
-      integer info
-      character*13       srname
-
-c  f06aaz  is an error handler for the level 2 blas routines.
-
-c  it is called by the level 2 blas routines if an input parameter is
-c  invalid.
-
-c  srname - character*13.
-c           on entry, srname specifies the name of the routine which
-c           called f06aaz.
-
-c  info   - integer.
-c           on entry, info specifies the position of the invalid
-c           parameter in the parameter-list of the calling routine.
-c----------------------------------------------------------------------
-
-      integer ierr, ifail
-      character*4        varbnm
-
-      character*80       rec (1)
-
-      integer p01acf
-      external           p01acf
-c     ..
-
-      write (rec (1),99999) srname, info
-      if (srname(1:3).eq.'f06') then
-         ierr = -1
-         varbnm = '    '
-      else
-         ierr = -info
-         varbnm = 'info'
-      end if
-      ifail = 0
-      ifail = p01acf (ifail, ierr, srname(1:6), varbnm, 1, rec)
-
-99999 format (' ** on entry to ', a13, ' parameter number ', i2,
-     *         ' had an illegal value')
-
-      end
 
       integer function p01acf(ifail,ierror,srname,varbnm,nrec,rec)
 c----------------------------------------------------------------------
-c     p01acf is the error-handling routine for the f06 and f07
-c     routines. it is a slightly modified
-c     version of p01abf.
-
 c     p01acf either returns the value of ierror through the routine
 c     name (soft failure), or terminates execution of the program
 c     (hard failure). diagnostic messages may be output.
@@ -1108,7 +1058,7 @@ c        abnormal exit from calling routine
          if (ifail.eq.-1.or.ifail.eq.0.or.ifail.eq.-13 .or.
      *       (ifail.gt.0.and.mod(ifail/10,10).ne.0)) then
 c           noisy exit
-            call x04aaf(0,nerr)
+
             do 60 i = 1, nrec
                call x04baf(nerr,rec(i))
    60       continue
@@ -1230,15 +1180,15 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       info = 0
-      if     (.not.(uplo .eq.'u'.or.uplo .eq.'u').and.
-     *         .not.(uplo .eq.'l'.or.uplo .eq.'l')    ) then
+      if     (.not.(uplo .eq.'u').and.
+     *         .not.(uplo .eq.'l')    ) then
          info = 1
-      else if (.not.(trans.eq.'n'.or.trans.eq.'n').and.
-     *         .not.(trans.eq.'t'.or.trans.eq.'t').and.
-     *         .not.(trans.eq.'c'.or.trans.eq.'c')    ) then
+      else if (.not.(trans.eq.'n').and.
+     *         .not.(trans.eq.'t').and.
+     *         .not.(trans.eq.'c')    ) then
          info = 2
-      else if (.not.(diag .eq.'u'.or.diag .eq.'u').and.
-     *         .not.(diag .eq.'n'.or.diag .eq.'n')    ) then
+      else if (.not.(diag .eq.'u').and.
+     *         .not.(diag .eq.'n')    ) then
          info = 3
       else if (n.lt.0) then
          info = 4
@@ -1247,10 +1197,8 @@ c----------------------------------------------------------------------
       else if (incx.eq.0) then
          info = 8
       end if
-      if (info.ne.0) then
-         call f06aaz('f06pff/dtrmv ', info)
-         return
-      end if
+
+      if (info.ne.0) return
 
       if (n.eq.0) return
 
@@ -3439,8 +3387,7 @@ c        n     .lt. 0
 c        lda   .lt. m
 c
 c  if  on  entry,  ifail  was either  -1 or 0  then  further  diagnostic
-c  information  will  be  output  on  the  error message  channel. (see
-c  routine  x04aaf.)
+c  information  will  be  output  on  the  error message  channel.
 c
 c  5. further information
 c     ===================
@@ -3528,8 +3475,8 @@ c  where  t  is  upper triangular and  s  is orthogonal,  using the routine  f01
       integer ierr, j, jmax, k, la
       character*46      rec(1)
       double precision dnrm2
-      integer p01abf
-      external          dnrm2, p01abf
+      integer p01acf
+      external          dnrm2, p01acf
 
 c     check the input parameters.
 
@@ -3542,14 +3489,14 @@ c     check the input parameters.
       if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
       if (ierr.gt.0) then
          write (rec,fmt=99999) ierr
-         ifail = p01abf(ifail,-1,srname,1,rec)
+         ifail = p01acf(ifail,-1,srname,' ',1,rec)
          return
       end if
 
 c     compute eps and the initial column norms.
 
       if (min(m,n).eq.0) then
-         ifail = p01abf(ifail,0,srname,0,rec)
+         ifail = 0
          return
       end if
 c                                this should be (1/2)*b**(1-p)
@@ -3570,7 +3517,7 @@ c        find the pivot column.
 c
          maxnrm = 0d0
          jmax = k
-         if ((pivot.eq.'c').or.(pivot.eq.'c')) then
+         if (pivot.eq.'c') then
             do 40 j = k, n
                if (work(j+n).gt.maxnrm) then
                   maxnrm = work(j+n)
@@ -3662,7 +3609,7 @@ c     set the final  zeta  when  m.le.n.
 c
       if (m.le.n) zeta(m) = 0d0
 c
-      ifail = p01abf(ifail,0,srname,0,rec)
+      ifail = 0
 
 99999 format ('    the input parameters contained ',i2,' error(s)')
       end
@@ -3786,7 +3733,7 @@ c        if (n.ne.'valid value') call p01abw(n, 'n', idiag, ierr, srname)
 
       ierr = ierr + 1
       if ((mod(inform,10).ne.1).or.(mod(inform/10,10).ne.0)) then
-         call x04aaf(0,nerr)
+
          write (rec,fmt=99999) name, srname, n
          call x04baf(nerr,' ')
          call x04baf(nerr,rec(1))
@@ -3828,7 +3775,7 @@ c        if (n.lt.1)call p01aby(n, 'n', idiag, ierr, srname)
 
       ierr = ierr + 1
       if ((mod(inform,10).ne.1).or.(mod(inform/10,10).ne.0)) then
-         call x04aaf(0,nerr)
+
          write (rec,fmt=99999) name, srname, n
          call x04baf(nerr,' ')
          call x04baf(nerr,rec(1))
@@ -4032,49 +3979,7 @@ c        n   .lt. 0
 c        lda .lt. m
 c
 c  if  on  entry,  ifail  was  either  -1 or 0  then  further diagnostic
-c  information  will  be  output  on  the  error message  channel. (see
-c  routine  x04aaf.)
-
-c  following the use of this routine the operations
-c
-c        b := q*b   and   b := q'*b,
-c
-c  where  b  is an  m by k  matrix, can  be  performed  by calls to  the
-c  routine  f01qdf. the  operation  b := q*b can be obtained
-c  by the call:
-c
-c     ifail = 0
-c     call f01qdf('no transpose', 'separate', m, n, a, lda, zeta,
-c    $             k, b, ldb, work, ifail)
-c
-c  and  b := q'*b  can be obtained by the call:
-c
-c     ifail = 0
-c     call f01qdf('transpose', 'separate', m, n, a, lda, zeta,
-c    $             k, b, ldb, work, ifail)
-c
-c  in  both  cases  work  must be a  k  element array  that  is used  as
-c  workspace. if  b  is a one-dimensional array (single column) then the
-c  parameter  ldb  can be replaced by  m. see routine f01qdf for further
-c  details.
-c
-c  the first k columns of the orthogonal matrix q can either be obtained
-c  by setting  b to the first k columns of the unit matrix and using the
-c  first of the above two calls,  or by calling the routine
-c  f01qef, which overwrites the k columns of q on the first k columns of
-c  the array a.  q is obtained by the call:
-c
-c     call f01qef('separate', m, n, k, a, lda, zeta, work, ifail)
-c
-c  as above work must be a k element array.  if k is larger than n, then
-c  a must have been declared to have at least k columns.
-c
-c  operations involving the matrix  r  can readily  be performed by  the
-c  level 2 blas  routines  dtrsv  and dtrmv, but note
-c  that no test for  near singularity  of  r  is incorporated in dtrsv .
-c  if  r  is singular,  or nearly singular then the routine
-c  f02wuf  can be  used to  determine  the  singular value decomposition
-c  of  r.
+c  information  will  be  output  on  the  error message  channel.
 
       character*6 srname
       parameter (srname='sgeqr ')
@@ -4088,8 +3993,8 @@ c  of  r.
 
       character*46 rec(1)
 
-      integer p01abf
-      external p01abf
+      integer p01acf
+      external p01acf
 
 c     check the input parameters.
 
@@ -4099,14 +4004,14 @@ c     check the input parameters.
       if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
       if (ierr.gt.0) then
          write (rec,fmt=99999) ierr
-         ifail = p01abf(ifail,-1,srname,1,rec)
+         ifail = p01acf(ifail,-1,srname,' ',1,rec)
          return
       end if
 c
 c     perform the factorization.
 c
       if (n.eq.0) then
-         ifail = p01abf(ifail,0,srname,0,rec)
+         ifail = 0
          return
       end if
       la = lda
@@ -4149,7 +4054,7 @@ c     set the final  zeta  when  m.eq.n.
 c
       if (m.eq.n) zeta(n) = 0d0
 c
-      ifail = p01abf(ifail,0,srname,0,rec)
+      ifail = 0
 
 99999 format ('    the input parameters contained ',i2,' error(s)')
       end
@@ -4495,156 +4400,6 @@ c
 c
       dlantr = value
 
-      end
-
-      subroutine x04bay(nout,nrec,rec)
-c     x04bay outputs nrec records on device nout, by calling x04baf.
-c     if nrec is 0 then no records are output.
-
-      integer nout, nrec
-
-      character*(*)     rec(*)
-
-      integer i
-
-      do 20 i = 1, nrec
-         call x04baf(nout,rec(i))
-   20 continue
-      end
-
-      subroutine x04baf(nout,rec)
-c     x04baf writes the contents of rec to the unit defined by nout.
-c
-c     trailing blanks are not output, except that if rec is entirely
-c     blank, a single blank character is output.
-c     if nout.lt.0, i.e. if nout is not a valid fortran unit identifier,
-c     then no output occurs.
-      integer nout
-      character*(*)     rec
-      integer i
-
-      if (nout.ge.0) then
-c        remove trailing blanks
-         do 20 i = len(rec), 2, -1
-            if (rec(i:i).ne.' ') go to 40
-   20    continue
-c        write record to external file
-   40    write (nout,fmt=99999) rec(1:i)
-      end if
-
-99999 format (a)
-      end
-
-
-
-      subroutine x04aaf(i,nerr)
-
-c     if i = 0, sets nerr to current error message unit number
-c     (stored in nerr1).
-c     if i = 1, changes current error message unit number to
-c     value specified by nerr.
-
-      integer i, nerr
-      integer nerr1
-      save              nerr1
-      data              nerr1/0/
-
-      if (i.eq.0) nerr = nerr1
-      if (i.eq.1) nerr1 = nerr
-
-      end
-
-      subroutine x04abf(i,nadv)
-
-c      if i = 0, sets nadv to current advisory message unit number
-c     (stored in nadv1).
-c     if i = 1, changes current advisory message unit number to
-c     value specified by nadv.
-c
-
-      integer i, nadv
-
-      integer nadv1
-
-      save              nadv1
-
-      data              nadv1/6/
-
-      if (i.eq.0) nadv = nadv1
-      if (i.eq.1) nadv1 = nadv
-
-      end
-
-
-
-      integer function p01abf(ifail,ierror,srname,nrec,rec)
-
-c     p01abf is an error-handling routine
-c
-c     p01abf either returns the value of ierror through the routine
-c     name (soft failure), or terminates execution of the program
-c     (hard failure). diagnostic messages may be output.
-c
-c     if ierror = 0 (successful exit from the calling routine),
-c     the value 0 is returned through the routine name, and no
-c     message is output
-c
-c     if ierror is non-zero (abnormal exit from the calling routine),
-c     the action taken depends on the value of ifail.
-c
-c     ifail =  1: soft failure, silent exit (i.e. no messages are
-c                 output)
-c     ifail = -1: soft failure, noisy exit (i.e. messages are output)
-c     ifail =-13: soft failure, noisy exit but standard messages from
-c                 p01abf are suppressed
-c     ifail =  0: hard failure, noisy exit
-c
-c     for compatibility with certain routines included before mark 12
-c     p01abf also allows an alternative specification of ifail in which
-c     it is regarded as a decimal integer with least significant digits
-c     cba. then
-c
-c     a = 0: hard failure  a = 1: soft failure
-c     b = 0: silent exit   b = 1: noisy exit
-c
-c     except that hard failure now always implies a noisy exit.
-      integer    ierror, ifail, nrec
-      character*(*)           srname
-      character*(*)           rec(*)
-      integer    i, nerr
-      character*72            mess
-
-      if (ierror.ne.0) then
-c        abnormal exit from calling routine
-         if (ifail.eq.-1.or.ifail.eq.0.or.ifail.eq.-13 .or.
-     *       (ifail.gt.0.and.mod(ifail/10,10).ne.0)) then
-c           noisy exit
-            call x04aaf(0,nerr)
-            do 20 i = 1, nrec
-               call x04baf(nerr,rec(i))
-   20       continue
-            if (ifail.ne.-13) then
-               write (mess,fmt=99999) srname, ierror
-               call x04baf(nerr,mess)
-               if (abs(mod(ifail,10)).ne.1) then
-c                 hard failure
-                  call x04baf(nerr,
-     *                     ' ** hard failure - execution terminated'
-     *                       )
-                  call p01abz
-               else
-c                 soft failure
-                  call x04baf(nerr,
-     *                        ' ** soft failure - control returned')
-               end if
-            end if
-         end if
-      end if
-
-      p01abf = ierror
-
-99999 format (' ** abnormal exit from routine ',a,': ifail',
-     *  ' =',i6)
       end
 
       subroutine cmqmul (mode,n,nz,nfree,nq,unitq,kx,v,zy,wrk)

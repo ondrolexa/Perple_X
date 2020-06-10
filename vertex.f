@@ -237,6 +237,8 @@ c-----------------------------------------------------------------------
 
       integer i, j, idead, ier, it
 
+      logical pttrue(l2)
+
       character y*1
 
       double precision errr(k5)
@@ -280,6 +282,12 @@ c-----------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
+      integer inc,jpot
+      common/ cst101 /inc(l2),jpot
+
+      double precision vmax,vmin,dv
+      common/ cst9  /vmax(l2),vmin(l2),dv(l2)
+
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
@@ -306,6 +314,27 @@ c                                 for optimization.
       call initlp 
 
       open (n0-1,status='scratch')
+c                                 patch to initialize unused potentials
+      pttrue(1:l2) = .false.
+
+      do i = 1, ipot
+         do j = 1, jpot
+            if (jv(i).eq.j) pttrue(j) = .true.
+         end do
+      end do
+
+      do j = 1, jpot
+         if (pttrue(j)) then 
+            write (*,1080) vname(j),v(j)
+            if (v(j).eq.0d0) call error (72,v(j),j,
+     *     'the sectioning value of '//vname(j)//' cannot be zero.')
+         end if
+      end do 
+
+1080  format ('The sectioning value for ',a,' is read from the list ',
+     *        'list of minimum potential',/,'values at the end of your',
+     *        ' problem definition file, its value is currently: ',
+     *        g14.7)
 c                                 two cases fileio: input from
 c                                 file, else analytical path function
       if (fileio) then 
@@ -314,7 +343,8 @@ c                                 file, else analytical path function
 
          if (ier.ne.0) call error (6,v(1),i,cfname)
 
-         j = 0 
+         j = 0
+
 
          do 
 

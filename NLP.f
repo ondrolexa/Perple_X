@@ -1,6 +1,6 @@
 
 
-      subroutine e04ucf(n,nclin,lda,ldr,a,bl,bu,
+      subroutine nlpopt(n,nclin,lda,ldr,a,bl,bu,
      *                  objfun,iter,istate,clamda,objf,gradu,r,
      *                  x,iw,leniw,w,lenw,iuser,user,ifail,jprint)
 
@@ -33,7 +33,7 @@ c     ifail    on entry 0, -1, 1; -1 recommended (see chp p01);
 c              on exit 0 is ok, ifail < 0 => mode set < 0; 
 c              1-9 error conditions.
 
-c     e04ucf   solves the nonlinear program
+c     nlpopt   solves the nonlinear program
 c
 c            minimize                   f(x)
 c
@@ -48,7 +48,7 @@ c     equality or inequality constraints on  x.
 c
 c     the dimensions of the problem are...
 
-c     e04ucf   uses a sequential quadratic programming algorithm, with a
+c     nlpopt   uses a sequential quadratic programming algorithm, with a
 c     positive-definite quasi-newton approximation to the transformed
 c     hessian  q'hq  of the lagrangian function (which will be stored in
 c     the array  r).
@@ -56,7 +56,7 @@ c     the array  r).
       implicit none 
 
       character*6       srname
-      parameter (srname='e04ucf')
+      parameter (srname='nlpopt')
       integer mxparm
       parameter (mxparm=30)
       integer lenls
@@ -128,8 +128,8 @@ c     the array  r).
       character*80      rec(2)
 
       double precision dnrm2, adivb, dlantr
-      integer p01abf
-      external          dnrm2, adivb, dlantr, p01abf
+      integer p01acf
+      external          dnrm2, adivb, dlantr, p01acf
 
 c     .. intrinsic functions ..
       intrinsic         dble, max, min, dsqrt
@@ -579,10 +579,9 @@ c     recover the optional parameters set by the user.
       call icopy(mxparm,ipsvnp,1,iprmnp,1)
       call dcopy(mxparm,rpsvnp,1,rprmnp,1)
 
-      if (inform.lt.9) then
-         call dcopy(n,w(lgrad),1,gradu,1)
-      end if
-c     if (msgnp.gt.0) then
+      if (inform.lt.9) call dcopy(n,w(lgrad),1,gradu,1)
+
+      if (msgnp.gt.0) then
          if (inform.ne.0.and.(ifail.eq.0.or.ifail.eq.-1)) then
          if (inform.lt.0) write (rec,fmt=99985)
          if (inform.eq.1) write (rec,fmt=99984)
@@ -595,25 +594,26 @@ c     if (msgnp.gt.0) then
          call x04bay(nerr,2,rec)
          end if
  
-         ifail = p01abf(ifail,inform,srname,0,rec)
-c     end if
+         ifail = p01acf(ifail,inform,srname,' ',0,rec)
+
+      end if
 
       return
 c
-c     end of  e04ucf. (npsol)
+c     end of  nlpopt. (npsol)
 c
-99999 format (/' exit e04ucf - user requested termination.')
-99998 format (/' exit e04ucf - optimal solution found.')
-99997 format (/' exit e04ucf - optimal solution found, but requested a',
+99999 format (/' exit nlpopt - user requested termination.')
+99998 format (/' exit nlpopt - optimal solution found.')
+99997 format (/' exit nlpopt - optimal solution found, but requested a',
      *       'ccuracy not achieved.')
-99996 format (/' exit e04ucf - no feasible point for the linear constr',
+99996 format (/' exit nlpopt - no feasible point for the linear constr',
      *       'aints.')
-99995 format (/' exit e04ucf - no feasible point for the nonlinear con',
+99995 format (/' exit nlpopt - no feasible point for the nonlinear con',
      *       'straints.')
-99994 format (/' exit e04ucf - too many major iterations.             ')
-99993 format (/' exit e04ucf - current point cannot be improved upon. ')
-99992 format (/' exit e04ucf - large errors found in the derivatives. ')
-99991 format (/' exit e04ucf - ',i7,' errors found in the input parame',
+99994 format (/' exit nlpopt - too many major iterations.             ')
+99993 format (/' exit nlpopt - current point cannot be improved upon. ')
+99992 format (/' exit nlpopt - large errors found in the derivatives. ')
+99991 format (/' exit nlpopt - ',i7,' errors found in the input parame',
      *       'ters.  problem abandoned.')
 99990 format (/' final objective value =',g16.7)
 99989 format (/' minimum sum of infeasibilities =',g16.7)
@@ -1064,7 +1064,7 @@ c     end of  e04ucp. (nploc)
      *                  n,nclin,istate,kx,named,names,bigbnd,bl,
      *                  bu,x,m,lda,ldr,ldfj,nerr,ifail)
 
-c     e04nbz   checks the input data for e04ucf and e04upf.
+c     e04nbz   checks the input data for nlpopt and e04upf.
       implicit none
 
       double precision bigbnd
@@ -7647,7 +7647,7 @@ c
 
 c     end of  e04ucw. (npfeas)
 
-99999 format (/' //e04ucw//  the maximum violation is ',1p,d14.2,' in ',
+99999 format (/' the maximum violation is ',1p,d14.2,' in ',
      *       'constraint',i5)
       end
 
@@ -7741,7 +7741,7 @@ c          the slack variables, the multipliers and the variables.
      *                  lwrk1, lzy, mjrdbg, mnrdbg, msgqp, nartif, ncqp,
      *                  nctotl, ngq, nmajor, nminor, nplin, nrank,
      *                  nrejtd, nrpq, ntry, nviol, nz1
-      logical           linobj, overfl
+      logical           linobj
 
       double precision rprmls(mxparm), rprmnp(mxparm)
       integer iprmls(mxparm), iprmnp(mxparm)
@@ -7993,7 +7993,7 @@ c     end of  e04ucu. (npiqp)
      *                  objfun,aqp,ax,bl,bu,clamda,
      *                  featol,grad,gradu,r,x,iw,w,lenw,iuser,user)
 
-c     e04ucz  is the core routine for  e04ucf,  a sequential quadratic
+c     e04ucz  is the core routine for  nlpopt,  a sequential quadratic
 c     programming (sqp) method for nonlinearly constrained optimization.
 
       implicit none 
@@ -10487,4 +10487,42 @@ C
 C     End of  E04UEF. (NPOPTN)
 C
       END
+
+
+      subroutine x04bay(nout,nrec,rec)
+
+c     if nrec is 0 then no records are output.
+
+      integer nout, nrec
+
+      character*(*)     rec(*)
+
+      integer i
+
+      do 20 i = 1, nrec
+         call x04baf(nout,rec(i))
+   20 continue
+      end
+
+      subroutine x04baf(nout,rec)
+
+c     trailing blanks are not output, except that if rec is entirely
+c     blank, a single blank character is output.
+c     if nout.lt.0, i.e. if nout is not a valid fortran unit identifier,
+c     then no output occurs.
+      integer nout
+      character*(*)     rec
+      integer i
+
+      if (nout.ge.0) then
+c        remove trailing blanks
+         do 20 i = len(rec), 2, -1
+            if (rec(i:i).ne.' ') go to 40
+   20    continue
+c        write record to external file
+   40    write (*,fmt=99999) rec(1:i)
+      end if
+
+99999 format (a)
+      end
 

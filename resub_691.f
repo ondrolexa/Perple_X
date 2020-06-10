@@ -360,8 +360,6 @@ c        if (lopt(28)) call begtim (7)
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,gtot,is,iter,opt,idead,quit)
 
-         write (*,'(2(g16.8,1x))') ogtot, gtot
-
 c        if (lopt(28)) call endtim (7,.true.,'YCLOS2 ')
 
          if (idead.gt.0) then 
@@ -429,7 +427,6 @@ c                                 reset refinement point flags
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
-      write (*,*) jpoint, jphct, zcoct
 
       do kd = 1, npt
 
@@ -493,8 +490,8 @@ c                                 refinement point was the same solution.
          lds = ids
 
       end do
-
-      write (*,*) jpoint, jphct, zcoct
+c DEBUG691
+      if (jphct.gt.50000) write (*,*) jpoint, jphct, zcoct
 
       end
 
@@ -648,7 +645,7 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
          if (sum.lt.0.9999999) then
-            write (*,*) 'low sum, savpa, suspect zs:'
+            write (*,*) 'low sum, savpa, suspect zs, ids:',ids
 c           call errpau
             call p2z(pa,zt,ids)
          end if 
@@ -1083,8 +1080,8 @@ c                                save the new compositions
                sum = sum + pa3(jd,k)
                pnew(i,k) = pnew(i,k) + xx*pa3(jd,k)
             end do
-
-            if (sum.lt.0.999999) call errpau
+c DEBUG691
+            if (sum.lt.0.999999) write (*,*) 'bad pa3 sum'
 
             if (lopt(32).and.ksmod(ids).eq.39) then
 
@@ -2153,7 +2150,7 @@ c----------------------------------------------------------------------
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead, j, k
 
-      double precision clamda(*), clam(k19), x(*), gtot
+      double precision clamda(*), clam(k19), x(*), gtot, ogtot
 
       logical stabl(k19), solvnt(k19), quit, abort, test, good, bad
 
@@ -2202,7 +2199,7 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      save tic
+      save tic, ogtot
       data tic/0/
 c----------------------------------------------------------------------
 c                                 npt is the number of points refined
@@ -2220,6 +2217,7 @@ c                                 solution.
 
       npt = 0
       mpt = 0
+      if (iter.eq.2) ogtot = 1d99
       gtot = 0d0 
 
       do i = 1, jphct
@@ -2298,6 +2296,16 @@ c                                 keep the least metastable point
          end if
 
       end do
+c DEBUG691
+      if (iter.eq.iopt(10)) then 
+         write (*,*) 'quitting at iter/dg ',iter,gtot-ogtot
+      end if
+
+      if (dabs(gtot-ogtot).lt.1d0) then 
+         quit = .true.
+      end if 
+
+      ogtot = gtot
 c                                 abort is set if pure solvent is stable, if 
 c                                 it is the only solvent then reset abort
       if (abort.and.mpt.eq.0) abort = .false.
