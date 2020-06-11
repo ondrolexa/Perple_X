@@ -212,8 +212,8 @@ c---------------------------------------------------------------------
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
 
-      double precision mu
-      common/ cst39 /mu(i6)
+      double precision mmu
+      common/ cst39 /mmu(i6)
 
       save kt,trv,iwarn,oldid
       data kt,trv,iwarn,oldid/0d0,1673.15d0,0,0/
@@ -527,7 +527,7 @@ c                                 do legendre transform if proj
       if (proj) then
 c                                 mobile components
          do j = 1, jmct
-            gval = gval - vnumu(j,id) * mu(j)
+            gval = gval - vnumu(j,id) * mmu(j)
          end do
 
       end if
@@ -1667,15 +1667,15 @@ c-----------------------------------------------------------------------
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)
 
-      double precision mu
-      common/ cst39 /mu(i6)
+      double precision mmu
+      common/ cst39 /mmu(i6)
 c----------------------------------------------------------------------
       do i = 1, jmct
 
             if (imaf(i).eq.1) then
 c                                 the primary variable is a chemical
 c                                 potential.
-               mu(i) = v(3+i)
+               mmu(i) = v(3+i)
 
             else
 c                                 the primary variable is a fugacity or
@@ -1693,7 +1693,7 @@ c                                 activity
 
                end if
 
-               mu(i) = gref + r*v(2)*v(3+i)*2.302585093d0
+               mmu(i) = gref + r*v(2)*v(3+i)*2.302585093d0
 
              end if
 
@@ -12587,8 +12587,11 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision p,t,xco2,mmu,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+      double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
+
+      double precision mmu
+      common/ cst39 /mmu(i6)
 
       logical mus
       double precision mu
@@ -12958,8 +12961,8 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision mu
-      common/ cst39 /mu(i6)
+      double precision mmu
+      common/ cst39 /mmu(i6)
 
       double precision vnumu
       common/ cst44 /vnumu(i6,k10)
@@ -12980,7 +12983,7 @@ c                                 -sdt
 
       do j = 1, jmct
 c                                 -ndu
-         g = g - vnumu(j,id) * mu(j)
+         g = g - vnumu(j,id) * mmu(j)
       end do
 c                                 transitions
       vdp = 0d0
@@ -18986,8 +18989,8 @@ c-----------------------------------------------------------------------
       double precision x
       common/ scrtch /x(k21)
 
-      double precision p,t,xco2,mmu,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+      double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -19845,8 +19848,8 @@ c---------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision p,t,xco2,mmu,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+      double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
 
       integer nsub,nterm
       double precision acoef

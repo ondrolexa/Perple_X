@@ -663,8 +663,8 @@ c         end do
 c      end if
 c                                 chemical potentials variance
       if (jpot.ne.1) then 
-         write (lu,1130) (cname(i), i = 1, jbulk)
-         write (lu,1140) (mu(i), i = 1, jbulk)
+         write (lu,1130) (cname(i), i = 1, kbulk)
+         write (lu,1140) (mu(i), i = 1, kbulk)
          write (lu,1071) 2, jbulk - ntot + 2 
 c                                 test for non-NaN chemical potentials
          mus = .false.
@@ -679,10 +679,6 @@ c                                 test for non-NaN chemical potentials
       end if 
 
       if (laq.and.lopt(25)) then 
-c                                 load independent potentials if in use
-         do i = 1, jmct
-            mu(jbulk+i) = v(3+i)
-         end do
 
          do i = 1, ntot
             

@@ -661,6 +661,8 @@ c                                 the bulk composition constraints
       end do
 
       idead = -1
+
+      iprint = 0
 c                                 solution model index
       istuff(1) = ids
 c                                 istuff(2) is set by NLP and is
@@ -672,6 +674,7 @@ c                                 istuff(3) = 1 min g, 0 max entropy
          istuff(3) = 0
       end if
 
+      CALL E04UEF ('nolist')
 c auto
 c      CALL E04UEF ('difference interval = 1d-3')
 c eps = 1e-5
