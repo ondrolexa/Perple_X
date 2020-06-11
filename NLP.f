@@ -430,7 +430,7 @@ c        find a feasible point.
 
          ssq1 = zero
          linobj = .false.
-         call e04nch(linobj,rowerr,unitq,nclin,nactiv,nfree,nrank,nz,n,
+         call e04nch (linobj,rowerr,unitq,nclin,nactiv,nfree,nrank,nz,n,
      *               nplin,ldq,lda,ldr,ldt,istate,iw(lkactv),iw(lkx),
      *               jmax,errmax,ctx,xnorm,a,w(lax),bl,bu,w(lgq),w(lres)
      *               ,w(lres0),w(lfeatl),r,w(lt),x,w(lq),w(lwrk1),
@@ -447,7 +447,7 @@ c        find a feasible point.
          itmxsv = itmax1
          itmax1 = nminor
 
-         call e04ncz('fp problem',named,names,linobj,unitq,nlperr,itns,
+         call e04ncz ('fp problem',named,names,linobj,unitq,nlperr,itns,
      *               jinf,nclin,nplin,nactiv,nfree,nrank,nz,nz1,n,lda,
      *               ldr,istate,iw(lkactv),iw(lkx),ctx,obj,ssq1,suminf,
      *               numinf,xnorm,bl,bu,a,w(lclam),w(lax),w(lfeatl),r,x,
@@ -478,9 +478,7 @@ c        check for a bad r.
          cond = adivb (drmax,drmin,overfl)
 
          if (cond.gt.rcndbd.or.rfrobn.gt.rootn*growth*drmax) then
-
-c           refactorize the hessian and bound the condition estimator.
-
+c                                 refactorize the hessian and bound the condition estimator.
             if (msgnp.gt.0) then
                write (rec,fmt=99986)
                call x04baf(iprint,rec(1))
@@ -489,9 +487,7 @@ c           refactorize the hessian and bound the condition estimator.
      *                  w(lgq),r,w(lq),w(lwrk1),w(lres0))
          end if
       end if
-
-c     now we can check the gradients at a feasible x.
-
+c                                 check the gradients at a feasible x.
       lvrfyc = lverfy
       if (lverfy.ge.10) lvrfyc = -1
 
@@ -510,9 +506,7 @@ c     now we can check the gradients at a feasible x.
 
       call dcopy (n,w(lgrad),1,w(lgq),1)
       call cmqmul (6,n,nz,nfree,ldq,unitq,iw(lkx),w(lgq),w(lq),w(lwrk1))
-
-c     solve the problem.
-
+c                                 solve the problem.
       iuser(2) = 1
 
          call e04ucz (named,names,unitq,inform,iter,n,nclin,nctotl
@@ -521,13 +515,15 @@ c     solve the problem.
      *               objfun,a,w(lax),bl,bu,clamda,
      *               w(lfeatl),w(lgrad),gradu,r,x,iw,w,lenw,iuser,user)
 
-
-c     if required, form the triangular factor of the hessian.
-
-c     first,  form the square matrix  r  such that  h = r'r.
-c     compute the  qr  factorization of  r.
+c                                if required, form the triangular factor of the hessian.
+c                                first,  form the square matrix  r  such that  h = r'r.
+c                                compute the  qr  factorization of  r.
 
       if (lformh.gt.0) then
+
+         write (*,*) 'hessian'
+         call errpau
+
          lv = lwrk2
          do 60 j = 1, n
             if (j.gt.1) call sload (j-1,zero,w(lv),1)
@@ -593,15 +589,18 @@ c     recover the optional parameters set by the user.
          if (inform.eq.9) write (rec,fmt=99978) nerror
          call x04bay(nerr,2,rec)
          end if
- 
+c                                 on input:
+c                                 ifail = 1 soft, silent
+c                                 ifail = 0 hard, noisy
+c                                 ifail = -1, soft noisy
+c                                 ifail = -13, soft, not so noisy
+c                                 p01acf sets ifail = inform
          ifail = p01acf(ifail,inform,srname,' ',0,rec)
 
       end if
 
-      return
-c
 c     end of  nlpopt. (npsol)
-c
+
 99999 format (/' exit nlpopt - user requested termination.')
 99998 format (/' exit nlpopt - optimal solution found.')
 99997 format (/' exit nlpopt - optimal solution found, but requested a',
@@ -2820,7 +2819,7 @@ c     values as grad.
      *                  sumsd, test, xj, yj
       integer i, info, irow1, irow2, iter, itmax, j, mode,
      *                  nccnst, ncolj, nfcnst, nstate
-      logical           debug, done, first, headng, needed
+      logical           done, first, headng
 
       character*80      rec(4)
 
@@ -3136,7 +3135,7 @@ c     after computing the indicated function values.
      *                  fdsave, hsave, oldcd, oldh, oldsd, rho, sdcerr,
      *                  sdsave
       logical           ce1big, ce2big, overfl, te2big
-      character*80      rec(6)
+
       double precision adivb 
       external          adivb 
       intrinsic         abs, max, min, sqrt
@@ -3359,6 +3358,8 @@ c
 
 c evaluates any missing gradients.
 
+      implicit none
+
       double precision rdummy
       parameter (rdummy=-11111.0d+0)
       double precision zero, half, one
@@ -3379,7 +3380,7 @@ c evaluates any missing gradients.
       integer inpdbg(5)
       double precision biglow, bigupp, delta, objf1, objf2, stepbl,
      *                  stepbu, xj
-      integer i, j, mode, ncolj, nstate
+      integer i, j, mode, nstate
       intrinsic         abs, max
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
@@ -3623,7 +3624,7 @@ c     end of  e04uch. (cmalf1)
       end
 
 
-      subroutine e04nbv(n,nu,nrank,ldr,lenv,lenw,r,u,v,w,c,s)
+      subroutine e04nbv(n,nrank,ldr,lenv,lenw,r,u,v,w,c,s)
 
 c     e04nbv  modifies the  nrank*n  upper-triangular matrix  r  so that
 c     q*(r + v*w')  is upper triangular,  where  q  is orthogonal,
@@ -3635,7 +3636,9 @@ c
 c     the matrix v*w' is an (lenv) by (lenw) matrix.
 c     the vector v is overwritten.
 
-      integer ldr, lenv, lenw, n, nrank, nu
+      implicit none
+
+      integer ldr, lenv, lenw, n, nrank
       double precision c(n), r(ldr,*), s(n), u(n,*), v(n), w(n)
       integer j
       intrinsic         min
@@ -3647,13 +3650,6 @@ c        reduce  v to beta*e(j)  using a backward sweep of rotations
 c        in planes (j-1, j), (j-2, j), ..., (1, j).
 
          call ssrotg ('fixed','backwards',j-1,v(j),v,1,c,s)
-c
-
-c        apply the sequence of rotations to u.
-
-         if (nu.gt.0) call sgesrc ('left','bottom','backwards',j,nu,1,j,
-     *                            c,s,u,n)
-c
 
 c        apply the sequence of rotations to r. this generates a spike in
 c        the j-th row of r, which is stored in s.
@@ -3672,12 +3668,7 @@ c        eliminate the spike using a forward sweep of rotations in
 c        planes (1, j), (2, j), ..., (j-1, j).
 
          call susqr('left',n,1,j,c,s,r,ldr)
-c
 
-c        apply the rotations to u.
-
-         if (nu.gt.0) call sgesrc ('left','bottom','forwards',j,nu,1,j,c
-     *                            ,s,u,n)
       end if
 c
 c     end of  e04nbv. (cmr1md)
@@ -3742,6 +3733,7 @@ c     by the steplength alfa.
       curvl = glf2 - glf1
       tinycl = qpcurv*tolg
       ssbfgs = curvl .le. alfa*tinycl
+
       if (npdbg.and.inpdbg(1).gt.0) then
          write (rec,fmt=99999) ssbfgs, tinycl, curvl
          call x04bay(iprint,3,rec)
@@ -3804,7 +3796,7 @@ c     perform the update to  r = r + rpq*wrk1'.
 c     rpq is overwritten. arrays gq1 and hpq are used to store the
 c     sines and cosines defined by the plane rotations.
 c
-      call e04nbv(n,0,n,ldr,n,n,r,hpq,rpq,wrk1,gq1,hpq)
+      call e04nbv(n,n,ldr,n,n,r,hpq,rpq,wrk1,gq1,hpq)
 
 c     end of  e04ucl. (npupdt)
 
@@ -6425,6 +6417,7 @@ c     plane rotations applied on the left.  r is overwritten.
 c
 c     if nu .gt. 0,  the rotations are applied to the  nu  columns of
 c     the matrix  u.
+      implicit none
 
       double precision zero
       parameter (zero=0.0d+0)
@@ -6434,13 +6427,10 @@ c     the matrix  u.
       double precision c(n), r(ldr,*), s(n), u(n,*)
 
       integer lenj
-c     .. intrinsic functions ..
-      intrinsic         min
 
-c
 c     swap the elements of the i-th and j-th columns of r on, or above,
 c     the main diagonal.
-c
+
       call dswap(min(i,nrank),r(1,i),1,r(1,j),1)
       lenj = min(j,nrank)
 c
@@ -6453,36 +6443,32 @@ c        if required, apply the sequence of rotations to u.
 
          call ssrotg ('fixed','backwards',lenj-i-1,r(lenj,j),r(i+1,j),1,
      *               c(i+1),s(i+1))
-c
+
          if (nu.gt.0) call sgesrc ('left','bottom','backwards',n,nu,i+1,
      *                            lenj,c,s,u,n)
-c
+
 c        put zeros into the j-th column of r in positions corresponding
 c        to the sub-diagonals of the i-th column.
-c
+
          s(i) = r(lenj,j)
          call sload (lenj-i,zero,r(i+1,j),1)
-c
+
 c        apply the sequence of rotations to r.  this generates a spike
 c        in the lenj-th row of r, which is stored in s.
-c
+
          call sutsrs ('left',n,i+1,lenj,c,s,r,ldr)
-c
+
 c        eliminate the spike using a forward sweep in planes
 c        (i,lenj), (i+1,lenj), ..., (lenj-1,lenj).
 c        if necessary, apply the sequence of rotations to u.
-c
+
          call susqr('left',n,i,lenj,c,s,r,ldr)
-c
+
          if (nu.gt.0) call sgesrc ('left','bottom','forwards',lenj,nu,i,
      *                            lenj,c,s,u,n)
       end if
 
-
-c     end of  e04nbu
-
       end
-
 
       subroutine e04nct(unitq,n,nactiv,nfree,nres,ngq,nz,nrz,lda,ldzy,
      *                  ldr,ldt,nrank,jdel,kdel,kactiv,kx,a,res,r,t,gq,
@@ -7733,7 +7719,7 @@ c          the slack variables, the multipliers and the variables.
      *                  ipadls(18), ipadnp(12), ipsvls(mxparm),
      *                  ipsvnp(mxparm), locls(lenls)
 
-      double precision amin, biglow, bigupp, blj, buj, con, condmx,
+      double precision biglow, bigupp, blj, buj, con, condmx,
      *                  quotnt, ssq, ssq1, suminf, viol, weight, wscale,
      *                  wtmax, wtmin
       integer i, idbg, idbgsv, inform, iswap, j, jinf, k, k1,
@@ -8366,22 +8352,21 @@ c
             msgnp = msgsv1
             msgqp = msgsv2
          end if
-c
+
 c        make copies of information needed for the bfgs update.
-c
+
          call dcopy(n,x,1,w(lx1),1)
          call dcopy(n,w(lgq),1,w(lgq1),1)
 
-c
 c        ============================================================
 c        compute the parameters for the linesearch.
 c        ============================================================
 c        alfmin is the smallest allowable step predicted by the qp
 c        subproblem.
-c
+
          alfmin = one
          if (.not. feasqp) alfmin = zero
-c
+
 c        ------------------------------------------------------------
 c        alfmax is the largest feasible steplength subject to a user-
 c        defined limit alflim on the change in x.
@@ -8412,13 +8397,13 @@ c        ------------------------------------------------------------
             alfsml = adivb (fdnorm,dxnorm,overfl)
             alfsml = min(alfsml,alfmax)
          end if
-c
+
 c        ============================================================
 c        compute the steplength using safeguarded interpolation.
 c        ============================================================
          alflim = adivb ((one+xnorm)*dxlim,dxnorm,overfl)
          alfa = min(alflim,one)
-c
+
          call e04ucr(needfd,nlserr,n,nfun,ngrad,
      *               iw(lneedc),objfun,alfa,alfbnd,alfmax,alfsml,
      *               dxnorm,epsrf,eta,gdx,grdalf,glf1,glf2,objf,objalf,
@@ -8427,16 +8412,15 @@ c
      *               w(ldlam),w(ldslk),grad,gradu,clamda(nl),w(lrho),
      *               w(lslk1),w(lslk),w(lx1),x,w(lwrk2),w,lenw,iuser,
      *               user)
-c
 
 c           e04ucr  sets nlserr to the following values...
-c
+
 c           < 0  if the user wants to stop.
 c             1  if the search is successful and alfa < alfmax.
 c             2  if the search is successful and alfa = alfmax.
 c             3  if a better point was found but too many functions
 c                were needed (not sufficient decrease).
-c
+
 c           values of nlserr occurring with a nonzero value of alfa.
 c             4  if alfmax < tolabs (too small to do a search).
 c             5  if alfa  < alfsml (e04ucj only -- maybe want to switch
@@ -8453,9 +8437,9 @@ c                (alfmax le toltny  or  uphill).
             inform = nlserr
             go to 60
          end if
-c
+
          if (alfa.gt.alflim) mjrmsg(4:4) = 'l'
-c
+
          error = nlserr .ge. 4
          if (error) then
 c           ---------------------------------------------------------

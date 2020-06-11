@@ -3,8 +3,7 @@ c a library of BLAS level 2 subroutines. Modified subroutines are named
 c by appending a digit to the original name or in the case of 6 char
 c names by replacing the final character by a digit (1).
 
-c BLAS is a freely-available software package. It is available from 
-c netlib at http://www.netlib.org/blas/
+c BLAS is a freely-available software package at www.netlib.org/blas/
 
 c JADC, 5/2020.
 
@@ -1075,7 +1074,6 @@ c                 hard failure
                   call x04baf(nerr,
      *                     ' ** hard failure - execution terminated'
      *                       )
-                  call p01abz
                else
 c                 soft failure
                   call x04baf(nerr,
@@ -3883,19 +3881,6 @@ c     y := x
          end if
       end if
 
-      end
-
-      subroutine p01abz
-
-c     terminates execution when a hard failure occurs.
-c
-c     ******************** implementation note ********************
-c     the following stop statement may be replaced by a call to an
-c     implementation-dependent routine to display a message and/or
-c     to abort the program.
-c     *************************************************************
-
-      stop
       end
 
 

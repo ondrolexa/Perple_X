@@ -9764,7 +9764,7 @@ c--------------------------------------------------------------------------
 
       character znm(3,2)*2, pnm(3)*2
 
-      double precision zpr,smix,esum,omega,scp(k5)
+      double precision zpr,omega,scp(k5)
 
       logical bad
 
@@ -9957,19 +9957,6 @@ c                                 write composition name to pseudocompound list 
           write (n8,1050) names(phct),(y(j), j = 1, h)
 
       end if
-c                                 -------------------------------------
-      do i = 1, m3
-         exces(i,phct) = 0d0
-      end do
-
-      smix = 0d0
-      esum = 0d0
-c                                 load static array constants:
-      do h = 1, nstot(im)
-c                                 accumulate endmember configurational entropy
-         esum = esum + pa(h) * scoef(h,im)
-
-      end do
 c                                 bulk composition stuff
       call getscp (scp,ctot(phct),im,1,.true.)
 
@@ -10009,51 +9996,49 @@ c                                 CONVEX
          end do
 
       end if
+c                                 -------------------------------------
+c                                 this section loads excess, configurational and
+c                                 dqf contributions for static compositions
+c                                 into exces; the messiness is probably 
+c                                 not worth the effort
+      do i = 1, m3
+         exces(i,phct) = 0d0
+      end do
 
-c                                 compute ideal configurational negentropy:
-      if (order) then
-c                                 for cpd formation models, configurational entropy
-c                                 is evaluated from speciation.
-         smix = 0d0
-
-      else if (msite(im).ne.0) then
-
-         smix = -omega(im,pa)
-
-      end if
-c                                 save it:
-      exces(2,phct) = smix
+      if (.not.order) then 
+c                                 configurational negentropy:
+         if (msite(im).ne.0) exces(2,phct) = -omega(im,pa)
 c                                 load excess terms, if not Laar or ordered:
-      if (extyp(im).eq.0.and.(.not.order)) then
+         if (extyp(im).eq.0) then
 
-         do i = 1, jterm(im)
+            do i = 1, jterm(im)
 
-            zpr = 1d0
+               zpr = 1d0
 
-            do j = 1, jord(im)
-               if (jsub(j,i,im).ne.0) zpr = zpr * pa(jsub(j,i,im))
+               do j = 1, jord(im)
+                  if (jsub(j,i,im).ne.0) zpr = zpr * pa(jsub(j,i,im))
+               end do
+
+               do j = 1, m3
+                  exces(j,phct) = exces(j,phct) + zpr * wgl(j,i,im)
+               end do
+
             end do
 
-            do j = 1, m3
-               exces(j,phct) = exces(j,phct) + zpr * wgl(j,i,im)
-            end do
-
-         end do
-
-      else if (extyp(im).eq.1) then
+         else if (extyp(im).eq.1) then
 c                                 redlich kister; expand polynomial
 c                                 G Helffrich, 4/16
-         do i = 1, jterm(im)
-            do j = 1, rko(i,im)
-               zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
-     *             * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
-               do l = 1, m3
-                  exces(l,phct) = exces(l,phct) +
-     *               zpr * wkl(l,j,i,im)
+            do i = 1, jterm(im)
+               do j = 1, rko(i,im)
+                  zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
+     *                * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
+                  do l = 1, m3
+                     exces(l,phct) = exces(l,phct) +
+     *                  zpr * wkl(l,j,i,im)
+                  end do
                end do
             end do
-         end do
-
+         end if
       end if
 c                              dqf corrections are also be saved in the
 c                              exces array this implies that speciation
@@ -20221,140 +20206,5 @@ c                                 min order g
       end if
 c                                 add magnetic component
       gfesi = gfesi + gmag(y)
-
-      end
-
-      double precision function gfes (y,g1,g2)
-c-----------------------------------------------------------------------
-c gfes returns the Gibbs free energy for Fe-S fluid after
-c Saxena & Eriksson 2015.
-
-c coded by ecrg Dec 2017 with cribbing from the Fe-Si models
-
-c    y   - the bulk S mole fraction
-c    g1 - free energy of S liq
-c    g2 - free energy of Fe liq
-
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical done
-
-      integer itic
-
-      double precision g1, g2, y, x, g00, g01, g02, g04, g10, g20, g30,
-     *                 rt, xmin, xmax, dg, d2g, dx, gfes0, g0
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c----------------------------------------------------------------------
-
-      if (y.le.nopt(5).or.y.ge.1d0-nopt(5)) then
-c                          endmember compositions, no order possible
-         gfes =  y*g2 + (1d0 - y)*g1
-         return
-      end if
-
-
-      g00 = -104888.1d0 + 3.3884608d-1*t + 9.489d-2*p
-     *                                      + 3.4769476d-5*t*p
-c                       or   + 1.7687597d-1*p - 8.5431919d-6*t*p in green2.dat
-      g01 = -8626.2578d0
-      g02 = 72954.295d0 - 26.1780d0*t
-      g04 = 25106d0
-      g10 = 35043.323d0 - 9.880908d0*t - 5.1303766d-1*p
-     *                                      - 2.5038372d-7*t*p
-      g20 = -23972.273d0
-      g30 = 30436.822d0
-
-      rt  = r*t
-
-c                          max/min concentrations of ordered species.
-c                          for y=b/(a+b) and a-b formation limited
-c                          by b,
-c                          xmax = (2 y Zab Zba)/
-c                                   (Zaa Zab - y Zaa Zab - y Zaa Zba + 2 y Zab Zba);
-c                          the case below is for ZFeFe = ZSS = 6;  ZFeS = ZSFe = 2
-      xmin = nopt(5)
-
-      if (y.lt.0.5d0) then
-         xmax = 2.d0*y/(3d0 - 4d0*y) - nopt(5)
-      else
-         xmax = 2d0*(1d0-y)/(3d0 - 4d0*(1d0-y)) - nopt(5)
-      end if
-
-c                                 get 1st and 2nd derivatives
-      x = xmax
-
-      call dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)
-
-      done = .false.
-c                                 find starting point for newton-raphson
-c                                 search
-      if (dg.gt.0d0) then
-c                                 max ordered concentration
-         dx = -dg/d2g
-
-      else
-c                                 most disordered concentration
-         x = xmin
-
-         call dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)
-
-         if (d2g.gt.0d0) then
-c                                 sanity check
-            dx = -dg/d2g
-
-         else
-c                                 full disordered - shouldn't be in here
-            done = .true.
-
-         end if
-
-      end if
-c                                 iteration loop
-      if (.not.done) then
-c                                 increment and check bounds
-         call pcheck (x,xmin,xmax,dx,done)
-c                                 iteration counter
-         itic = 0
-
-         do
-
-            call dgfes (dg,d2g,y,x,rt,g00,g01,g02,g04,g10,g20,g30)
-
-            dx = -dg/d2g
-
-            call pcheck (x,xmin,xmax,dx,done)
-
-            if (done) then
-
-               exit
-
-            else
-
-               itic = itic + 1
-               if (itic.gt.iopt(21)) exit
-
-            end if
-
-         end do
-
-      end if
-
-      gfes = gfes0 (y,x,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
-
-      if (iopt(17).ne.0) then
-c                                 if order_check is on, compare to
-c                                 max order g
-         g0 = gfes0 (y,xmax,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
-         if (gfes.gt.g0) gfes = g0
-c                                 min order g
-         g0 = gfes0 (y,xmin,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
-         if (gfes.gt.g0) gfes = g0
-
-      end if
 
       end

@@ -9,13 +9,19 @@ c of solution ids subject to site fraction constraints
 c     number of independent endmember fractions -> nstot-1 (<m19)
 c     number of independent endmember fractions -> nz (<m20)
 c     closure is forced in the objective function (gsol2)
+
+c ingsol MUST be called prior to minfrc to initialize solution/p-t
+c specific properties!
+
+c endmember gibbs energies must be computed (presumably by gall)
+c prior to the call to minfxc!
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       integer ids, kds, nvar, iter, iwork(m22),
-     *        istuff(10), istate(m21), istart, nclin, ntot
+     *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
      *         , i, j, iprint
 
@@ -66,7 +72,7 @@ c                                 from the global arrays
       bl(nvar+1:nvar+nclin) = zl(ids,1:nclin)
       bu(nvar+1:nvar+nclin) = zu(ids,1:nclin)
 
-      istart = -1
+      idead = -1
 c                                 the solution model index
       istuff(1) = ids
 c                                 print/save obj value 
@@ -103,7 +109,7 @@ c      CALL E04UEF ('function precision = 0.00025')
 
       call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-     *             m22,work,m23,istuff,stuff,istart,iprint)
+     *             m22,work,m23,istuff,stuff,idead,iprint)
 
 c     call nlpopt (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
 c    *             iter,istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,
@@ -138,10 +144,10 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, jds, nvar, mode, istuff(*), istart
+      integer i, jds, nvar, mode, istuff(*), istart
 
       double precision ppp(*), gval, gsol4, ggrd(*), stuff(*),
-     *                 gsol1, g, sum, scp(k5), zt(m10,m11), sump
+     *                 gsol1, g, sum, scp(k5)
 
       external gsol4, gsol1
 
@@ -306,14 +312,15 @@ c     write (*,1000) gval, (pa(i),i=1,nstot(jds))
       end
 
 
-
-
       double precision function gsol4 (id)
 c-----------------------------------------------------------------------
 c gsol4 computes the total (excess+ideal) free energy of solution
 c for a solution identified by index ids for the speciation input
 c via cxt7, i.e., in contrast to gsol1 it does not compute the 
 c speciation of o/d models.
+
+c ingsol MUST be called prior to gsol4 to initialize solution
+c specific parameters! 
 
 c gsol4 assumes the endmember g's have been calculated by gall.
 c-----------------------------------------------------------------------
@@ -476,10 +483,6 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
       end
 
 
-
-
-
-
       subroutine p2yx (id)
 c-----------------------------------------------------------------------
 c converts the independent endmember fractions to 0-1 bounded barycentric 
@@ -502,7 +505,7 @@ c-----------------------------------------------------------------------
       integer ncon, id, is(mvar+mcon), iw(liw), idead, istart
 
       double precision ax(mcon), clamda(mvar+mcon), wrk(lw), c(mvar),
-     *                 a(mcon,mvar), b(mcon)
+     *                 a(mcon,mvar), b(mcon), gopt
 
       double precision ayz
       common/ csty2z /ayz(h9,m20,m4)
@@ -525,7 +528,7 @@ c-----------------------------------------------------------------------
       common/ be04nb /ldt,ncolt,ldq
 c-----------------------------------------------------------------------
 c                                 get the disordered p's
-      call minfxc (id,.true.)
+      call minfxc (gopt,id,.true.)
 c                                 get the site fraction constraints
       call p2zind (pa,b,id)
 c                                 dummy objective function coefficients
@@ -564,7 +567,7 @@ c                                 convert the y's to x's
 
       end
 
-      subroutine minfxc (ids,maxs)
+      subroutine minfxc (gfinal,ids,maxs)
 c-----------------------------------------------------------------------
 c optimize solution gibbs energy or configurational entropy at constant 
 c composition subject to site fraction constraints.
@@ -575,6 +578,9 @@ c     number of site fractions -> nz (<m20)
 c     closure is forced in the objective function (gsol2) and
 c        by using the complete set of site fraction.
 c     requires that pp has been loaded in cxt7
+
+c ingsol MUST be called prior to minfxc to initialize solution/p-t
+c specific properties!
 c-----------------------------------------------------------------------
       implicit none
 
@@ -583,7 +589,7 @@ c-----------------------------------------------------------------------
       logical maxs
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
-     *        istuff(10),istate(m21), istart, nclin, ntot
+     *        istuff(10),istate(m21), idead, nclin, ntot
 
       double precision sum, ggrd(m19), b(k5),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
@@ -654,16 +660,16 @@ c                                 the bulk composition constraints
 
       end do
 
-      istart = -1
+      idead = -1
 c                                 solution model index
       istuff(1) = ids
 c                                 istuff(2) is set by NLP and is
 c                                 irrelevant.
-c                                 istuff(3) = 0 min g, 1 max entropy
+c                                 istuff(3) = 1 min g, 0 max entropy
       if (maxs) then 
-         istuff(3) = 0
-      else 
          istuff(3) = 1
+      else 
+         istuff(3) = 0
       end if
 
 c auto
@@ -688,15 +694,8 @@ c eps**(0.9)
 c      CALL E04UEF ('function precision = 0.00025')
        CALL E04UEF ('derivative level = 0')
 
-c                                 istuff = 0 min g, 1 max entropy
-      if (maxs) then 
-         istuff(1) = 0
-      else 
-         istuff(1) = 1
-      end if 
-
       call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-     *             m22,work,m23,istuff,stuff,istart,iprint)
+     *             m22,work,m23,istuff,stuff,idead,iprint)
 
       end

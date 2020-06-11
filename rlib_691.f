@@ -9618,7 +9618,7 @@ c--------------------------------------------------------------------------
 
       character znm(3,2)*2, pnm(3)*2
 
-      double precision zpr,smix,esum,omega,scp(k5)
+      double precision zpr,omega,scp(k5)
 
       logical bad
 
@@ -9811,19 +9811,6 @@ c                                 write composition name to pseudocompound list 
           write (n8,1050) names(phct),(y(j), j = 1, h)
 
       end if
-c                                 -------------------------------------
-      do i = 1, m3
-         exces(i,phct) = 0d0
-      end do
-
-      smix = 0d0
-      esum = 0d0
-c                                 load static array constants:
-      do h = 1, nstot(im)
-c                                 accumulate endmember configurational entropy
-         esum = esum + pa(h) * scoef(h,im)
-
-      end do
 c                                 bulk composition stuff
       call getscp (scp,ctot(phct),im,1,.true.)
 
@@ -9863,51 +9850,49 @@ c                                 CONVEX
          end do
 
       end if
+c                                 -------------------------------------
+c                                 this section loads excess, configurational and
+c                                 dqf contributions for static compositions
+c                                 into exces; the messiness is probably 
+c                                 not worth the effort
+      do i = 1, m3
+         exces(i,phct) = 0d0
+      end do
 
-c                                 compute ideal configurational negentropy:
-      if (order) then
-c                                 for cpd formation models, configurational entropy
-c                                 is evaluated from speciation.
-         smix = 0d0
-
-      else if (msite(im).ne.0) then
-
-         smix = -omega(im,pa)
-
-      end if
-c                                 save it:
-      exces(2,phct) = smix
+      if (.not.order) then 
+c                                 configurational negentropy:
+         if (msite(im).ne.0) exces(2,phct) = -omega(im,pa)
 c                                 load excess terms, if not Laar or ordered:
-      if (extyp(im).eq.0.and.(.not.order)) then
+         if (extyp(im).eq.0) then
 
-         do i = 1, jterm(im)
+            do i = 1, jterm(im)
 
-            zpr = 1d0
+               zpr = 1d0
 
-            do j = 1, jord(im)
-               if (jsub(j,i,im).ne.0) zpr = zpr * pa(jsub(j,i,im))
+               do j = 1, jord(im)
+                  if (jsub(j,i,im).ne.0) zpr = zpr * pa(jsub(j,i,im))
+               end do
+
+               do j = 1, m3
+                  exces(j,phct) = exces(j,phct) + zpr * wgl(j,i,im)
+               end do
+
             end do
 
-            do j = 1, m3
-               exces(j,phct) = exces(j,phct) + zpr * wgl(j,i,im)
-            end do
-
-         end do
-
-      else if (extyp(im).eq.1) then
+         else if (extyp(im).eq.1) then
 c                                 redlich kister; expand polynomial
 c                                 G Helffrich, 4/16
-         do i = 1, jterm(im)
-            do j = 1, rko(i,im)
-               zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
-     *             * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
-               do l = 1, m3
-                  exces(l,phct) = exces(l,phct) +
-     *               zpr * wkl(l,j,i,im)
+            do i = 1, jterm(im)
+               do j = 1, rko(i,im)
+                  zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
+     *                * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
+                  do l = 1, m3
+                     exces(l,phct) = exces(l,phct) +
+     *                  zpr * wkl(l,j,i,im)
+                  end do
                end do
             end do
-         end do
-
+         end if
       end if
 c                              dqf corrections are also be saved in the
 c                              exces array this implies that speciation
@@ -12235,7 +12220,7 @@ c                                 a pure compound
       else if (lorder(ids)) then
 c                                 get composition
          call setxyp (ids,id,.false.,bad)
-c                                 initialize gph and any dqf corrections
+c                                 initialize gph and add dqf corrections
          call gexces (id,gph)
 c                                 compute margules coefficients
          call setw (ids)
@@ -12664,24 +12649,26 @@ c                                 compute margules coefficients
             call setw (i)
 c                                 compute enthalpy of ordering
             call oenth (i)
-c                                 now for each compound:
+
             do j = 1, jend(i,2)
-c                                 for speciation models gexces
-c                                 evaluates only endmember sconf
-c                                 and internal dqf's
-               call gexces (id,g(id))
 
                call setxyp (i,id,.false.,bad)
+c DEBUG691 GALL
+               call ingsol (i)
+               call minfxc(g(id),i,.false.)
+c                                 for static composition o/d models 
+c                                 gexces only accounts for internal dqf's
+c              call gexces (id,g(id))
 
-               call specis (dg,i)
+c              call specis (dg,i)
 c                                 add in g from real endmembers, this
 c                                 must include the g for the disordered equivalent
 c                                 of the ordered species
-               do k = 1, lstot(i)
+c              do k = 1, lstot(i)
 
-                  g(id) = g(id) + g(jend(i,2+k)) * pp(k)
+c                 g(id) = g(id) + g(jend(i,2+k)) * pp(k)
 
-               end do
+c              end do
 
                g(id) = g(id) + dg
 
@@ -20682,6 +20669,7 @@ c                                 read bulk composition data:
       call bplinp (err)
 
       end
+
       double precision function gfesi (y,g1,g2)
 c-----------------------------------------------------------------------
 c gfesi returns the Gibbs free energy for BCC FeSi alloy after
