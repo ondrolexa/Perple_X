@@ -1008,36 +1008,11 @@ c     accessed sequentially with one pass through a.
 
 
 
-      integer function p01acf(ifail,ierror,srname,varbnm,nrec,rec)
+      integer function errmsg (ifail,ierror,srname,varbnm,nrec,rec)
 c----------------------------------------------------------------------
-c     p01acf either returns the value of ierror through the routine
-c     name (soft failure), or terminates execution of the program
-c     (hard failure). diagnostic messages may be output.
-
-c     if ierror = 0 (successful exit from the calling routine),
-c     the value 0 is returned through the routine name, and no
-c     message is output
-
-c     if ierror is non-0d0 (abnormal exit from the calling routine),
-c     the action taken depends on the value of ifail.
-c
-c     ifail =  1: soft failure, silent exit (i.e. no messages are
-c                 output)
-c     ifail = -1: soft failure, noisy exit (i.e. messages are output)
-c     ifail =-13: soft failure, noisy exit but standard messages from
-c                 p01acf are suppressed
-c     ifail =  0: hard failure, noisy exit
-c
-c     for compatibility with certain routines included before mark 12
-c     p01acf also allows an alternative specification of ifail in which
-c     it is regarded as a decimal integer with least significant digits
-c     cba. then
-c
-c     a = 0: hard failure  a = 1: soft failure
-c     b = 0: silent exit   b = 1: noisy exit
-c
-c     except that hard failure now always implies a noisy exit.
 c----------------------------------------------------------------------
+      implicit none
+
       integer    ierror, ifail, nrec
       character*(*)           srname, varbnm
       character*(*)           rec(*)
@@ -1054,36 +1029,28 @@ c----------------------------------------------------------------------
    20    continue
    40    continue
 c        abnormal exit from calling routine
-         if (ifail.eq.-1.or.ifail.eq.0.or.ifail.eq.-13 .or.
-     *       (ifail.gt.0.and.mod(ifail/10,10).ne.0)) then
-c           noisy exit
+
 
             do 60 i = 1, nrec
                call x04baf(nerr,rec(i))
    60       continue
-            if (ifail.ne.-13) then
+
                if (varlen.ne.0) then
                   write (mess,fmt=99999) srname, varbnm(1:varlen),
      *              ierror
                else
                   write (mess,fmt=99998) srname
                end if
+
                call x04baf(nerr,mess)
-               if (abs(mod(ifail,10)).ne.1) then
+
 c                 hard failure
                   call x04baf(nerr,
-     *                     ' ** hard failure - execution terminated'
-     *                       )
-               else
-c                 soft failure
-                  call x04baf(nerr,
-     *                        ' ** soft failure - control returned')
-               end if
-            end if
-         end if
+     *                     ' ** execution terminated')
+
       end if
 
-      p01acf = ierror
+      errmsg = ierror
 
 99999 format (' ** abnormal exit from routine ',a,': ',a,
      *       ' =',i6)
@@ -3473,8 +3440,8 @@ c  where  t  is  upper triangular and  s  is orthogonal,  using the routine  f01
       integer ierr, j, jmax, k, la
       character*46      rec(1)
       double precision dnrm2
-      integer p01acf
-      external          dnrm2, p01acf
+      integer errmsg
+      external          dnrm2
 
 c     check the input parameters.
 
@@ -3487,7 +3454,7 @@ c     check the input parameters.
       if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
       if (ierr.gt.0) then
          write (rec,fmt=99999) ierr
-         ifail = p01acf(ifail,-1,srname,' ',1,rec)
+         ifail = errmsg(ifail,-1,srname,' ',1,rec)
          return
       end if
 
@@ -4001,8 +3968,8 @@ c  information  will  be  output  on  the  error message  channel.
 
       character*46 rec(1)
 
-      integer p01acf
-      external p01acf
+      integer errmsg
+      external errmsg
 
 c     check the input parameters.
 
@@ -4012,7 +3979,7 @@ c     check the input parameters.
       if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
       if (ierr.gt.0) then
          write (rec,fmt=99999) ierr
-         ifail = p01acf(ifail,-1,srname,' ',1,rec)
+         ifail = errmsg (ifail,-1,srname,' ',1,rec)
          return
       end if
 c

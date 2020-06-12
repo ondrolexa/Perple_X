@@ -1671,7 +1671,7 @@ c                                lagged speciation
 
       end do 
 c                                dependent potentials
-      if (jpot.ne.1) write (n5,1010) (mu(i),i=1,jbulk)
+      if (jpot.ne.1) write (n5,1010) (mu(i),i=1,kbulk)
 
 1010  format (10(g16.8,1x))
 

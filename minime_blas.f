@@ -20,6 +20,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical inp, newopt
+
       integer ids, kds, nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
@@ -29,7 +31,10 @@ c DEBUG691
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(1)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),yt(m14),zp,zt(m10,m11)
+     *                 ,c(1),cjac(1,1),yt(m14),zp,zt(m10,m11),
+     *                 ftol,fdint
+
+      character ctol*20,cdint*20
 
       integer nz
       double precision apz, zl, zu
@@ -45,16 +50,18 @@ c DEBUG691                    dummies for NCNLN > 0
 
       external gsol2, dummy
 
-      data iprint/0/
+      data iprint,inp/0,.false./
 
-      save iprint
+      COMMON            /EE04UC/NEWOPT
+
+      save iprint,inp
 c-----------------------------------------------------------------------
       if (.not.mus) then 
          write (*,*) 'no mus'
          call errpau
       end if
 
-      nclin = nz(ids)
+10    nclin = nz(ids)
       ntot = nstot(ids)
       nvar = ntot - 1
 c                                 finite difference increments
@@ -62,6 +69,7 @@ c                                 will be estimated at this
 c                                 coordinate, so choose a feasible 
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
+      ppp = 0
 c                                 initialize bounds
       bu(1:nvar) = 1d20
       bl(1:nvar) = -1d20
@@ -84,16 +92,28 @@ c                                 saved obj value counter
 c                                 refinement point index
       istuff(5) = kds
 
-      CALL E04UEF ('nolist')
+      iprint = 10
+
+      if (inp) then
+         newopt = .true.
+         write (*,*) 'ftol,fdint'
+         read (*,*) ftol, fdint
+         write (ctol,'(g14.7)') ftol
+         write (cdint,'(g14.7)') fdint
+
+      CALL E04UEF ('optimality tolerance = '//ctol)
+      CALL E04UEF ('difference interval = '//cdint)
+
+c     CALL E04UEF ('nolist')
 c auto
-c      CALL E04UEF ('difference interval = 1d-3')
+c     CALL E04UEF ('difference interval = 1d-4')
 c eps = 1e-5
 c sqrt(eps)
 c      CALL E04UEF ('linear feasibility tolerance = 0.0032')
 c sqrt(eps)
 c      CALL E04UEF ('feasibility tolerance = 0.0032')
 c eps**(0.8)
-c      CALL E04UEF ('optimality tolerance = 1d-4')
+c     CALL E04UEF ('optimality tolerance = ....')
 c eps**(0.9)
 c      CALL E04UEF ('function precision = 0.0000316')
 c eps = 1e-4
@@ -105,6 +125,9 @@ c eps**(0.8)
 c      CALL E04UEF ('optimality tolerance = 0.00063')
 c eps**(0.9)
 c      CALL E04UEF ('function precision = 0.00025')
+
+      end if
+
       CALL E04UEF ('derivative level = 0')
 
       call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
@@ -130,7 +153,8 @@ c        write (*,1010) i, bl(i),zp,bu(i)
 c     end do
 
 c     call p2z (pa,zt,ids)
-
+      write (*,*) istuff(3),gfinal,kds
+      if (inp) goto 10
 1010  format (i5,1x,10(g14.7,1x))
       end
 

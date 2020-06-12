@@ -128,11 +128,8 @@ c     the array  r).
       character*80      rec(2)
 
       double precision dnrm2, adivb, dlantr
-      integer p01acf
-      external          dnrm2, adivb, dlantr, p01acf
-
-c     .. intrinsic functions ..
-      intrinsic         dble, max, min, dsqrt
+      integer errmsg
+      external          dnrm2, adivb, dlantr, errmsg
 
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
       common            /ae04nc/locls
@@ -188,7 +185,7 @@ c
       inform = 0
 c                                 print flags
       msgnp = jprint
-      msgqp = jprint 
+      msgqp = jprint - 10
 c
 c     set the default values for the parameters.
 c
@@ -287,28 +284,26 @@ c
 c
       tolrnk = zero
       rcndbd = dsqrt(hcndbd)
-c                                 print flags
-      msgnp = 0
-      msgqp = 0 
 
-c     load the arrays of feasibility tolerances.
-
+c                                 load the arrays of feasibility tolerances.
       if (tolfea.gt.zero) call sload (nplin,tolfea,w(lfeatl),1)
-
-
-
+c                                 forward finite difference interval, 
+c                                 lfdset 0 - evaluate increment
+c                                        1 - use specified increment
+c                                        2 - use  default
+c                                 cdint central difference.
       if (lfdset.eq.0) then
          fdchk = dsqrt(epsrf)
       else if (lfdset.eq.1) then
          fdchk = fdint
+         cdint = fdint
       else
          fdchk = w(lhfrwd)
       end if
-
+c                                  optimality tolerance is ftol
       nfun = 0
       ngrad = 0
       nstate = 1
-
 
 c     if required,  compute the problem functions.
 c     if the constraints are nonlinear,  the first call of confun
@@ -593,9 +588,8 @@ c                                 on input:
 c                                 ifail = 1 soft, silent
 c                                 ifail = 0 hard, noisy
 c                                 ifail = -1, soft noisy
-c                                 ifail = -13, soft, not so noisy
-c                                 p01acf sets ifail = inform
-         ifail = p01acf(ifail,inform,srname,' ',0,rec)
+c                                 errmsg sets ifail = inform
+         ifail = errmsg (ifail,inform,srname,' ',0,rec)
 
       end if
 
@@ -786,6 +780,7 @@ c
       if (bigdx.le.zero) bigdx = max(gigant,bigbnd)
       if (dxlim.le.zero) dxlim = two
       if (eta.lt.zero.or.eta.ge.one) eta = point9
+c                                  optimality tolerance
       if (ftol.lt.epsrf.or.ftol.ge.one) ftol = epsrf**point8
 c
       if (hcndbd.lt.one) hcndbd = condbd
@@ -1786,7 +1781,8 @@ c
       atom = string(j:j)
       if (lge(atom,'0').and.lle(atom,'9')) then
          ndigit = ndigit + 1
-      else if (atom.eq.'d'.or.atom.eq.'e') then
+      else if (atom.eq.'d'.or.atom.eq.'e'.or.
+     *         atom.eq.'D'.or.atom.eq.'E') then
          nexp = nexp + 1
       else if (atom.eq.'-') then
          nminus = nminus + 1
@@ -8323,6 +8319,8 @@ c
       optiml = ktcond(1).and.ktcond(2)
 c
       convrg = majits .gt. 0.and.alfdx .le. rtftol*xsize
+
+c     write (*,*) majits, alfdx,rtftol*xsize
 c
       infeas = convrg.and..not. feasqp.or.nqpinf .gt. 7
 c

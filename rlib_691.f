@@ -12657,21 +12657,21 @@ c                                 compute enthalpy of ordering
 
                call setxyp (i,id,.false.,bad)
 c DEBUG691 GALL
-               call ingsol (i)
-               call minfxc(g(id),i,.false.)
+c              call ingsol (i)
+c              call minfxc(g(id),i,.false.)
 c                                 for static composition o/d models 
 c                                 gexces only accounts for internal dqf's
-c              call gexces (id,g(id))
+               call gexces (id,g(id))
 
-c              call specis (dg,i)
+               call specis (dg,i)
 c                                 add in g from real endmembers, this
 c                                 must include the g for the disordered equivalent
 c                                 of the ordered species
-c              do k = 1, lstot(i)
+               do k = 1, lstot(i)
 
-c                 g(id) = g(id) + g(jend(i,2+k)) * pp(k)
+                  g(id) = g(id) + g(jend(i,2+k)) * pp(k)
 
-c              end do
+               end do
 
                g(id) = g(id) + dg
 
@@ -18626,13 +18626,13 @@ c                                lagged speciation
 c                                 read mu's if available
          if (jpot.ne.1) then
  
-            read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, jbulk)
+            read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, kbulk)
 
             if (ier.ne.0) then 
 c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
-               do i = 1, jbulk
+               do i = 1, kbulk
                   amu(i,ibulk) = nopt(7)
                end do 
  
