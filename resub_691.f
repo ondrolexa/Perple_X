@@ -444,12 +444,11 @@ c                                 special (pointless) iterations?
 c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call setexs (ids,id,.false.)
+               call setxyp (ids,id,.false.,kterat)
             else
                if (nrf(ids)) cycle
-               call endmmx (kd,id,ids)
+               call endpa (kd,id,ids)
             end if
-
-            call setxyp (ids,id,.false.,kterat)
 
          else
 c                                 use pointer array lkp this uses 
@@ -466,10 +465,7 @@ c                                 point to solution models
 
                if (nrf(ids)) cycle
 c                                 endmember refinement point:
-c                                 get refine point composition
-               call endmmx (kd,-id,ids)
-               write (*,*) 'wugga wugga'
-               call errpau
+               call endpa (kd,-id,ids)
 
             else
 
@@ -495,12 +491,10 @@ c DEBUG691
 
       end
 
-      subroutine endmmx (ld,jd,ids)
+      subroutine endpa (ld,jd,ids)
 c----------------------------------------------------------------------
-c generate compositional coordinates (x(i,j) array) for endmembers 
-c during outrefine. if iter = 1, id is the static array index of the
-c endmember, else iter is the dynamic array index. ids is the solution
-c model index. 
+c generate compositional coordinates for endmember jd of solution ids
+c during adaptive optimization, ld is the associated refinement point.
 c----------------------------------------------------------------------
       implicit none
 
@@ -526,35 +520,18 @@ c----------------------------------------------------------------------
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 c----------------------------------------------------------------------
 c                                 set refinement point index
-      hkp(jd) = ld 
+      hkp(jd) = ld
+
+      pa(1:nstot(ids)) = 0d0
 c                                 locate the endmember in the solution
       do i = 1, lstot(ids)
          if (jend(ids,2+i).eq.jd) then
-            kd = i
+            pa(i) = 1d0
             exit
          end if 
       end do
 
-      do ii = 1, poly(ids)
-c                                 initialize wt 
-         pwt(ii) = 0d0
-c                                 initialize poly x's
-         do i = 1, istg(ids,ii)
-
-            do j = 1, ispg(ids,ii,i)
-               x(ii,i,j) = 0d0
-            end do
-
-            if (kd.lt.pvert(ids,ii,1).or.kd.gt.pvert(ids,ii,2)) cycle
-c                                 assign fractions
-            x(ii,i,kmsol(ids,kd,i)) = 1d0
-c                                 and weight
-            pwt(ii) = 1d0
-            if (pop1(ids).gt.1) x(pop1(ids),1,ii) = 1d0
-
-         end do
-
-      end do
+      if (lorder(ids)) call makepp (ids)
 
       end
 
@@ -2357,36 +2334,35 @@ c                                 improves quality, because it stops the list
 c                                 from being clogged up with one phase
                cycle
 
-            else
+            else 
 
                bad = .false.
 
                do j = 1, npt + kpt 
 
                   if (jkp(jdv(j)).ne.jkp(jmin(i))) cycle
-
-                  good = .false.
 c                                 metastable point matches a refinement point, 
-c                                 check composition
+c                                 check composition if refinement_switch is on
+                  if (lopt(49)) then
+
+                     good = .false.
 c                                 only accept if more distant than soltol
 c                 if (solvus(jdv(j),jmin(i),jkp(jdv(j)))) good = .true.
 
 c                                 metastable point matches a refinement point, 
 c                                 check composition
-                  do k = 1, icp
+                     do k = 1, icp
+c                                 accept if it differs by some tolerance
+                        if (dabs(cp2(k,jdv(j))-cp2(k,jmin(i))).gt.
+     *                                                nopt(5)) then 
+                           good = .true.
+                        end if
 
-                     if (dabs(cp2(k,jdv(j))-cp2(k,jmin(i))).gt.nopt(5))
-     *                                                              then
-c                                 do not allow metastable refinement points of
-c                                 stable solutions (refinement_switch = F)
-                        if (lopt(49)) good = .true.
-                        exit
+                     end do
 
-                     end if
+                     if (good) cycle
 
-                  end do
-
-                  if (good) cycle
+                  end if
 
                   bad = .true.
 

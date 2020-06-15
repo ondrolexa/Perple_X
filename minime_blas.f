@@ -52,8 +52,6 @@ c DEBUG691                    dummies for NCNLN > 0
 
       data iprint,inp/0,.false./
 
-      COMMON            /EE04UC/NEWOPT
-
       save iprint,inp
 c-----------------------------------------------------------------------
       if (.not.mus) then 
@@ -69,7 +67,7 @@ c                                 will be estimated at this
 c                                 coordinate, so choose a feasible 
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
-      ppp = 0
+      if (inp) ppp = 0
 c                                 initialize bounds
       bu(1:nvar) = 1d20
       bl(1:nvar) = -1d20
@@ -92,10 +90,11 @@ c                                 saved obj value counter
 c                                 refinement point index
       istuff(5) = kds
 
-      iprint = 10
-
       if (inp) then
-         newopt = .true.
+c        newopt = .true.
+
+         iprint = 10
+
          write (*,*) 'ftol,fdint'
          read (*,*) ftol, fdint
          write (ctol,'(g14.7)') ftol
@@ -126,6 +125,12 @@ c      CALL E04UEF ('optimality tolerance = 0.00063')
 c eps**(0.9)
 c      CALL E04UEF ('function precision = 0.00025')
 
+      else
+
+         CALL E04UEF ('nolist')
+         CALL E04UEF ('optimality tolerance =  1d-4')
+         CALL E04UEF ('difference interval = 1d-3')
+
       end if
 
       CALL E04UEF ('derivative level = 0')
@@ -153,8 +158,13 @@ c        write (*,1010) i, bl(i),zp,bu(i)
 c     end do
 
 c     call p2z (pa,zt,ids)
-      write (*,*) istuff(3),gfinal,kds
+      if (inp) write (*,*) istuff(3),gfinal,kds
       if (inp) goto 10
+
+      do i = 1, nstot(ids)
+         if (dabs(pa(i)).lt.zero) pa(i) = 0d0
+      end do 
+
 1010  format (i5,1x,10(g14.7,1x))
       end
 
@@ -210,7 +220,7 @@ c-----------------------------------------------------------------------
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
 
-      g = gsol4 (jds)
+      g = gsol1 (jds)
 
 c     write (*,1000) 1, (pa(i),i=1,nstot(jds))
 c                                 get the bulk composition from pp
@@ -302,27 +312,23 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
+      istuff(4) = istuff(4) + 1
+
       psum = 0d0
 
       do i = 1, nvar
          psum = psum + ppp(i)
-         p0a(i) = ppp(i)
+         pa(i) = ppp(i)
       end do
 
-      p0a(nstot(jds)) = 1d0 - psum
-
-      do i = 1, nstot(jds)
-         if (dabs(p0a(i)).lt.zero) p0a(i) = 0d0
-         pp(i)  = p0a(i)
-         pa(i)  = p0a(i)
-      end do
+      pa(nstot(jds)) = 1d0 - psum
 
       call makepp (jds)
 
       if (istuff(3).eq.0d0) then 
          gval = gsol4 (jds)
       else
-         gval = - omega(jds,p0a)
+         gval = - omega(jds,pa)
       end if
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
@@ -556,7 +562,7 @@ c                                 get the disordered p's
 c                                 get the site fraction constraints
       call p2zind (pa,b,id)
 c                                 dummy objective function coefficients
-c                                 (only 1 feasible point)
+c                                 (only 1 feasible point?)
       c(1:mstot(id)) = 1d0
 c                                 load the ayz constraint matrix
       a(1:nz(id),1:mstot(id)) = ayz(id,1:nz(id),1:mstot(id))
@@ -610,7 +616,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical maxs
+      logical maxs, inp
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
      *        istuff(10),istate(m21), idead, nclin, ntot
@@ -619,6 +625,9 @@ c-----------------------------------------------------------------------
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(1),
      *                 lapz(m20,m19)
+c DEBUG691
+     *                 ,xp(m14), ftol, fdint
+      character*14 cdint, ctol
 
       integer nz
       double precision apz, zl, zu
@@ -649,6 +658,10 @@ c-----------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       external gsol3
+c DEBUG691 minfxc
+      data iprint,inp/0,.false./
+
+      save iprint,inp
 c-----------------------------------------------------------------------
 c                                 create constraint matrix z
 c                                 --------------------------
@@ -657,6 +670,9 @@ c                                 --------------------------
 c                                 initialize bounds
       bu(1:nvar) = 1d20
       bl(1:nvar) = -1d20
+
+      ppp(1:nvar) = p0a(1:nvar)
+      if (inp) xp(1:ntot) = p0a(1:ntot)
 c                                 load the local constraints 
 c                                 from the global arrays
       nclin = nz(ids) + icomp
@@ -697,32 +713,46 @@ c                                 istuff(3) = 1 min g, 0 max entropy
       else 
          istuff(3) = 0
       end if
+c                                 obj call counter
+      istuff(4) = 0
 
-      CALL E04UEF ('nolist')
-c auto
-c      CALL E04UEF ('difference interval = 1d-3')
-c eps = 1e-5
-c sqrt(eps)
-c      CALL E04UEF ('linear feasibility tolerance = 0.0032')
-c sqrt(eps)
-c      CALL E04UEF ('feasibility tolerance = 0.0032')
-c eps**(0.8)
-c      CALL E04UEF ('optimality tolerance = 1d-4')
-c eps**(0.9)
-c      CALL E04UEF ('function precision = 0.0000316')
-c eps = 1e-4
-c sqrt(eps)
-c      CALL E04UEF ('linear feasibility tolerance = 0.01')
-c sqrt(eps)
-c      CALL E04UEF ('feasibility tolerance = 0.01')
-c eps**(0.8)
-c      CALL E04UEF ('optimality tolerance = 0.00063')
-c eps**(0.9)
-c      CALL E04UEF ('function precision = 0.00025')
-       CALL E04UEF ('derivative level = 0')
+10    if (inp) then
+
+         istuff(4) = 0
+
+         iprint = 10
+
+         ppp(1:nvar) = xp(1:nvar)
+
+         write (*,*) 'ftol,fdint'
+         read (*,*) ftol, fdint
+         write (ctol,'(g14.7)') ftol
+         write (cdint,'(g14.7)') fdint
+
+         CALL E04UEF ('optimality tolerance = '//ctol)
+         CALL E04UEF ('difference interval = '//cdint)
+
+      else
+
+         CALL E04UEF ('nolist')
+         CALL E04UEF ('optimality tolerance =  1d-4')
+         CALL E04UEF ('difference interval = 1d-3')
+
+      end if
+
+      CALL E04UEF ('derivative level = 0')
 
       call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
      *             m22,work,m23,istuff,stuff,idead,iprint)
+
+      if (inp) then 
+         write (*,*) istuff(4),gfinal,istuff(1)
+         goto 10
+      end if
+
+      do i = 1, nstot(ids)
+         if (dabs(pa(i)).lt.zero) pa(i) = 0d0
+      end do 
 
       end

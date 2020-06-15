@@ -12543,7 +12543,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad
+      logical bad, switch
 
       integer i, j, k, id
 
@@ -12608,6 +12608,10 @@ c                                 working arrays
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+c DEBUG691 gall
+      data switch/.false./
+
+      save switch
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components. 
@@ -12648,17 +12652,22 @@ c                                 a liquid below T_melt option threshold
             end do
 
          else if (lorder(i)) then
+c DEBUG691 GALL
+            if (switch) then 
 c                                 compute margules coefficients
             call setw (i)
 c                                 compute enthalpy of ordering
             call oenth (i)
 
+            else
+               call ingsol (i)
+            end if 
+
             do j = 1, jend(i,2)
 
                call setxyp (i,id,.false.,bad)
-c DEBUG691 GALL
-c              call ingsol (i)
-c              call minfxc(g(id),i,.false.)
+
+               if (switch) then 
 c                                 for static composition o/d models 
 c                                 gexces only accounts for internal dqf's
                call gexces (id,g(id))
@@ -12674,6 +12683,12 @@ c                                 of the ordered species
                end do
 
                g(id) = g(id) + dg
+
+               else 
+
+                  call minfxc(g(id),i,.false.)
+
+               end if
 
                id = id + 1
 
