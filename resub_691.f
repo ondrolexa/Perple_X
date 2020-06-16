@@ -572,9 +572,6 @@ c----------------------------------------------------------------------
 c subroutine to save a copy of adaptive pseudocompound endmember fractions
 c in the temporary array ycoor (also lcoor) used by resub to generate
 c the new zcoor array for the subsequent iteration.
-
-c iter = 2 - refinement points were static compositions
-c iter > 2 - refinement points were dynamic compositions
 c----------------------------------------------------------------------
       implicit none
 

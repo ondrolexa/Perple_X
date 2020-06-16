@@ -53,7 +53,7 @@ c DEBUG691                    dummies for NCNLN > 0
 
       external gsol2, dummy
 
-      data iprint,inp/0,.false./
+      data iprint,inp/0,.true./
 
       save iprint,inp
 c-----------------------------------------------------------------------
@@ -92,7 +92,7 @@ c                                 saved obj value counter
 c                                 refinement point index
       istuff(5) = kds
 
-      if (inp) then
+      if (.not.inp) then
 
          ppp = 0
 
@@ -140,11 +140,19 @@ c     end do
 
 c     call p2z (pa,zt,ids)
       if (inp) write (*,*) istuff(3),gfinal,kds
-      if (inp) goto 10
+c     if (inp) goto 10
 
+      zp = 0d0
       do i = 1, nstot(ids)
+         zp = zp + pa(i)
 c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
-      end do 
+      end do
+
+      if (zp.lt.0.9999) then 
+         write (*,*) 'low sum'
+         call p2z (pa,zt,ids)
+      end if
+
 
 1010  format (i5,1x,10(g14.7,1x))
       end
@@ -162,7 +170,7 @@ c-----------------------------------------------------------------------
       integer i, jds, nvar, mode, istuff(*), istart
 
       double precision ppp(*), gval, gsol4, ggrd(*), stuff(*),
-     *                 gsol1, g, sum, scp(k5)
+     *                 gsol1, g, sum, scp(k5), sum1
 
       external gsol4, gsol1
 
@@ -190,18 +198,16 @@ c-----------------------------------------------------------------------
 
       do i = 1, nvar
          sum = sum + ppp(i)
-         p0a(i) = ppp(i)
+         pa(i) = ppp(i)
       end do
 
-      p0a(nstot(jds)) = 1d0 - sum
-      pp(1:nstot(jds)) = p0a(1:nstot(jds))
-      pa(1:nstot(jds)) = p0a(1:nstot(jds))
+      pa(nstot(jds)) = 1d0 - sum
 
       call makepp (jds)
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
 
-      g = gsol1 (jds)
+      g = gsol4 (jds)
 
 c     write (*,1000) 1, (pa(i),i=1,nstot(jds))
 c                                 get the bulk composition from pp
@@ -253,6 +259,14 @@ c                                 save the endmember fractions
             zco(zcoct+1:zcoct+nstot(jds)) = pa(1:nstot(jds))
 
             zcoct = zcoct + nstot(jds)
+
+            sum = 0d0
+            do i = 1, nstot(jds)
+               sum = sum + pa(i)
+            end do 
+            if (sum.lt.0.9999) then
+               write (*,*) 'wug'
+            end if
 
          end if
 
