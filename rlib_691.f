@@ -7994,14 +7994,14 @@ c                                 and the jacobians are
                          p0t = p0t + p0a(l)
                       end do
 
-                      write (*,*) 'pat, p0t ',pat, p0t
+c                     write (*,*) 'pat, p0t ',pat, p0t
 
-                      write (*,*) 'wacka boom',zl,j,i
-                      write (*,*) (p0a(l),l=1,nstot(id))
-                      write (*,*) (pa(l),l=1,nstot(id))
-                      write (*,*) p, t
-                      write (*,*) 'please report this error'
-                      write (*,*)
+c                     write (*,*) 'wacka boom',zl,j,i
+c                     write (*,*) (p0a(l),l=1,nstot(id))
+c                     write (*,*) (pa(l),l=1,nstot(id))
+c                     write (*,*) p, t
+c                     write (*,*) 'please report this error'
+c                     write (*,*)
                       inf = .true.
 
                    end if
@@ -10275,13 +10275,13 @@ c                                 avoid impossible compositions 'cause a min > 0
 c                                 1-ycum is the smallest fraction possible
             if (ycum.gt.r1) then
 c                                 inconsistent limits
-               write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
-               write (*,*) ycum,ids,ksmod(ids),lsite,k,i,mode
-               write (*,*) (pxmx(lpoly,1,j),j=1,jsp)
-               write (*,*) (pxmn(lpoly,1,j),j=1,jsp)
-               write (*,*) (pxnc(lpoly,1,j),j=1,jsp)
-               write (*,*) (iy(j),j=1,jsp)
-               call warn (999,ycum,jsp,'cartes')
+c              write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
+c              write (*,*) ycum,ids,ksmod(ids),lsite,k,i,mode
+c              write (*,*) (pxmx(lpoly,1,j),j=1,jsp)
+c              write (*,*) (pxmn(lpoly,1,j),j=1,jsp)
+c              write (*,*) (pxnc(lpoly,1,j),j=1,jsp)
+c              write (*,*) (iy(j),j=1,jsp)
+c              call warn (999,ycum,jsp,'cartes')
 
                cycle
 
@@ -15075,7 +15075,7 @@ c                                 n(j) is molar site population
 
             end do
 
-            if (nt.gt.0d0) then
+            if (nt.gt.zero) then
 c                                 site has non-zero multiplicity
                do j = 1, zsp(id,i)
 
@@ -15084,7 +15084,7 @@ c                                 site has non-zero multiplicity
                   d2z = (2d0*dnt*(z*dnt-dn(j)) + nt*d2n(j) - n(j)*d2nt)
      *                  /nt**2
 
-                  if (z.gt.0d0) then
+                  if (z.gt.zero) then
 
                      lnz = dlog(z)
                      lnz1 = lnz + 1d0
@@ -15095,7 +15095,10 @@ c                                 site has non-zero multiplicity
 
                   else if (dz.gt.zero) then
 
-                     write (*,*) 'oink temkin dz ',dz
+                     dz = dn(j)/nt
+                     d2z = (2d0*dnt*(-dn(j)) + nt*d2n(j) - n(j)*d2nt)
+     *                  /nt**2
+                     write (*,*) 'oink temkin dz ',z,dz,d2z,n(j)
 
                   end if
 
@@ -15122,7 +15125,7 @@ c                                 for each term:
                   d2z = d2z + dcoef(k,j,i,id) * d2p(ksub(k,j,i,id))
                end do
 
-               if (z.gt.0d0) then
+               if (z.gt.zero) then
 
                   lnz = dlog(z)
                   lnz1 = 1d0 + lnz
@@ -15146,7 +15149,7 @@ c                                 derivative may be +/-infinite
 c                                 add the contibution from the last species:
             z = 1d0 - nt
 
-            if (z.gt.0d0) then
+            if (z.gt.zero) then
 
                lnz = dlog(z)
                lnz1 = 1d0 + lnz
@@ -15222,7 +15225,7 @@ c                                 for each term:
 
          z = 1d0 - zt
 
-         end
+      end
 
 
       subroutine rmoden
@@ -20107,7 +20110,7 @@ c                                 species expression by differnce
          do i = 1, msite(im)
 c                                 qmult = 0, temkin, all expressions are
 c                                 available
-            if (zmult(im,i).eq.0) cycle
+            if (zmult(im,i).eq.0d0) cycle
 
             jp1 = zsp(im,i) + 1
 c                                 initialize the term counter
@@ -20130,7 +20133,7 @@ c                                 if it has a non zero fraction
 
       do i = 1, msite(im)
 
-         if (zmult(im,i).eq.0) then
+         if (zmult(im,i).eq.0d0) then
             jp1 = 0
          else
             jp1 = 1

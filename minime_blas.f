@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical inp, newopt
+      logical inp
 
       integer ids, kds, nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
@@ -48,6 +48,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision mu
       common/ cst330 /mu(k8),mus
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       external gsol2, dummy
 
       data iprint,inp/0,.false./
@@ -67,7 +70,6 @@ c                                 will be estimated at this
 c                                 coordinate, so choose a feasible 
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
-      if (inp) ppp = 0
 c                                 initialize bounds
       bu(1:nvar) = 1d20
       bl(1:nvar) = -1d20
@@ -91,7 +93,8 @@ c                                 refinement point index
       istuff(5) = kds
 
       if (inp) then
-c        newopt = .true.
+
+         ppp = 0
 
          iprint = 10
 
@@ -100,30 +103,8 @@ c        newopt = .true.
          write (ctol,'(g14.7)') ftol
          write (cdint,'(g14.7)') fdint
 
-      CALL E04UEF ('optimality tolerance = '//ctol)
-      CALL E04UEF ('difference interval = '//cdint)
-
-c     CALL E04UEF ('nolist')
-c auto
-c     CALL E04UEF ('difference interval = 1d-4')
-c eps = 1e-5
-c sqrt(eps)
-c      CALL E04UEF ('linear feasibility tolerance = 0.0032')
-c sqrt(eps)
-c      CALL E04UEF ('feasibility tolerance = 0.0032')
-c eps**(0.8)
-c     CALL E04UEF ('optimality tolerance = ....')
-c eps**(0.9)
-c      CALL E04UEF ('function precision = 0.0000316')
-c eps = 1e-4
-c sqrt(eps)
-c      CALL E04UEF ('linear feasibility tolerance = 0.01')
-c sqrt(eps)
-c      CALL E04UEF ('feasibility tolerance = 0.01')
-c eps**(0.8)
-c      CALL E04UEF ('optimality tolerance = 0.00063')
-c eps**(0.9)
-c      CALL E04UEF ('function precision = 0.00025')
+         CALL E04UEF ('optimality tolerance = '//ctol)
+         CALL E04UEF ('difference interval = '//cdint)
 
       else
 
@@ -162,7 +143,7 @@ c     call p2z (pa,zt,ids)
       if (inp) goto 10
 
       do i = 1, nstot(ids)
-         if (dabs(pa(i)).lt.zero) pa(i) = 0d0
+c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
       end do 
 
 1010  format (i5,1x,10(g14.7,1x))
@@ -752,7 +733,7 @@ c                                 obj call counter
       end if
 
       do i = 1, nstot(ids)
-         if (dabs(pa(i)).lt.zero) pa(i) = 0d0
+c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
       end do 
 
       end

@@ -2173,6 +2173,9 @@ c----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
@@ -2352,10 +2355,15 @@ c                 if (solvus(jdv(j),jmin(i),jkp(jdv(j)))) good = .true.
 c                                 metastable point matches a refinement point, 
 c                                 check composition
                      do k = 1, icp
+                        if (dcp(k,jkp(jdv(j))).eq.0d0) cycle
 c                                 accept if it differs by some tolerance
-                        if (dabs(cp2(k,jdv(j))-cp2(k,jmin(i))).gt.
-     *                                                nopt(5)) then 
+                        if (dabs( (cp2(k,jdv(j))-cp2(k,jmin(i)))
+     *                     / dcp(k,jkp(jdv(j))) ).gt. soltol) then
+
                            good = .true.
+
+                           exit 
+
                         end if
 
                      end do
