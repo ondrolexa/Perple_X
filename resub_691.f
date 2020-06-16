@@ -2278,7 +2278,7 @@ c DEBUG691
          write (*,*) 'quitting at iter/dg ',iter,gtot-ogtot
       end if
 
-      if (dabs(gtot-ogtot).lt.1d0) then 
+      if (dabs(gtot-ogtot).lt.1d-1) then 
          quit = .true.
       end if 
 

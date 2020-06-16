@@ -7996,7 +7996,7 @@ c                                 and the jacobians are
 
 c                     write (*,*) 'pat, p0t ',pat, p0t
 
-c                     write (*,*) 'wacka boom',zl,j,i
+                      write (*,*) 'wacka boom',zl,j,i
 c                     write (*,*) (p0a(l),l=1,nstot(id))
 c                     write (*,*) (pa(l),l=1,nstot(id))
 c                     write (*,*) p, t
@@ -10275,7 +10275,7 @@ c                                 avoid impossible compositions 'cause a min > 0
 c                                 1-ycum is the smallest fraction possible
             if (ycum.gt.r1) then
 c                                 inconsistent limits
-c              write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
+               write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
 c              write (*,*) ycum,ids,ksmod(ids),lsite,k,i,mode
 c              write (*,*) (pxmx(lpoly,1,j),j=1,jsp)
 c              write (*,*) (pxmn(lpoly,1,j),j=1,jsp)
@@ -15093,7 +15093,7 @@ c                                 site has non-zero multiplicity
                      dzlnz = dzlnz + dz * lnz1
                      d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
 
-                  else if (dz.gt.zero) then
+                  else if (dabs(dn(j)/nt).gt.zero) then
 
                      dz = dn(j)/nt
                      d2z = (2d0*dnt*(-dn(j)) + nt*d2n(j) - n(j)*d2nt)

@@ -53,7 +53,7 @@ c DEBUG691                    dummies for NCNLN > 0
 
       external gsol2, dummy
 
-      data iprint,inp/0,.true./
+      data iprint,inp/0,.false./
 
       save iprint,inp
 c-----------------------------------------------------------------------
@@ -92,7 +92,7 @@ c                                 saved obj value counter
 c                                 refinement point index
       istuff(5) = kds
 
-      if (.not.inp) then
+      if (inp) then
 
          ppp = 0
 
@@ -140,7 +140,7 @@ c     end do
 
 c     call p2z (pa,zt,ids)
       if (inp) write (*,*) istuff(3),gfinal,kds
-c     if (inp) goto 10
+      if (inp) goto 10
 
       zp = 0d0
       do i = 1, nstot(ids)
