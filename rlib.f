@@ -8413,7 +8413,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g,pmax,pmin,dp,dpmax,omega,gex,dy(m4)
+      double precision g,ga,pmax,pmin,dp,dpmax,omega,gex,dy(m4)
 
       external gex, omega
 
@@ -8453,30 +8453,17 @@ c                                 stoichiometric coefficients
 
       error = .false.
 c                                 starting point
-      if (lrecip(id)) then
-c                                 reciprocal
-         call plimit (pmin,pmax,k,id)
-         dpmax = pmax - pmin
-
-      else
-c                                 find the maximum proportion of the
-c                                 ordered species cannot be > the amount
-c                                 of reactant initially present.
-         dpmax = 1d0
-         do i = 1, nr
-            if (-p0a(ind(i))/dy(i).lt.dpmax) dpmax = -p0a(ind(i))/dy(i)
-         end do
-
-      end if
+      call plimit (pmin,pmax,k,id)
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
+      pmax = pmax - nopt(5)
+      pmin = pmin + nopt(5)
       pin(k) = .true.
-      dp = dpmax - nopt(5)
-      pmax = p0a(jd) + dp
-      pmin = p0a(jd) + nopt(5)
+      dp = pmax - p0a(jd)
+      dpmax = pmax - pmin
 
       if (pmax-pmin.lt.nopt(5)) return
 c                                 get starting end for the search
@@ -8555,7 +8542,17 @@ c                                 didn't converge or couldn't
 c                                 find a starting point, set
 c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
-      if (error) call pincs (dpmax,dy,ind,jd,nr)
+      if (error) then
+c                                 ordered
+         call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+         g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+c                                 anti-ordered
+         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+         ga = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+
+         if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+
+      end if
 
       g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
