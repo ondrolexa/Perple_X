@@ -426,7 +426,7 @@ c                                 site multiplicity
 
             end do
 
-            if (zuffix(id).ne.'none') then
+            if (zuffix(id).ne.' ') then
 
                write (lu,'(11x,a,/)') 
      *                        'Non-mixing stoichiometry: '//zuffix(id)

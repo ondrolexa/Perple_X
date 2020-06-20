@@ -11421,7 +11421,8 @@ begin_model
 
                      Previously present as a brute force model which did not allow the anti-ordered
                      ilmenite configuration. Re-formulated as standard o/d model to remove this
-                     limitation, JADC Jan 14, 2017.
+                     limitation; however, the model has been parameterized so that the ordered and
+                     antiordered states are energetucally equivalent. JADC Jan 14, 2017.
 
                                   NOTES:
 

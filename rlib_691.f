@@ -5853,12 +5853,6 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer jspec
-      common/ cxt8 /jspec(h9,m4)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
       gg = 0d0
 
@@ -6571,7 +6565,7 @@ c---------------------------------------------------------------------
 
       logical add, wham, zbad, bad
 
-      integer im, nloc, i, j, id, jd, k, l, ii, 
+      integer im, nloc, i, j, id, jd, k, l, m, n, ii, 
      *        killct, killid(20)
 
       double precision dinc, dx, gcpd, stinc, getstr,
@@ -6672,6 +6666,9 @@ c                                 parameters for autorefine
       common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
      *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
      *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
+
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 
       integer ifp
       logical fp
@@ -7125,13 +7122,14 @@ c                                 site fractions as a function of bulk
 c                                 y's and dependent species y:
       nloc = 0
 
+      if (zuffix(h0).eq.'none') zuffix(h0) = ' '
       zuffix(im) = zuffix(h0)
 
       do i = 1, msite(h0)
 c                                 eliminate sites with 1 species
-         if (zmult(h0,i).gt.0) then
+         if (zmult(h0,i).gt.zero) then
 c                                 non-temkin
-            if (zsp(h0,i).eq.0) then
+            if (zsp(h0,i).lt.zero) then
 c                                 pad zuffix with the remaining species
                if (tzmult(h0,i).eq.1d0) then 
                   znames(h0,i,2) = ' '
@@ -7149,7 +7147,7 @@ c                                 pad zuffix with the remaining species
                cycle
             end if
          else
-            if (zsp(h0,i).eq.1) then
+            if (zsp(h0,i).eq.1d0) then
 c                                 pad zuffix with the remaining species
                text = znames(h0,i,0)//'['//znames(h0,i,1)//']'
                call unblnk (text)
@@ -7367,13 +7365,21 @@ c                                 is only relevant for WERAMI
       if (lname(im).eq.'liquid'.and.iam.eq.3.and.lopt(6))
      *                                                 fp(im) = .true.
 
-      do i = 1, kstot
+      do i = 1, lstot(im)
 c                                 pointer to endmember
          id = kdsol(insp(i))
+c                                 save the total mols of the endmember in a solution
+c                                 specific array, this is done so the ordered 
+c                                 endmembers do not need to be treated as a special case
+         endt(im,i) = ctot(id)
+
+         do j = 1, icomp
+            endc(im,i,j) = cp(j,id)
+         end do
 c                                 figure out the compositional distance between
 c                                 the endmembers, this is used to scale the solvus
 c                                 tolerance
-         do j = i+1, kstot
+         do j = i+1, lstot(im)
 
             jd = kdsol(insp(j))
             if (ctot(id)*ctot(jd).eq.0d0) cycle
@@ -7427,6 +7433,34 @@ c                                 look for endmembers to be killed
          end if
 
       end do
+c                                 compute and save the total moles for the 
+c                                 ordered endmembers
+      if (lstot(im).lt.nstot(im)) then 
+c                                  if o/d add the ordered endmembers
+         do m = 1, norder
+c                                  the ordered endmember compositions are 
+c                                  a stoichiometric combination of the 
+c                                  disordered endmembers
+            j = lstot(im) + m
+
+            endt(im,j) = 0d0
+            endc(im,j,:) = 0d0
+
+            do n = 1, nr(m)
+
+               jd = jend(im,2+ideps(n,m,im))
+
+               endt(im,j) = endt(im,j) + depnu(n,m) * ctot(jd)
+
+               do i = 1, icomp
+                  endc(im,j,i) = endc(im,j,i) + depnu(n,m) * cp(i,jd)
+               end do
+
+            end do
+
+         end do
+
+      end if
 c                                 set pmod to false if explicit_bulk_modulus is not T
       if (.not.lopt(17)) pmod(im) = .false.
 
@@ -12579,9 +12613,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m4)
-
-      integer jspec
-      common/ cxt8 /jspec(h9,m4)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -12600,16 +12631,13 @@ c                                 working arrays
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c DEBUG691 gall
-      data switch/.false./
+      data switch/.true./
 
       save switch
 c-----------------------------------------------------------------------
@@ -12659,6 +12687,8 @@ c                                 compute margules coefficients
 c                                 compute enthalpy of ordering
             call oenth (i)
 
+               call ingsol (i)
+
             else
                call ingsol (i)
             end if 
@@ -12683,6 +12713,10 @@ c                                 of the ordered species
                end do
 
                g(id) = g(id) + dg
+
+                  pa = p0a
+
+                  call minfxc(g(id),i,.false.)
 
                else 
 
@@ -14455,9 +14489,6 @@ c                                 working arrays
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      integer jspec
-      common/ cxt8 /jspec(h9,m4)
-
       double precision yf,gh,v
       common/ cstcoh /yf(nsp),gh(nsp),v(nsp)
 
@@ -14475,9 +14506,6 @@ c                                 working arrays
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
       if (id.lt.0) then
 
@@ -14783,17 +14811,16 @@ c                                 restretch.
       subroutine gpmlt1 (g,id,error)
 c----------------------------------------------------------------------
 c subroutine to speciation of the green et al (JMG, 2016) melt model. this
-c model is a special case (ksmod(id)=27) because of the peculiar configurational
-c entropy expression and because the model has a single ordering parameter, which
+c model is a special case because the model has a single ordering parameter, which
 c green et al take as the fraction of the ordered species (an). this formulation is
 c unfortunate because p(an) is not orthogonal to the disordered speciation
 c (p0, because the moles of the species is not constant with changing speciation).
 c here the model is recast as g(p0,q) where q is the number of moles of an that can be
 c formed given p0.
 
-c    id identifies the solution.
-c    g  is the change in G for the stable speciation relative to a mechanical
-c       mixture of the endmembers.
+c    id - identifies the solution.
+c    g  - change in G for the stable speciation relative to a mechanical
+c          mixture of the endmembers.
 c    pc is the mass normalization factor, sum(p0*ctot)
 c----------------------------------------------------------------------
       implicit none
@@ -17481,6 +17508,44 @@ c                                  into the mobile/saturated component space
 
       end 
 
+      subroutine getxcp (xc,ntot,ids)
+c-----------------------------------------------------------------------
+c getxcp gets the normalized chemical composition of solution ids from 
+c its endmember fractions. called by minfxc (only for o/d models). 
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, ids
+
+      double precision xc(*), ntot
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
+c-----------------------------------------------------------------------
+      xc(1:icomp) = 0d0
+      ntot = 0d0
+
+      do i = 1, nstot(ids)
+
+         do j = 1, icomp 
+            xc(j) = xc(j) + pa(i) * endc(ids,i,j)/endt(ids,i)
+         end do 
+
+         ntot = ntot + pa(i) * endt(ids,i)
+
+      end do
+
+      end
+
       subroutine getscp (scp,scptot,ids,jd,pure)
 c-----------------------------------------------------------------------
 c getscp gets the bulk chemical composition of solution ids from the composition
@@ -19760,71 +19825,28 @@ c                                  y array, or ideps(n,m,id) in the p array.
       subroutine makapc (id)
 c----------------------------------------------------------------------
 c subroutine to make the ap'*c matrix for ap'*c = c, where p' is the 
-c the independent subset of p.
+c the independent subset of p. c is the normalized composition.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, m, n, id
+      integer i, j, id
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      double precision apc
-      common/ cstp2c /apc(h9,k5,m19)
-
-      integer mdep,idep,jdep,ndph
-      double precision nu,y2p
-      common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
-     *                idep(m15,j4),ndph(m15)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      integer iddeps,norder,nr
-      double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
-     *                nr(j3)
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 c----------------------------------------------------------------------
-      apc(id,:,:) = 0d0
-c                                 independent endmembers:
-      do j = 1, lstot(id)
-c                                 the disordered endmembers
+
+      do j = 1, nstot(id)
+c                                 for non-equimolar
          do i = 1, icomp
-            apc(id,i,j) = cp(i,jend(id,2+j))
+            apc(id,i,j) = endc(id,j,i) / endt(id,j)
          end do
 
       end do
-
-      if (lstot(id).lt.nstot(id)) then 
-c                                  if o/d add the ordered endmembers
-         do m = 1, norder
-c                                  the ordered endmember compositions are 
-c                                  a stoichiometric combination of the 
-c                                  disordered endmembers
-            j = lstot(id) + m
-
-            do n = 1, nr(m)
-c                                  the endmember decomposes to iddeps(n,m) in the
-c                                  y array, or ideps(n,m,id) in the p array.
-               do i = 1, icomp
-
-                  apc(id,i,j) = apc(id,i,j) + depnu(n,m)
-     *                        * cp(i,jend(id,2+ideps(n,m,id)))
-               end do 
-
-            end do
-
-         end do
-
-      end if
 c                                   eliminate p(nstot) as 1 - sum(p,nstot-1)
 c                                   this method costs an extra column dimension in
 c                                   p2c, but what the heck... it can be used 

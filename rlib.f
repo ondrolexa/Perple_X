@@ -8399,11 +8399,16 @@ c----------------------------------------------------------------------
       subroutine speci1 (g,id,k,error)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
-c composition is returned
-c in array pa.
-c    id identifies the solution.
-c    g is the change in G for the stable speciation relative to a mechanical
-c      mixture of the endmembers.
+c composition is returned in array pa.
+
+c    k  - the ordered species
+c    id - the solution.
+c    g  - the change in G for the stable speciation relative to a mechanical
+c         mixture of the endmembers.
+
+c by default the search begins from the maximum ordered endmember fraction 
+c consequently it will usually find the ordered local minimum before it finds
+c the antiordered minium. 
 c----------------------------------------------------------------------
       implicit none
 
@@ -8462,13 +8467,11 @@ c                                 the root must lie at p > pmax - nopt(5).
       pmax = pmax - nopt(5)
       pmin = pmin + nopt(5)
       pin(k) = .true.
-      dp = pmax - p0a(jd)
-      dpmax = pmax - pmin
 
       if (pmax-pmin.lt.nopt(5)) return
 c                                 get starting end for the search
 c                                 first try the maximum
-      call pincs (dp,dy,ind,jd,nr)
+      call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       call gderi1 (k,id,dp)
 
@@ -8478,20 +8481,16 @@ c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the
 c                                 the disordered case:
-         call pincs (pmin,dy,ind,jd,nr)
+         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
          call gderi1 (k,id,dp)
-
-         if (dp.le.0d0) then
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
 c                                 the min/max order cases, specis
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-            error = .true.
-
-         end if
+         if (dp.le.0d0) error = .true.
 
       end if
 

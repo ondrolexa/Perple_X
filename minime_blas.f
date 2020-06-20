@@ -29,7 +29,7 @@ c DEBUG691
 
       double precision ggrd(m19), lapz(m20,m19),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
-     *                 clamda(m21),r(m19,m19),work(m23),stuff(1)
+     *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),yt(m14),zp,zt(m10,m11),
      *                 ftol,fdint
@@ -159,7 +159,7 @@ c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
 
       subroutine gsol2 (mode,nvar,ppp,gval,ggrd,istart,istuff,stuff)
 c-----------------------------------------------------------------------
-c function to evaluate gibbs energy of a solution for nlpopt. can call 
+c function to evaluate gibbs energy of a solution for minfrc. can call 
 c either gsol1 that does o/d or gsol4 that does not, gsol1 seems to give
 c better results presumably because it's using analytical gradients.
 c-----------------------------------------------------------------------
@@ -205,15 +205,10 @@ c-----------------------------------------------------------------------
 
       call makepp (jds)
 
-c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
+      g = gsol4 (jds,1d0)
 
-      g = gsol4 (jds)
-
-c     write (*,1000) 1, (pa(i),i=1,nstot(jds))
 c                                 get the bulk composition from pp
       call getscp (scp,sum,jds,jds,.false.)
-
-c     write (*,1000) 0, (scp(i),i=1,icp)
 
       gval = g
 
@@ -302,6 +297,9 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
@@ -317,13 +315,21 @@ c-----------------------------------------------------------------------
       end do
 
       pa(nstot(jds)) = 1d0 - psum
+c                                 for non-equimolar ordering
+c                                 get the total moles
+      stuff(2) = 0d0
 
-      call makepp (jds)
+      do i = 1, nstot(jds)
+         stuff(2) = stuff(2) + pa(i) * endt(jds,i)
+      end do
 
-      if (istuff(3).eq.0d0) then 
-         gval = gsol4 (jds)
+      if (istuff(3).eq.0d0) then
+c                                 free energy minimization
+c                                 gsol4 returns the g for stuff(1) moles
+         gval = gsol4 (jds,stuff(2)/stuff(1))
       else
-         gval = - omega(jds,pa)
+c                                 entropy maximization
+         gval = -stuff(2)/stuff(1) * omega(jds,pa)
       end if
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
@@ -336,18 +342,20 @@ c     write (*,1000) gval, (pa(i),i=1,nstot(jds))
 
       end
 
-
-      double precision function gsol4 (id)
+      double precision function gsol4 (id,norm)
 c-----------------------------------------------------------------------
 c gsol4 computes the total (excess+ideal) free energy of solution
 c for a solution identified by index ids for the speciation input
 c via cxt7, i.e., in contrast to gsol1 it does not compute the 
-c speciation of o/d models.
+c speciation of o/d models. the energy is scaled to stuff1 moles
+c by norm.
 
 c ingsol MUST be called prior to gsol4 to initialize solution
 c specific parameters! 
 
 c gsol4 assumes the endmember g's have been calculated by gall.
+
+c gsol4 is called only for implicit order-disorder models by minfxc.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -355,13 +363,11 @@ c-----------------------------------------------------------------------
 
       integer k, id
 
-      double precision gg
+      double precision g1, g2, norm
 
-      double precision omega, gfluid, gzero,
-     *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid, gfes
+      double precision omega, gex, gfesi
 
-      external omega, gfluid, gzero, gex, gfesi,
-     *         gfesic, gfecr1, gerk, ghybrid, gfes
+      external omega, gex
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -372,141 +378,34 @@ c-----------------------------------------------------------------------
       double precision enth
       common/ cxt35 /enth(j3)
 
-      integer jnd
-      double precision aqg,q2,rt
-      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 bookkeeping variables
-c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer jspec
-      common/ cxt8 /jspec(h9,m4)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
-      gg = 0d0
-
-      if (specil(id)) then
-c                                 special is reserved for special models 
-c                                 that set standard flags (lorder and/or lrecip)
-c                                 currently only Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-            gg =  gfesic (pa(1),pa(3),pa(4),
-     *                    g(jend(id,3)),g(jend(id,4)),
-     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
-
-      else if (simple(id)) then
-c                                 -------------------------------------
-c                                 macroscopic formulation for normal solutions.
-         call gdqf (id,gg,p0a)
-
-         gg = gg - t * omega(id,pa) + gex(id,pa)
-c                                 get mechanical mixture contribution
-         do k = 1, lstot(id)
-            gg = gg + pa(k) * g(jend(id,2+k))
-         end do
-
-      else if (lorder(id)) then
-c                                 dqf, excess, and entropic effects.
-         call gdqf (id,gg,pp)
-
-         gg = gg - t * omega(id,pa) + gex(id,pa)
-c                                 enthalpic effect of forming the ordered
-c                                 species:
-         do k = 1, nord(id)
-            gg = gg + pa(lstot(id)+k)*enth(k)
-         end do
-c                                 plus the mechanical mixture of the 
-c                                 disordered endmembers
-         do k = 1, lstot(id)
-            gg = gg + g(jend(id,2+k)) * pp(k)
-         end do
-
-      else if (ksmod(id).eq.0) then
-c                                 ------------------------------------
-c                                 internal fluid eos
-         gg = gfluid(pa(1))
-
-         do k = 1, 2
-            gg = gg + gzero(jnd(k))*pa(k)
-         end do
-
-      else if (ksmod(id).eq.20) then
-c                                 electrolytic solution, need to check
-c                                 that this thing is getting the right
-c                                 partial molar volumes.
-         call slvnt1 (gg)
-
-         call slvnt2 (gg)
-
-      else if (ksmod(id).eq.26) then
-c                                 ------------------------------------
-c                                 andreas salt model
-         call hcneos (gg,pa(1),pa(2),pa(3))
-
-         do k = 1, 3
-            gg = gg + pa(k) * g(jend(id,2+k))
-         end do
-
-      else if (ksmod(id).eq.29) then
-c                                 -------------------------------------
-c                                 BCC Fe-Si Lacaze and Sundman
-         gg =  gfesi(pa(1),g(jend(id,3)),g(jend(id,4)))
-
-      else if (ksmod(id).eq.32) then
-c                                 -------------------------------------
-c                                 BCC Fe-Cr Andersson and Sundman
-         gg =  gfecr1(pa(1),g(jend(id,3)),g(jend(id,4)))
-
-      else if (ksmod(id).eq.39) then
-c                                 -------------------------------------
-c                                 generic hybrid EoS
-c                                 initialize pointer array
-         do k = 1, nstot(id)
-c                                 sum pure species g's
-            gg = gg + g(jnd(k)) * pa(k)
-
-         end do
-c                                 compute and add in activities
-         gg = gg + ghybrid (pa)
-
-      else if (ksmod(id).eq.41) then
-c                                 hybrid MRK ternary COH fluid
-         call rkcoh6 (pa(2),pa(1),gg)
-
-         do k = 1, 3
-            gg = gg + g(jnd(k)) * pa(k)
-         end do
-
-      else if (ksmod(id).eq.40) then
-c                                 MRK silicate vapor
-         do k = 1, nstot(id)
-            gg = gg + gzero (jnd(k)) * pa(k)
-         end do
-
-         gg = gg + gerk(pa)
-
-      else if (ksmod(id).eq.42) then
-c                                 ------------------------------------
-c                                 Fe-S fluid (Saxena & Eriksson 2015)
-         gg =  gfes(pa(2),g(jend(id,3)),g(jend(id,4)))
-
-      else
-
-         write (*,*) 'what the **** am i doing here?'
-         call errpau
-
-      end if
-
-      gsol4 = gg
+c                                 for non-equimolar ordering properties
+c                                 computed with pa are for stuff2 moles
+c                                 and those computed with pp are for 
+c                                 stuff1 moles
+      g1 = 0d0
+c                                 dqf contribution
+      call gdqf (id,g1,pp)
+c                                 mechanical contribution
+      do k = 1, lstot(id)
+         g1 = g1 + g(jend(id,2+k)) * pp(k)
+      end do
+c                                 entropic + excess o/d effect
+      g2 = - t * omega(id,pa) + gex(id,pa)
+c                                 enthalpic effect o/d effct
+      do k = 1, nord(id)
+         g2 = g2 + pa(lstot(id)+k)*enth(k)
+      end do
+c                                 gsol4 is the energy per stuff1 moles. 
+      gsol4 = g1 + g2 / norm
 
       end
-
 
       subroutine p2yx (id)
 c-----------------------------------------------------------------------
@@ -618,7 +517,7 @@ c-----------------------------------------------------------------------
 
       double precision sum, ggrd(m19), b(k5),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
-     *                 clamda(m21),r(m19,m19),work(m23),stuff(1),
+     *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19)
 c DEBUG691
      *                 ,xp(m14), ftol, fdint
@@ -628,8 +527,8 @@ c DEBUG691
       double precision apz, zl, zu
       common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
 
-      double precision apc
-      common/ cstp2c /apc(h9,k5,m19)
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -666,8 +565,8 @@ c                                 initialize bounds
       bu(1:nvar) = 1d20
       bl(1:nvar) = -1d20
 
-      ppp(1:nvar) = p0a(1:nvar)
-      if (inp) xp(1:ntot) = p0a(1:ntot)
+      ppp(1:nvar) = pa(1:nvar)
+      xp(1:ntot) = pa(1:ntot)
 c                                 load the local constraints 
 c                                 from the global arrays
       nclin = nz(ids) + icomp
@@ -678,20 +577,26 @@ c                                 first the site fraction constraints
          bl(nvar+i) = zl(ids,i)
          bu(nvar+i) = zu(ids,i)
       end do
-c                                 get the bulk composition from pp
-      call getscp (b,sum,ids,ids,.false.)
+c                                 get the normalized bulk composition of the solution
+c                                 save the sum (stuff(1)) for non-equimolar ordering
+      call getxcp (b,stuff(1),ids)
+c                                 --------------------------------
 c                                 the bulk composition constraints
       do k = 1, icomp
 
          i = nz(ids) + k
 
+         sum = 0d0
          do j = 1, nvar
             lapz(i,j) = apc(ids,k,j)
+            sum = sum + lapz(i,j) * xp(j)
          end do
 
          bl(nvar+i) = b(k) - apc(ids,k,ntot)
          if (dabs(bl(nvar+i)).lt.zero) bl(nvar+i) = 0d0
          bu(nvar+i) = bl(nvar+i)
+
+c        write (*,*) 'sum, b ',bl(nvar+i),sum
 
       end do
 
@@ -741,13 +646,27 @@ c                                 obj call counter
      *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
      *             m22,work,m23,istuff,stuff,idead,iprint)
 
+      if (idead.eq.2) then 
+         write (*,*) 'minfxc infeasible initial conditions'
+         call errpau
+      end if
+
+      sum = 0d0
+
+      do i = 1, nvar
+         pa(i) = ppp(i)
+         sum = sum + ppp(i)
+      end do
+
+      pa(i) = 1d0 - sum
+
       if (inp) then 
          write (*,*) istuff(4),gfinal,istuff(1)
          goto 10
       end if
 
-      do i = 1, nstot(ids)
+c     do i = 1, nstot(ids)
 c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
-      end do 
+c     end do 
 
       end
