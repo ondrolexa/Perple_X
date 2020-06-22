@@ -7022,332 +7022,8 @@ c                                 if msite(h0) ne 0 get "normalization" constant
 c                                 configurational entropies) for entropy model:
       if (msite(im).ne.0) call snorm0 (im,tname)
 c                                 -------------------------------------
-      if (order) then
-c                                 models with speciation:
-         do j = 1, norder
-
-            do i = 1, 3
-               deph(i,j,im) = denth(j,i)
-            end do
-
-            nrct(j,im) = nr(j)
-
-            do i = 1, nr(j)
-               ideps(i,j,im) = iy2p(iddeps(i,j))
-            end do
-
-         end do
-c                                 classify multiple species models according
-c                                 to whether the disordered reactants are
-c                                 partially or completely correlated, assume
-c                                 anti-correlation is not a possible case.
-         icase(im) = 0
-
-         if (norder.gt.1) then
-
-            imatch = 0
-
-            do j = 1, nr(1)
-
-               id = ideps(j,1,im)
-
-               do i = 1, nr(2)
-                  if (id.eq.ideps(i,2,im)) then
-                     imatch = imatch + 1
-                     exit
-                  end if
-               end do
-
-            end do
-
-            if (imatch.eq.1) then
-c                                 if match = 1 one species didn't match
-c                                 assume partial correlation
-               icase(im) = 2
-            else if (imatch.ge.2) then
-               icase(im) = 1
-            end if
-
-         end if
-c                                first create derivatives of endmember
-c                                fractions with respect to the ordered
-c                                species:
-         do j = 1, norder
-
-            do i = 1, nstot(im)
-               dydy(i,j,im) = 0d0
-            end do
-c                                derivative of the ordered species with
-c                                respect to itself:
-            dydy(kstot+j,j,im) = 1d0
-c                                each ordered species decomposes to
-c                                two disordered species iddeps(1-2,j)
-c                                depnu is the stoichiometric coefficient
-c                                of the disordered species in the ordered
-c                                species.
-
-c                                derivatives of the consituent species
-c                                with respect to the ordered species
-            dnu(im) = 1d0
-
-            do i = 1, nr(j)
-               dydy(ideps(i,j,im),j,im) = dydy(ideps(i,j,im),j,im)
-     *                                  - depnu(i,j)
-               dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
-            end do
-c                                dnu ~0 => speciation reaction is not equimolar
-            if (dabs(dnu(im)).gt.1d4*zero) then
-               if (norder.gt.1) call error (72,r,i,
-     *              'ordering schemes with > 1 non-equi'//
-     *              'molar reaction have not been anticipated: '//tname)
-            else
-               dnu(im) = 0d0
-            end if
-
-         end do
-c                                evaluate the second derivative of each
-c                                pi*pj term in the excess function with
-c                                respect to kth species
-         do i = 1, iterm
-            do j = 1, norder
-               do k = 1, norder
-
-                  dppp(k,j,i,im) =  dydy(jsub(1,i,im),k,im)
-     *                             *dydy(jsub(2,i,im),j,im)
-     *                           +
-     *                              dydy(jsub(2,i,im),k,im)
-     *                             *dydy(jsub(1,i,im),j,im)
-               end do
-            end do
-         end do
-c                                 site fractions as a function of bulk
-c                                 y's and dependent species y:
-         do i = 1, msite(im)
-c                                 for each species, read
-c                                 function to define the
-c                                 site fraction of the species:
-            if (zsp(im,i)+1.gt.m11) call error (1,dx,zsp(im,i)+1,'m11')
-
-            do k = 1, norder
-               sdzdp(k,zsp(im,i)+1,i,im) = 0d0
-            end do
-
-            do j = 1, zsp(im,i)
-c                                 # of terms in the
-c                                 site fraction function and a0.
-               do l = 1, norder
-                  sdzdp(l,j,i,im) = 0d0
-               end do
-c                                 for each term:
-               do k = 1, lterm(j,i,im)
-c                                 endmember indexes
-                  ind = ksub(k,j,i,im)
-c                                 get derivatives, of species fractions
-c                                 with respect to ordered species
-                  do l = 1, norder
-                     itic = 0
-                     do ii = 1, nr(l)
-                        if (ind.eq.ideps(ii,l,im)) then
-                           sdzdp(l,j,i,im) = sdzdp(l,j,i,im)
-     *                     + dydy(ideps(ii,l,im),l,im)*dcoef(k,j,i,im)
-                           itic = itic + 1
-c                                 high order terms not allowed
-                           if (itic.gt.1)
-     *                        call error (999,r,801,'GMODEL')
-                        end if
-                     end do
-c                                 the derivative of a term with the
-c                                 ordered species.
-                     if (ind.eq.kstot+l)
-     *                  sdzdp(l,j,i,im) = sdzdp(l,j,i,im)
-     *                                  + dcoef(k,j,i,im)
-
-                  end do
-               end do
-            end do
-         end do
-c                                 multiply each dzdp by qmult (R*site
-c                                 multiplicity) to reduce operation
-c                                 count in evaluating derivatives.
-         do k = 1, norder
-            do i = 1, msite(h0)
-
-               dzt = 0d0
-
-               do j = 1, zsp(im,i)
-                  if (dabs(sdzdp(k,j,i,im)).lt.zero)
-     *                     sdzdp(k,j,i,im) = 0d0
-                  dzt = dzt + sdzdp(k,j,i,im)
-               end do
-
-               if (dabs(dzt).lt.zero) dzt = 0d0
-               sdzdp(k,j,i,im) = -dzt
-
-            end do
-         end do
-
-      end if
-
-c                                 ----------------------------------------------
-c                                 derive limit expressions for O/D models
-      if (order) then
-
-         do k = 1, nord(im)
-c                                 number of limits for ordered species k
-            ln(k,im) = 0
-         end do
-c                                 all z expressions may be necessary to
-c                                 formulate limits, make the ksp'th + 1
-c                                 species expression by differnce
-         do i = 1, msite(im)
-c                                 qmult = 0, temkin, all expressions are
-c                                 available
-            if (zmult(im,i).eq.0) cycle
-
-            jp1 = zsp(im,i) + 1
-c                                 initialize the term counter
-            lterm(jp1,i,im) = 0
-c                                 cycle through the endmembers to work out
-c                                 if it has a non zero fraction
-            do l = 1, nstot(im)
-
-               call zmake (zij,i,l,im)
-
-               if (dabs(zij).lt.zero) cycle
-
-               lterm(jp1,i,im) = lterm(jp1,i,im) + 1
-               dcoef(lterm(jp1,i,im),jp1,i,im) = zij
-               ksub(lterm(jp1,i,im),jp1,i,im) = l
-
-            end do
-         end do
-
-         do i = 1, msite(im)
-
-            if (zmult(im,i).eq.0) then
-               jp1 = 0
-            else
-               jp1 = 1
-            end if
-
-            do j = 1, zsp(im,i) + jp1
-
-               do k = 1, nord(im)
-
-                  c0 = 0d0
-                  c1 = 0d0
-
-                  if (dcoef(0,j,i,im).ne.0d0) call error (72,c0(0),i,
-     *           'solution '//tname//': constants not allowed in '//
-     *           'O/D model configurational entropy site fraction '//
-     *           'expressions')
-
-                  do l = 1, lterm(j,i,im)
-
-                     il = ksub(l,j,i,im)
-
-                     if (il.le.lstot(im)) then
-
-                        c0(il) = c0(il) + dcoef(l,j,i,im)
-
-                        do ik = 1, nord(im)
-
-                           kk = lstot(im) + ik
-c                                  coefficient on p0
-                           c0(kk) = c0(kk) - dydy(il,ik,im)
-     *                                     * dcoef(l,j,i,im)
-c                                  coefficient on p
-                           c1(kk) = c1(kk) + dydy(il,ik,im)
-     *                                     * dcoef(l,j,i,im)
-
-                        end do
-
-                     else
-
-                        c1(il) = c1(il) + dcoef(l,j,i,im)
-
-                     end if
-c                                 at this point the c's are the coefficients for a
-c                                 z(p,p0), below they are rearranged to get p(kk) = f(p0,p[~kk],z[0,1])
-c                                 in other words the loop on mord(im) is superfluous, but what the heck...
-                     kk = lstot(im)+k
-
-                     if (l.eq.lterm(j,i,im).and.c1(kk).ne.0d0) then
-
-                        do ik = 0, nstot(im)
-                           c0(ik) = -c0(ik)/c1(kk)
-                        end do
-c                                the constant for the p(k) limit when z(j) = 1
-                        c1(0) = c0(0) + 1d0/c1(kk)
-
-                        do ik = lstot(im) + 1, nstot(im)
-                           if (ik.eq.kk) cycle
-                           c1(ik) = -c1(ik)/c1(kk)
-                        end do
-
-                        c1(kk) = 0d0
-
-                        if  (c1(0).gt.c0(0)) then
-c                                 z = 1 is the upper limit, the constant is c0(0) and
-                           delta = c1(0)-c0(0)
-
-                        else
-c                                 z = 0 is the upper limit, the constant is c1(0) and
-                           delta = c0(0)-c1(0)
-                           c0(0) = c1(0)
-
-                        end if
-c                                 increment limit counter
-                        ln(k,im) = ln(k,im) + 1
-c                                 initialize p0 term counter for limit
-                        lt(ln(k,im),k,im) = 0
-c                                 load the p0 coefficients, if simplicial p0 > lstot(im) = 0
-                        do ik = 1, nstot(im)
-
-                           if (jsmod.eq.6.and.ik.gt.lstot(im)) exit
-                           if (c0(ik).eq.0d0) cycle
-c                                 increment term counter:
-                           lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
-c                                 save the coefficient and index:
-                           lc(lt(ln(k,im),k,im),ln(k,im),k,im) = c0(ik)
-                           lid(lt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,ln(k,im),lt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-                        end do
-c                                 initialize p term counter for limit
-                        jt(ln(k,im),k,im) = 0
-c                                 load the p coefficients
-                        do ik = lstot(im) + 1, nstot(im)
-
-                           if (c0(ik).eq.0d0) cycle
-c                                 increment term counter:
-                           jt(ln(k,im),k,im) = jt(ln(k,im),k,im) + 1
-c                                 save the coefficient and index:
-                           jc(jt(ln(k,im),k,im),ln(k,im),k,im) = c1(ik)
-                           jid(jt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,jt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-
-                        end do
-c                                load the constant and delta:
-                       l0c(1,ln(k,im),k,im) = c0(0)
-                       l0c(2,ln(k,im),k,im) = delta
-
-c                       write (*,*) 'cst delta ', c0(0),delta
-c                       write (*,*) ' '
-
-                     end if
-
-                  end do
-
-               end do
-            end do
-         end do
-      end if
+c                                 organize O/D model parameters
+      call setord (im)
 c                                 ----------------------------------------------
 c                                 models with special endmember indexing:
       if (jsmod.eq.0) then
@@ -7731,7 +7407,10 @@ c                                 i.e., iopt(17).ne.0, compute disordered g.
             end do
          end if
 
-         if (gdord.lt.g) g = gdord
+         if (gdord.lt.g) then 
+            g = gdord
+            pa(1:nstot(id)) = p0a(1:nstot(id))
+         end if 
 
       end if
 
@@ -8418,7 +8097,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g,ga,pmax,pmin,dp,dpmax,omega,gex,dy(m4)
+      double precision g, ga, pmax,pmin,dp,omega,gex,dy(m4)
 
       external gex, omega
 
@@ -8459,38 +8138,49 @@ c                                 stoichiometric coefficients
       error = .false.
 c                                 starting point
       call plimit (pmin,pmax,k,id)
+
+      pin(k) = .true.
+
+      if (pmax-pmin.lt.nopt(5)) then
+c                                 a composition for which no O/D 
+c                                 is possible, setting error will
+c                                 generate min(maxord,maxdis). in 
+c                                 this case maxord should always be
+c                                 stable
+         error = .true.
+
+      else
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-      pmax = pmax - nopt(5)
-      pmin = pmin + nopt(5)
-      pin(k) = .true.
-
-      if (pmax-pmin.lt.nopt(5)) return
+         pmax = pmax - nopt(5)
+         pmin = pmin + nopt(5)
 c                                 get starting end for the search
 c                                 first try the maximum
-      call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+         call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
-      call gderi1 (k,id,dp)
+         call gderi1 (k,id,dp)
 
-      if (dp.ge.0d0) then
+         if (dp.ge.0d0) then
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the
 c                                 the disordered case:
-         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+            call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp)
+            call gderi1 (k,id,dp)
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
 c                                 the min/max order cases, specis
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-         if (dp.le.0d0) error = .true.
+            if (dp.le.0d0) error = .true.
+
+         end if
 
       end if
 
@@ -20205,5 +19895,429 @@ c                                 min order g
       end if
 c                                 add magnetic component
       gfesi = gfesi + gmag(y)
+
+      end
+      subroutine setord (im)
+c---------------------------------------------------------------------
+c set global order/disorder models parameters, call by gmodel for 
+c solution model im. 
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical zbad
+
+      integer im, i, j, ind, id, k, l,itic, ii, imatch, 
+     *        il, ik, kk, jp1
+
+      double precision dzt, dx, delta, c0(0:20), c1(0:20), zij
+
+      external zbad
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
+
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *                nterm(m10,m11),nsub(m10,m11,m0)
+
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
+     *      isub(m1,m2),insp(m4),
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
+
+      integer iddeps,norder,nr
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
+
+      integer iorig,jnsp,iy2p
+      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+c                                 endmember pointers
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision cp
+      common/ cst12 /cp(k5,k10)
+
+      integer ln,lt,lid,jt,jid
+      double precision lc, l0c, jc
+      common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
+     *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
+     *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
+
+      integer spct
+      double precision ysp
+      character spnams*8
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
+
+      character specie*4
+      integer jsp, ins
+      common/ cxt33 /jsp,ins(nsp),specie(nsp)
+
+      character mname*8
+      common/ cst18a /mname(m4)
+
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+c                                 models with speciation:
+      do j = 1, norder
+
+         do i = 1, 3
+            deph(i,j,im) = denth(j,i)
+         end do
+
+         nrct(j,im) = nr(j)
+
+         do i = 1, nr(j)
+            ideps(i,j,im) = iy2p(iddeps(i,j))
+         end do
+
+      end do
+c                                 classify multiple species models according
+c                                 to whether the disordered reactants are
+c                                 partially or completely correlated, assume
+c                                 anti-correlation is not a possible case.
+      icase(im) = 0
+
+      if (norder.gt.1) then
+
+         imatch = 0
+
+         do j = 1, nr(1)
+
+            id = ideps(j,1,im)
+
+            do i = 1, nr(2)
+               if (id.eq.ideps(i,2,im)) then
+                  imatch = imatch + 1
+                  exit
+               end if
+            end do
+
+         end do
+
+         if (imatch.eq.1) then
+c                                 if match = 1 one species didn't match
+c                                 assume partial correlation
+            icase(im) = 2
+         else if (imatch.ge.2) then
+            icase(im) = 1
+         end if
+
+      end if
+c                                first create derivatives of endmember
+c                                fractions with respect to the ordered
+c                                species:
+      do j = 1, norder
+
+         do i = 1, nstot(im)
+            dydy(i,j,im) = 0d0
+         end do
+c                                derivative of the ordered species with
+c                                respect to itself:
+         dydy(kstot+j,j,im) = 1d0
+c                                each ordered species decomposes to
+c                                two disordered species iddeps(1-2,j)
+c                                depnu is the stoichiometric coefficient
+c                                of the disordered species in the ordered
+c                                species.
+
+c                                derivatives of the consituent species
+c                                with respect to the ordered species
+         dnu(im) = 1d0
+
+         do i = 1, nr(j)
+            dydy(ideps(i,j,im),j,im) = dydy(ideps(i,j,im),j,im)
+     *                                  - depnu(i,j)
+            dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
+         end do
+c                                dnu ~0 => speciation reaction is not equimolar
+         if (dabs(dnu(im)).gt.1d4*zero) then
+            if (norder.gt.1) call error (72,r,i,
+     *              'ordering schemes with > 1 non-equi'//
+     *              'molar reaction have not been anticipated: '//tname)
+         else
+            dnu(im) = 0d0
+         end if
+
+      end do
+c                                evaluate the second derivative of each
+c                                pi*pj term in the excess function with
+c                                respect to kth species
+      do i = 1, iterm
+         do j = 1, norder
+            do k = 1, norder
+
+                  dppp(k,j,i,im) =  dydy(jsub(1,i,im),k,im)
+     *                             *dydy(jsub(2,i,im),j,im)
+     *                           +
+     *                              dydy(jsub(2,i,im),k,im)
+     *                             *dydy(jsub(1,i,im),j,im)
+            end do
+         end do
+      end do
+c                                 site fractions as a function of bulk
+c                                 y's and dependent species y:
+      do i = 1, msite(im)
+c                                 for each species, read
+c                                 function to define the
+c                                 site fraction of the species:
+         if (zsp(im,i)+1.gt.m11) call error (1,dx,zsp(im,i)+1,'m11')
+
+         do k = 1, norder
+            sdzdp(k,zsp(im,i)+1,i,im) = 0d0
+         end do
+
+         do j = 1, zsp(im,i)
+c                                 # of terms in the
+c                                 site fraction function and a0.
+            do l = 1, norder
+               sdzdp(l,j,i,im) = 0d0
+            end do
+c                                 for each term:
+            do k = 1, lterm(j,i,im)
+c                                 endmember indexes
+               ind = ksub(k,j,i,im)
+c                                 get derivatives, of species fractions
+c                                 with respect to ordered species
+               do l = 1, norder
+                  itic = 0
+                  do ii = 1, nr(l)
+                     if (ind.eq.ideps(ii,l,im)) then
+                        sdzdp(l,j,i,im) = sdzdp(l,j,i,im)
+     *                  + dydy(ideps(ii,l,im),l,im)*dcoef(k,j,i,im)
+                        itic = itic + 1
+c                                 high order terms not allowed
+                        if (itic.gt.1) call error (999,r,801,'GMODEL')
+                     end if
+                  end do
+c                                 the derivative of a term with the
+c                                 ordered species.
+                  if (ind.eq.kstot+l)
+     *               sdzdp(l,j,i,im) = sdzdp(l,j,i,im)
+     *                               + dcoef(k,j,i,im)
+
+               end do
+            end do
+         end do
+      end do
+c                                 multiply each dzdp by qmult (R*site
+c                                 multiplicity) to reduce operation
+c                                 count in evaluating derivatives.
+      do k = 1, norder
+         do i = 1, msite(h0)
+
+            dzt = 0d0
+
+            do j = 1, zsp(im,i)
+               if (dabs(sdzdp(k,j,i,im)).lt.zero) sdzdp(k,j,i,im) = 0d0
+               dzt = dzt + sdzdp(k,j,i,im)
+            end do
+
+            if (dabs(dzt).lt.zero) dzt = 0d0
+            sdzdp(k,j,i,im) = -dzt
+
+         end do
+      end do
+c                                 ----------------------------------------------
+c                                 derive z2p limit expressions for O/D models
+      do k = 1, nord(im)
+c                                 number of limits for ordered species k
+         ln(k,im) = 0
+      end do
+
+      if (ksmod(im).ne.688) then 
+
+         if (nord(im).gt.1) call error (72,c0(0),i,
+     *            'solution '//tname//': multiple order parameters '//
+     *            'only allowed in 688 format models')
+
+c                                 all z expressions may be necessary to
+c                                 formulate limits, make the ksp'th + 1
+c                                 species expression by differnce
+         do i = 1, msite(im)
+c                                 qmult = 0, temkin, all expressions are
+c                                 available
+            if (zmult(im,i).eq.0d0) cycle
+
+            jp1 = zsp(im,i) + 1
+c                                 initialize the term counter
+            lterm(jp1,i,im) = 0
+c                                 cycle through the endmembers to work out
+c                                 if it has a non zero fraction
+            do l = 1, nstot(im)
+
+               call zmake (zij,i,l,im)
+
+               if (dabs(zij).lt.zero) cycle
+
+               lterm(jp1,i,im) = lterm(jp1,i,im) + 1
+               dcoef(lterm(jp1,i,im),jp1,i,im) = zij
+               ksub(lterm(jp1,i,im),jp1,i,im) = l
+
+            end do
+         end do
+      end if 
+
+      do i = 1, msite(im)
+
+         if (zmult(im,i).eq.0d0) then
+            jp1 = 0
+         else
+            jp1 = 1
+         end if
+
+         do j = 1, zsp(im,i) + jp1
+
+            do k = 1, nord(im)
+
+               c0 = 0d0
+               c1 = 0d0
+
+               if (dcoef(0,j,i,im).ne.0d0) call error (72,c0(0),i,
+     *            'solution '//tname//': constants not allowed in '//
+     *            'O/D model configurational entropy site fraction '//
+     *            'expressions')
+
+               do l = 1, lterm(j,i,im)
+
+                  il = ksub(l,j,i,im)
+
+                  if (il.le.lstot(im)) then
+
+                     c0(il) = c0(il) + dcoef(l,j,i,im)
+
+                     do ik = 1, nord(im)
+
+                        kk = lstot(im) + ik
+c                                  coefficient on p0
+                        c0(kk) = c0(kk) - dydy(il,ik,im)
+     *                                  * dcoef(l,j,i,im)
+c                                  coefficient on p
+                        c1(kk) = c1(kk) + dydy(il,ik,im)
+     *                                  * dcoef(l,j,i,im)
+
+                     end do
+
+                  else
+
+                     c1(il) = c1(il) + dcoef(l,j,i,im)
+
+                  end if
+c                                 at this point the c's are the coefficients for a
+c                                 z(p,p0), below they are rearranged to get p(kk) = f(p0,p[~kk],z[0,1])
+c                                 in other words the loop on mord(im) is superfluous, but what the heck...
+                  kk = lstot(im)+k
+
+                  if (l.eq.lterm(j,i,im).and.dabs(c1(kk)).gt.zero) then
+
+                     do ik = 0, nstot(im)
+                        c0(ik) = -c0(ik)/c1(kk)
+                     end do
+c                                the constant for the p(k) limit when z(j) = 1
+                     c1(0) = c0(0) + 1d0/c1(kk)
+
+                     do ik = lstot(im) + 1, nstot(im)
+                        if (ik.eq.kk) cycle
+                        c1(ik) = -c1(ik)/c1(kk)
+                     end do
+
+                     c1(kk) = 0d0
+
+                     if  (c1(0).gt.c0(0)) then
+c                                 z = 1 is the upper limit, the constant is c0(0) and
+                        delta = c1(0)-c0(0)
+
+                     else
+c                                 z = 0 is the upper limit, the constant is c1(0) and
+                        delta = c0(0)-c1(0)
+                        c0(0) = c1(0)
+
+                     end if
+c                                 -----------------------------------------------------
+c                                 found a limit, increment limit counter
+                     ln(k,im) = ln(k,im) + 1
+c                                 initialize p0 term counter for limit
+                     lt(ln(k,im),k,im) = 0
+c                                 load the p0 coefficients, if simplicial p0 > lstot(im) = 0
+                     do ik = 1, nstot(im)
+
+                        if (jsmod.eq.6.and.ik.gt.lstot(im)) exit
+                        if (dabs(c0(ik)).lt.zero) cycle
+c                                 increment term counter:
+                        lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
+c                                 save the coefficient and index:
+                        lc(lt(ln(k,im),k,im),ln(k,im),k,im) = c0(ik)
+                        lid(lt(ln(k,im),k,im),ln(k,im),k,im) = ik
+
+c                          write (*,*) i,j,ln(k,im),lt(ln(k,im),k,im)
+c                          write (*,*) c0(ik),ik
+
+                     end do
+c                                 initialize p term counter for limit
+                     jt(ln(k,im),k,im) = 0
+c                                 load the p coefficients
+                     do ik = lstot(im) + 1, nstot(im)
+
+                        if (dabs(c0(ik)).lt.zero) cycle
+c                                 increment term counter:
+                        jt(ln(k,im),k,im) = jt(ln(k,im),k,im) + 1
+c                                 save the coefficient and index:
+                        jc(jt(ln(k,im),k,im),ln(k,im),k,im) = c1(ik)
+                        jid(jt(ln(k,im),k,im),ln(k,im),k,im) = ik
+
+c                          write (*,*) i,j,jt(ln(k,im),k,im)
+c                          write (*,*) c0(ik),ik
+
+
+                     end do
+c                                load the constant and delta:
+                     l0c(1,ln(k,im),k,im) = c0(0)
+                     l0c(2,ln(k,im),k,im) = delta
+
+c                       write (*,*) 'cst delta ', c0(0),delta
+c                       write (*,*) ' '
+
+                  end if
+
+               end do
+
+            end do
+
+         end do
+
+      end do
 
       end

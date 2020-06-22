@@ -621,7 +621,7 @@ c DEBUG691
          if (sum.lt.0.9999999) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids
 c           call errpau
-            call p2z(pa,zt,ids)
+            call p2z(pa,zt,ids,.true.)
          end if 
 
       end do 

@@ -138,7 +138,7 @@ c        write (*,1010) i, bl(i),zp,bu(i)
 
 c     end do
 
-c     call p2z (pa,zt,ids)
+c     call p2z (pa,zt,ids,.true.)
       if (inp) write (*,*) istuff(3),gfinal,kds
       if (inp) goto 10
 
@@ -150,7 +150,7 @@ c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
 
       if (zp.lt.0.9999) then 
          write (*,*) 'low sum'
-         call p2z (pa,zt,ids)
+         call p2z (pa,zt,ids,.true.)
       end if
 
 
@@ -216,7 +216,7 @@ c                                 get the bulk composition from pp
          gval = gval - scp(i)*mu(i)
 c         if (scp(i).lt.-1d2*zero) then
 c            write (*,*) 'gsol2, large -composition',jds,i,scp(i)
-c            call p2z (pa,zt,jds)
+c            call p2z (pa,zt,jds,.true.)
 c            scp(i) = 0d0
 c         end if
       end do
@@ -327,6 +327,7 @@ c                                 get the total moles
 c                                 free energy minimization
 c                                 gsol4 returns the g for stuff(1) moles
          gval = gsol4 (jds,stuff(2)/stuff(1))
+c        gval = gsol4 (jds,1d0)
       else
 c                                 entropy maximization
          gval = -stuff(2)/stuff(1) * omega(jds,pa)
@@ -578,8 +579,9 @@ c                                 first the site fraction constraints
          bu(nvar+i) = zu(ids,i)
       end do
 c                                 get the normalized bulk composition of the solution
-c                                 save the sum (stuff(1)) for non-equimolar ordering
       call getxcp (b,stuff(1),ids)
+
+c     call getscp (b,sum,ids,ids,.false.)
 c                                 --------------------------------
 c                                 the bulk composition constraints
       do k = 1, icomp
@@ -634,8 +636,10 @@ c                                 obj call counter
 
       else
 
+         iprint = 0 
+
          CALL E04UEF ('nolist')
-         CALL E04UEF ('optimality tolerance =  1d-4')
+         CALL E04UEF ('optimality tolerance =  1d-8')
          CALL E04UEF ('difference interval = 1d-3')
 
       end if

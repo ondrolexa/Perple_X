@@ -8298,11 +8298,16 @@ c----------------------------------------------------------------------
       subroutine speci1 (g,id,k,error)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
-c composition is returned
-c in array pa.
-c    id identifies the solution.
-c    g is the change in G for the stable speciation relative to a mechanical
-c      mixture of the endmembers.
+c composition is returned in array pa.
+
+c    k  - the ordered species
+c    id - the solution.
+c    g  - the change in G for the stable speciation relative to a mechanical
+c         mixture of the endmembers.
+
+c by default the search begins from the maximum ordered endmember fraction 
+c consequently it will usually find the ordered local minimum before it finds
+c the antiordered minium. 
 c----------------------------------------------------------------------
       implicit none
 
@@ -8312,7 +8317,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g,pmax,pmin,dp,dpmax,omega,gex,dy(m4)
+      double precision g, ga, pmax,pmin,dp,omega,gex,dy(m4)
 
       external gex, omega
 
@@ -8352,45 +8357,48 @@ c                                 stoichiometric coefficients
 
       error = .false.
 c                                 starting point
-
-c                                 reciprocal
       call plimit (pmin,pmax,k,id)
-      dpmax = pmax - pmin
+
+      pin(k) = .true.
+
+      if (pmax-pmin.lt.nopt(5)) then
+c                                 a composition for which no O/D 
+c                                 is possible, setting error will
+c                                 generate min(maxord,maxdis). in 
+c                                 this case maxord should always be
+c                                 stable
+         error = .true.
+
+      else
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-      pin(k) = .true.
-      dp = dpmax - nopt(5)
-      pmax = p0a(jd) + dp
-      pmin = p0a(jd) + nopt(5)
-
-      if (pmax-pmin.lt.nopt(5)) return
+         pmax = pmax - nopt(5)
+         pmin = pmin + nopt(5)
 c                                 get starting end for the search
 c                                 first try the maximum
-      call pincs (dp,dy,ind,jd,nr)
+         call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
-      call gderi1 (k,id,dp)
+         call gderi1 (k,id,dp)
 
-      if (dp.ge.0d0) then
+         if (dp.ge.0d0) then
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the
 c                                 the disordered case:
-         call pincs (pmin,dy,ind,jd,nr)
+            call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp)
-
-         if (dp.le.0d0) then
+            call gderi1 (k,id,dp)
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
 c                                 the min/max order cases, specis
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-            error = .true.
+            if (dp.le.0d0) error = .true.
 
          end if
 
@@ -8443,7 +8451,17 @@ c                                 didn't converge or couldn't
 c                                 find a starting point, set
 c                                 ordered speciation, specis will
 c                                 compare this the disordered case.
-      if (error) call pincs (dpmax,dy,ind,jd,nr)
+      if (error) then
+c                                 ordered
+         call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+         g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+c                                 anti-ordered
+         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+         ga = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+
+         if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+
+      end if
 
       g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
 
@@ -12579,9 +12597,11 @@ c-----------------------------------------------------------------------
 
       logical bad, switch
 
-      integer i, j, k, id
+      integer i, j, k, id, itic
 
       double precision gval, dg, g0(m4)
+cDEBUG691
+     *,zt(m10,m11)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
      *                 gfecr1, gcpd, gfes
@@ -12637,6 +12657,12 @@ c                                 working arrays
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c DEBUG691 gall
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       data switch/.true./
 
       save switch
@@ -12693,11 +12719,13 @@ c                                 compute enthalpy of ordering
                call ingsol (i)
             end if 
 
+           itic = 0
+
             do j = 1, jend(i,2)
 
                call setxyp (i,id,.false.,bad)
 
-               if (switch) then 
+               if (switch.or.dnu(i).eq.0d0) then 
 c                                 for static composition o/d models 
 c                                 gexces only accounts for internal dqf's
                call gexces (id,g(id))
@@ -12714,19 +12742,34 @@ c                                 of the ordered species
 
                g(id) = g(id) + dg
 
+                  z = pa
                   pa = p0a
 
-                  call minfxc(g(id),i,.false.)
+                  dg = 0d0 
+
+
+                  call minfxc(dg,i,.false.)
+
+                  if (dabs(dg-g(id)).gt.1d0) then 
+                     write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
+                     itic = itic + 1
+                     call p2z (z,zt,i,.true.)
+                     call p2z (pa,zt,i,.true.)
+                  end if
 
                else 
 
+                  dg = 0d0 
                   call minfxc(g(id),i,.false.)
+                  write (*,*) ' i, id ',dg - g(id),id
 
                end if
 
                id = id + 1
 
             end do
+c DEBUG191
+            write (*,*) 'itic for ids ',itic,i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -19515,7 +19558,7 @@ c                                 for each term:
 
       end
 
-      subroutine p2z (y,z,ids)
+      subroutine p2z (y,z,ids,prnt)
 c----------------------------------------------------------------------
 c subroutine to compute site fractions computed from equations entered by
 c user for configurational entropy (macroscopic form). with range checks.
@@ -19529,7 +19572,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical badz, bad
+      logical badz, bad, prnt
 
       external badz
 
@@ -19589,7 +19632,7 @@ c                                 for each term:
 
                end do
 
-               write (*,1001) i,j,z(i,j)
+               if (prnt) write (*,1001) i,j,z(i,j)
 c                                 non-temkin (688)
                if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
 c DEBUG691
@@ -19841,7 +19884,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       do j = 1, nstot(id)
-c                                 for non-equimolar
+
          do i = 1, icomp
             apc(id,i,j) = endc(id,j,i) / endt(id,j)
          end do
@@ -19852,7 +19895,7 @@ c                                   this method costs an extra column dimension 
 c                                   p2c, but what the heck... it can be used 
 c                                   to form the constraint b vector
       do j = 1, nstot(id) - 1
-         do i = 1, icomp
+         do i = 1, icomp + 1
             apc(id,i,j) = apc(id,i,j) - apc(id,i,nstot(id))
          end do
       end do
@@ -20203,7 +20246,7 @@ c                                 z(p,p0), below they are rearranged to get p(kk
 c                                 in other words the loop on mord(im) is superfluous, but what the heck...
                   kk = lstot(im)+k
 
-                  if (l.eq.lterm(j,i,im).and.c1(kk).ne.0d0) then
+                  if (l.eq.lterm(j,i,im).and.dabs(c1(kk)).gt.zero) then
 
                      do ik = 0, nstot(im)
                         c0(ik) = -c0(ik)/c1(kk)
@@ -20237,7 +20280,7 @@ c                                 load the p0 coefficients, if simplicial p0 > l
                      do ik = 1, nstot(im)
 
                         if (jsmod.eq.6.and.ik.gt.lstot(im)) exit
-                        if (c0(ik).eq.0d0) cycle
+                        if (dabs(c0(ik)).lt.zero) cycle
 c                                 increment term counter:
                         lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
 c                                 save the coefficient and index:
@@ -20253,7 +20296,7 @@ c                                 initialize p term counter for limit
 c                                 load the p coefficients
                      do ik = lstot(im) + 1, nstot(im)
 
-                        if (c0(ik).eq.0d0) cycle
+                        if (dabs(c0(ik)).lt.zero) cycle
 c                                 increment term counter:
                         jt(ln(k,im),k,im) = jt(ln(k,im),k,im) + 1
 c                                 save the coefficient and index:
@@ -20283,8 +20326,6 @@ c                       write (*,*) ' '
       end do
 
       end
-
-
 
       subroutine makayx (id)
 c----------------------------------------------------------------------
