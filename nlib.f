@@ -35,8 +35,8 @@ c----------------------------------------------------------------------
       integer loclc
       common/ ae04mf /loclc(15)
 
-      double precision  wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 
       integer ldq,ldt,ncolt
       common/ be04nb /ldt,ncolt,ldq
@@ -296,7 +296,6 @@ c----------------------------------------------------------------------
       double precision  alfa, asize,dtmax, dtmin
       integer           jadd, jdel,ldq, ldt, itmax
 
-      double precision  wmach(9)
       integer           loclc
       double precision  alfap, alfhit, bigalf, biggst, condmx, 
      *                  dinky, dnorm, errmax, flmax,
@@ -313,7 +312,10 @@ c----------------------------------------------------------------------
       double precision  ddot1, dnrm2, adivb
 
       common/ ae04mf /loclc(15)
-      common/ cstmch /wmach
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+
       common/ be04nb /ldt,ncolt,ldq
       common/ de04nb /asize, dtmax, dtmin
 
@@ -735,13 +737,10 @@ c     check the row residuals.
       end
 
 
-
       subroutine e04nfq(unitq,k1,k2,it,nactiv,nartif,nz,nfree,
      *                  nrejtd,ngq,n,ldq,lda,ldt,istate,kactiv,kx,
      *                  condmx,a,t,gqm,q,w,c,s)
-c     mark 16 release. nag copyright 1992.
 
-c     ******************************************************************
 c     e04nfq  includes general constraints  k1  thru  k2  as new rows of
 c     the  tq  factorization:
 c              a(free) * q(free)  = ( 0 t)
@@ -749,10 +748,6 @@ c                        q(free)  = ( z y)
 
 c     a) the  nactiv x nactiv  upper-triangular matrix  t  is stored
 c        with its (1,1) element in position  (it,jt)  of the array  t.
-
-c     original version written by peg,  october-31-1984.
-c     this version of  e04nfq  dated  7-jul-1989.
-c     ******************************************************************
 
       implicit none
 
@@ -765,14 +760,17 @@ c     ******************************************************************
       integer           istate(*), kactiv(n), kx(n)
 
       double precision  asize, dtmax, dtmin
-      double precision  wmach(9)
+
       double precision  cndmax, cond, delta, dtnew, rnorm, rowmax,
      *                  rtmax, tdtmax, tdtmin
       integer           i, iadd, iartif, ifix, inform, iswap, j, jadd,
      *                  jt, k, l, nzadd
       logical           overfl
       double precision  dnrm2, adivb
-      common/ cstmch /wmach
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+
       common            /de04nb/asize, dtmax, dtmin
 
 
@@ -1058,11 +1056,14 @@ c        variables exactly on their bounds.
       integer           istate(n+nclin)
       double precision  tolx0
       integer           itnfix, ndegen
-      double precision  wmach(9)
+
       integer           nfix(2)
       double precision  d, tolz
       integer           is, j, maxfix
-      common/ cstmch /wmach
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+
       common/ce04mf/tolx0, ndegen, itnfix, nfix
       save              tolz
 
@@ -1380,8 +1381,8 @@ c     gamma = 0.001 seems to be safe.
 
       common/ce04mf/tolx0, ndegen, itnfix, nfix
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 
 c     tolpiv is a tolerance to exclude negligible elements of a'p.
 
@@ -1719,8 +1720,6 @@ c     unbounded.
      *                  nfree,ngq,n,lda,ldq,ldt,kx,condmx,
      *                  a,t,gqm,q,w,c,s)
 
-      implicit none 
-
 c     e04nfr  updates the matrices  z, y, t, r  and  d  associated with
 c     factorizations
 
@@ -1762,6 +1761,8 @@ c     matrix  q = (z y)  is the identity and will not be touched.
 c     if  ngq .gt. 0,  the column transformations are applied to the
 c     columns of the  (ngq x n)  matrix  gqm'.
 
+      implicit none 
+
       double precision  condmx
       integer           iadd, ifix, inform, it, jadd, lda, ldq,
      *                  ldt, n, nactiv, nfree, ngq, nz
@@ -1777,19 +1778,16 @@ c     columns of the  (ngq x n)  matrix  gqm'.
 
       common            /de04nb/asize, dtmax, dtmin
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 
       overfl = .false.
       bound = jadd .le. n
       jt = nz + 1
 
       if (bound) then
-
-
-c        a simple bound has entered the working set.  iadd is not used.
-
-
+c                                  a simple bound has entered the 
+c                                  working set.  iadd is not used.
          nanew = nactiv
 
          if (unitq) then
@@ -1829,7 +1827,6 @@ c        a general constraint has entered the working set.
 c        ifix is not used.
 
          nanew = nactiv + 1
-
 c                                 transform the incoming row of a by q'.
          call dcopy (n,a(iadd,1),lda,w,1)
          call cmqmul (8,n,nz,nfree,ldq,unitq,kx,w,q,c)

@@ -579,8 +579,8 @@ c----------------------------------------------------------------------
 
       double precision a, b, absb, absa, div
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       absa = dabs(a)
       absb = dabs(b)
@@ -600,9 +600,11 @@ c                                 b is also < machine eps
 c                                 a is > eps
          if (absb.le.wmach(3)) then
 c                                 b is < eps, div = sign(a)*huge
-            div  =  dsign(wmach(7),a)
+            div  =  dsign (wmach(8),a)
 c                                 this doesn't make sense, but it's the
 c                                 original code. jadc, jul 4, 2019.
+c                                 changed to sqrt(huge) [wmach(8)] because
+c                                 -huge causes a fpe if a < 0. jadc, 6/24/2020.
             fail = .true.
 
          else
@@ -1749,8 +1751,8 @@ c----------------------------------------------------------------------
 
       logical            left, right
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       left = (side.eq.'l')
       right = (side.eq.'r')
@@ -2019,21 +2021,21 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       if (min(n, k).eq.0) return
 
-            do i = 1, n
+      do i = 1, n
 
-               l = idint(perm(i))
+         l = idint(perm(i))
 
-               if (l.ne.i) then
+         if (l.ne.i) then
 
-                  do j = 1, k
-                     temp = b(i,j)
-                     b(i,j) = b(l,j)
-                     b(l,j) = temp
-                  end do
+            do j = 1, k
+               temp = b(i,j)
+               b(i,j) = b(l,j)
+               b(l,j) = temp
+            end do
 
-               end if
+         end if
 
-             end do
+      end do
 
       end
 
@@ -2071,25 +2073,17 @@ c----------------------------------------------------------------------
       double precision alpha, tol, zeta
       integer incx, n
       double precision x(*)
-      double precision beta, eps, scale, ssq
-      logical            first
+      double precision beta, scale, ssq
 
-      save               eps, first
-      data               first/ .true. /
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       if (n.lt.1) then
          zeta = 0d0
       else if ((n.eq.1).and.(x(1).eq.0d0)) then
          zeta = 0d0
       else
-c
-         if (first) then
-            first = .false.
-c                                this should be (1/2)*b**(1-p)
-c                                or maybe b**(1-p)
-            eps   =  1.11022302462516d-16
-         end if
-c
+
 c        treat case where p is a 2 by 2 matrix specially.
 c
          if (n.eq.1) then
@@ -2100,8 +2094,8 @@ c
             if (alpha.eq.0d0) then
                zeta   =  1d0
                alpha  = dabs (x(1))
-               x(1) = -sign(1d0, x(1))
-            else if (dabs(x(1)).le.max(eps*dabs(alpha),tol)) then
+               x(1) = -dsign (1d0, x(1))
+            else if (dabs(x(1)).le.dmax1(wmach(3)*dabs(alpha),tol)) then
                zeta   =  0d0
             else
                if (dabs(alpha).ge.dabs(x(1))) then
@@ -2129,7 +2123,7 @@ c           alpha = 0d0  specially.
 c           note that  scale = max(abs(x(i))).
 
             if ((scale.eq.0d0).or.
-     *          (scale.le.max(eps*dabs(alpha), tol))) then
+     *          (scale.le.dmax1(wmach(3)*dabs(alpha), tol))) then
                zeta  = 0d0
             else if (alpha.eq.0d0) then
                zeta  = 1d0
@@ -2258,8 +2252,8 @@ c----------------------------------------------------------------------
       double precision adivb
       external adivb
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       if (b.eq.0d0) then
 
@@ -2906,8 +2900,8 @@ c----------------------------------------------------------------------
 
       double precision a(lda, *), c(*), s(*), aij, ctemp, stemp, temp
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       if (min(n,k1).lt.1.or.k2.le.k1.or.k2.gt.n) return
 
@@ -2970,8 +2964,8 @@ c flmin = 1/flmax ~= wmach(3) = epsmch
 
       double precision scale, ssq, sqt, norm
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       sqt = dsqrt(ssq)
 

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated June 22, 2020.',
+     *      'Perple_X version 6.9.0, source updated June 24, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -129,8 +129,8 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -170,7 +170,7 @@ c                                 relative precision (eps)
 c                                 largest number
       wmach(7) = huge(0d0)
       wmach(8) = dsqrt(wmach(7))
-      wmach(9) = max(1d0/wmach(4),1d2)
+      wmach(9) = dmax1(1d0/wmach(4),1d2)
 c                                 solution composition zero and one
       r2 = 1d2 * r2
 
@@ -9758,8 +9758,8 @@ c-----------------------------------------------------------------------
 
       integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
       ier = 0
 c                            initialize ipvt,d

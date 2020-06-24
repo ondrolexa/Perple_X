@@ -3396,8 +3396,8 @@ c-----------------------------------------------------------------------
 
       double precision t, p1, p2, p3, p4, dinc
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
 
       p1 = dexp(-t)
@@ -8721,8 +8721,8 @@ c                                 excess energy variables
 c----------------------------------------------------------------------
 c                                 initialize, d2gx has been set in setw
       g = 0d0
-      dp = dg
       dg = g
+      dp = dg
       d2g = d2gx(k,k)
 
       if (lexces(id)) then
@@ -18492,8 +18492,9 @@ c                                 try to open final plt and blk files
 
             else 
 
-                call warn (99,nopt(1),i,'error occurred while reading '
-     *          //'final plt/blk files; looking for interim results...')
+                call warn (99,nopt(1),i,'error occurred while attemptin'
+     *          //'g to read final plt/blk files; looking for interim '
+     *          //'results...')
 
             end if
 
