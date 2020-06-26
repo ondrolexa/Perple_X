@@ -5680,6 +5680,53 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
 
       end
 
+      double precision function gsol5 (id)
+c-----------------------------------------------------------------------
+c gsol5 computes the excess + configurational + enthalpy_of_ordered_endmember 
+c free energy of a solution identified by index ids for the speciation input
+c via cxt7.
+
+c ingsol MUST be called prior to gsol5 to initialize solution
+c specific parameters! 
+
+c gsol5 assumes the endmember g's have been calculated by gall.
+
+c gsol5 is called only for implicit order-disorder models by minfxc and
+c speci1.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision g2
+
+      double precision omega, gex
+
+      external omega, gex
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+c                                 entropic + excess o/d effect
+      g2 = - t * omega(id,pa) + gex(id,pa)
+c                                 enthalpic effect o/d effct
+      do k = 1, nord(id)
+         g2 = g2 + pa(lstot(id)+k)*enth(k)
+      end do
+
+      gsol5 = g2
+
+      end
+
       subroutine ingsol (id)
 c-----------------------------------------------------------------------
 c ingso1 initializes p-t dependent solution model id parameters for gsol1
@@ -7549,15 +7596,17 @@ c                                 get the delta configurational entropy and deri
 
       do k = 1, norder
 
-         if (.not.pin(k)) cycle
-
          g = g + enth(k) * pa(lstot(id)+k)
+
+         if (.not.pin(k)) cycle
 c                                 dg is the negative of the differential of g
 c                                 with respect to the kth species.
          dg(k) = -(enth(k) + dg(k) - tk*ds(k))
+
          do l = k, norder
             d2g(l,k) = d2g(l,k) - tk*d2s(l,k)
          end do
+
       end do
 c                                 determininats, to check for a saddle point
 c      if (norder.eq.2) then
@@ -8097,16 +8146,13 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, ga, pmax,pmin,dp,omega,gex,dy(m4)
+      double precision g, ga, pmax,pmin,dp,gsol5,dy(m4)
 
-      external gex, omega
+      external gsol5
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -8116,9 +8162,6 @@ c----------------------------------------------------------------------
 
       logical pin
       common/ cyt2 /pin(j3)
-
-      double precision enth
-      common/ cxt35 /enth(j3)
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -8138,7 +8181,7 @@ c                                 stoichiometric coefficients
       error = .false.
 c                                 starting point
       call plimit (pmin,pmax,k,id)
-
+c                                 necessary?
       pin(k) = .true.
 
       if (pmax-pmin.lt.nopt(5)) then
@@ -8234,16 +8277,16 @@ c                                 compare this the disordered case.
       if (error) then
 c                                 ordered
          call pincs (pmax-p0a(jd),dy,ind,jd,nr)
-         g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+         g = gsol5 (id)
 c                                 anti-ordered
          call pincs (pmin-p0a(jd),dy,ind,jd,nr)
-         ga = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+         ga = gsol5 (id)
 
          if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       end if
 
-      g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+      g = gsol5 (id)
 
       end
 

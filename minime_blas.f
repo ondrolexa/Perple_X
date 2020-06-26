@@ -205,7 +205,7 @@ c-----------------------------------------------------------------------
 
       call makepp (jds)
 
-      g = gsol4 (jds,1d0)
+      g = gsol4(jds)
 
 c                                 get the bulk composition from pp
       call getscp (scp,sum,jds,jds,.false.)
@@ -315,22 +315,14 @@ c-----------------------------------------------------------------------
       end do
 
       pa(nstot(jds)) = 1d0 - psum
-c                                 for non-equimolar ordering
-c                                 get the total moles
-      stuff(2) = 0d0
-
-      do i = 1, nstot(jds)
-         stuff(2) = stuff(2) + pa(i) * endt(jds,i)
-      end do
 
       if (istuff(3).eq.0d0) then
 c                                 free energy minimization
-c                                 gsol4 returns the g for stuff(1) moles
-         gval = gsol4 (jds,stuff(2)/stuff(1))
-c        gval = gsol4 (jds,1d0)
+         gval = gsol4 (jds)
+
       else
 c                                 entropy maximization
-         gval = -stuff(2)/stuff(1) * omega(jds,pa)
+         gval = -omega(jds,pa)
       end if
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
@@ -340,71 +332,6 @@ c     write (*,1000) gval, (pa(i),i=1,nstot(jds))
 
 1000  format (g12.6,1x,12(f8.5,1x))
 1010  format (2(g14.7,2x))
-
-      end
-
-      double precision function gsol4 (id,norm)
-c-----------------------------------------------------------------------
-c gsol4 computes the total (excess+ideal) free energy of solution
-c for a solution identified by index ids for the speciation input
-c via cxt7, i.e., in contrast to gsol1 it does not compute the 
-c speciation of o/d models. the energy is scaled to stuff1 moles
-c by norm.
-
-c ingsol MUST be called prior to gsol4 to initialize solution
-c specific parameters! 
-
-c gsol4 assumes the endmember g's have been calculated by gall.
-
-c gsol4 is called only for implicit order-disorder models by minfxc.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer k, id
-
-      double precision g1, g2, norm
-
-      double precision omega, gex, gfesi
-
-      external omega, gex
-
-      integer jend
-      common/ cxt23 /jend(h9,m4)
-
-      double precision g
-      common/ cst2 /g(k1)
-
-      double precision enth
-      common/ cxt35 /enth(j3)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c----------------------------------------------------------------------
-c                                 for non-equimolar ordering properties
-c                                 computed with pa are for stuff2 moles
-c                                 and those computed with pp are for 
-c                                 stuff1 moles
-      g1 = 0d0
-c                                 dqf contribution
-      call gdqf (id,g1,pp)
-c                                 mechanical contribution
-      do k = 1, lstot(id)
-         g1 = g1 + g(jend(id,2+k)) * pp(k)
-      end do
-c                                 entropic + excess o/d effect
-      g2 = - t * omega(id,pa) + gex(id,pa)
-c                                 enthalpic effect o/d effct
-      do k = 1, nord(id)
-         g2 = g2 + pa(lstot(id)+k)*enth(k)
-      end do
-c                                 gsol4 is the energy per stuff1 moles. 
-      gsol4 = g1 + g2 / norm
 
       end
 

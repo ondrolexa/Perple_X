@@ -5807,7 +5807,6 @@ c                                 the term should goto -Inf
 
       end
 
-
       double precision function gsol1 (id)
 c-----------------------------------------------------------------------
 c gsol1 computes the total (excess+ideal) free energy of solution
@@ -5827,6 +5826,8 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer k, id
+
+      logical minfx
 
       double precision gg
 
@@ -5877,7 +5878,7 @@ c                                 get mechanical mixture contribution
 
       else if (lorder(id)) then
 c                                 get the speciation, excess and entropy effects.
-         call specis (gg,id)
+         call specis (gg,id,minfx)
 c                                 decompose the ordered species into
 c                                 the independent disordered species
 c                                 i.e., the p0a array becomes the p's if the
@@ -5968,6 +5969,104 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
       end if
 
       gsol1 = gg
+
+      end
+
+      double precision function gsol5 (id)
+c-----------------------------------------------------------------------
+c gsol5 computes the excess + configurational + enthalpy_of_ordered_endmember 
+c free energy of a solution identified by index ids for the speciation input
+c via cxt7.
+
+c ingsol MUST be called prior to gsol5 to initialize solution
+c specific parameters! 
+
+c gsol5 assumes the endmember g's have been calculated by gall.
+
+c gsol5 is called only for implicit order-disorder models by minfxc and
+c speci1.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision g2
+
+      double precision omega, gex
+
+      external omega, gex
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+c                                 entropic + excess o/d effect
+      g2 = - t * omega(id,pa) + gex(id,pa)
+c                                 enthalpic effect o/d effct
+      do k = 1, nord(id)
+         g2 = g2 + pa(lstot(id)+k)*enth(k)
+      end do
+
+      gsol5 = g2
+
+      end
+
+      double precision function gsol4 (id)
+c-----------------------------------------------------------------------
+c gsol4 computes the total (excess+ideal) free energy of solution
+c for a solution identified by index ids for the speciation input
+c via cxt7, i.e., in contrast to gsol1 it does not compute the 
+c speciation of o/d models.
+
+c ingsol MUST be called prior to gsol4 to initialize solution
+c specific parameters! 
+
+c gsol4 assumes the endmember g's have been calculated by gall.
+
+c gsol4 is called only for implicit order-disorder models by minfxc and
+c speci1.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision g1, gsol5
+
+      external gsol5
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision g
+      common/ cst2 /g(k1)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+c                                 for non-equimolar ordering properties
+c                                 computed with pa are for stuff2 moles
+c                                 and those computed with pp are for 
+c                                 stuff1 moles
+      g1 = 0d0
+c                                 dqf contribution
+      call gdqf (id,g1,pp)
+c                                 mechanical contribution
+      do k = 1, lstot(id)
+         g1 = g1 + g(jend(id,2+k)) * pp(k)
+      end do
+c                                 add entropic + enthalpic + excess o/d effect
+      gsol4 = g1 + gsol5(id)
 
       end
 
@@ -7628,7 +7727,7 @@ c                                 zero ordered pp's
 
       end
 
-      subroutine specis (g,id)
+      subroutine specis (g,id,minfx)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with disordered composition p0a.
 c the speciated composition is returned in array pa.
@@ -7642,7 +7741,7 @@ c----------------------------------------------------------------------
 
       integer i,id
 
-      logical error
+      logical error, minfx
 
       double precision g, gdord, omega, gex
 
@@ -7686,7 +7785,9 @@ c                                 multiple speciation, use a special routine
 c                                 for single species models:
          if (nord(id).gt.1) then
 
-            call speci2 (g,id,error)
+            minfx = .false.
+
+            call speci2 (g,id,error,minfx)
 
          else
 
@@ -7705,10 +7806,10 @@ c                                 i.e., iopt(17).ne.0, compute disordered g.
             gdord = gdord + p0a(lstot(id)+i)*enth(i)
          end do
 
-         if (gdord.lt.g) then 
+         if (gdord.lt.g) then
             g = gdord
             pa(1:nstot(id)) = p0a(1:nstot(id))
-         end if 
+         end if
 
       end if
 
@@ -7847,15 +7948,17 @@ c                                 get the delta configurational entropy and deri
 
       do k = 1, norder
 
-         if (.not.pin(k)) cycle
-
          g = g + enth(k) * pa(lstot(id)+k)
+
+         if (.not.pin(k)) cycle
 c                                 dg is the negative of the differential of g
 c                                 with respect to the kth species.
          dg(k) = -(enth(k) + dg(k) - tk*ds(k))
+
          do l = k, norder
             d2g(l,k) = d2g(l,k) - tk*d2s(l,k)
          end do
+
       end do
 c                                 determininats, to check for a saddle point
 c      if (norder.eq.2) then
@@ -8313,20 +8416,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, id, jd, k, itic, nr, ind(m4)
+      integer i, id, jd, k, itic, ind(m14), nr
 
       logical error, done
 
-      double precision g, ga, pmax,pmin,dp,omega,gex,dy(m4)
+      double precision g, ga, pmax, pmin, dp, gsol5, dy(m14)
 
-      external gex, omega
+      external gsol5
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -8337,28 +8437,26 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
-      double precision enth
-      common/ cxt35 /enth(j3)
-
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
 
-      do i = 1, nrct(k,id)
+      do i = 1, nr
 c                                 dependent disordered species
          ind(i) = ideps(i,k,id)
 c                                 stoichiometric coefficients
          dy(i) = dydy(ind(i),k,id)
-      end do
+
+      end do 
 
       jd = lstot(id) + k
 
       error = .false.
 c                                 starting point
       call plimit (pmin,pmax,k,id)
-
+c                                 necessary?
       pin(k) = .true.
 
       if (pmax-pmin.lt.nopt(5)) then
@@ -8454,32 +8552,34 @@ c                                 compare this the disordered case.
       if (error) then
 c                                 ordered
          call pincs (pmax-p0a(jd),dy,ind,jd,nr)
-         g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+         g = gsol5(id)
 c                                 anti-ordered
          call pincs (pmin-p0a(jd),dy,ind,jd,nr)
-         ga = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+         ga = gsol5(id)
 
          if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       end if
 
-      g = pa(jd)*enth(k) - t*omega(id,pa) + gex(id,pa)
+      g = gsol5(id)
 
       end
 
-      subroutine speci2 (g,id,error)
+      subroutine speci2 (g,id,error,minfx)
 c----------------------------------------------------------------------
 c subroutine to multiple speciation of a solution with disordered composition
 c p0a. the speciated composition is returned in array pa.
 c    id identifies the solution.
 c    g is the change in G for the stable speciation relative to a mechanical
 c      mixture of the endmembers.
+c    minfx is true if the speciation cannot be solved by speci2
+c    error is true if speci2 does not converge
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical error
+      logical error, minfx
 
       integer i,k,id,lord,itic
 
@@ -8488,13 +8588,28 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
 c                                 get initial p values
       call pinc0 (id,lord)
 c                                 lord is the number of possible species
-      if (lord.eq.1) then
+      if (lord.lt.nord(id).and.icase(id).eq.1) then
+c                                 most likely the model had degenerated
+c                                 to ordering across two sites, but because
+c                                 the ordered species are made of the same
+c                                 endmembers (icase(id)=1), all the ordered
+c                                 species are necessary to describe the ordering.
+         minfx = .true.
+
+      else if (lord.eq.1) then
+c DEBUG691
+         if (icase(id).eq.2) then 
+            write (*,*) 'wugga wugga?'
+         end if 
 
          do i = 1, nord(id)
             if (pin(i)) then
@@ -8588,9 +8703,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, jd, nr, ind(m4)
+      integer i, jd, nr, ind(*)
 
-      double precision dp, dy(m4)
+      double precision dp, dy(*)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -12230,7 +12345,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad
+      logical bad, minfx
 
       integer k,id,ids
 
@@ -12279,7 +12394,7 @@ c                                 compute margules coefficients
 c                                 evaluate enthalpies of ordering
          call oenth (ids)
 c                                 get the speciation energy effect
-         call specis (dg,ids)
+         call specis (dg,ids,minfx)
 c                                 get gmech
          do k = 1, lstot(ids)
             gph = gph + gproj(jend(ids,2+k)) * pp(k)
@@ -12595,7 +12710,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, switch
+      logical bad, switch, minfx
 
       integer i, j, k, id, itic
 
@@ -12707,61 +12822,58 @@ c                                 a liquid below T_melt option threshold
 
          else if (lorder(i)) then
 c DEBUG691 GALL
-            if (switch) then 
-c                                 compute margules coefficients
-            call setw (i)
-c                                 compute enthalpy of ordering
-            call oenth (i)
-
-               call ingsol (i)
-
-            else
-               call ingsol (i)
-            end if 
-
-           itic = 0
+c                                 initialize margules, enthalpy of
+c                                 ordering, internal dqfs (last for minfxc)
+            call ingsol (i)
 
             do j = 1, jend(i,2)
 
                call setxyp (i,id,.false.,bad)
 
-               if (switch.or.dnu(i).eq.0d0) then 
+               if (switch) then
+
+                  call specis (dg,i,minfx)
+
+                  if (minfx) then 
+c                                 degenerated
+                     call minfxc (g(id),i,.false.)
+
+                  else
+c                                 use old solver
+
 c                                 for static composition o/d models 
 c                                 gexces only accounts for internal dqf's
-               call gexces (id,g(id))
-
-               call specis (dg,i)
+                  call gexces (id,g(id))
 c                                 add in g from real endmembers, this
 c                                 must include the g for the disordered equivalent
 c                                 of the ordered species
-               do k = 1, lstot(i)
+                  do k = 1, lstot(i)
 
-                  g(id) = g(id) + g(jend(i,2+k)) * pp(k)
+                     g(id) = g(id) + g(jend(i,2+k)) * pp(k)
 
-               end do
+                  end do
 
-               g(id) = g(id) + dg
-
-                  z = pa
-                  pa = p0a
-
-                  dg = 0d0 
+                  g(id) = g(id) + dg
 
 
-                  call minfxc(dg,i,.false.)
+c                  pa = p0a
+c                  dg = 0d0 
 
-                  if (dabs(dg-g(id)).gt.1d0) then 
-                     write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
-                     itic = itic + 1
-                     call p2z (z,zt,i,.true.)
-                     call p2z (pa,zt,i,.true.)
+c                  call minfxc(dg,i,.false.)
+
+c                  if (dabs(dg-g(id)).gt.1d0) then 
+c                     write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
+c                     itic = itic + 1
+c                     call p2z (z,zt,i,.true.)
+c                     write (*,*) ' '
+c                     call p2z (pa,zt,i,.true.)
+c                  end if
+
                   end if
 
                else 
 
-                  dg = 0d0 
                   call minfxc(g(id),i,.false.)
-                  write (*,*) ' i, id ',dg - g(id),id
 
                end if
 
@@ -12769,7 +12881,7 @@ c                                 of the ordered species
 
             end do
 c DEBUG191
-            write (*,*) 'itic for ids ',itic,i
+c           write (*,*) 'itic for ids ',itic,i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -14509,6 +14621,8 @@ c-----------------------------------------------------------------------
 
       integer i, k, id
 
+      logical minfx
+
       double precision g, gso(nsp), gamm0
 
       double precision omega, gfluid, gzero, aqact,
@@ -14570,16 +14684,24 @@ c                                 initialize p-t dependent coefficients
          else if (lorder(id)) then
 c                                 -------------------------------------
 c                                 get the speciation, excess and entropy effects.
-            call specis (g,id)
+            call specis (g,id,minfx)
 
-            do k = 1, lstot(id)
+            if (minfx) then 
+c                                 degenerated speciation
+               call minfxc (g,id,.false.)
+
+            else 
+
+               do k = 1, lstot(id)
 c                                 compute mechanical g from these z's,
 c                                 specip adds a correction for the ordered species.
-               g = g + gcpd (jend(id,2+k),.true.) * pp(k)
-            end do
+                  g = g + gcpd (jend(id,2+k),.true.) * pp(k)
+               end do
 c                                 get the dqf, this assumes the independent reactants
 c                                 are not dqf'd. gex not neccessary as computed in specip
-            call gdqf (id,g,pp)
+               call gdqf (id,g,pp)
+
+            end if
 
          else if (lrecip(id)) then
 c                                 -------------------------------------
@@ -20531,8 +20653,9 @@ c                                 try to open final plt and blk files
 
             else 
 
-                call warn (99,nopt(1),i,'error occurred while reading '
-     *          //'final plt/blk files; looking for interim results...')
+                call warn (99,nopt(1),i,'error occurred while attemptin'
+     *          //'g to read final plt/blk files; looking for interim '
+     *          //'results...')
 
             end if
 
