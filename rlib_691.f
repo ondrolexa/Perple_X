@@ -15002,7 +15002,6 @@ c----------------------------------------------------------------------
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
       error = .false.
-      p0a(nstot(id)) = 0d0
 c                                 rqmax the maximum amount of the
 c                                 ordered species that can be formed
 c                                 from the fully disordered species
@@ -19378,6 +19377,9 @@ c----------------------------------------------------------------------
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+c DEBUG691 gall
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c---------------------------------------------------------
       nvar = nstot(id) - 1
 c                                 to be counted:
@@ -19404,7 +19406,7 @@ c                                 Az*p >= 0 constraints:
 
                m = ksub(k,j,i,id)
 
-               if (m.ne.nstot(id)) then 
+               if (m.ne.nstot(id).or.dnu(id).ne.0d0) then 
 
                   apz(id,nz(id),m) = apz(id,nz(id),m) 
      *                               + dcoef(k,j,i,id)
@@ -19679,7 +19681,7 @@ c----------------------------------------------------------------------
 
       external badz
 
-      double precision y(m4), zt, z(m10,m11)
+      double precision y(*), zt, z(m10,m11)
 
       integer i,j,k,ids
 

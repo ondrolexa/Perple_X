@@ -1053,7 +1053,9 @@ c                                save the new compositions
                pnew(i,k) = pnew(i,k) + xx*pa3(jd,k)
             end do
 c DEBUG691
-            if (sum.lt.0.999999) write (*,*) 'bad pa3 sum'
+            if (sum.lt.one.or.sum.gt.1d0+zero) then
+               write (*,*) 'bad pa3 sum'
+            end if
 
             if (lopt(32).and.ksmod(ids).eq.39) then
 

@@ -426,13 +426,8 @@ c                                 site multiplicity
 
             end do
 
-            if (zuffix(id).ne.' ') then
-
-               write (lu,'(11x,a,/)') 
+            if (zuffix(id).ne.' ') write (lu,'(11x,a,/)') 
      *                        'Non-mixing stoichiometry: '//zuffix(id)
-            else
-               write (lu,'(/)')
-            end if 
 
          end do
 
@@ -1081,13 +1076,20 @@ c-----------------------------------------------------------------------
       integer k, id, jd
 
       integer spct
-      double precision ysp
+      double precision ysp, sum
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+c DEBUG691 gall
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       character specie*4
       integer isp, ins
@@ -1096,34 +1098,9 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 c----------------------------------------------------------------------
-
-      if (lorder(id)) then 
-
-         do k = 1, spct(id) 
-            ysp(k,jd) = pa(k)
-         end do 
-
-      else if (lrecip(id)) then 
-
-         do k = 1, spct(id) 
-            ysp(k,jd) = p0a(k)
-         end do
-
-      else if (simple(id).or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
-     *         ksmod(id).le.28.or.ksmod(id).eq.39.or.ksmod(id).eq.42) 
-     *        then
-c                                 macroscopic formulation for normal solutions (2,688) and
-c                                 hp melt model (24)
-c                                 ghiorso melt model (25)
-c                                 andreas salt model (26)
-c                                 high T melt model (28)
-c                                 generic hybrid fluid (39)
-c                                 Fe-S fluid Saxena & Eriksson (42)
-         do k = 1, spct(id)
-            ysp(k,jd) = y(k)
-         end do
-
-      else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
+c                                 it's not clear if these remain special cases in 691, 
+c                                 they are left just in case...
+      if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
 c                                 BCC Fe-Cr Andersson and Sundman (32)
          spct(id) = 4
@@ -1141,6 +1118,19 @@ c                                 hardwired binary/pseudo-binary (0)
          do k = 1, spct(id) 
             ysp(k,jd) = yf(ins(k))
          end do
+
+      else
+c DEBUG691
+         sum = 0d0
+
+         do k = 1, spct(id)
+            sum = sum + pa(k)
+            ysp(k,jd) = pa(k)
+         end do
+
+         if (sum.lt.one.or.sum.gt.1d0+zero) then 
+            write (*,*) 'bad sum'
+         end if 
 
       end if
 

@@ -48,6 +48,10 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision mu
       common/ cst330 /mu(k8),mus
 
+c DEBUG691 gall
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
@@ -64,7 +68,12 @@ c-----------------------------------------------------------------------
 
 10    nclin = nz(ids)
       ntot = nstot(ids)
-      nvar = ntot - 1
+
+      if (dnu(ids).eq.0d0) then
+         nvar = ntot - 1
+      else 
+         nvar = ntot
+      end if 
 c                                 finite difference increments
 c                                 will be estimated at this 
 c                                 coordinate, so choose a feasible 
@@ -79,6 +88,13 @@ c                                 from the global arrays
 
       bl(nvar+1:nvar+nclin) = zl(ids,1:nclin)
       bu(nvar+1:nvar+nclin) = zu(ids,1:nclin)
+
+      if (nvar.eq.ntot) then
+         nclin = nclin + 1
+         bl(nvar+nclin) = 1d0
+         bu(nvar+nclin) = 1d0
+         lapz(nclin,1:nvar) = 1d0
+      end if
 
       idead = -1
 c                                 the solution model index
@@ -124,36 +140,46 @@ c     call nlpopt (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
 c    *             iter,istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,
 c    *             m22,work,m23,istuff,stuff,istart)
 
-c     write (*,1000) 'pas',pa(1:3)
-c     write (*,1000) 'p0as',p0a(1:3)
-1000  format (a10,10(g14.7,1x))
+      if (inp) then 
 
-c     do i = 1, nz(ids)
-c        zp = 0d0 
-c        do j = 1, nvar
-c           zp = zp + lapz(i,j) * ppp(j)
-c        end do
+         zp = 0d0
+         do i = 1, nstot(ids)
+            zp = zp + ppp(i)
+         end do
 
-c        write (*,1010) i, bl(i),zp,bu(i)
+         write (*,1000) 'pas',pa(1:3)
+         write (*,1000) 'p0as',p0a(1:3)
 
-c     end do
+         do i = 1, nclin
+            zp = 0d0 
+            do j = 1, nvar
+               zp = zp + lapz(i,j) * ppp(j)
+            end do
 
-c     call p2z (pa,zt,ids,.true.)
-      if (inp) write (*,*) istuff(3),gfinal,kds
-      if (inp) goto 10
+            write (*,1010) i, bl(i),zp,bu(i)
 
-      zp = 0d0
-      do i = 1, nstot(ids)
-         zp = zp + pa(i)
-c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
-      end do
+         end do
 
-      if (zp.lt.0.9999) then 
-         write (*,*) 'low sum'
          call p2z (pa,zt,ids,.true.)
+
+         write (*,*) istuff(3),gfinal,kds
+
+         goto 10
+
       end if
 
+c      zp = 0d0
+c      do i = 1, nstot(ids)
+c         zp = zp + ppp(i)
+c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
+c      end do
 
+c      if (zp.lt.one.or.zp.gt.1d0+zero) then 
+c         write (*,*) 'low sum'
+c         call p2z (ppp,zt,ids,.true.)
+c      end if
+
+1000  format (a10,10(g14.7,1x))
 1010  format (i5,1x,10(g14.7,1x))
       end
 
@@ -191,17 +217,21 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+c DEBUG691 gall
+      double precision deph,dydy,dnu
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
-      sum = 0d0
+      sum1 = 0d0
 
       do i = 1, nvar
-         sum = sum + ppp(i)
+         sum1 = sum1 + ppp(i)
          pa(i) = ppp(i)
       end do
 
-      pa(nstot(jds)) = 1d0 - sum
+      if (nvar.lt.nstot(jds)) pa(nstot(jds)) = 1d0 - sum1
 
       call makepp (jds)
 c                                 T use explicit ordering
@@ -226,7 +256,13 @@ c     write (*,1000) gval, g
 
       istuff(3) = istuff(3) + 1
 
-      if (istuff(2).ne.0) then
+c      if (sum1.lt.one.or.sum1.ge.1d0+zero) then 
+c         write (*,*) 'whoa nelly, ',sum1, istuff(2)
+c      else 
+c         write (*,*) 'heigh ho silver',istuff(4)
+c      end if 
+
+      if (istuff(2).ne.0.and.sum1.ge.one.and.sum1.le.1d0+zero) then
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c        write (*,1000) gval, g/sum, (pa(i),i=1,nstot(jds))
@@ -257,8 +293,9 @@ c                                 save the endmember fractions
             sum = 0d0
             do i = 1, nstot(jds)
                sum = sum + pa(i)
-            end do 
-            if (sum.lt.0.9999) then
+            end do
+
+            if (sum.lt.one.or.sum.gt.1d0+zero) then
                write (*,*) 'wug'
             end if
 
