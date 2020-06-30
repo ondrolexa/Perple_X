@@ -195,7 +195,7 @@ c-----------------------------------------------------------------------
       jds = istuff(1)
 
       sum = 0d0
-      write (*,*) ' in gsol2'
+
       do i = 1, nvar
          sum = sum + ppp(i)
          pa(i) = ppp(i)
@@ -265,7 +265,7 @@ c                                 save the endmember fractions
          end if
 
       end if
-      write (*,*) ' o gsol2'
+
 1000  format (2(g12.6,1x),12(f8.5,1x))
 1010  format (2(g14.7,2x))
 
