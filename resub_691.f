@@ -500,7 +500,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ii, i, j, ids, jd, kd, ld
+      integer i, ids, jd, ld
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -637,9 +637,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, ids, kcoor, j
-
-      double precision sum
+      integer id, ids, kcoor
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -1469,7 +1467,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ic,jc,ii,i,j,k,ids
+      integer ic,jc,i,j,ids
 c                                 -------------------------------------
 c                                 global variables
       integer iap,ibulk
@@ -1508,7 +1506,7 @@ c                                lagged speciation
          if (ksmod(ids).eq.39.and.lopt(32)) write (n5,1010) 
      *                                            (caq(i,j),j=1,nat)
 
-      end do 
+      end do
 c                                dependent potentials
       if (jpot.ne.1) write (n5,1010) (mu(i),i=1,kbulk)
 

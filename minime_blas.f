@@ -160,8 +160,8 @@ c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
       subroutine gsol2 (mode,nvar,ppp,gval,ggrd,istart,istuff,stuff)
 c-----------------------------------------------------------------------
 c function to evaluate gibbs energy of a solution for minfrc. can call 
-c either gsol1 that does o/d or gsol4 that does not, gsol1 seems to give
-c better results presumably because it's using analytical gradients.
+c either gsol1 with order true or false, true seems to give better results
+c presumably because it's using analytical gradients.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -169,10 +169,10 @@ c-----------------------------------------------------------------------
 
       integer i, jds, nvar, mode, istuff(*), istart
 
-      double precision ppp(*), gval, gsol4, ggrd(*), stuff(*),
+      double precision ppp(*), gval, ggrd(*), stuff(*),
      *                 gsol1, g, sum, scp(k5), sum1
 
-      external gsol4, gsol1
+      external gsol1
 
       logical mus
       double precision mu
@@ -195,7 +195,7 @@ c-----------------------------------------------------------------------
       jds = istuff(1)
 
       sum = 0d0
-
+      write (*,*) ' in gsol2'
       do i = 1, nvar
          sum = sum + ppp(i)
          pa(i) = ppp(i)
@@ -204,9 +204,8 @@ c-----------------------------------------------------------------------
       pa(nstot(jds)) = 1d0 - sum
 
       call makepp (jds)
-
-      g = gsol4(jds)
-
+c                                 T use explicit ordering
+      g = gsol1 (jds,.false.)
 c                                 get the bulk composition from pp
       call getscp (scp,sum,jds,jds,.false.)
 
@@ -266,13 +265,19 @@ c                                 save the endmember fractions
          end if
 
       end if
-
+      write (*,*) ' o gsol2'
 1000  format (2(g12.6,1x),12(f8.5,1x))
 1010  format (2(g14.7,2x))
 
       end
 
       subroutine gsol3 (mode,nvar,ppp,gval,ggrd,istart,istuff,stuff)
+c-----------------------------------------------------------------------
+c gsol3 - a shell to call gsol1 from minfxc, ingsol must be called
+c         prior to minfxc to initialize solution specific paramters. only
+c         called for equimolar explicit o/d models. non-equimolar o/d models
+c         (currently melt(G,HGP)) involve non-linear constraints that are not
+c         currently implemented in minfxc/nlpopt.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -282,9 +287,9 @@ c-----------------------------------------------------------------------
 
       double precision ppp(*), gval, psum, ggrd(*), stuff(*)
 
-      double precision gsol4, omega
+      double precision gsol1, omega
 
-      external gsol4, omega
+      external gsol1, omega
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -318,11 +323,12 @@ c-----------------------------------------------------------------------
 
       if (istuff(3).eq.0d0) then
 c                                 free energy minimization
-         gval = gsol4 (jds)
+         gval = gsol1 (jds,.false.)
 
       else
 c                                 entropy maximization
-         gval = -omega(jds,pa)
+         gval = -omega (jds,pa)
+
       end if
 
 c     write (*,1000) 0, (pa(i),i=1,nstot(jds))

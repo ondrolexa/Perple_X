@@ -5510,6 +5510,39 @@ c                                 the term should goto -Inf
 
       end
 
+      double precision function gmchpr (id)
+c-----------------------------------------------------------------------
+c gmech computes the mechanical mixture gibbs energy of a solution, if 
+c the solution is an explicit o/d solution the sum does not include the 
+c enthalpies of ordering for the ordered endmembers. 
+
+c gmchpr projects through mobile component potentials and saturated 
+c components, called only for static cpds by CONVEX (gphase).
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision gproj
+
+      external gproj
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      gmchpr = 0d0
+
+      do k = 1, lstot(id)
+         gmchpr = gmchpr + gproj (jend(id,2+k)) * pp(k)
+      end do
+
+      end
 
       double precision function gsol1 (id)
 c-----------------------------------------------------------------------
@@ -5639,7 +5672,6 @@ c                                 BCC Fe-Cr Andersson and Sundman
       else if (ksmod(id).eq.39) then
 c                                 -------------------------------------
 c                                 generic hybrid EoS
-c                                 initialize pointer array
          do k = 1, nstot(id)
 c                                 sum pure species g's
             gg = gg + g(jnd(k)) * y(k)
@@ -5680,19 +5712,49 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
 
       end
 
-      double precision function gsol5 (id)
+      double precision function gmech0 (id)
 c-----------------------------------------------------------------------
-c gsol5 computes the excess + configurational + enthalpy_of_ordered_endmember 
+c gmech computes the mechanical mixture gibbs energy of a solution at
+c the refernce pressure.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision gzero
+
+      external gzero
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      gmech0 = 0d0
+
+      do k = 1, lstot(id)
+         gmech0 = gmech0 + gzero (jend(id,2+k)) * pp(k)
+      end do
+
+      end
+
+      double precision function gord (id)
+c-----------------------------------------------------------------------
+c gord computes the excess + configurational + enthalpy_of_ordered_endmember 
 c free energy of a solution identified by index ids for the speciation input
 c via cxt7.
 
-c ingsol MUST be called prior to gsol5 to initialize solution
+c ingsol MUST be called prior to gord to initialize solution
 c specific parameters! 
 
-c gsol5 assumes the endmember g's have been calculated by gall.
+c gord assumes the endmember g's have been calculated by gall.
 
-c gsol5 is called only for implicit order-disorder models by minfxc and
-c speci1.
+c gord is called for explicit order-disorder models by minfxc, gsol1, and 
+c specis.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -5723,7 +5785,7 @@ c                                 enthalpic effect o/d effct
          g2 = g2 + pa(lstot(id)+k)*enth(k)
       end do
 
-      gsol5 = g2
+      gord = g2
 
       end
 
@@ -6367,11 +6429,11 @@ c---------------------------------------------------------------------
 
       logical add, wham, zbad, bad
 
-      integer im, nloc, i, j, ind, id, jd, k, l,itic, ii, imatch, 
-     *        killct, killid(20), il, ik, kk, jp1
+      integer im, nloc, i, j, id, jd, k, l, ii, 
+     *        killct, killid(20)
 
-      double precision dinc, dzt, dx, gcpd, stinc, getstr, delta,
-     *                 c0(0:20), c1(0:20), zij, zsite(m10,m11)
+      double precision dinc, dx, gcpd, stinc, getstr, 
+     *                 zsite(m10,m11)
 
       external gcpd, zbad, stinc, getstr
 
@@ -7345,11 +7407,9 @@ c                                 amounts of disordered species.
 c-----------------------------------------------------------------------
 c y2p0 converts the y array of disordered dependent and independent
 c species abundance to the p0 array of the independent (ordered and
-c disordered) species. the p0 array gives the minimum possible
-c concentrations of the ordered species (the stable abundances are
-c determined by solving the speciation problem).
+c disordered) species. 
 
-c for non-reciprocal solutions the y and p0 arrays are identical.
+c for simplicial solutions the y and p0 arrays are identical.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -8142,13 +8202,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, id, jd, k, itic, nr, ind(m4)
+      integer i, id, jd, k, itic, nr, ind(m14)
 
       logical error, done
 
-      double precision g, ga, pmax,pmin,dp,gsol5,dy(m4)
+      double precision g, ga, pmax,pmin,dp,gord,dy(m14)
 
-      external gsol5
+      external gord
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8277,16 +8337,16 @@ c                                 compare this the disordered case.
       if (error) then
 c                                 ordered
          call pincs (pmax-p0a(jd),dy,ind,jd,nr)
-         g = gsol5 (id)
+         g = gord(id)
 c                                 anti-ordered
          call pincs (pmin-p0a(jd),dy,ind,jd,nr)
-         ga = gsol5 (id)
+         ga = gord(id)
 
          if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       end if
 
-      g = gsol5 (id)
+      g = gord(id)
 
       end
 
@@ -8411,9 +8471,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, jd, nr, ind(m4)
+      integer i, jd, nr, ind(*)
 
-      double precision dp, dy(m4)
+      double precision dp, dy(*)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -12132,13 +12192,13 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer k,id,ids
+      integer id, ids
 
       double precision gzero, dg, gerk, gph, gproj, gcpd, gfesi, gex,
-     *                 gfecr1, gfesic, gfes
+     *                 gfecr1, gfesic, gfes, gmech0, gmchpr
 
       external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic, gfes, 
-     *         gex
+     *         gex, gmech0, gmchpr
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12180,12 +12240,8 @@ c                                 evaluate enthalpies of ordering
          call oenth (ids)
 c                                 get the speciation energy effect
          call specis (dg,ids)
-c                                 get gmech
-         do k = 1, lstot(ids)
-            gph = gph + gproj(jend(ids,2+k)) * pp(k)
-         end do
 
-         gph = gph + dg
+         gph = gph + gmchpr (ids) + dg
 
       else if (ksmod(ids).eq.0) then
 
@@ -12194,21 +12250,13 @@ c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
          call fexces (id,gph)
 
-         do k = 1, nstot(ids)
-            gph = gph + gzero (jend(ids,2+k)) * y(k)
-         end do
+         gph = gph + gmech0(ids)
 
       else if (ksmod(ids).eq.40) then
 c                                 si-o mrk fluid
-         gph = 0d0
-
          call setxyp (ids,id,.false.,bad)
 
-         do k = 1, nstot(ids)
-            gph = gph + gzero(jnd(k)) * y(k)
-         end do
-
-         gph = gph + gerk (p0a)
+         gph = gmech0(ids) + gerk (p0a)
 
       else if (ksmod(ids).ge.29.and.ksmod(ids).le.32) then
 c                                 nastia's models:
@@ -12263,9 +12311,7 @@ c                                 and/or dqf corrections:
 
          end if
 c                                 add gmech
-         do k = 1, nstot(ids)
-            gph = gph +  gproj (jend(ids,2+k)) * y(k)
-         end do
+         gph = gph +  gmchpr(ids) 
 c                                 for van laar get fancier excess function
          if (llaar(ids)) then
 
@@ -14769,7 +14815,6 @@ c                                 min order g
 
       end
 
-
       subroutine gpmlt1 (g,id,error)
 c----------------------------------------------------------------------
 c subroutine to speciation of the green et al (JMG, 2016) melt model. this
@@ -14906,7 +14951,7 @@ c                                 fails to converge.
          end do
 
       else
-c                                 speciation is not stoichiometrically possible
+c                                 speciation is stoichiometrically frustrated
          g = -t*omega(id,p0a) + gex(id,p0a)
          return
 
@@ -14914,8 +14959,8 @@ c                                 speciation is not stoichiometrically possible
 
 90    if (error) then
 c                                 didn't converge or couldn't find a good
-c                                 starting point compare the fully ordered
-c                                 and g's specis will compare this to the
+c                                 starting point compute the fully ordered
+c                                 g, specis will compare this to the
 c                                 disordered g and take the lowest:
          do i = 1, nstot(id)
             pa(i) = (p0a(i) + dydy(i,1,id)*qmax) / (1d0 + dnu(id)*qmax)

@@ -2156,8 +2156,8 @@ c----------------------------------------------------------------------
 
       integer n
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       if (n.lt.1) then
 
@@ -2568,16 +2568,18 @@ c  sscmv performs the operation
 c
 c     y := alpha*x
 c----------------------------------------------------------------------
+      implicit none
+
       double precision alpha
       integer incx, incy, n
       double precision x(*), y(*)
       integer i, ix, iy
 c----------------------------------------------------------------------
       if (n.gt.0) then
-         if ((alpha.eq.0d0).and.(incy.ne.0)) then
+         if (alpha.eq.0d0.and.incy.ne.0) then
             call sload(n, 0d0, y, abs(incy))
          else
-            if ((incx.eq.incy).and.(incx.gt.0)) then
+            if (incx.eq.incy.and.incx.gt.0) then
                do 10, ix = 1, 1 + (n - 1)*incx, incx
                   y(ix) = alpha*x(ix)
    10          continue
@@ -2618,11 +2620,16 @@ c
 c  if tol is supplied as less than zero then the value epsmch, where
 c  epsmch is the relative machine precision, is used in place of tol.
 c----------------------------------------------------------------------
+      implicit none
+
       double precision tol
       integer     incx, n
       double precision x(*)
       double precision tl, xmax
       integer     ix, k
+
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
 
       k = 0
@@ -2631,15 +2638,15 @@ c----------------------------------------------------------------------
          if (tol.lt.0d0) then
 c                                this should be (1/2)*b**(1-p)
 c                                or maybe b**(1-p)
-            tl = 1.11022302462516d-16
+            tl = wmach(8)
          else
             tl = tol
          end if
-         xmax = abs(x(ix))
+         xmax = dabs(x(ix))
 c
    10    if   (k.lt.n) then
-            if (abs(x(ix)).le.tl*xmax) go to 20
-            xmax = max(xmax, abs(x(ix)))
+            if (dabs(x(ix)).le.tl*xmax) go to 20
+            xmax = max(xmax, dabs(x(ix)))
             k    = k  + 1
             ix   = ix + incx
             go to 10
@@ -2833,8 +2840,8 @@ c----------------------------------------------------------------------
       double precision a(lda,*), c(*), s(*), aij, ctemp, stemp, subh, 
      *                 temp
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
       if ((min(n, k1).lt.1).or.(k2.le.k1).or.(k2.gt.n))return
 
@@ -2960,6 +2967,7 @@ c original code was using
 
 c flmax = wmach(7) = huge
 c flmin = 1/flmax ~= wmach(3) = epsmch
+c----------------------------------------------------------------------
       implicit none
 
       double precision scale, ssq, sqt, norm
@@ -3146,14 +3154,19 @@ c  sdscl performs the operation
 c
 c     x := diag(d)*x
 c-----------------------------------------------------------------------
+      implicit none
+
       integer incd, incx, n
       double precision d(*), x(*)
       integer i, id, ix
+
+      double precision wmach
+      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
       if (n.gt.0) then
-         if ((incd.eq.0).and.(incx.ne.0)) then
+         if (incd.eq.0.and.incx.ne.0) then
             call dscal(n, d(1), x, abs(incx))
-         else if ((incd.eq.incx).and.(incd.gt.0)) then
+         else if (incd.eq.incx.and.incd.gt.0) then
             do 10, id = 1, 1 + (n - 1)*incd, incd
                x(id) = d(id)*x(id)
    10       continue
@@ -3347,80 +3360,7 @@ c        lda   .lt. m
 c
 c  if  on  entry,  ifail  was either  -1 or 0  then  further  diagnostic
 c  information  will  be  output  on  the  error message  channel.
-c
-c  5. further information
-c     ===================
-c
-c  following the use of this routine the operations
-c
-c        b := q*b   and   b := q'*b,
-c
-c  where  b  is an  m by k  matrix, can  be  performed  by calls to  the
-c  auxiliary linear algebra routine  f01qdf. the operation  b := q*b can
-c  be obtained by the call:
-c
-c     ifail = 0
-c     call f01qdf('no transpose', 'separate', m, min(m, n), a, lda,
-c    $             zeta, k, b, ldb, work, ifail)
-c
-c  and  b := q'*b  can be obtained by the call:
-c
-c     ifail = 0
-c     call f01qdf('transpose', 'separate', m, min(m, n), a, lda,
-c    $             zeta, k, b, ldb, work, ifail)
-c
-c  in  both  cases  work  must be  a  k  element array  that is used  as
-c  workspace. if b is a one-dimensional array (single column) then the
-c  parameter  ldb  can be replaced by  m. see routine f01qdf for further
-c  details.
-c
-c  also following the use of this routine the operations
-c
-c     b := p'*b   and   b := p*b,
-c
-c  where b is an n by k matrix, and the operations
-c
-c     b := b*p    and   b := b*p',
-c
-c  where  b is a k by n  matrix, can  be performed by calls to the basic
-c  linear  algebra  routine  f06qjf.  the  operation  b := p'*b  can  be
-c  obtained by the call:
-c
-c     call f06qjf('left', 'transpose', n, min(m, n), perm,
-c    $             k, b, ldb)
-c
-c  the operation  b := p*b  can be obtained by the call:
-c
-c     call f06qjf('left', 'no transpose', n, min(m, n), perm,
-c    $             k, b, ldb)
-c
-c  if  b is a one-dimensional array (single column) then the parameter
-c  ldb  can be  replaced  by  n  in the above  two calls.  the operation
-c  b := b*p  can be obtained by the call:
-c
-c     call f06qjf('right', 'no transpose', k, min(m, n), perm,
-c    $             m, b, ldb)
-c
-c  and  b := b*p'  can be obtained by the call:
-c
-c     call f06qjf('right', 'transpose', k, min(m, n), perm,
-c    $             m, b, ldb)
-c
-c  if  b is a one-dimensional array (single column) then the parameter
-c  ldb  can be replaced by  k  in the above two calls.
-c  see routine f06qjf for further details.
-c
-c  operations involving  the matrix  r  can readily be performed by  the
-c  level 2 blas  routines  dtrsv  and dtrmv . note that no test for near
-c  singularity of r is incorporated in this routine or in routine dtrsv.
-c  if  r is nearly singular then the f02wuf can be
-c  used to determine the singular value decomposition of  r.  operations
-c  involving  the matrix  x  can also be  performed by the  level 2 blas
-c  routines.  matrices  of  the  form  (r  x)  can  be  factorized  as
-c
-c     (r  x) = (t  0)*s',
-c
-c  where  t  is  upper triangular and  s  is orthogonal,  using the routine  f01qgf.
+      implicit none
 
       double precision lamda
       parameter (lamda=1.0d-2)
@@ -3437,12 +3377,14 @@ c  where  t  is  upper triangular and  s  is orthogonal,  using the routine  f01
       integer errmsg
       external          dnrm2
 
+      double precision wmach
+      common/ cstmch /wmach(9)
+
 c     check the input parameters.
 
       ierr = 0
-      if ((pivot.ne.'c').and.(pivot.ne.'C').and.(pivot.ne.'s')
-     *   .and.(pivot.ne.'S')) call p01abw(pivot,'pivot',ifail,ierr,
-     *                               srname)
+      if ((pivot.ne.'c').and.(pivot.ne.'s'))
+     *   call p01abw(pivot,'pivot',ifail,ierr,srname)
       if (m.lt.0) call p01aby(m,'m',ifail,ierr,srname)
       if (n.lt.0) call p01aby(n,'n',ifail,ierr,srname)
       if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
@@ -3460,7 +3402,7 @@ c     compute eps and the initial column norms.
       end if
 c                                this should be (1/2)*b**(1-p)
 c                                or maybe b**(1-p)
-      eps = 1.11022302462516d-16
+      eps = wmach(8)
 
       do 20 j = 1, n
          work(j) = dnrm2(m,a(1,j),1)
@@ -3624,7 +3566,7 @@ c  greater than n then an immediate return is effected.
       integer i, j
 
       if ((min(n,k1).lt.1).or.(k2.le.k1).or.(k2.gt.n)) return
-      if ((side.eq.'l').or.(side.eq.'L')) then
+      if (side.eq.'l') then
 c
 c        apply the permutations to columns n back to k1.
 c
@@ -3646,7 +3588,7 @@ c
    20       continue
             a(k1,j) = aij
    40    continue
-      else if ((side.eq.'r').or.(side.eq.'R')) then
+      else if (side.eq.'r') then
 c
 c        apply  the  plane interchanges to  columns  k1  up to
 c        (k2 - 1) and  form   the   additional  sub-diagonal
@@ -3684,6 +3626,8 @@ c
 c        ierr = 0
 c        if (n.ne.'valid value') call p01abw(n, 'n', idiag, ierr, srname)
 
+      implicit none 
+
       integer ierr, inform
       character*(*)     n
       character*(*)     name, srname
@@ -3699,9 +3643,6 @@ c        if (n.ne.'valid value') call p01abw(n, 'n', idiag, ierr, srname)
          call x04baf(nerr,rec(2))
          call x04baf(nerr,rec(3))
       end if
-      return
-
-c     end of p01abw.
 
 99999 format (' *****  parameter  ',a,'  is invalid in routine  ',a,
      *  '  ***** ',/8x,'value supplied is',/8x,a)
@@ -3779,25 +3720,28 @@ c                             i.le.j  are referenced,
 c  if   matrix = 'l' or 'l'   then  a  and  b  are  regarded  as   lower
 c                             triangular,  and only  elements  for which
 c                             i.ge.j  are referenced.
+
+      implicit none
+
       character*1 matrix
       integer m, n, lda, ldb
       double precision a(lda, *), b(ldb, *)
       integer i, j
 
 
-      if ((matrix.eq.'g').or.(matrix.eq.'g')) then
+      if (matrix.eq.'g') then
          do 20 j = 1, n
             do 10 i = 1, m
                b(i, j) = a(i, j)
    10       continue
    20    continue
-      else if ((matrix.eq.'u').or.(matrix.eq.'u')) then
+      else if (matrix.eq.'u') then
          do 40 j = 1, n
             do 30 i = 1, min(m, j)
                b(i, j) = a(i, j)
    30       continue
    40    continue
-      else if ((matrix.eq.'l').or.(matrix.eq.'l')) then
+      else if (matrix.eq.'l') then
          do 60 j = 1, min(m, n)
             do 50 i = j, m
                b(i, j) = a(i, j)
@@ -3811,6 +3755,9 @@ c                             i.ge.j  are referenced.
 
 c  icopy performs the operation
 c     y := x
+
+      implicit none
+
       integer incx, incy, n
       integer x(*), y(*)
       integer i, ix, iy
@@ -4056,7 +4003,6 @@ c     x = const*e,   e' = (1  1 ... 1).
 c----------------------------------------------------------------------
 c modified blas routine smload (smload)
 c----------------------------------------------------------------------
-
       implicit none
 
       integer i, j, lda, m, n
@@ -4097,8 +4043,7 @@ c----------------------------------------------------------------------
       double precision a(lda, *)
       integer i, j
 
-
-      if ((matrix.eq.'g').or.(matrix.eq.'g')) then
+      if (matrix.eq.'g') then
          do 20 j = 1, n
             do 10 i = 1, m
                a(i, j) = const
@@ -4109,7 +4054,7 @@ c----------------------------------------------------------------------
                a(i, i) = diag
    30       continue
          end if
-      else if ((matrix.eq.'u').or.(matrix.eq.'u')) then
+      else if (matrix.eq.'u') then
          do 50 j = 1, n
             do 40 i = 1, min(m, j)
                a(i, j) = const
@@ -4120,7 +4065,7 @@ c----------------------------------------------------------------------
                a(i, i) = diag
    60       continue
          end if
-      else if ((matrix.eq.'l').or.(matrix.eq.'l')) then
+      else if (matrix.eq.'l') then
          do 80 j = 1, min(m, n)
             do 70 i = j, m
                a(i, j) = const
@@ -4196,6 +4141,7 @@ c
 c  work    (workspace) real array, dimension (lwork),
 c          where lwork >= m when norm = 'i'; otherwise, work is not
 c          referenced.
+      implicit none 
 
       integer             lda, m, n
       character                        diag, norm, uplo
@@ -4206,28 +4152,28 @@ c          referenced.
 
       if (min(m,n).eq.0) then
          value = 0d0
-      else if ((norm.eq.'m'.or.norm.eq.'m')) then
+      else if (norm.eq.'m') then
 c
 c        find max(abs(a(i,j))).
 c
-         if ((diag.eq.'u'.or.diag.eq.'u')) then
+         if (diag.eq.'u') then
             value = 1d0
-            if ((uplo.eq.'u'.or.uplo.eq.'u')) then
+            if (uplo.eq.'u') then
                do 40 j = 1, n
                   do 20 i = 1, min(m,j-1)
-                     value = max(value,abs(a(i,j)))
+                     value = max(value,dabs(a(i,j)))
    20             continue
    40          continue
             else
                do 80 j = 1, n
                   do 60 i = j + 1, m
-                     value = max(value,abs(a(i,j)))
+                     value = max(value,dabs(a(i,j)))
    60             continue
    80          continue
             end if
          else
             value = 0d0
-            if ((uplo.eq.'u'.or.uplo.eq.'u')) then
+            if (uplo.eq.'u') then
                do 120 j = 1, n
                   do 100 i = 1, min(m,j)
                      value = max(value,abs(a(i,j)))
@@ -4241,23 +4187,25 @@ c
   160          continue
             end if
          end if
-      else if (((norm.eq.'o'.or.norm.eq.'o')).or.(norm.eq.'1')) then
+      else if (norm.eq.'o'.or.norm.eq.'1') then
 c
 c        find norm1(a).
 c
          value = 0d0
-         udiag = (diag.eq.'u'.or.diag.eq.'u')
-         if ((uplo.eq.'u'.or.uplo.eq.'u')) then
+
+         udiag = (diag.eq.'u')
+
+         if (uplo.eq.'u') then
             do 220 j = 1, n
-               if ((udiag).and.(j.le.m)) then
+               if (udiag.and.(j.le.m)) then
                   sum = 1d0
                   do 180 i = 1, j - 1
-                     sum = sum + abs(a(i,j))
+                     sum = sum + dabs(a(i,j))
   180             continue
                else
                   sum = 0d0
                   do 200 i = 1, min(m,j)
-                     sum = sum + abs(a(i,j))
+                     sum = sum + dabs(a(i,j))
   200             continue
                end if
                value = max(value,sum)
@@ -4267,29 +4215,29 @@ c
                if (udiag) then
                   sum = 1d0
                   do 240 i = j + 1, m
-                     sum = sum + abs(a(i,j))
+                     sum = sum + dabs(a(i,j))
   240             continue
                else
                   sum = 0d0
                   do 260 i = j, m
-                     sum = sum + abs(a(i,j))
+                     sum = sum + dabs(a(i,j))
   260             continue
                end if
                value = max(value,sum)
   280       continue
          end if
-      else if ((norm.eq.'i'.or.norm.eq.'i')) then
+      else if (norm.eq.'i') then
 c
 c        find normi(a).
 c
-         if ((uplo.eq.'u'.or.uplo.eq.'u')) then
-            if ((diag.eq.'u'.or.diag.eq.'u')) then
+         if (uplo.eq.'u') then
+            if (diag.eq.'u') then
                do 300 i = 1, m
                   work(i) = 1d0
   300          continue
                do 340 j = 1, n
                   do 320 i = 1, min(m,j-1)
-                     work(i) = work(i) + abs(a(i,j))
+                     work(i) = work(i) + dabs(a(i,j))
   320             continue
   340          continue
             else
@@ -4298,12 +4246,12 @@ c
   360          continue
                do 400 j = 1, n
                   do 380 i = 1, min(m,j)
-                     work(i) = work(i) + abs(a(i,j))
+                     work(i) = work(i) + dabs(a(i,j))
   380             continue
   400          continue
             end if
          else
-            if ((diag.eq.'u'.or.diag.eq.'u')) then
+            if (diag.eq.'u') then
                do 420 i = 1, n
                   work(i) = 1d0
   420          continue
@@ -4312,7 +4260,7 @@ c
   440          continue
                do 480 j = 1, n
                   do 460 i = j + 1, m
-                     work(i) = work(i) + abs(a(i,j))
+                     work(i) = work(i) + dabs(a(i,j))
   460             continue
   480          continue
             else
@@ -4321,7 +4269,7 @@ c
   500          continue
                do 540 j = 1, n
                   do 520 i = j, m
-                     work(i) = work(i) + abs(a(i,j))
+                     work(i) = work(i) + dabs(a(i,j))
   520             continue
   540          continue
             end if
@@ -4330,13 +4278,13 @@ c
          do 560 i = 1, m
             value = max(value,work(i))
   560    continue
-      else if (((norm.eq.'f'.or.norm.eq.'f'))
-     *        .or.((norm.eq.'e'.or.norm.eq.'e'))) then
+
+      else if (norm.eq.'f'.or.norm.eq.'e') then
 c
 c        find normf(a).
 c
-         if ((uplo.eq.'u'.or.uplo.eq.'u')) then
-            if ((diag.eq.'u'.or.diag.eq.'u')) then
+         if (uplo.eq.'u') then
+            if (diag.eq.'u') then
                scale = 1d0
                sum = min(m,n)
                do 580 j = 2, n
@@ -4350,7 +4298,7 @@ c
   600          continue
             end if
          else
-            if ((diag.eq.'u'.or.diag.eq.'u')) then
+            if (diag.eq.'u') then
                scale = 1d0
                sum = min(m,n)
                do 620 j = 1, n

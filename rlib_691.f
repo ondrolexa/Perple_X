@@ -30,7 +30,7 @@ c-----------------------------------------------------------------------
 
       end
 
-      subroutine gexces (id,dg)
+      double precision function gexces (id)
 c-----------------------------------------------------------------------
 c gexces evaluates the contribution to the gibbs energy of a pseudocompound
 c arising from configurational entropy, excess properties, and dqf corrections
@@ -43,14 +43,14 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps,dg
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       double precision exces
       common/ cst304 /exces(m3,k1)
 c-----------------------------------------------------------------------
 
-      dg = exces(1,id) + t * exces(2,id) + p * exces(3,id)
+      gexces = exces(1,id) + t * exces(2,id) + p * exces(3,id)
 
       end
 
@@ -1015,7 +1015,6 @@ c                              streamline the eos:
                do j = 1, 13
                   z(j) = 0d0
                end do
-
 
                call conver (
 c                                 g0,s0, dummy
@@ -3489,8 +3488,8 @@ c-----------------------------------------------------------------------
 
       double precision t, p1, p2, p3, p4, dinc
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
 
       p1 = dexp(-t)
@@ -5807,35 +5806,54 @@ c                                 the term should goto -Inf
 
       end
 
-      double precision function gsol1 (id)
+      double precision function gsol1 (id,order)
 c-----------------------------------------------------------------------
-c gsol1 computes the total (excess+ideal) free energy of solution
-c for a solution identified by index ids and composition y(m4) input
-c from cxt7, the composition y is the independent endmember fractions
-c for all model types except reciprocal solutions, in which case it is
-c the y's for the full reciprocal model.
+c gsol1 computes the complete gibbs energy of a solution identified by 
+c index ids and endmember composition pa input from cxt7. 
 
-c gsol assumes the endmember g's have not been calculated by gall and is
-c      only called by WERAMI.
-c gsol1 is identical to gsol but can only been called after gall and is
-c      only called by loadgx. ingsol must be called prior to
-c      gsol1 to initialize p-t dependnent model parameters.
+c if order is true, then the speciation of order disorder models is 
+c computed; otherwise the speciation is taken as input.
+
+c summary of the gsol functions/subroutines: 
+
+c gsol  - assumes the endmember g's have not been calculated by gall and is
+c         only called by WERAMI/MEEMUM/FRENDLY via function ginc. may be
+c         called for any tybe of solution model.
+
+c gsol1 - identical to gsol but can only been called after gall and is
+c         only called by loadgx. ingsol must be called prior to
+c         gsol1 to initialize p-t dependent model parameters. may be
+c         called for any type of solution model.
+
+c gsol2 - a shell to call gsol1 from minfrc, ingsol must be called
+c         prior to minfrc to initialize solution specific paramters. may be
+c         called for any type of solution model.
+
+c gsol3 - a shell to call gsol1 from minfxc, ingsol must be called
+c         prior to minfxc to initialize solution specific paramters. only
+c         called for equimolar explicit o/d models. non-equimolar o/d models
+c         (currently melt(G,HGP)) involve non-linear constraints that are not
+c         currently implemented in minfxc/nlpopt.
+
+c gord  - a function to compute the excess + enthalpic + entropic effects of 
+c         mixing for an explicit o/d solution model. called by gsol4 and 
+c         gall (via specis).
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer k, id
+      integer id
 
-      logical minfx
+      logical minfx, order
 
       double precision gg
 
-      double precision omega, gfluid, gzero,
+      double precision omega, gfluid, gzero, gmech, gord, gdqf, gmech0,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid, gfes
 
-      external omega, gfluid, gzero, gex, gfesi,
-     *         gfesic, gfecr1, gerk, ghybrid, gfes
+      external omega, gfluid, gzero, gex, gfesi, gmech, gord, gmech0,
+     *         gfesic, gfecr1, gerk, ghybrid, gfes, gdqf
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -5868,38 +5886,30 @@ c                                 currently only Nastia's version of BCC/FCC Fe-
       else if (simple(id)) then
 c                                 -------------------------------------
 c                                 macroscopic formulation for normal solutions.
-         call gdqf (id,gg,pa)
+         gg = gdqf (id) - t * omega (id,pa) + gex (id,pa) + gmech (id)
 
-         gg = gg - t * omega(id,pa) + gex(id,pa)
-c                                 get mechanical mixture contribution
-         do k = 1, lstot(id)
-            gg = gg + pa(k) * g(jend(id,2+k))
-         end do
-
-      else if (lorder(id)) then
+      else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
          call specis (gg,id,minfx)
-c                                 decompose the ordered species into
-c                                 the independent disordered species
-c                                 i.e., the p0a array becomes the p's if the
-c                                 abundance of the ordered species is 0.
-         do k = 1, lstot(id)
-c                                 compute mechanical g from these z's,
-c                                 specip adds a correction for the ordered species.
-            gg = gg + g(jend(id,2+k)) * pp(k)
-         end do
-c                                 get the dqf, this assumes the independent reactants
-c                                 are not dqf'd. gex not neccessary as computed in specip
-         call gdqf (id,gg,pp)
+
+         if (minfx) then 
+c                                 degenerated, minfx only set for equimolar speciation.
+            call minfxc (gg,id,.false.)
+
+         else
+
+            gg = gdqf(id) + gmech(id)
+
+         end if
+
+      else if (lorder(id)) then
+c                                 add entropic + enthalpic + excess o/d effect
+          gg = gdqf(id) + gmech(id) + gord(id)
 
       else if (ksmod(id).eq.0) then
 c                                 ------------------------------------
 c                                 internal fluid eos
-         gg = gfluid(pa(1))
-
-         do k = 1, 2
-            gg = gg + gzero(jnd(k))*pa(k)
-         end do
+         gg = gfluid(pa(1)) + gmech0(id)
 
       else if (ksmod(id).eq.20) then
 c                                 electrolytic solution, need to check
@@ -5914,9 +5924,7 @@ c                                 ------------------------------------
 c                                 andreas salt model
          call hcneos (gg,pa(1),pa(2),pa(3))
 
-         do k = 1, 3
-            gg = gg + pa(k) * g(jend(id,2+k))
-         end do
+         gg = gg + gmech(id)
 
       else if (ksmod(id).eq.29) then
 c                                 -------------------------------------
@@ -5931,30 +5939,17 @@ c                                 BCC Fe-Cr Andersson and Sundman
       else if (ksmod(id).eq.39) then
 c                                 -------------------------------------
 c                                 generic hybrid EoS
-c                                 initialize pointer array
-         do k = 1, nstot(id)
-c                                 sum pure species g's
-            gg = gg + g(jnd(k)) * pa(k)
-
-         end do
-c                                 compute and add in activities
-         gg = gg + ghybrid (pa)
+         gg = ghybrid(pa) + gmech(id)
 
       else if (ksmod(id).eq.41) then
 c                                 hybrid MRK ternary COH fluid
          call rkcoh6 (pa(2),pa(1),gg)
 
-         do k = 1, 3
-            gg = gg + g(jnd(k)) * pa(k)
-         end do
+         gg = gg + gmech(id)
 
       else if (ksmod(id).eq.40) then
 c                                 MRK silicate vapor
-         do k = 1, nstot(id)
-            gg = gg + gzero (jnd(k)) * pa(k)
-         end do
-
-         gg = gg + gerk(pa)
+         gg = gmech0(id) + gerk(pa)
 
       else if (ksmod(id).eq.42) then
 c                                 ------------------------------------
@@ -5972,27 +5967,25 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
 
       end
 
-      double precision function gsol5 (id)
+      double precision function gord (id)
 c-----------------------------------------------------------------------
-c gsol5 computes the excess + configurational + enthalpy_of_ordered_endmember 
+c gord computes the excess + configurational + enthalpy_of_ordered_endmember 
 c free energy of a solution identified by index ids for the speciation input
 c via cxt7.
 
-c ingsol MUST be called prior to gsol5 to initialize solution
+c ingsol MUST be called prior to gord to initialize solution
 c specific parameters! 
 
-c gsol5 assumes the endmember g's have been calculated by gall.
+c gord assumes the endmember g's have been calculated by gall.
 
-c gsol5 is called only for implicit order-disorder models by minfxc and
-c speci1.
+c gord is called for explicit order-disorder models by minfxc, gsol1, and 
+c specis.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       integer k, id
-
-      double precision g2
 
       double precision omega, gex
 
@@ -6009,40 +6002,28 @@ c-----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
 c                                 entropic + excess o/d effect
-      g2 = - t * omega(id,pa) + gex(id,pa)
+      gord = - t * omega(id,pa) + gex(id,pa)
 c                                 enthalpic effect o/d effct
       do k = 1, nord(id)
-         g2 = g2 + pa(lstot(id)+k)*enth(k)
+         gord = gord + pa(lstot(id)+k)*enth(k)
       end do
-
-      gsol5 = g2
 
       end
 
-      double precision function gsol4 (id)
+      double precision function gmech (id)
 c-----------------------------------------------------------------------
-c gsol4 computes the total (excess+ideal) free energy of solution
-c for a solution identified by index ids for the speciation input
-c via cxt7, i.e., in contrast to gsol1 it does not compute the 
-c speciation of o/d models.
+c gmech computes the mechanical mixture gibbs energy of a solution, if 
+c the solution is an explicit o/d solution the sum does not include the 
+c enthalpies of ordering for the ordered endmembers. 
 
-c ingsol MUST be called prior to gsol4 to initialize solution
-c specific parameters! 
-
-c gsol4 assumes the endmember g's have been calculated by gall.
-
-c gsol4 is called only for implicit order-disorder models by minfxc and
-c speci1.
+c gmech assumes endmember g have been computed by a prior call to gall.
+c gmchpt or gmchpr should be called when this is not the case.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       integer k, id
-
-      double precision g1, gsol5
-
-      external gsol5
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -6054,19 +6035,109 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
-c                                 for non-equimolar ordering properties
-c                                 computed with pa are for stuff2 moles
-c                                 and those computed with pp are for 
-c                                 stuff1 moles
-      g1 = 0d0
-c                                 dqf contribution
-      call gdqf (id,g1,pp)
-c                                 mechanical contribution
+      gmech = 0d0
+
       do k = 1, lstot(id)
-         g1 = g1 + g(jend(id,2+k)) * pp(k)
+         gmech = gmech + g(jend(id,2+k)) * pp(k)
       end do
-c                                 add entropic + enthalpic + excess o/d effect
-      gsol4 = g1 + gsol5(id)
+
+      end
+
+      double precision function gmchpt (id)
+c-----------------------------------------------------------------------
+c gmchpt computes the mechanical mixture gibbs energy of a solution, if 
+c the solution is an explicit o/d solution the sum does not include the 
+c enthalpies of ordering for the ordered endmembers. 
+
+c gmchpt projects through mobile component potentials, but does not
+c project through saturated components. use gmchpr for full projection.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision gcpd
+
+      external gcpd
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      gmchpt = 0d0
+
+      do k = 1, lstot(id)
+         gmchpt = gmchpt + gcpd (jend(id,2+k),.true.) * pp(k)
+      end do
+
+      end
+
+      double precision function gmchpr (id)
+c-----------------------------------------------------------------------
+c gmech computes the mechanical mixture gibbs energy of a solution, if 
+c the solution is an explicit o/d solution the sum does not include the 
+c enthalpies of ordering for the ordered endmembers. 
+
+c gmchpr projects through mobile component potentials and saturated 
+c components, called only for static cpds by CONVEX (gphase).
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision gproj
+
+      external gproj
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      gmchpr = 0d0
+
+      do k = 1, lstot(id)
+         gmchpr = gmchpr + gproj (jend(id,2+k)) * pp(k)
+      end do
+
+      end
+
+      double precision function gmech0 (id)
+c-----------------------------------------------------------------------
+c gmech computes the mechanical mixture gibbs energy of a solution at
+c the refernce pressure.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision gzero
+
+      external gzero
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      gmech0 = 0d0
+
+      do k = 1, lstot(id)
+         gmech0 = gmech0 + gzero (jend(id,2+k)) * pp(k)
+      end do
 
       end
 
@@ -6339,7 +6410,7 @@ c------------------------------------------------------------------------
 
       logical zbad
 
-      integer h,id,j
+      integer h,id
 
       double precision omega, zsite(m10,m11)
 
@@ -6356,9 +6427,7 @@ c                                 get normalization constants
 c                                 for each endmember
       do h = 1, nstot(id)
 c                                 zero y-array
-         do j = 1, nstot(id)
-            pa(j) = 0d0
-         end do
+         pa(1:nstot(id)) = 0d0
 
          pa(h) = 1d0
 c                                 check for valid site fractions
@@ -6400,29 +6469,30 @@ c                                 model:
 
       end
 
-      subroutine gdqf (id,g,y)
+      double precision function gdqf (id)
 c----------------------------------------------------------------------
-c subroutine to evaluate the excess G of solution id with macroscopic
-c composition y. assumes a previous call to setdqf. When setdqf is
-c not called use
+c subroutine to evaluate the excess G of solution id with endmember
+c composition pp. assumes a previous call to setdqf.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
       integer i, id
-c                                 working arrays
-      double precision g, y(m4)
-c                                 dqf corrections
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
       integer jndq, jdqf, iq
-
       double precision dqfg, dq
-
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 c----------------------------------------------------------------------
+      gdqf = 0d0 
+
       do i = 1, jdqf(id)
 
-         g = g + y(iq(i))*dq(i)
+         gdqf = gdqf + pp(iq(i))*dq(i)
 
       end do
 
@@ -6552,12 +6622,12 @@ c                                 dt, derivative of sum(phi)
 
       double precision function gex (ids,y)
 c-----------------------------------------------------------------------
-c evaluate the excess function for solution model ids. assuming no prior
-c call to set coefficients (as in function gexces).
+c evaluate the excess function for solution model ids. assumes prior
+c call to setw
+
 c input:
 c      ids - solution pointer
 c      y - composition array
-
 c------------------------------------------------------------------------
       implicit none
 
@@ -7635,12 +7705,11 @@ c                                 p'2c
       subroutine y2p0 (id)
 c-----------------------------------------------------------------------
 c y2p0 converts the y array of disordered dependent and independent
-c species abundance to the p0 array of the independent (ordered and
-c disordered) species. the p0 array gives the minimum possible
-c concentrations of the ordered species (the stable abundances are
-c determined by solving the speciation problem).
+c species abundance to the pa array of the independent (ordered and
+c disordered) species. pa is copied to p0a and converted to pp by 
+c the call to makepp.
 
-c for non-reciprocal solutions the y and p0 arrays are identical.
+c for simplicial solutions the y and pa arrays are identical.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -7661,26 +7730,20 @@ c-----------------------------------------------------------------------
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c-----------------------------------------------------------------------
-c                                 always set p0a because if laar and 
-c                                 .not.recip or recip p0a is used.
-c     if (.not.lorder(id).and..not.lrecip(id).and..not.llaar(id)) return
 c                                 initialize ordered species
       do k = 1, nord(id)
-         p0a(lstot(id)+k) = 0d0
+         pa(lstot(id)+k) = 0d0
       end do
 
       do k = 1, nstot(id)
 c                                 initialize the independent species
 c                                 other than the ordered species
-         if (k.le.lstot(id)) p0a(k) = y(knsp(k,id))
+         if (k.le.lstot(id)) pa(k) = y(knsp(k,id))
 c                                 convert the dependent species to
 c                                 idependent species
          do l = 1, ndep(id)
-            p0a(k) = p0a(k) + y2pg(l,k,id) * y(knsp(lstot(id)+l,id))
+            pa(k) = pa(k) + y2pg(l,k,id) * y(knsp(lstot(id)+l,id))
          end do
-
-         pa(k) = p0a(k)
-         pp(k) = p0a(k)
 
       end do
 c                                 convert the ordered species to 
@@ -7763,6 +7826,8 @@ c----------------------------------------------------------------------
 
       g = 0d0
 
+      minfx = .false.
+
       if (dnu(id).ne.0d0) then
 
          call gpmlt1 (g,id,error)
@@ -7784,8 +7849,6 @@ c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
 c                                 for single species models:
          if (nord(id).gt.1) then
-
-            minfx = .false.
 
             call speci2 (g,id,error,minfx)
 
@@ -8219,8 +8282,8 @@ c-----------------------------------------------------------------------
 
       double precision a(m,m),d(m),rmax,tmax,temp,ratio
 
-      double precision wmach(9)
-      common/ cstmch /wmach
+      double precision wmach
+      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d
@@ -8420,9 +8483,9 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, ga, pmax, pmin, dp, gsol5, dy(m14)
+      double precision g, ga, pmax, pmin, dp, gord, dy(m14)
 
-      external gsol5
+      external gord
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8552,16 +8615,16 @@ c                                 compare this the disordered case.
       if (error) then
 c                                 ordered
          call pincs (pmax-p0a(jd),dy,ind,jd,nr)
-         g = gsol5(id)
+         g = gord(id)
 c                                 anti-ordered
          call pincs (pmin-p0a(jd),dy,ind,jd,nr)
-         ga = gsol5(id)
+         ga = gord(id)
 
          if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       end if
 
-      g = gsol5(id)
+      g = gord(id)
 
       end
 
@@ -12347,13 +12410,13 @@ c-----------------------------------------------------------------------
 
       logical bad, minfx
 
-      integer k,id,ids
+      integer id, ids
 
       double precision gzero, dg, gerk, gph, gproj, gcpd, gfesi, gex,
-     *                 gfecr1, gfesic, gfes
+     *                 gfecr1, gfesic, gfes, gexces, gmchpr, gmech0
 
       external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic, gfes, 
-     *         gex
+     *         gex, gexces, gmchpr, gmech0
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12387,20 +12450,24 @@ c                                 a pure compound
       else if (lorder(ids)) then
 c                                 get composition
          call setxyp (ids,id,.false.,bad)
-c                                 initialize gph and add dqf corrections
-         call gexces (id,gph)
 c                                 compute margules coefficients
          call setw (ids)
 c                                 evaluate enthalpies of ordering
          call oenth (ids)
 c                                 get the speciation energy effect
          call specis (dg,ids,minfx)
-c                                 get gmech
-         do k = 1, lstot(ids)
-            gph = gph + gproj(jend(ids,2+k)) * pp(k)
-         end do
 
-         gph = gph + dg
+         if (minfx) then
+c                                 minfxc requires the dqfs
+            call setdqf (id)
+c                                 degenerated
+            call minfxc (gph,ids,.false.)
+
+         else
+c                                 add dqf corrections and mech
+            gph = gexces (id) + gmchpr (ids) + dg
+
+         end if
 
       else if (ksmod(ids).eq.0) then
 
@@ -12409,21 +12476,13 @@ c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
          call fexces (id,gph)
 
-         do k = 1, nstot(ids)
-            gph = gph + gzero (jend(ids,2+k)) * pa(k)
-         end do
+         gph = gph + gmech0(ids)
 
       else if (ksmod(ids).eq.40) then
 c                                 si-o mrk fluid
-         gph = 0d0
-
          call setxyp (ids,id,.false.,bad)
 
-         do k = 1, nstot(ids)
-            gph = gph + gzero(jnd(k)) * pa(k)
-         end do
-
-         gph = gph + gerk (pa)
+         gph = gmech0(ids) + gerk (pa)
 
       else if (ksmod(ids).ge.29.and.ksmod(ids).le.32) then
 c                                 nastia's models:
@@ -12454,7 +12513,7 @@ c                                 because it sets lrecip(id) = true.
 
          call setxyp (ids,id,.false.,bad)
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
-         gph = gfes(pa(2), gproj (jend(ids,3)), gproj (jend(ids,4)) )
+         gph = gfes (pa(2), gproj (jend(ids,3)), gproj (jend(ids,4)) )
 
       else
 c                                 normal models (configurational
@@ -12474,19 +12533,17 @@ c                                 ternary coh fluid deltag
          else
 c                                 get the excess and/or ideal mixing effect
 c                                 and/or dqf corrections:
-            call gexces (id,gph)
+             gph = gexces (id)
 
          end if
 c                                 add gmech
-         do k = 1, nstot(ids)
-            gph = gph +  gproj (jend(ids,2+k)) * pa(k)
-         end do
+         gph = gph +  gmchpr (ids)
 c                                 for van laar get fancier excess function
          if (llaar(ids)) then
 
             call setw (ids)
 
-            gph = gph + gex(ids,y)
+            gph = gph + gex (ids,pa)
 
          end if
 
@@ -12714,15 +12771,15 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id, itic
 
-      double precision gval, dg, g0(m4)
+      double precision gval, dg, g0(m14)
 cDEBUG691
      *,zt(m10,m11)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
-     *                 gfecr1, gcpd, gfes
+     *                 gfecr1, gcpd, gfes, gmech, gexces
 
-      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid,
-     *         gcpd, gfes
+      external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gexces,
+     *         gcpd, gfes, gmech
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -12822,6 +12879,7 @@ c                                 a liquid below T_melt option threshold
 
          else if (lorder(i)) then
 c DEBUG691 GALL
+c           itic = 0
 c                                 initialize margules, enthalpy of
 c                                 ordering, internal dqfs (last for minfxc)
             call ingsol (i)
@@ -12830,44 +12888,35 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,.false.,bad)
 
-               if (switch) then
+               if (switch.or.dnu(i).ne.0d0) then
 
                   call specis (dg,i,minfx)
 
                   if (minfx) then 
 c                                 degenerated
                      call minfxc (g(id),i,.false.)
+c                    write (*,*) 'degenerated...'
+c                    call p2z (pa,zt,i,.true.)
 
                   else
-c                                 use old solver
-
+c                                 use old solver:
 c                                 for static composition o/d models 
-c                                 gexces only accounts for internal dqf's
-                  call gexces (id,g(id))
-c                                 add in g from real endmembers, this
-c                                 must include the g for the disordered equivalent
-c                                 of the ordered species
-                  do k = 1, lstot(i)
+c                                 gexces accounts for internal dqf's
+                  g(id) = gexces (id) + dg + gmech (i)
 
-                     g(id) = g(id) + g(jend(i,2+k)) * pp(k)
+c                 z = pa
+c                 pa = p0a
+c                 dg = 0d0 
 
-                  end do
+c                 call minfxc(dg,i,.false.)
 
-                  g(id) = g(id) + dg
-
-
-c                  pa = p0a
-c                  dg = 0d0 
-
-c                  call minfxc(dg,i,.false.)
-
-c                  if (dabs(dg-g(id)).gt.1d0) then 
-c                     write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
-c                     itic = itic + 1
-c                     call p2z (z,zt,i,.true.)
-c                     write (*,*) ' '
-c                     call p2z (pa,zt,i,.true.)
-c                  end if
+c                 if (dabs(dg-g(id)).gt.1d0) then 
+c                    write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
+c                    itic = itic + 1
+c                    call p2z (z,zt,i,.true.)
+c                    write (*,*) ' '
+c                    call p2z (pa,zt,i,.true.)
+c                 end if
 
                   end if
 
@@ -12880,21 +12929,18 @@ c                  end if
                id = id + 1
 
             end do
-c DEBUG191
+c DEBUG691
 c           write (*,*) 'itic for ids ',itic,i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
             do j = 1, jend(i,2)
-c                                 initialize with excess energy, dqf,
-c                                 and configurational entropy terms
-               call gexces (id,g(id))
 
                call setxyp (i,id,.false.,bad)
-
-               do k = 1, lstot(i)
-                  g(id) = g(id) + g(jend(i,2+k)) * pa(k)
-               end do
+c                                 gexces returns with excess energy, dqf,
+c                                 and configurational entropy terms for 
+c                                 simple models.
+               g(id) = gexces(id) + gmech(i)
 
                id = id + 1
 
@@ -12925,19 +12971,13 @@ c                                 compute margules coefficients
             call setw (i)
 c                                 because the hp van laar may have p-t
 c                                 dependent volumes, the full expression
-c                                 must be evaluated here:
+c                                 must be evaluated here by gex:
             do j = 1, jend(i,2)
-c                                 initialize with dqf,
-c                                 and configurational entropy terms
-               call gexces (id,g(id))
 
                call setxyp (i,id,.false.,bad)
-
-               do k = 1, lstot(i)
-                  g(id) = g(id) + g(jend(i,2+k)) * pa(k)
-               end do
-c                                 add the real excess energy
-               g(id) = g(id) + gex(i,pa)
+c                                 for simple vanlaar gexces returns dqf
+c                                 and configurational entropy terms
+               g(id) = gexces(id) + gex(i,pa) + gmech(i)
 
                id = id + 1
 
@@ -12976,9 +13016,7 @@ c                                 H2O-CO2-Salt:
 
                call hcneos (g(id),pa(1),pa(2),pa(3))
 
-               do k = 1, nstot(i)
-                  g(id) = g(id) + g(jend(i,2+k)) * pa(k)
-               end do
+               g(id) = g(id) + gmech(i)
 
                id = id + 1
 
@@ -12987,18 +13025,10 @@ c                                 H2O-CO2-Salt:
          else if (ksmod(i).eq.39) then
 c                                 generic hybrid EoS
             do j = 1, jend(i,2)
-
-               g(id) = 0d0
 c                                 load composition array and pointers
                call setxyp (i,id,.false.,bad)
-
-               do k = 1, nstot(i)
-c                                 sum pure species g's
-                  g(id) = g(id) + g(jnd(k)) * pa(k)
-
-               end do
 c                                 compute and add in activities
-               g(id) = g(id) + ghybrid (pa)
+               g(id) = ghybrid(pa) + gmech(i)
 
                id = id + 1
 
@@ -13035,9 +13065,7 @@ c                                 hybrid MRK ternary COH fluid
 
                call rkcoh6 (pa(2),pa(1),g(id))
 
-               do k = 1, 3
-                  g(id) = g(id) + g(jnd(k)) * pa(k)
-               end do
+               g(id) = g(id) + gmech(i)
 
                id = id + 1
 
@@ -13047,15 +13075,9 @@ c                                 hybrid MRK ternary COH fluid
 
             do j = 1, jend(i,2)
 c                                 MRK silicate vapor
-               g(id) = 0d0
-
                call setxyp (i,id,.false.,bad)
 
-               do k = 1, lstot(i)
-                  g(id) = g(id) + gzero(jnd(k)) * pa(k)
-               end do
-
-               g(id) = g(id) + gerk(pa)
+               g(id) = gmech (i) + gerk (pa)
 
                id = id + 1
 
@@ -13067,7 +13089,7 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
 
                call setxyp (i,id,.false.,bad)
 
-               g(id) = gfes(1d0-pa(1),g(jend(i,3)),g(jend(i,4)))
+               g(id) = gfes (1d0-pa(1),g(jend(i,3)),g(jend(i,4)))
 
                id = id + 1
 
@@ -13149,7 +13171,7 @@ c                           systems.
 c----------------------------------------------------------------------
 c gzero computes the 1 bar reference pressure free energy of a compound
 c identified by the argument 'id'. no fugacity terms are added for real
-c gas species (cf., gcpd).
+c gas species (cf, gcpd).
 c----------------------------------------------------------------------
       implicit none
 
@@ -13228,7 +13250,6 @@ c                                 interaction energy
      *                    therlm(7,1,ld),therlm(8,1,ld))
 
       end
-
 
       subroutine outlim
 c----------------------------------------------------------------------
@@ -14623,14 +14644,13 @@ c-----------------------------------------------------------------------
 
       logical minfx
 
-      double precision g, gso(nsp), gamm0
-
-      double precision omega, gfluid, gzero, aqact,
+      double precision omega, gfluid, gzero, aqact, gmchpt, gmech0,
      *                 gex, gfesi, gcpd, gerk, gfecr1, ghybrid,
-     *                 gfes, gfesic
+     *                 gfes, gfesic, g, gso(nsp), gamm0, gdqf
 
-      external gphase, omega, gfluid, gzero, gex, gfesic,
-     *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact, gfes
+      external gphase, omega, gfluid, gzero, gex, gfesic, gdqf,
+     *         gfesi, gerk, gfecr1, ghybrid, gcpd, aqact, gfes,
+     *         gmchpt, gmech0
 
       integer jend
       common/ cxt23 /jend(h9,m4)
@@ -14689,41 +14709,19 @@ c                                 get the speciation, excess and entropy effects
             if (minfx) then 
 c                                 degenerated speciation
                call minfxc (g,id,.false.)
+               write (*,*) 'need to compute g''s first, e.g., gmchpt'
+               call errpau
 
             else 
 
-               do k = 1, lstot(id)
-c                                 compute mechanical g from these z's,
-c                                 specip adds a correction for the ordered species.
-                  g = g + gcpd (jend(id,2+k),.true.) * pp(k)
-               end do
-c                                 get the dqf, this assumes the independent reactants
-c                                 are not dqf'd. gex not neccessary as computed in specip
-               call gdqf (id,g,pp)
+               g = g + gmchpt (id) + gdqf (id)
 
             end if
 
-         else if (lrecip(id)) then
+         else if (lrecip(id).or.simple(id)) then
 c                                 -------------------------------------
 c                                 macroscopic reciprocal solution w/o order-disorder
-            do k = 1, lstot(id)
-               g = g + gcpd (jend(id,2+k),.true.) * pa(k)
-            end do
-c                                 get the dqf
-            call gdqf (id,g,pa)
-c                                 and excess contributions
-            g = g - t * omega (id,pa) + gex (id,pa)
-
-         else if (simple(id)) then
-c                                 -------------------------------------
-c                                 macroscopic formulation for normal solutions.
-            call gdqf (id,g,pa)
-c                                 add entropy and excess contributions
-            g = g - t * omega (id,pa) + gex (id,pa)
-c                                 get mechanical mixture contribution
-            do k = 1, mstot(id)
-               g = g + pa(k) * gcpd (jend(id,2+k),.true.)
-            end do
+            g = gmchpt (id) + gdqf (id) - t*omega (id,pa) + gex (id,pa)
 
          else if (ksmod(id).eq.20) then
 c                                 electrolytic solution
@@ -14747,9 +14745,7 @@ c                                 ------------------------------------
 c                                 andreas salt model
             call hcneos (g,pa(1),pa(2),pa(3))
 
-            do k = 1, 3
-               g = g + pa(k) * gcpd (jend(id,2+k),.true.)
-            end do
+            g = g + gmchpt (id)
 
          else if (ksmod(id).eq.29) then
 c                                 -------------------------------------
@@ -14789,14 +14785,8 @@ c                                 solute species (caq => molality)
                end do
 
             else
-
-               do k = 1, mstot(id)
-c                                 sum pure species g's
-                  g = g + gcpd(jnd(k),.true.) * pa(k)
-
-               end do
-c                                 compute and add in activities
-               g = g + ghybrid (pa)
+c                                 mech + activities
+               g = gmchpt (id) + ghybrid (pa)
 
             end if
 
@@ -14804,33 +14794,22 @@ c                                 compute and add in activities
 c                                 hybrid MRK ternary COH fluid
             call rkcoh6 (pa(2),pa(1),g)
 
-            do k = 1, nstot(id)
-               g = g + gcpd(jnd(k),.true.) * pa(k)
-            end do
+            g = g + gmchpt (id)
 
          else if (ksmod(id).eq.40) then
 c                                 MRK silicate vapor
-            do k = 1, nstot(id)
-               g = g + gzero(jnd(k)) * pa(k)
-            end do
-
-            g = g + gerk(pa)
+            g = gmech0 (id) + gerk (pa)
 
          else if (ksmod(id).eq.42) then
 c                                 ------------------------------------
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
-            g = gfes(pa(2), gcpd (jend(id,3),.true.),
-     *                      gcpd (jend(id,4),.true.) )
+            g = gfes (pa(2), gcpd (jend(id,3),.true.),
+     *                       gcpd (jend(id,4),.true.) )
 
          else if (ksmod(id).eq.0) then
 c                                 ------------------------------------
 c                                 internal fluid eos. hardwired to special
-c                                 component choices
-            do k = 1, 2
-
-               g = g + gzero (jnd(k))*pa(k)
-
-            end do
+c                                 component choices.
 c                                 don't know whether it's a speciation routine
 c                                 so set the fluid species fractions just in case,
 c                                 this is only necessay for species output by
@@ -14839,7 +14818,7 @@ c                                 is a speciation routine.
             yf(2) = pa(1)
             yf(1) = 1d0 - yf(2)
 c
-            g = g + gfluid (yf(2))
+            g = gmech0(id) + gfluid (yf(2))
 
          else
 
@@ -14853,7 +14832,6 @@ c
       end if
 
       end
-
 
       double precision function gfrnd (id)
 c-----------------------------------------------------------------------
@@ -15029,6 +15007,9 @@ c                                 rqmax the maximum amount of the
 c                                 ordered species that can be formed
 c                                 from the fully disordered species
 c                                 fractions
+
+c                                 this solver DOES NOT account for the
+c                                 antiordered state! 
       rqmax = 1d0
 
       do i = 1, nrct(1,id)
@@ -15108,7 +15089,7 @@ c                                 fails to converge.
          end do
 
       else
-c                                 speciation is not stoichiometrically possible
+c                                 speciation is stoichiometrically frustrated
          g = -t*omega(id,p0a) + gex(id,p0a)
          return
 
@@ -15116,8 +15097,8 @@ c                                 speciation is not stoichiometrically possible
 
 90    if (error) then
 c                                 didn't converge or couldn't find a good
-c                                 starting point compare the fully ordered
-c                                 and g's specis will compare this to the
+c                                 starting point compute the fully ordered
+c                                 g, specis will compare this to the
 c                                 disordered g and take the lowest:
          do i = 1, nstot(id)
             pa(i) = (p0a(i) + dydy(i,1,id)*qmax) / (1d0 + dnu(id)*qmax)
@@ -17454,7 +17435,7 @@ c----------------------------------------------------------------------
          if (lopt(46)) then
 c                                 set as aq_solvent_solvus:
 c                                 solute free cpd
-            g2(phct) = gsol1(ids)
+            g2(phct) = gsol1 (ids,.true.)
 
             call csol (phct,ids,bad)
 
@@ -17517,7 +17498,7 @@ c                                  solute-bearing compound
       else 
 c                                 call gsol to get g of the solution, gsol also
 c                                 computes the p compositional coordinates
-         g2(phct) = gsol1(ids)
+         g2(phct) = gsol1 (ids,.true.)
 c                                 use the coordinates to compute the composition 
 c                                 of the solution
          call csol (phct,ids,bad)

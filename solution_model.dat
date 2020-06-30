@@ -1634,9 +1634,12 @@ begin_model
 
                       JADC 12/18
 
-                      DQF's changed from published values to the values in the TC files.
+                      * DQF's changed from published values to the values in the TC files.
 
                       JADC 4/23/19
+
+                      * the current solver for this model (gpmelt) precludes stability
+                        of antiordered states. 6/27/20, JADC.
 
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
@@ -1815,9 +1818,12 @@ begin_model
 
                       JADC 9/16
 
-                      reformulated as standard O/D model, 12/18, JADC
+                      * reformulated as standard O/D model, 12/18, JADC
 
-                      converted to 688 format, 1/8/20, JADC
+                      * converted to 688 format, 1/8/20, JADC
+
+                      * the current solver for this model (gpmelt) precludes stability
+                        of antiordered states, 6/27/20, JADC.
 
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
@@ -1976,6 +1982,10 @@ begin_model
                              CHLORITE, White et al JMG 32:261-286, 2014
 
                              NOTES:
+
+                             * This is an oddball model because Al disorder is implicit
+                               while Fe-Mg disorder is explicit. The model should be 
+                               reformulated so that clin is an explicit ordered species.
 
                              * This model will only function in the Al-free and
                                Mg-free limits if Al and Mg are retained as thermodynamic
@@ -13194,6 +13204,11 @@ begin_model
                            | CHLORITE: extended from holland et al. 1998, EJM.
 
                              NOTES:
+
+                             * This is an oddball model because Al disorder is implicit
+                               The model should be reformulated so that clin is an explicit 
+                               ordered species. The current formulaton precludes the anti-ordered
+                               state.
 
                              * This model will only function for the FASH subsystem
                                if MGO is also used as a component in VERTEX.
