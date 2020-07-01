@@ -243,63 +243,34 @@ c                                 get the bulk composition from pp
 
       do i = 1, icp
          gval = gval - scp(i)*mu(i)
-c         if (scp(i).lt.-1d2*zero) then
-c            write (*,*) 'gsol2, large -composition',jds,i,scp(i)
-c            call p2z (pa,zt,jds,.true.)
-c            scp(i) = 0d0
-c         end if
       end do
 c                                  normalize for appearances
       gval = gval/sum
 
-c     write (*,1000) gval, g
-
       istuff(3) = istuff(3) + 1
 
-c      if (sum1.lt.one.or.sum1.ge.1d0+zero) then 
-c         write (*,*) 'whoa nelly, ',sum1, istuff(2)
-c      else 
-c         write (*,*) 'heigh ho silver',istuff(4)
-c      end if 
-
-      if (istuff(2).ne.0.and.sum1.ge.one.and.sum1.le.1d0+zero) then
+      if (istuff(2).ne.0.and.(nvar.lt.nstot(jds).or.
+     *    sum1.ge.one.and.sum1.le.1d0+zero).and.sum.gt.zero) then
 c                                 save the composition
          istuff(4) = istuff(4) + 1
-c        write (*,1000) gval, g/sum, (pa(i),i=1,nstot(jds))
-c                                 there is a small possibility 
-c                                 that the composition of a phase
-c                                 may move entirely into the 
-c                                 constrained composition space
-         if (sum.gt.zero) then
 c                                 increment the counter
-            jphct = jphct + 1
+         jphct = jphct + 1
 c                                 the solution model pointer
-            jkp(jphct) = jds
+         jkp(jphct) = jds
 c                                 the refinement point pointer
-            hkp(jphct) = istuff(5)
+         hkp(jphct) = istuff(5)
 c                                 save the normalized g
-            g2(jphct) = g/sum
+         g2(jphct) = g/sum
 c                                 save the normalized bulk
-            cp2(1:icomp,jphct) = scp(1:icomp)/sum
+         cp2(1:icomp,jphct) = scp(1:icomp)/sum
 c                                 sum scp(1:icp)
-            c2tot(jphct) = sum
+         c2tot(jphct) = sum
 c                                 save the endmember fractions
-            icoz(jphct) = zcoct
+         icoz(jphct) = zcoct
 
-            zco(zcoct+1:zcoct+nstot(jds)) = pa(1:nstot(jds))
+         zco(zcoct+1:zcoct+nstot(jds)) = pa(1:nstot(jds))
 
-            zcoct = zcoct + nstot(jds)
-
-            sum = 0d0
-            do i = 1, nstot(jds)
-               sum = sum + pa(i)
-            end do
-
-            if (sum.lt.one.or.sum.gt.1d0+zero) then
-               write (*,*) 'wug'
-            end if
-
-         end if
+         zcoct = zcoct + nstot(jds)
 
       end if
 
