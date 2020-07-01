@@ -19357,7 +19357,6 @@ c                                 assign polytope weight
 
       end
 
-
       subroutine makapz (id)
 c----------------------------------------------------------------------
 c subroutine to construct the apz matrix for the p' to independent z 
@@ -19380,6 +19379,9 @@ c----------------------------------------------------------------------
 c DEBUG691 gall
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c---------------------------------------------------------
       nvar = nstot(id) - 1
 c                                 to be counted:
@@ -19400,13 +19402,13 @@ c                                 initial az, bz
             dbz = 0d0
 c                                 both Temkin and non-Temkin have
 c                                 Az*p >= 0 constraints:
-            apz(id,nz(id),1:nvar) = 0d0
+            apz(id,nz(id),1:nstot(id)) = 0d0
 
             do k = 1, lterm(j,i,id)
 
                m = ksub(k,j,i,id)
 
-               if (m.ne.nstot(id).or.dnu(id).ne.0d0) then 
+               if (m.ne.nstot(id).or.dnu(id).gt.zero) then 
 
                   apz(id,nz(id),m) = apz(id,nz(id),m) 
      *                               + dcoef(k,j,i,id)
@@ -19443,7 +19445,8 @@ c                                 non-Temkin have the Az*p <= 1 constraint
 c                                 a pre-688 model, need to make
 c                                 a limit expression for the missing
 c                                 site fraction
-
+            if (dnu(id).gt.zero) call error (72,dbz,id,'non-equimolar '
+     *         //'ordering only allowed for 688 format solution models')
 c                                 pointer to the previous constraints for
 c                                 the site
             k = nz(id) - zsp(id,i) + 1

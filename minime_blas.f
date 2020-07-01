@@ -69,7 +69,7 @@ c-----------------------------------------------------------------------
 10    nclin = nz(ids)
       ntot = nstot(ids)
 
-      if (dnu(ids).eq.0d0) then
+      if (dnu(ids).lt.zero) then
          nvar = ntot - 1
       else 
          nvar = ntot
