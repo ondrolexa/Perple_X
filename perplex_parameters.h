@@ -414,7 +414,7 @@ c                                 -------------------------------
       common/ cst1 /thermo(k4,k10)
 
       double precision uf
-      integer iff, idss, ifug
+      integer ifug, iff, idss
       common/ cst10 /uf(2),iff(2),idss(h5),ifug
 
       integer iaq, aqst, aqct

@@ -531,7 +531,7 @@ c                                 locate the endmember in the solution
          end if 
       end do
 
-      if (lorder(ids)) call makepp (ids)
+      call makepp (ids)
 
       end
 
@@ -647,7 +647,7 @@ c----------------------------------------------------------------------
 
       pa(1:nstot(ids)) = ycoor(kcoor+1:kcoor+nstot(ids))
 
-      if (lorder(ids)) call makepp (ids)
+      call makepp (ids)
 
       end
 

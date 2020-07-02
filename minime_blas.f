@@ -36,6 +36,8 @@ c DEBUG691                    dummies for NCNLN > 0
 
       character ctol*20,cdint*20
 
+      external gsol2, dummy
+
       integer nz
       double precision apz, zl, zu
       common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
@@ -52,11 +54,6 @@ c DEBUG691 gall
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      external gsol2, dummy
-
       data iprint,inp/0,.false./
 
       save iprint,inp
@@ -69,7 +66,7 @@ c-----------------------------------------------------------------------
 10    nclin = nz(ids)
       ntot = nstot(ids)
 
-      if (dnu(ids).lt.zero) then
+      if (dnu(ids).eq.0d0) then
          nvar = ntot - 1
       else 
          nvar = ntot

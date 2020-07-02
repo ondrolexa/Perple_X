@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
-      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp
+      double precision oldt,oldp,ax(k5),x(k1),clamda(k1+k5),w(lw)
 
       integer is(k1+k5),iw(liw)
 

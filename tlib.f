@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated June 28, 2020.',
+     *      'Perple_X version 6.9.0, source updated July 3, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -97,7 +97,11 @@ c----------------------------------------------------------------------
       character*3 key*22, val, nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
-      double precision dnan, res0, r2
+      double precision res0, r2
+
+      double precision dnan
+
+      external dnan
 
       integer jtest,jpot
       common/ debug /jtest,jpot
@@ -8266,8 +8270,6 @@ c-----------------------------------------------------------------------
 
       integer idum, nstrg, i, j, k, ierr, icmpn, jcont, kct
 
-      double precision dip
-
       logical fileio, flsh, anneal, short
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
@@ -8811,7 +8813,7 @@ c                             variable iv(1):
 
          end if 
 
-         if (vname(iv(1)).eq.blank) call error (116,dip,i,'I')
+         if (vname(iv(1)).eq.blank) call error (116,vmin(1),i,'I')
 
       end if
 c                             variable iv(2):

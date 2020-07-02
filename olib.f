@@ -1649,7 +1649,13 @@ c                                 mass % composition:
             pcomp(j,jd) = pcomp(j,jd)*atwt(j)*1d2/props(17,jd)
          end do  
 
-      end if 
+      end if
+c                                 ginc gets the speciation and also sets
+c                                 the pp-array which may be required by 
+c                                 moduli.
+      g0 = ginc(0d0,0d0,id)
+c                                 save the speciation.
+      if (id.gt.0) call getspc (id,jd)
 c                                 bulk modulus flag, if false use explicit form
       bulk = .true.
 c                                 shear modulus
@@ -1672,11 +1678,6 @@ c                                 explicit bulk modulus is allowed and used
          props(21,jd) = 0d0
 
       end if
-
-      g0 = ginc(0d0,0d0,id)
-c                                 get/save speciation, this has to be done after
-c                                 the call topn2 ginc for o/d speciation models. 
-      if (id.gt.0) call getspc (id,jd)
 c                                 set flag for multiple root eos's
       sroot = .true.
 c                                 compute g-derivatives for isostatic 
@@ -2330,7 +2331,8 @@ c                                 negative compressibility?
 c                                 final values
       call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
 
-      if ((v.lt.0d0.or.gpp.gt.0d0).and..not.rxn.and.okt) then
+      if ((v.lt.0d0.or.gpp.gt.0d0.or.gpp.lt.-v)
+     *                           .and..not.rxn.and.okt) then
 c                                 v or K < 0, reset to last working value
          dp0 = xdp
 

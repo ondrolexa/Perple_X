@@ -1020,7 +1020,7 @@ c                               lagged speciation
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
                pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
-               if (lorder(ids)) call makepp (ids)
+               call makepp (ids)
 
             end if
 
@@ -1341,11 +1341,7 @@ c                                 partial molar volumes for volume fractions
                v0(i) = endvol(jend(ids,2+i), ok)
                if (.not.ok) return
 
-               if (lrecip(ids)) then 
-                  v = v + pp(i) * v0(i)
-               else 
-                  v = v + y(i) * v0(i)
-               end if
+               v = v + pp(i) * v0(i)
 
             end do
 
@@ -1358,14 +1354,7 @@ c                                 partial molar volumes for volume fractions
 
                if (pmu.eq.0d0) liq = .true.
 
-               if (lrecip(ids)) then 
-                  vf = pp(i) * v0(i) / v
-               else
-c                                 for solutions with no dependent endmembers
-c                                 the y coordinates can be used to compute 
-c                                 the composition.
-                  vf = y(i) * v0(i) / v
-               end if 
+               vf = pp(i) * v0(i) / v
 
                mu = mu + vf / pmu
                mut = mut + vf / pmut
@@ -1837,7 +1826,6 @@ c                                 in frendly
             beta = -gpp/v
             alpha = gpt/v
             rho = props(17,jd)/v*1d2
-
 c                                 ideal gas beta = 1/p           
             if (beta.gt.v.or.beta.lt.0d0) then
                beta = nopt(7)
@@ -1947,9 +1935,9 @@ c                                 1) v < 0 and not a reaction or an ideal gas in
 c                                 2) alpha and beta are undefined
 c                                 3) cp or beta is < 0 or unreasonably large
 
-c                                 bulk is true if bulk modulus is computed thermodynamically
-c                                 volume is false only if sick and .not.bulk
-
+c                                 bulk - true if bulk modulus is computed thermodynamically
+c                                 volume - false only if sick and .not.bulk
+c                                 -------------------------------------
 c                                 seismic properties
       if (volume.and..not.rxn) then
 
@@ -2323,7 +2311,8 @@ c                                 negative compressibility?
 c                                 final values
       call getgpp (g0,dp0,dp1,dp2,v,gpp,id,fow)
 
-      if ((v.lt.0d0.or.gpp.gt.0d0).and..not.rxn.and.okt) then
+      if ((v.lt.0d0.or.gpp.gt.0d0.or.gpp.lt.-v)
+     *                           .and..not.rxn.and.okt) then
 c                                 v or K < 0, reset to last working value
          dp0 = xdp
 
@@ -2342,7 +2331,7 @@ c                                 temperature increments
 
                call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
-               if (s.gt.0d0.and.gtt.lt.0.and.t-2d0*dt2.gt.0d0) then
+               if (s.gt.0d0.and.gtt.lt.0d0.and.t-2d0*dt2.gt.0d0) then
                   okt = .true.
                   exit 
                end if 

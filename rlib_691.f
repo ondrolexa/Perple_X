@@ -7180,14 +7180,7 @@ c                                 this looks like bad news, for laar/recip
 c                                 or laar/order, but appears to be overridden
 c                                 by use of logical classification variables,
 c                                 in which case, why is it here????
-      if (laar) then
-
-         if (iterm.eq.0) laar = .false.
-         if (dnu(im).ne.0d0) call error (72,r,i,'laar excess function '/
-     *          /'not anticipated for non-equimolar ordering: '//tname)
-
-      end if
-
+      if (laar.and.iterm.eq.0) laar = .false.
 
       if (iterm.gt.0) then
          lexces(im) = .true.
@@ -7207,13 +7200,7 @@ c                                 models to single site models.
 c                                 a non-reciprocal model (ksmod=5) with
 c                                 dependent endmembers is also classified
 c                                 as lrecip.
-      if (recip.or.depend) then
-
-         lrecip(im) = .true.
-         if (dnu(im).ne.0d0) call error (72,r,i,'polytopic composition'/
-     *    /' space not anticipated for non-equimolar ordering: '//tname)
-
-      end if
+      if (recip.or.depend) lrecip(im) = .true.
 c                                 -------------------------------------
 c                                 save the excess terms
       jterm(im) = iterm
@@ -7442,6 +7429,17 @@ c                                 configurational entropies) for entropy model:
 c                                 -------------------------------------
 c                                 organize O/D model parameters
       call setord (im)
+
+      if (dnu(im).ne.0d0) then
+c                                 non-equimolar restrictions:
+         if (laar) call error (72,r,i,'laar excess function not antici'/
+     *                     /'pated for non-equimolar ordering: '//tname)
+         if (lrecip(im)) call error (72,r,i,'prismatic composition spa'/
+     *        /'ce not anticipated for non-equimolar ordering: '//tname)
+         if (ksmod(im).ne.688) call error (72,r,i,'non-equimolar order'/
+     *               /'ing only allowed for 688 format solution models')
+
+      end if
 c                                 ----------------------------------------------
 c                                 models with special endmember indexing:
       if (jsmod.eq.0) then
@@ -19408,7 +19406,7 @@ c                                 Az*p >= 0 constraints:
 
                m = ksub(k,j,i,id)
 
-               if (m.ne.nstot(id).or.dnu(id).gt.zero) then 
+               if (m.ne.nstot(id).or.dnu(id).ne.0d0) then 
 
                   apz(id,nz(id),m) = apz(id,nz(id),m) 
      *                               + dcoef(k,j,i,id)
@@ -19445,8 +19443,7 @@ c                                 non-Temkin have the Az*p <= 1 constraint
 c                                 a pre-688 model, need to make
 c                                 a limit expression for the missing
 c                                 site fraction
-            if (dnu(id).gt.zero) call error (72,dbz,id,'non-equimolar '
-     *         //'ordering only allowed for 688 format solution models')
+
 c                                 pointer to the previous constraints for
 c                                 the site
             k = nz(id) - zsp(id,i) + 1
