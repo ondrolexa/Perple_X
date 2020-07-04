@@ -268,8 +268,11 @@ full_name    clinohumite
 chu      fchu
 tchu     ftchu
 
-0. 1   .1   0                      | X(F), imod = 0 -> cartesian subdivision
-0. 1   .1   0                      | X(Ti), imod = 0 -> cartesian subdivision
+X_F  0. 1   .1   0                 | X(F), imod = 0 -> cartesian subdivision
+X_OH by difference
+
+X_Ti 0. 1   .1   0                 | X(Ti), imod = 0 -> cartesian subdivision
+X_Mg by difference
 
 begin_dependent_endmembers
 ftchu   = 1 tchu + 1/2 fchu - 1/2 chu
@@ -11533,7 +11536,7 @@ begin_model
 
                                                      ___________________
                            Prism I    5 maj           Mg           MgSi   independent
-                                      7 cmaj_d        Ca           MgSi   dependent
+                                      7 cmmaj_d       Ca           MgSi   dependent
 
                                       6 fmaj_d        Fe           FeSi   dependent
                                      11 cfmaj_d       Ca           FeSi   dependent
@@ -11624,7 +11627,7 @@ X                                   | site name
 z(Fe) = 1 alm
 z(Ca) = 1 gr
 z(Na) = 1/3 nagt
-z(Mg) = 1 py + 2/3 nagt
+z(Mg) = 1 py + 1 maj + 1 gfm + 2/3 nagt     | added maj + gfm 7/3/20, JADC 
 
 Y                                   | site name
 4 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -11976,7 +11979,7 @@ M2                                  | site name
 z(Al) = 1 macf + 1 cacf + 1/2 nacfb
 z,Mg) = 1/2 mscf + 1/2 oscf
 z(Fe) = 1/2 fscf
-z(Si) = 1/2 mscf + 1/2 oscf + 1/2 fscf
+z(Si) = 1/2 mscf + 1/2 oscf + 1/2 fscf + 1/2 nacfb
 
 [O4]                                | formula suffix, enter "none" for no suffix.
 
@@ -11992,6 +11995,8 @@ begin_model
                       The M1 site has a fake multiplicity of 3 (6 apfu)
 
                       Eliminated ordered dependent endmembers. JADC, 10/2018.
+
+                      Converted to 688 format. JADC, 3/7/2020.
 
                                                       M3      M2      M1
                                                      ___________________
@@ -12017,34 +12022,36 @@ NAl(H)
 abbreviation NAl
 full_name    New aluminous phase
 
-8                            | prismatic composition space
-2                            | 2 simplices
-2 4                          | 1 binary and 1 quaternary
+688                                | model type: 688 format standard model
+ 
+1                                  | number of prisms
+                                   | ----------------------------
+2                                  | number of simplices in the prism
+2 4                                | number of vertices on each simplex
 
 nanal    nfnal_d
 canal    cfnal_d
 manal    fanal_d
 msnal    fsnal
 
-2                            | number of ordered species:
+X_MgM2  0  1   .1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
+X_FeM2  by difference
 
+X_NAM13 0  1   .1  0              | range and resolution for X(nanal) on site 2, imod = 0 -> cartesian subdivision
+X_CAM13 0  1   .1  0              | range and resolution for X(canal) on site 2, imod = 0 -> cartesian subdivision
+X_MAM13 0  1   .1  0              | range and resolution for X(manal) on site 2, imod = 0 -> cartesian subdivision
+X_MSM13 by difference
+
+begin_ordered_endmembers
 o1nal = 5/6 msnal + 1/6 fsnal  enthalpy_of_ordering = 2d3
 o2nal = 1/2 msnal + 1/2 fsnal  enthalpy_of_ordering = 6.5d3
+end_ordered_endmembers
 
-3                            | number of dependent endmembers
-
+begin_dependent_endmembers
 nfnal_d   = 1 nanal - 1 o1nal + 1 o2nal     | NM - FM + FF = NF
 cfnal_d   = 1 canal - 1 o1nal + 1 o2nal     | CM - FM + FF = CF
 fanal_d   = 1 manal - 1 msnal + 1 o2nal     | MM - MM + FF = FF
-
-
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0      | endmember flags
-
-0  1   .1  0              | range and resolution for X(Mg) on site 1, imod = 0 -> cartesian subdivision
-
-0  1   .1  0              | range and resolution for X(nanal) on site 2, imod = 0 -> cartesian subdivision
-0  1   .1  0              | range and resolution for X(canal) on site 2, imod = 0 -> cartesian subdivision
-0  1   .1  0              | range and resolution for X(manal) on site 2, imod = 0 -> cartesian subdivision
+end_dependent_endmembers
 
 begin_excess_function
 W(nanal canal)          14.2d3
@@ -12072,20 +12079,28 @@ end_excess_function
 
 3                          | 3 site (M3, M2, M1) entropy model
                            | (note: occupancies should not include dependent endmembers,
-                           |  but does include ordered endmembers)
+                           |  but do include ordered endmembers)
 
-4 1                        | 4 species on M3, site multiplicity of 1
-z(m3,na)    = 1 nanal
-z(m3,ca)    = 1 canal
-z(m3,mg)    = 1 manal + 1 msnal
+M3
+4 1 1                      | 4 species on M3, effective site multiplicity, true multiplicity
+z(Na,M3)    = 1 nanal
+z(Ca,M3)    = 1 canal
+z(Mg,M3)    = 1 manal + 1 msnal
+z(Fe,M3)    = 1 fsnal + 1 o2nal + 1 o1nal
 
-2 2.                       | 2 species on M2, site multiplicity of 2
-z(m2,fe)   = 1 fsnal + 1 o2nal
+M2
+2 2 2                      | 2 species on M2, effective site multiplicity, true multiplicity
+z(Fe,M2)   = 1 fsnal + 1 o2nal
+z(Mg,M2)   = 1 nanal + 1 canal + 1 manal + 1 msnal + 1 o1nal
 
-4 3.                       | 4 species on M1, (fake) site multiplicity of 3 (true multiplicity = 6)
-z(m1,mg)   = 1/2 msnal + 1/2 o1nal + 1/2 o2nal
-z(m1,fe)   = 1/2 fsnal
-z(m1,al)   = 5/6 nanal + 1 canal + 1 manal
+M1
+4 3 6                      | 4 species on M1, effective site multiplicity, true multiplicity
+z(Mg,M1)   = 1/2 msnal + 1/2 o1nal + 1/2 o2nal
+z(Fe,M1)   = 1/2 fsnal
+z(Al,M1)   = 5/6 nanal + 1 canal + 1 manal
+z(Si,M1)   = 1/6 nanal + 1/2 fsnal + 1/2 msnal + 1/2 o1nal + 1/2 o2nal
+
+[look-it-up]               | formula suffix, enter "none" for no suffix.
 
 end_of_model
                       --------------------------------------------------------

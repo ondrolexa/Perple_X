@@ -19140,10 +19140,11 @@ c----------------------------------------------------------------------
       character mname*8
       common/ cst18a /mname(m4)
 c----------------------------------------------------------------------
-      if (poly(h0).gt.1.and.ivert(jpoly,isimp(jpoly)).gt.1) then
+      if ((poly(h0).gt.1.and.ivert(jpoly,isimp(jpoly)).gt.1)
+     *                                     .or.isimp(jpoly).gt.1) then
 
          ier = 0
-c                              reading a composite model or a polytope, 
+c                              reading a composite model or a prism, 
 c                              a name is associated with each subdivision range
          do j = 1, isimp(jpoly)
 

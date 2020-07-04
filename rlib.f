@@ -15329,11 +15329,15 @@ c                                composite compositional simplex
      *    'h4 (maximum number of subcompositions for solution model: '
      *     //tname//')')
 c                                read subdivision ranges for the polytopes
-      if (poly(h0).gt.1) then 
+      if (poly(h0).gt.1) then
+
          call redsub (poly(h0)+1,tname)
-      else
-         poname(h0,1,1,1) = tname
-      end if 
+
+      else 
+c                                simple prism/simplex use solution name
+          poname(h0,1,1,1) = tname
+
+      end if
 c                                initialize total number of polyyope vertices
       istot = 0 
 c                                read data for each polytope
@@ -15346,7 +15350,6 @@ c                                number of simplices
          if (isimp(i).gt.mst) call error (1,rnums(1),isimp(i),
      *      'mst (maximum number of simplices in a subcomposition for '
      *      //'solution model: '//tname//')')
-
 c                                number of vertices on each simplex:
          call readda (rnums,isimp(i),tname)
 
@@ -18154,10 +18157,11 @@ c----------------------------------------------------------------------
       character mname*8
       common/ cst18a /mname(m4)
 c----------------------------------------------------------------------
-      if (poly(h0).gt.1.and.ivert(jpoly,isimp(jpoly)).gt.1) then
+      if ((poly(h0).gt.1.and.ivert(jpoly,isimp(jpoly)).gt.1)
+     *                                     .or.isimp(jpoly).gt.1) then
 
          ier = 0
-c                              reading a composite model or a polytope, 
+c                              reading a composite model or a prism, 
 c                              a name is associated with each subdivision range
          do j = 1, isimp(jpoly)
 

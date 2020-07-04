@@ -490,7 +490,7 @@ c DEBUG691
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      external gsol3
+      external gsol3, e04uef, nlpopt
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
