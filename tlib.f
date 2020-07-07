@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated July 3, 2020.',
+     *      'Perple_X version 6.9.0, source updated July 7, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2161,6 +2161,22 @@ c---------------------------------------------------------------------
      *        'or vice versa, try again...',/)
  
       end
+
+      subroutine errdbg (msg)
+c---------------------------------------------------------------------
+c print debugging error msg and pause.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character msg*(*)
+
+      write (*,'(/,a,/)') msg
+
+      call errpau
+
+      end 
 
       subroutine errpau 
 c---------------------------------------------------------------------

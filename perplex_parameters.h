@@ -152,7 +152,7 @@ c----------------------------------------------------------------------
       parameter(k20=k18,k25=k21*k32)
 c----------------------------------------------------------------------
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=14)
-      parameter (k7=k5+1,k8=k5+2,k17=7,k19=3*k5)
+      parameter (k7=k5+1,k8=k5+2,k17=8,k19=3*k5)
       parameter (k9=35,k10=450,k14=18,k15=6,k16=120)
       parameter (k22=mdim*mst*h4*k19,k23=25)
 !                                 l2 - max number of independent potential variables

@@ -346,7 +346,7 @@ c     write (*,1000) gval, (pa(i),i=1,nstot(jds))
 
       end
 
-      subroutine p2yx (id)
+      subroutine p2yx (id,bad)
 c-----------------------------------------------------------------------
 c converts the independent endmember fractions to 0-1 bounded barycentric 
 c coordinates:
@@ -373,13 +373,12 @@ c-----------------------------------------------------------------------
       double precision ayz
       common/ csty2z /ayz(h9,m20,m4)
 
-      integer nz
-      double precision apz, zl, zu
-      common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -393,14 +392,14 @@ c-----------------------------------------------------------------------
 c                                 get the disordered p's
       call minfxc (gopt,id,.true.)
 c                                 get the site fraction constraints
-      call p2zind (pa,b,id)
+      call p2zind (pa,b,ncon,id)
 c                                 dummy objective function coefficients
 c                                 (only 1 feasible point?)
       c(1:mstot(id)) = 1d0
 c                                 load the ayz constraint matrix
-      a(1:nz(id),1:mstot(id)) = ayz(id,1:nz(id),1:mstot(id))
+      a(1:ncon,1:mstot(id)) = ayz(id,1:ncon,1:mstot(id))
 c                                 add the closure constraint
-      ncon = nz(id) + 1
+      ncon = ncon + 1
       a(ncon,1:mstot(id)) = 1d0
       b(ncon) = 1d0
 c                                 cold start
@@ -415,7 +414,7 @@ c                                 optimize by nag
 
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
 
-      if (idead.gt.0) then
+      if (idead.gt.0.and.idead.ne.3) then
 c                                 look for severe errors
          call lpwarn (idead,'LPOPT ')
          call errpau
@@ -425,8 +424,12 @@ c                                 reset ldt, ldq, istart for phase eq
       ldq = icp + 1
       ldt = ldq
       istart = 0
+c                                 strip out zero's
+      do ncon = 1, mstot(id)
+         if (dabs(y(ncon)).lt.1d4*zero) y(ncon) = 0d0
+      end do 
 c                                 convert the y's to x's
-      call sety2x (id,y)
+      call sety2x (id,y,bad)
 
       end
 
@@ -597,6 +600,7 @@ c                                 obj call counter
 
       do i = 1, nvar
          pa(i) = ppp(i)
+         if (dabs(pa(i)).lt.zero) pa(i) = 0d0
          sum = sum + ppp(i)
       end do
 

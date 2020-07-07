@@ -6077,6 +6077,34 @@ c----------------------------------------------------------------------
 
       end
 
+      subroutine geeend (id)
+c-----------------------------------------------------------------------
+c geeend updates the projected free energies of solution id, it is 
+c only called for output purposes (gsol/ginc/getphp).
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer k, id
+
+      double precision gproj
+
+      external gproj
+
+      double precision g
+      common/ cst2 /g(k1)
+
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+c----------------------------------------------------------------------
+
+      do k = 1, lstot(id)
+         g(jend(id,2+k)) = gproj (jend(id,2+k))
+      end do
+
+      end
+
       double precision function gmchpr (id)
 c-----------------------------------------------------------------------
 c gmech computes the mechanical mixture gibbs energy of a solution, if 
@@ -12877,7 +12905,7 @@ c                                 a liquid below T_melt option threshold
 
          else if (lorder(i)) then
 c DEBUG691 GALL
-c           itic = 0
+            itic = 0
 c                                 initialize margules, enthalpy of
 c                                 ordering, internal dqfs (last for minfxc)
             call ingsol (i)
@@ -12885,6 +12913,8 @@ c                                 ordering, internal dqfs (last for minfxc)
             do j = 1, jend(i,2)
 
                call setxyp (i,id,.false.,bad)
+c DEBUG
+               call p2yx (i,bad)
 
                if (switch.or.dnu(i).ne.0d0) then
 
@@ -12902,19 +12932,19 @@ c                                 for static composition o/d models
 c                                 gexces accounts for internal dqf's
                   g(id) = gexces (id) + dg + gmech (i)
 
-c                 z = pa
-c                 pa = p0a
-c                 dg = 0d0 
+                  z = pa
+                  p0a = pa
+                  dg = 0d0 
 
-c                 call minfxc(dg,i,.false.)
+                  call minfxc(dg,i,.false.)
 
-c                 if (dabs(dg-g(id)).gt.1d0) then 
-c                    write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
-c                    itic = itic + 1
-c                    call p2z (z,zt,i,.true.)
-c                    write (*,*) ' '
-c                    call p2z (pa,zt,i,.true.)
-c                 end if
+                  if (dabs(dg-g(id)).gt.1d0) then 
+                     write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
+                     itic = itic + 1
+                     call p2z (z,zt,i,.true.)
+                     write (*,*) ' '
+                     call p2z (pa,zt,i,.true.)
+                  end if
 
                   end if
 
@@ -12923,12 +12953,16 @@ c                 end if
                   call minfxc(g(id),i,.false.)
 
                end if
+c DEBUG
+
+               p0a = pa
+               call p2yx (i,bad)
 
                id = id + 1
 
             end do
 c DEBUG691
-c           write (*,*) 'itic for ids ',itic,i
+            write (*,*) 'itic for ids ',itic,i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -14624,13 +14658,11 @@ c                                 meemum/werami
       double precision function gsol (id)
 c-----------------------------------------------------------------------
 c gsol computes the total (excess+ideal) free energy of solution
-c for a solution identified by index ids and composition y(m4) input
-c from cxt7, the composition y is the independent endmember fractions
-c for all model types except reciprocal solutions, in which case it is
-c the y's for the full reciprocal model.
+c for a solution identified by index ids and composition pa(m4) input
+c from cxt7.
 
 c gsol assumes the endmember g's have not been calculated by gall and is
-c      called by WERAMI and MEEMUM.
+c      called by WERAMI and MEEMUM for output purposes.
 c gsol1 is identical to gsol but can only been called after gall and is
 c      called by VERTEX and MEEMUM.
 c-----------------------------------------------------------------------
@@ -14701,6 +14733,10 @@ c                                 initialize p-t dependent coefficients
 
          else if (lorder(id)) then
 c                                 -------------------------------------
+c                                 as gsol may be called many times for the same 
+c                                 bulk composition, the pa array will change, reset
+c                                 to the p0a values
+            pa(1:nstot(id)) = p0a(1:nstot(id))
 c                                 get the speciation, excess and entropy effects.
             call specis (g,id,minfx)
 
@@ -19471,14 +19507,18 @@ c                                 the site
       end
 
 
-      subroutine sety2x (id,y)
+      subroutine sety2x (id,y,bad)
 c----------------------------------------------------------------------
 c subroutine to convert independent disordered y to subcomposition
-c x's, assumes y's are normalized.
+c x's, assumes y's are normalized. if the model is a CSS
+c then all fraction in 0 wt prisms are zeroed and the result scanned for 
+c negative fractions, if these are found bad is set to true.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      logical bad
 
       integer ii, i, j, k, l, m, id
 
@@ -19492,6 +19532,7 @@ c----------------------------------------------------------------------
       common/ cxt7 /yt(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
+      bad = .false.
 c                                  test
       do ii = 1, poly(id)
 c                                  get the polytope weight
@@ -19506,6 +19547,16 @@ c                                  get the polytope weight
             do k = pvert(id,ii,1), pvert(id,ii,2)
                pwt(ii) = pwt(ii) + y(k)
             end do
+
+            if (dabs(pwt(ii)).lt.1d4*zero) then
+
+               pwt(ii) = 0d0
+
+               do k = pvert(id,ii,1), pvert(id,ii,2)
+                  y(k) = 0d0
+               end do
+
+            end if
 
          end if
 
@@ -19524,7 +19575,7 @@ c                                 the algebra
 
             end do
 
-            write (*,1000) ii,l,m,xt,x(ii,l,m)
+            x(ii,l,m) = xt
 
             m = m + 1
 
@@ -19536,22 +19587,36 @@ c                                 the algebra
          end do
 
       end do
+c                                 set the prism weights, just in case
+c                                 they are used, which i doubt.
+      if (pop1(id).gt.1) then 
+         do k = 1, poly(id)
+            x(pop1(id),1,k) = pwt(k)
+         end do
+      end if
+
+      do k = 1, mstot(id)
+         if (y(k).lt.-1d4*zero) then 
+            bad = .true.
+         end if
+      end do 
 
 1000  format (3(i2,1x),3(3x,g14.6))
 
       end
 
 
-      subroutine p2zind (p,z,ids)
+      subroutine p2zind (p,z,l,ids)
 c----------------------------------------------------------------------
 c subroutine to compute independent site fractions (or molar amounts 
 c for temkin sites) and load them sequentially into the 1d array z
 c
+c     l - the total number of indpendent site fractions
 c non-temkin models:
-c     zsp - number of independent site fractions
+c     zsp - number of independent site fractions for site i (zsp1 - 1)
 c     z(l) - molar site fraction of species j on site i
 c temkin models:
-c     zsp - number of species
+c     zsp - number of species (zsp1) for site i
 c     z(l) - molar amount of species j on site i
 c----------------------------------------------------------------------
       implicit none
@@ -19801,17 +19866,16 @@ c                                 negative site?
 
       end
 
-
       subroutine makayz (id)
 c----------------------------------------------------------------------
 c subroutine to make the ayc matrix for ayz*y = z, z is the independent
-c subset of the site fractions. must be called after makapz (for nz).
+c subset of the site fractions.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, id
+      integer i, j, k, l, id, nz
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19836,10 +19900,6 @@ c----------------------------------------------------------------------
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
 
-      integer nz
-      double precision apz, zl, zu
-      common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
-
       integer jend
       common/ cxt23 /jend(h9,m4)
 c----------------------------------------------------------------------
@@ -19849,8 +19909,8 @@ c                                 independent endmembers:
 c                                 endmember is in column knsp(k,id)
          pa(:) = 0d0
          pa(k) = 1d0
-         call p2zind (pa,z,id)
-         ayz(id,1:nz(id),knsp(k,id)) = z(1:nz(id))
+         call p2zind (pa,z,nz,id)
+         ayz(id,1:nz,knsp(k,id)) = z(1:nz)
 
       end do
 c                                 dependent endmembers:
@@ -19865,9 +19925,9 @@ c                                 to independent disordered endmember idep(k,l):
 c                                 this is insanely inefficient, but who cares?
             pa(:) = 0d0
             pa(iy2p(idep(k,l))) = 1d0
-            call p2zind (pa,z,id)
+            call p2zind (pa,z,nz,id)
 
-            do i = 1, nz(id)
+            do i = 1, nz
                ayz(id,i,j) = ayz(id,i,j) + nu(k,l)*z(i)
             end do
 

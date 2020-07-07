@@ -1095,12 +1095,12 @@ c                                 now reform the arrays kdv and b
          cp3(1:icomp,i) = cpnew(1:icomp,i)
 
          pa3(i,1:nstot(ids)) = pnew(i,1:nstot(ids))
-c                               lagged speciation, ionic strength, tot molality
-c                               and solvent mass.
+c                                 lagged speciation, ionic strength, tot molality
+c                                 and solvent mass.
          if (lopt(32).and.ksmod(ids).eq.39) caq(i,1:nat) = ncaq(i,1:nat)
-c                                 check composition against solution model ranges
 c                                 if auto_refine is on:
-c        call sollim (ids)
+c                                 check composition against solution model ranges
+         call sollim (ids,i)
 
       end do
 
@@ -1110,8 +1110,8 @@ c        call sollim (ids)
          l = ksol(ntot,i)
          amt(k) = bsol(ntot,i)
          kkp(k) = l
-c                                for the sake of completeness load
-c                                compound composition into cp3 array
+c                                 for the sake of completeness load
+c                                 compound composition into cp3 array
          cp3(1:icomp,k) = cp(1:icomp,-l)
 
       end do
@@ -1120,7 +1120,7 @@ c                                compound composition into cp3 array
 
 99    end 
 
-      subroutine sollim (ids)
+      subroutine sollim (ids,jd)
 c----------------------------------------------------------------------
 c subroutine to extract compositional range of endmembers in stable phases
 c for auto_refine option.
@@ -1129,7 +1129,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ids, ii, i, j
+      integer ids, ii, i, j, jd
 
       double precision stinc
 
@@ -1155,6 +1155,29 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
+c                                 load the indepedent endmeber fractions 
+      pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c                                 recover the prismatic composition
+      if (lstot(ids).eq.nstot(ids).and.istg(ids,1).eq.1) then 
+c                                 the model is simplicial
+         do j = 1, ispg(ids,1,1)
+            x(1,1,j) = pa(j)
+         end do
+
+         if (pop1(ids).gt.1) call errdbg ('houston we have a problem')
+
+      else if (lorder(ids).or.lstot(ids).eq.nstot(ids)) then
+c                                 the model is o/d and/or prismatic with
+c                                 no dependent endmembers:
+c                                 get the simplicial coordinates
+         call makepp (ids)
+
+         call p2yx (ids)
+
+      else 
+c                                  reciprocal with dependent endmembers
+         call errdbg ('recip/equip?')
+      end if
 c                                 set stable flag
       stable(ids) = .true.
 c                                 check x-ranges
