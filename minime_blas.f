@@ -360,6 +360,8 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical bad
+
       integer liw,lw,mvar,mcon
 
       parameter (mvar=m4, mcon=m20, liw=2*mvar+3, 
@@ -414,10 +416,14 @@ c                                 optimize by nag
 
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
 
-      if (idead.gt.0.and.idead.ne.3) then
+      if (idead.gt.0.and.idead.ne.3.and.idead.ne.4) then
 c                                 look for severe errors
          call lpwarn (idead,'LPOPT ')
          call errpau
+
+      if (idead.eq.0) then 
+
+         write (*,*) 'good'
 
       end if
 c                                 reset ldt, ldq, istart for phase eq
@@ -426,10 +432,11 @@ c                                 reset ldt, ldq, istart for phase eq
       istart = 0
 c                                 strip out zero's
       do ncon = 1, mstot(id)
+         if (is(ncon).ne.0) y(ncon) = 0d0
          if (dabs(y(ncon)).lt.1d4*zero) y(ncon) = 0d0
       end do 
 c                                 convert the y's to x's
-      call sety2x (id,y,bad)
+      call sety2x (id,bad)
 
       end
 

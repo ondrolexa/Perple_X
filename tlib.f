@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated July 7, 2020.',
+     *      'Perple_X version 6.9.0, source updated July 9, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -176,11 +176,9 @@ c                                 largest number
       wmach(8) = dsqrt(wmach(7))
       wmach(9) = dmax1(1d0/wmach(4),1d2)
 c                                 solution composition zero and one
-      r2 = 1d2 * r2
-
-      zero = r2
-      r1 = 1d0 + r2
-      one = 1d0 - r2
+      zero = dsqrt(r2)
+      r1 = 1d0 + zero
+      one = 1d0 - zero
 c                                 -------------------------------------
 c                                 default option values:
 c                                 reserved for temporary use:
@@ -3289,7 +3287,7 @@ c                                 generic warning, also 99
      *        'probably, increasing parameter L6 in perplex_',
      *        'parameters.h',/,3x,
      *        'and recompiling VERTEX permit SMPLEX to converge.',/)
-205   format (/,'**error ver205** too many new phase assemblages, ',
+205   format (/,'**warning ver205** too many new phase assemblages, ',
      *        'found by routine newhld',/,'increase dimension j9 (',
      *        i8,')',/)
 228   format (/,'**warning ver228** in solution model ',a,' negative ',

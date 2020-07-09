@@ -4958,7 +4958,7 @@ c                               nreact is returned by readr
                idep(i,j) = inds(j+1)
             end do
 
-            if (dabs(sum-1d0).gt.1d4*zero) then
+            if (dabs(sum-1d0).gt.zero) then
 
                write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
 
@@ -5911,7 +5911,7 @@ c                                 non-temkin (688)
 
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
-               if (dabs(zt-1d0).gt.1d4*zero) then
+               if (dabs(zt-1d0).gt.zero) then
 
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
@@ -15513,7 +15513,7 @@ c                               nreact is returned by readr
                   idep(mdep,j) = inds(j+1)
                end do
 
-              if (dabs(sum-1d0).gt.1d4*zero) then 
+              if (dabs(sum-1d0).gt.zero) then 
                   write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
                   call error (72,sum,i,'dependent endmember '//
      *                 mname(inds(1))//' definition coefficients do not'
@@ -17569,6 +17569,9 @@ c-----------------------------------------------------------------------
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
 
       do j = 1, icomp
@@ -17656,7 +17659,13 @@ c                                 y coordinates used to compute the composition
       scptot = 0d0
 
       do i = 1, icp
+c DEBUG
+         if (scp(i).lt.0d0) then 
+            if (scp(i).gt.-zero) scp(i) = 0d0
+         end if
+
          scptot = scptot + scp(i)
+
       end do
 
       end
@@ -20159,7 +20168,7 @@ c                                with respect to the ordered species
             dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
          end do
 c                                dnu ~0 => speciation reaction is not equimolar
-         if (dabs(dnu(im)).gt.1d4*zero) then
+         if (dnu(im).ne.0d0) then
             if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)

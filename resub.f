@@ -329,7 +329,7 @@ c                                  just in case:
 
             do i = 1, icp
 
-               if (dabs(tot(i)).gt.1d2*zero) then 
+               if (dabs(tot(i)).gt.zero) then 
 
 c                  write (*,'(/,a,/)') '**warning ver333** '//
 c     *                   'You''ve got to ask yourself one '//
@@ -695,7 +695,7 @@ c----------------------------------------------------------------------
 
          id = jdv(i)
 
-         if (id.lt.jpoint) then 
+         if (id.le.jpoint) then 
             lkp(i) = -(id + jiinc)
             cycle
          end if 
@@ -1896,9 +1896,9 @@ c                                 find the most stable iopt(31) points
 
          if (lopt(34)) then
 
-            id = kdv(i)
+            id = kdv(i) 
 
-            if (ikp(id).ne.0) then 
+            if (ikp(id+jiinc).ne.0) then 
                call dumper (1,id,0,ikp(id+jiinc),x(id),clamda(id))
             else 
                call dumper (1,id,0,-(id+jiinc),x(id),clamda(id))

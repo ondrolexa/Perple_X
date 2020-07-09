@@ -596,7 +596,7 @@ c----------------------------------------------------------------------
 
          id = jdv(i)
 
-         if (id.lt.jpoint) then 
+         if (id.le.jpoint) then 
             lkp(i) = -(id + jiinc)
             cycle
          end if 
@@ -1129,6 +1129,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical bad
+
       integer ids, ii, i, j, jd
 
       double precision stinc
@@ -1172,7 +1174,12 @@ c                                 no dependent endmembers:
 c                                 get the simplicial coordinates
          call makepp (ids)
 
-         call p2yx (ids)
+         call p2yx (ids,bad)
+
+         if (bad) then 
+            write (*,*) 'outta da box',y(1:nstot(ids))
+            return
+         end if
 
       else 
 c                                  reciprocal with dependent endmembers
@@ -1762,7 +1769,7 @@ c                                 find the most stable iopt(31) points
 
             id = kdv(i)
 
-            if (ikp(id).ne.0) then 
+            if (ikp(id+jiinc).ne.0) then 
                call dumper (1,id,0,ikp(id+jiinc),x(id),clamda(id))
             else 
                call dumper (1,id,0,-(id+jiinc),x(id),clamda(id))

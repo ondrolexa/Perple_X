@@ -12913,8 +12913,6 @@ c                                 ordering, internal dqfs (last for minfxc)
             do j = 1, jend(i,2)
 
                call setxyp (i,id,.false.,bad)
-c DEBUG
-               call p2yx (i,bad)
 
                if (switch.or.dnu(i).ne.0d0) then
 
@@ -12932,19 +12930,19 @@ c                                 for static composition o/d models
 c                                 gexces accounts for internal dqf's
                   g(id) = gexces (id) + dg + gmech (i)
 
-                  z = pa
-                  p0a = pa
-                  dg = 0d0 
+c                 z = pa
+c                 p0a = pa
+c                 dg = 0d0 
+c
+c                 call minfxc(dg,i,.false.)
 
-                  call minfxc(dg,i,.false.)
-
-                  if (dabs(dg-g(id)).gt.1d0) then 
-                     write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
-                     itic = itic + 1
-                     call p2z (z,zt,i,.true.)
-                     write (*,*) ' '
-                     call p2z (pa,zt,i,.true.)
-                  end if
+c                 if (dabs(dg-g(id)).gt.1d0) then 
+c                    write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
+c                    itic = itic + 1
+c                    call p2z (z,zt,i,.true.)
+c                    write (*,*) ' '
+c                    call p2z (pa,zt,i,.true.)
+c                 end if
 
                   end if
 
@@ -12953,16 +12951,12 @@ c                                 gexces accounts for internal dqf's
                   call minfxc(g(id),i,.false.)
 
                end if
-c DEBUG
-
-               p0a = pa
-               call p2yx (i,bad)
 
                id = id + 1
 
             end do
 c DEBUG691
-            write (*,*) 'itic for ids ',itic,i
+c           write (*,*) 'itic for ids ',itic,i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -13836,7 +13830,7 @@ c                                 composite polytope
       write (*,1070) 'www.perplex.ethz.ch/perplex/faq/warning_'//
      *               'ver991_relax_solution_model_limits.txt'
 
-      call errpau
+c     call errpau
 
 1000  format (/,'*NOTE: if this solution model has been reformulated '
      *       ,'because of missing endmembers',/,'the variable indices ',
@@ -19507,7 +19501,7 @@ c                                 the site
       end
 
 
-      subroutine sety2x (id,y,bad)
+      subroutine sety2x (id,bad)
 c----------------------------------------------------------------------
 c subroutine to convert independent disordered y to subcomposition
 c x's, assumes y's are normalized. if the model is a CSS
@@ -19522,14 +19516,17 @@ c----------------------------------------------------------------------
 
       integer ii, i, j, k, l, m, id
 
-      double precision xt,y(m4)
+      double precision xt
 
       integer mx
       double precision ayx
       common/ csty2x /ayx(h9,h4,mst*msp,m4),mx(h9,h4)
 
-      double precision z, pa, p0a, x, w, yt, wl, pp
-      common/ cxt7 /yt(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
       bad = .false.
@@ -19556,6 +19553,10 @@ c                                  get the polytope weight
                   y(k) = 0d0
                end do
 
+            else if (pwt(ii).gt.one) then 
+
+               write (*,*) 'wugganoa wugga'
+
             end if
 
          end if
@@ -19574,6 +19575,12 @@ c                                 the algebra
                xt = xt + ayx(id,ii,i,j)*y(k)
 
             end do
+
+            if (xt.lt.zero) then 
+               xt = 0d0
+            else if (xt.gt.one) then 
+               xt = 1d0
+            end if
 
             x(ii,l,m) = xt
 
@@ -19596,7 +19603,7 @@ c                                 they are used, which i doubt.
       end if
 
       do k = 1, mstot(id)
-         if (y(k).lt.-1d4*zero) then 
+         if (y(k).lt.-1d-2) then 
             bad = .true.
          end if
       end do 
