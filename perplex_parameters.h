@@ -169,7 +169,7 @@ c----------------------------------------------------------------------
 !                                l10 - max number of parameters stored in caq for each phase.
 !                                nsp - max number of species in fluid speciation routines 
 
-      parameter (l2=5,l3=l2+2,l5=1000,l6=1000,l7=2048,l8=10,l9=100,
+      parameter (l2=5,l3=l2+2,l5=1000,l6=200,l7=2048,l8=10,l9=100,
      *           nsp=17,l10=nsp+l9+4)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function
@@ -314,9 +314,10 @@ c                                 model type
      *               specil(h9),simple(h9)
 
       logical stable,limit,lorch
+      integer badinv
       double precision xlo,xhi
       common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
-     *               stable(h9),limit(h9),lorch(h9)
+     *               badinv(h9,2),stable(h9),limit(h9),lorch(h9)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)

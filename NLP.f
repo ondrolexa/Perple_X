@@ -1693,7 +1693,6 @@ c
 c           pass token to output string array, then change case.
 c
          list(count) = string(first:mark)
-         call e04udu(list(count))
          first = mark + 2
          if (count.lt.numin) go to 20
 c
@@ -2371,56 +2370,6 @@ c     separators .
 c     end of  e04udw. (opscan)
       end
 
-      subroutine e04udu(string)
-
-c     purpose:  this subroutine changes all lower case letters in the
-c               character string to upper case.
-c
-c     method:   each character in string is treated in turn.  the
-c               intrinsic function index effectively allows a table
-c               lookup, with the local strings low and upp acting as
-c               two tables. this method avoids the use of char and
-c               ichar, which appear be different on ascii and ebcdic
-c               machines.
-c
-c     arguments
-c     arg       dim     type i/o/s description
-c     string       *       c   i/o   character string possibly
-c                                   containing some lower-case
-c                                   letters  on input; strictly
-c                                   upper-case letters on output
-c                                   with no change to any
-c                                   non-alphabetic characters.
-c
-c     external references:
-c     len    - returns the declared length of a character variable.
-c     index  - returns the position of second string within first.
-c-----------------------------------------------------------------------
-      character*(*)     string
-
-      integer i, j
-      character*1 c
-      character*26      low, upp
-c     .. intrinsic functions ..
-      intrinsic         index, len, lge, lle
-
-      data              low/'abcdefghijklmnopqrstuvwxyz'/,
-     *                  upp/'abcdefghijklmnopqrstuvwxyz'/
-
-c
-      do 20 j = 1, len(string)
-         c = string(j:j)
-         if (lge(c,'a').and.lle(c,'z')) then
-c           if (c.ge.'a'.and.c.le.'z') then
-            i = index(low,c)
-            if (i.gt.0) string(j:j) = upp(i:i)
-         end if
-   20 continue
-
-c     end of  e04udu. (opuppr)
-
-      end
-
 
       subroutine e04xax(inform,msglvl,n,bigbnd,epsrf,oktol,fdchk,objf,
      *                  xnorm,objfun,bl,bu,grad,gradu,dx,x,y,iuser,user)
@@ -2626,16 +2575,16 @@ c        loop over each of the elements of  x.
          do 80 j = j1, j2
 c
             if (grad(j).ne.rdummy) then
-c              ---------------------------------------------------------
+
 c              check this gradient element.
-c              ---------------------------------------------------------
+
                ncheck = ncheck + 1
                gj = grad(j)
                gsize = abs(gj)
                xj = x(j)
-c              ---------------------------------------------------------
+
 c              find a finite-difference interval by iteration.
-c              ---------------------------------------------------------
+
                iter = 0
                epsa = epsrf*(one+dabs(objf))
                cdest = zero
@@ -2665,9 +2614,9 @@ c
 c              +             until     done
                if (.not. done) go to 60
 c
-c              ---------------------------------------------------------
+
 c              exit for this variable.
-c              ---------------------------------------------------------
+
                gdiff = cdest
                x(j) = xj
 c
@@ -3432,9 +3381,9 @@ c
             end if
 c
             if (centrl) then
-c              ---------------------------------------------------------
+
 c              central differences.
-c              ---------------------------------------------------------
+
                x(j) = xj + delta + delta
 
                if (gradu(j).eq.rdummy) then
@@ -3442,9 +3391,9 @@ c              ---------------------------------------------------------
                   grad(j) = (four*objf1-three*objf-objf2)/(delta+delta)
                end if
             else
-c              ---------------------------------------------------------
+
 c              forward differences.
-c              ---------------------------------------------------------
+
                if (gradu(j).eq.rdummy) grad(j) = (objf1-objf)/delta
 c
             end if
@@ -3507,18 +3456,14 @@ c     been found.
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /fe04nb/icmdbg, cmdbg
 
-      if (cmdbg.and.icmdbg(3).gt.0) then
-         write (rec,fmt=99999)
-         call x04bay(iprint,3,rec)
-      end if
       lastv = .not. firstv
       jadd1 = 0
       jadd2 = 0
       palfa1 = bigalf
-c
+
       palfa2 = zero
       if (firstv) palfa2 = bigalf
-c
+
       do 20 j = 1, nctotl
          js = istate(j)
          if (js.le.0) then
@@ -3533,18 +3478,18 @@ c
                rownrm = one + anorm(i)
             end if
             if (negstp) atp = -atp
-c
+
             if (abs(atp).le.epspt9*rownrm*pnorm) then
-c
+
 c              this constraint appears to be constant along p.  it is
 c              not used to compute the step.  give the residual a value
 c              that can be spotted in the debug output.
-c
+
                res = -one
             else if (atp.le.zero.and.js.ne.-2) then
-c              ---------------------------------------------------------
+
 c              a'x  is decreasing and the lower bound is not violated.
-c              ---------------------------------------------------------
+
 c              first test for smaller palfa1.
 c
                absatp = -atp
@@ -3573,9 +3518,9 @@ c
                   end if
                end if
             else if (atp.gt.zero.and.js.ne.-1) then
-c              ---------------------------------------------------------
+
 c              a'x  is increasing and the upper bound is not violated.
-c              ---------------------------------------------------------
+
 c              test for smaller palfa1.
 c
                if (bu(j).lt.bigbnd) then
@@ -3601,12 +3546,6 @@ c
                      end if
                   end if
                end if
-            end if
-c
-            if (cmdbg.and.icmdbg(3).gt.0) then
-               write (rec,fmt=99998) j, js, featol(j), res, atp, jadd1,
-     *           palfa1, jadd2, palfa2
-               call x04baf(iprint,rec(1))
             end if
          end if
    20 continue
@@ -4164,12 +4103,7 @@ c
 c
       jmax = idamx1 (n+nclin,work)
       errmax = abs(work(jmax))
-c
-      if (lsdbg.and.ilsdbg(1).gt.0) then
-         write (rec,fmt=99999) errmax, jmax
-         call x04bay(iprint,2,rec)
-      end if
-c
+
       cvnorm = dnrm2(n+nclin,work,1)
 
 c     end of  e04ncr. (lsfeas)
@@ -4396,9 +4330,9 @@ c              that can be spotted in the debug output.
 c
                res = -one
             else if (atp.le.zero.and.js.ne.-2) then
-c              ---------------------------------------------------------
+
 c              a'x  is decreasing.
-c              ---------------------------------------------------------
+
 c              the lower bound is satisfied.  test for smaller alfa1.
 c
                absatp = -atp
@@ -4440,9 +4374,9 @@ c
                   end if
                end if
             else if (atp.gt.zero.and.js.ne.-1) then
-c              ---------------------------------------------------------
+
 c              a'x  is increasing and the upper bound is not violated.
-c              ---------------------------------------------------------
+
 c              test for smaller alfa1.
 c
                if (bu(j).lt.bigbnd) then
@@ -4669,29 +4603,10 @@ c
       pnorm = dnrm2(nrz,p,1)
 c
       call cmqmul (1,n,nrz,nfree,ldzy,unitq,kx,p,zy,work)
-c
-      if (lsdbg.and.ilsdbg(2).gt.0) then
-         write (rec,fmt=99999)
-         call x04bay(iprint,2,rec)
-         do 20 i = 1, n, 5
-            write (rec,fmt=99997) (p(j),j=i,min(i+4,n))
-            call x04baf(iprint,rec(1))
-   20    continue
-      end if
-c
+
 c     compute  ap.
-c
-      if (nclin.gt.0) then
-         call dgemv ('n',nclin,n,one,a,lda,p,zero,ap)
-         if (lsdbg.and.ilsdbg(2).gt.0) then
-            write (rec,fmt=99998)
-            call x04bay(iprint,2,rec)
-            do 40 i = 1, n, 5
-               write (rec,fmt=99997) (ap(j),j=i,min(i+4,n))
-               call x04baf(iprint,rec(1))
-   40       continue
-         end if
-      end if
+
+      if (nclin.gt.0) call dgemv ('n',nclin,n,one,a,lda,p,zero,ap)
 
 c     end of  e04ncq. (lsgetp)
 
@@ -4699,7 +4614,6 @@ c     end of  e04ncq. (lsgetp)
 99998 format (/' //e04ncq//  ap ... ')
 99997 format (1p,5d15.5)
       end
-
 
       subroutine e04ncj(prbtyp,isdel,iter,jadd,jdel,msglvl,nactiv,nfree,
      *                  n,nclin,nrank,ldr,ldt,nz,nrz,istate,alfa,condrz,
@@ -5478,9 +5392,9 @@ c           choices 2 or 3 are unsatisfactory.
             q = zero
 c
             if (closef) then
-c              ---------------------------------------------------------
+
 c              fit a parabola to the two best gradient values.
-c              ---------------------------------------------------------
+
                s = gbest
                q = gbest - gw
                if (debug) then
@@ -5488,9 +5402,9 @@ c              ---------------------------------------------------------
                   call x04baf(nout,rec(1))
                end if
             else
-c              ---------------------------------------------------------
+
 c              fit cubic through  fbest  and  fw.
-c              ---------------------------------------------------------
+
                if (debug) then
                   write (rec,fmt=99996)
                   call x04baf(nout,rec(1))
@@ -6516,11 +6430,7 @@ c           case 1.  a simple bound has been deleted.
 c           =======  columns nfree+1 and ir of r must be swapped.
 c
             ir = nz + kdel
-            if (lsdbg.and.ilsdbg(1).gt.0) then
-               write (rec,fmt=99998) nactiv, nz, nfree, ir, jdel, unitq
-               call x04bay(iprint,4,rec)
-            end if
-c
+
             itdel = 1
             nfree = nfree + 1
 c
@@ -6553,13 +6463,7 @@ c
 c
 c           case 2.  a general constraint has been deleted.
 c           =======
-c
-            if (lsdbg.and.ilsdbg(1).gt.0) then
-               write (rec,fmt=99997) nactiv, nz, nfree, kdel, jdel,
-     *           unitq
-               call x04bay(iprint,4,rec)
-            end if
-c
+
             itdel = kdel
             nactiv = nactiv - 1
 c
@@ -6645,12 +6549,7 @@ c
          else
             jart = -jdel
          end if
-c
-         if (lsdbg.and.ilsdbg(1).gt.0) then
-            write (rec,fmt=99999) nz, nrz1, jart
-            call x04bay(iprint,4,rec)
-         end if
-c
+
          if (jart.gt.nrz1) then
 c
 c           swap columns nrz1 and jart of r.
@@ -6876,15 +6775,6 @@ c     --------------------------------------------------------------
   140          continue
             end if
          end if
-      end if
-c
-      if (lsdbg.and.ilsdbg(1).gt.0) then
-         write (rec,fmt=99996) jsmlst, smllst, ksmlst
-         call x04bay(iprint,3,rec)
-         write (rec,fmt=99995) jbigst, biggst, kbigst
-         call x04bay(iprint,2,rec)
-         write (rec,fmt=99994) jtiny, tinylm
-         call x04bay(iprint,2,rec)
       end if
 
 c     end of  e04nck. (lsmuls)
@@ -7422,9 +7312,9 @@ c
                   call x04bay(isumm,2,rec)
 
 c
-c              ---------------------------------------------------------
+
 c              print the constraint values.
-c              ---------------------------------------------------------
+
                write (rec,fmt=99988)
                call x04bay(isumm,3,rec)
                write (rec,fmt=99987)

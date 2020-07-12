@@ -6901,7 +6901,7 @@ c                                 as lrecip.
       if (recip.or.depend) then
 
          lrecip(im) = .true.
-         if (dnu(im).ne.0d0) call error (72,r,i,'polytopic composition'/
+         if (dnu(im).ne.0d0) call error (72,r,i,'prismatic composition'/
      *    /' space not anticipated for non-equimolar ordering: '//tname)
 
       end if
@@ -17672,7 +17672,6 @@ c DEBUG
 
 c routines common to all programs? could be in tlib.f?
 
-
       subroutine getcmp (jd,id,ids,dynam)
 c-----------------------------------------------------------------------
 c getcmp gets the composition of pseudocompund id, where:
@@ -20264,9 +20263,9 @@ c                                 number of limits for ordered species k
 
       if (ksmod(im).ne.688) then 
 
-         if (nord(im).gt.1) call error (72,c0(0),i,
-     *            'solution '//tname//': multiple order parameters '//
-     *            'only allowed in 688 format models')
+c        if (nord(im).gt.1) call error (72,c0(0),i,
+c    *            'solution '//tname//': multiple order parameters '//
+c    *            'only allowed in 688 format models')
 
 c                                 all z expressions may be necessary to
 c                                 formulate limits, make the ksp'th + 1

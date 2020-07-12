@@ -1,5 +1,49 @@
-c     subroutine junkkk
+      call nlptst
 
+      call lptest
+
+      end
+
+      subroutine lptest
+* .. Parameters ..
+      INTEGER NIN, NOUT
+      PARAMETER (NIN=15,NOUT=6)
+      INTEGER NMAX, NCMAX
+      PARAMETER (NMAX=10,NCMAX=10)
+      INTEGER LDA
+      PARAMETER (LDA=NCMAX)
+      INTEGER LIWORK, LWORK
+      PARAMETER (LIWORK=1000,LWORK=10000)
+* .. Local Scalars ..
+      double precision OBJ
+      INTEGER I, IFAIL, ITER, J, N, NCLIN
+* .. Local Arrays ..
+      double precision A(LDA,NMAX), AX(NCMAX), BL(NMAX+NCMAX),
+     + BU(NMAX+NCMAX), CLAMDA(NMAX+NCMAX), CVEC(NMAX),
+     + WORK(LWORK), X(NMAX)
+      INTEGER ISTATE(NMAX+NCMAX), IWORK(LIWORK)
+* .. External Subroutines ..
+      EXTERNAL lpsol
+
+      open (nin,file='lp_test.dat',status='old')
+
+      READ (NIN,*)
+      READ (NIN,*) N, NCLIN
+
+      READ (NIN,*) (CVEC(I),I=1,N)
+      READ (NIN,*) ((A(I,J),J=1,N),I=1,NCLIN)
+      READ (NIN,*) (BL(I),I=1,N+NCLIN)
+      READ (NIN,*) (BU(I),I=1,N+NCLIN)
+      READ (NIN,*) (X(I),I=1,N)
+
+      IFAIL = -1
+
+      CALL lpsol(N,NCLIN,A,LDA,BL,BU,CVEC,ISTATE,X,ITER,OBJ,AX,
+     + CLAMDA,IWORK,LIWORK,WORK,LWORK,IFAIL)
+
+      END
+
+      subroutine nlptst
       implicit none 
 
       INTEGER NIN, NOUT
@@ -22,12 +66,12 @@ c .. Local Arrays ..
       INTEGER ISTATE(NMAX+NCLMAX+NCNMAX), IUSER(1),
      + IWORK(LIWORK)
 c .. External Subroutines ..
-      EXTERNAL CONFUN, E04UCF, OBJFUN
+      EXTERNAL CONFUN, nlpsol, OBJFUN
 
-c     WRITE (NOUT,*) ’E04UCF Example Program Results’
+c     WRITE (NOUT,*) ’nlpsol Example Program Results’
 c Skip heading in data file
 
-      open (nin,file='e04ucf.dat',status='old')
+      open (nin,file='nlp_test.dat',status='old')
 
       READ (NIN,*)
       READ (NIN,*) N, NCLIN, NCNLN
@@ -44,12 +88,12 @@ c Solve the problem
 c
       IFAIL = -1
 
-      CALL E04UCF(N,NCLIN,NCNLN,LDA,LDCJ,LDR,A,BL,BU,CONFUN,OBJFUN,
+      CALL nlpsol(N,NCLIN,NCNLN,LDA,LDCJ,LDR,A,BL,BU,CONFUN,OBJFUN,
      + ITER,ISTATE,C,CJAC,CLAMDA,OBJF,OBJGRD,R,X,IWORK,
      + LIWORK,WORK,LWORK,IUSER,USER,IFAIL)
 c
       END IF
-      STOP
+
       END
 
       SUBROUTINE OBJFUN(MODE,N,X,OBJF,OBJGRD,NSTATE,IUSER,USER)
@@ -66,15 +110,14 @@ c .. Array Arguments ..
 c .. Executable Statements ..
       IF (MODE.EQ.0 .OR. MODE.EQ.2) OBJF = X(1)*X(4)*(X(1)+X(2)+X(3)) +
      + X(3)
-c
+
       IF (MODE.EQ.1 .OR. MODE.EQ.2) THEN
       OBJGRD(1) = X(4)*(TWO*X(1)+X(2)+X(3))
       OBJGRD(2) = X(1)*X(4)
       OBJGRD(3) = X(1)*X(4) + ONE
       OBJGRD(4) = X(1)*(X(1)+X(2)+X(3))
       END IF
-c
-      RETURN
+
       END
 c
       SUBROUTINE CONFUN(MODE,NCNLN,N,LDCJ,NEEDC,X,C,CJAC,NSTATE,IUSER,
@@ -125,56 +168,4 @@ c
       END IF
       END IF
 
-      RETURN
       END
-
-
-      subroutine F02syf
-      pause
-      end 
-
-      subroutine e04gdy
-      pause
-      end 
-
-
-
-      subroutine e04fqf
-      pause
-      end 
-
-      subroutine e04nby
-      pause
-      end 
-
-
-      subroutine e04nqf
-      pause
-      end 
-
-      subroutine e04hex
-      pause
-      end 
-
-      subroutine e04dgy
-      pause
-      end 
-
-      subroutine e04dgx
-      pause
-      end 
-
-      subroutine f07nrz
-      pause
-      end 
-
-
-      subroutine f07qrv
-      pause
-      end 
-
-
-      subroutine g05fdf
-      pause
-      end 
-

@@ -18,6 +18,8 @@ c-----------------------------------------------------------------------
 
       integer i,liw,lw,k,idead,inc,lphct
 
+      character cit*4, ctol*14
+
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
       double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot
@@ -41,6 +43,9 @@ c-----------------------------------------------------------------------
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
+      double precision bl,bu
+      common/ cstbup /bl(k1+k5),bu(k1+k5)
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
@@ -60,6 +65,9 @@ c-----------------------------------------------------------------------
 
       logical abort1
       common/ cstabo /abort1
+
+      double precision wmach
+      common/ cstmch /wmach(9)
 
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
@@ -103,10 +111,22 @@ c                                 for subsequent warm starts
       idead = -1
 
       if (lopt(28)) call begtim (2)
+c                                 optimize by nag, original version
+c     call lpsol (jphct,hcp,a,k5,b,c,is,x,ax,
+c    *            clamda,iw,liw,w,lw,idead,l6,istart)
+c                                 optimize by full version:
+      write (ctol,'(g14.7)') wmach(4)*1d2
+      write (cit,'(i4)') l6
 
-c                                 optimize by nag
-      call lpnag (jphct,hcp,a,k5,b,c,is,x,ax,
-     *            clamda,iw,liw,w,lw,idead,l6,istart)
+      call e04mhf ('nolist')
+      call e04mhf ('iteration limit = '//cit)
+      call e04mhf ('feasibility tolerance = '//ctol)
+      call e04mhf ('print level = 1')
+      call e04mhf ('cold start')
+      call e04mhf ('problem type = lp')
+
+      call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,gtot,ax,
+     *            clamda,iw,liw,w,lw,idead)
 
       if (lopt(28)) call endtim (2,.true.,'Static optimization ')
 
@@ -132,7 +152,7 @@ c                                 find discretization points
 c                                 for refinement
 c        if (lopt(28)) call begtim (3)
 
-         call yclos1 (clamda,x,gtot,is,jphct,quit)
+         call yclos1 (clamda,x,is,jphct,quit)
 
 c        if (lopt(28)) call endtim (3,.true.,'Static YCLOS1 ')
 
@@ -213,12 +233,17 @@ c-----------------------------------------------------------------------
 
       logical quit, kterat
 
+      character cit*4, ctol*14
+
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision ax(k5), clamda(k21+k5), w(lw), tot(k5), gtot,
-     *                 ogtot
+     *                 ogtot, bl(k21+k5), bu(k21+k5)
 
       integer is(k21+k5), iw(liw)
+
+      double precision wmach
+      common/ cstmch /wmach(9)
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -287,14 +312,34 @@ c                                 set quit flag
          if (iter.gt.iopt(10).and.kter.eq.kitmax) quit = .true.
 c                                 cold start
          jstart = 0 
-c                                 set idead = 0 to prevent lpnag from
+c                                 set idead = 0 to prevent lpsol from
 c                                 overwriting warm start parameters
          idead = 0 
 
          if (lopt(28)) call begtim (8)
 c                                 do the optimization
-         call lpnag (jphct,icp,cp2,k5,b,g2,is,x,ax,
-     *               clamda,iw,liw,w,lw,idead,l6,jstart)
+c        call lpsol (jphct,icp,cp2,k5,b,g2,is,x,ax,
+c    *               clamda,iw,liw,w,lw,idead,l6,jstart)
+
+         write (ctol,'(g14.7)') wmach(4)*1d2
+         write (cit,'(i4)') l6
+
+         call e04mhf ('nolist')
+         call e04mhf ('iteration limit = '//cit)
+         call e04mhf ('feasibility tolerance = '//ctol)
+         call e04mhf ('print level = 1')
+         call e04mhf ('cold start')
+         call e04mhf ('problem type = lp')
+         call e04mhf ('minimum sum of infeasibilities = yes')
+
+         bl(1:jphct) = 0d0
+         bu(1:jphct) = 1d0
+
+         bl(jphct+1:jphct+icp) = b(1:icp)
+         bu(jphct+1:jphct+icp) = b(1:icp)
+
+         call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,gtot,ax,
+     *               clamda,iw,liw,w,lw,idead)
 
          if (lopt(28)) then 
             call endtim (8,.true.,'Dynamic optimization N ')
@@ -334,7 +379,7 @@ c                                  just in case:
 
             do i = 1, icp
 
-               if (dabs(tot(i)).gt.1d2*zero) then 
+               if (dabs(tot(i)).gt.zero) then 
 
 c                  write (*,'(/,a,/)') '**warning ver333** '//
 c     *                   'You''ve got to ask yourself one '//
@@ -1546,7 +1591,7 @@ c                                dependent potentials
 
       end 
 
-      subroutine yclos1 (clamda,x,gtot,is,jphct,quit)
+      subroutine yclos1 (clamda,x,is,jphct,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement. this routine is only called as preparation
@@ -1615,7 +1660,6 @@ c----------------------------------------------------------------------
       nsol = 0
       quit = .true.
       soltol = nopt(25)
-      gtot = 0d0
 
       do i = 1, jphct
 
@@ -1662,7 +1706,6 @@ c                                 new point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
-            gtot = gtot + x(i)*c(i)
 
             if (lopt(34)) then
 
@@ -1801,8 +1844,7 @@ c                                 necessary
 
       end if 
 
-      end 
-
+      end
 
       logical function solvus (id1,id2,ids)
 c-----------------------------------------------------------------------
@@ -1974,7 +2016,8 @@ c                            solve ux = y for x:
 
       subroutine initlp 
 c--------------------------------------------------------------------
-c initialize arrays and constants for lp minimization
+c initialize arrays and constants for lp minimization of static
+c compositions.
 c---------------------------------------------------------------------
       implicit none
 
@@ -1987,6 +2030,9 @@ c---------------------------------------------------------------------
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
+
+      double precision bl,bu
+      common/ cstbup /bl(k1+k5),bu(k1+k5)
 
       double precision vmax,vmin,dv
       common/ cst9 /vmax(l2),vmin(l2),dv(l2)
@@ -2063,6 +2109,12 @@ c                                 to static array
       ldq = icp + 1
 c                                 cold start istart = 0
       istart = 0
+
+      bl(1:jphct) = 0d0
+      bu(1:jphct) = 1d0
+
+      bl(jphct+1:jphct+icp) = b(1:icp)
+      bu(jphct+1:jphct+icp) = b(1:icp)
 
       end 
 

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated July 9, 2020.',
+     *      'Perple_X version 6.9.0, source updated July 13, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -158,7 +158,7 @@ c                                 for nag)
 
       if (r2.eq.0d0) call error (72,r1,i,
      *                         'starting precision for r1 < zero')
-c                                 wmach(1-2,5-6,9) do not have the 
+c                                 wmach(1-2,5,9) do not have the 
 c                                 standard BLAS values, additionally
 c                                 BLAS routines may assume a dimension
 c                                 of 15 for wmach.
@@ -172,6 +172,7 @@ c                                 relative precision (eps)
       wmach(4) = dsqrt(r2)
       wmach(5) = 1d0 + r2
 c                                 largest number
+      wmach(6) = dsqrt(1d0/huge(0d0))
       wmach(7) = huge(0d0)
       wmach(8) = dsqrt(wmach(7))
       wmach(9) = dmax1(1d0/wmach(4),1d2)
@@ -3148,7 +3149,7 @@ c                                 generic warning, also 99
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
      *         ,' for future instances of this problem.',/,
      *          'currently in routine: ',a,//)
-50    format (/,'**warning ver050** reformulating polytopic ',
+50    format (/,'**warning ver050** reformulating prismatic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
      *          'by excluding additional endmembers).',/)
@@ -8943,7 +8944,7 @@ c                                 archaic error trap
       subroutine setblk
 c-----------------------------------------------------------------------
 c for gridded minimization setblk computes the bulk composition
-c and initializes the arrays for lpopt.
+c and initializes the arrays for lpsol.
 c-----------------------------------------------------------------------
       implicit none
 

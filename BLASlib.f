@@ -257,7 +257,7 @@ c modified blas routine dgemv
 c assumes incy = incx = 1
 c eliminates trans = 'c'
 
-c  dgemv  performs one of the matrix-vector operations
+c  dgemv  does one of the matrix-vector operations
 
 c     y := alpha*a*x + beta*y,   or   y := alpha*a'*x + beta*y,
 
@@ -1061,7 +1061,7 @@ c                 hard failure
 
       subroutine dtrmv (uplo, trans, diag, n, a, lda, x, incx)
 c----------------------------------------------------------------------
-c  dtrmv  performs one of the matrix-vector operations
+c  dtrmv  does one of the matrix-vector operations
 
 c     x := a*x,   or   x := a'*x,
 
@@ -1488,7 +1488,7 @@ c                          (-s(i)  c(i))
       subroutine sgesrc (side, pivot, direct, m, n, k1, k2, c, s, a,
      *                   lda)
 c----------------------------------------------------------------------
-c  sgesrc  performs the transformation
+c  sgesrc  does the transformation
 c
 c     a := p*a,   when   side = 'l' or 'l'  ( left-hand side)
 c
@@ -1847,7 +1847,7 @@ c----------------------------------------------------------------------
 
       subroutine sgeapr (side, trans, n, perm, k, b, ldb)
 c----------------------------------------------------------------------
-c  sgeapr performs one of the transformations
+c  sgeapr does one of the transformations
 c
 c     b := p'*b   or   b := p*b,   where b is an m by k matrix,
 c
@@ -1865,7 +1865,7 @@ c  with rows and columns  i and  index(i)  interchanged. of course, if
 c  index(i) = i  then  p(i, index(i)) = i.
 c
 c  this  routine is intended  for use in conjunction with auxiliary
-c  routines  that  perform  interchange  operations,  such  as  sorting.
+c  routines  that  do  interchange  operations,  such  as  sorting.
 
 c  side   - character*1.
 c  trans
@@ -1875,19 +1875,19 @@ c           to be performed as follows.
 c
 c           side = 'l' or 'l'   and   trans = 't' or 't'
 c
-c              perform the operation   b := p'*b.
+c              do the operation   b := p'*b.
 c
 c           side = 'l' or 'l'   and   trans = 'n' or 'n'
 c
-c              perform the operation   b := p*b.
+c              do the operation   b := p*b.
 c
 c           side = 'r' or 'r'   and   trans = 't' or 't'
 c
-c              perform the operation   b := b*p'.
+c              do the operation   b := b*p'.
 c
 c           side = 'r' or 'r'   and   trans = 'n' or 'n'
 c
-c              perform the operation   b := b*p.
+c              do the operation   b := b*p.
 c
 c           unchanged on exit.
 
@@ -2564,7 +2564,7 @@ c----------------------------------------------------------------------
 
       subroutine sscmv (n, alpha, x, incx, y, incy)
 c----------------------------------------------------------------------
-c  sscmv performs the operation
+c  sscmv does the operation
 c
 c     y := alpha*x
 c----------------------------------------------------------------------
@@ -2989,7 +2989,7 @@ c----------------------------------------------------------------------
 
       subroutine sutsqr (side, n, k1, k2, c, s, a, lda)
 c----------------------------------------------------------------------
-c  perform the transformation
+c  do the transformation
 c
 c     r := p*u*q'  when  side = 'l' or 'l'  ( left-hand side)
 c
@@ -3150,7 +3150,7 @@ c
 
       subroutine sdscl (n, d, incd, x, incx)
 c-----------------------------------------------------------------------
-c  sdscl performs the operation
+c  sdscl does the operation
 c
 c     x := diag(d)*x
 c-----------------------------------------------------------------------
@@ -3409,7 +3409,7 @@ c                                or maybe b**(1-p)
          work(j+n) = work(j)
    20 continue
 c
-c     perform the factorization. tol is the tolerance for f06frf.
+c     do the factorization. tol is the tolerance for f06frf.
 c
       la = lda
       do 120 k = 1, min(m,n)
@@ -3464,7 +3464,7 @@ c
                   temp = a(k,k)
                   a(k,k) = zeta(k)
 c
-c                 now perform the operation  a := q(k)*a.
+c                 now do the operation  a := q(k)*a.
 c
 c                 let  b  denote  the bottom  (m - k + 1) by (n - k)
 c                 part of a.
@@ -3621,10 +3621,7 @@ c     name must be the name of the actual argument for n and srname must
 c     be the name of the calling routine.
 c
 c     this routine is intended for use when n is an invalid input
-c     parameter to routine srname. for example
-c
-c        ierr = 0
-c        if (n.ne.'valid value') call p01abw(n, 'n', idiag, ierr, srname)
+c     parameter to routine srname. 
 
       implicit none 
 
@@ -3685,10 +3682,7 @@ c     name must be the name of the actual argument for n and srname must
 c     be the name of the calling routine.
 c
 c     this routine is intended for use when n is an invalid input
-c     parameter to routine srname. for example
-c
-c        ierr = 0
-c        if (n.lt.1)call p01aby(n, 'n', idiag, ierr, srname)
+c     parameter to routine srname. 
 
       integer ierr, inform, n
       character*(*)     name, srname
@@ -3712,12 +3706,12 @@ c        if (n.lt.1)call p01aby(n, 'n', idiag, ierr, srname)
       subroutine smcopy (matrix, m, n, a, lda, b, ldb)
 c  smcopy  copies  the  m by n  matrix  a  into  the  m by n  matrix  b.
 c
-c  if   matrix = 'g' or 'g'   then  a  and  b  are  regarded as  general
+c  if   matrix = 'g'    then  a  and  b  are  regarded as  general
 c                             matrices,
-c  if   matrix = 'u' or 'u'   then  a  and  b  are  regarded  as   upper
+c  if   matrix = 'u'    then  a  and  b  are  regarded  as   upper
 c                             triangular,  and only  elements  for which
 c                             i.le.j  are referenced,
-c  if   matrix = 'l' or 'l'   then  a  and  b  are  regarded  as   lower
+c  if   matrix = 'l'    then  a  and  b  are  regarded  as   lower
 c                             triangular,  and only  elements  for which
 c                             i.ge.j  are referenced.
 
@@ -3753,7 +3747,7 @@ c                             i.ge.j  are referenced.
 
       subroutine icopy (n, x, incx, y, incy)
 
-c  icopy performs the operation
+c  icopy does the operation
 c     y := x
 
       implicit none
@@ -3923,53 +3917,53 @@ c     check the input parameters.
          ifail = errmsg (ifail,-1,srname,' ',1,rec)
          return
       end if
-c
-c     perform the factorization.
-c
+
+c     do the factorization.
+
       if (n.eq.0) then
          ifail = 0
          return
       end if
       la = lda
       do 20 k = 1, min(m-1,n)
-c
+
 c        use a  householder reflection  to  zero the  kth column  of  a.
 c        first set up the reflection.
-c
+
          call sgrfg (m-k,a(k,k),a(k+1,k),1,0d0,zeta(k))
          if ((zeta(k).gt.0d0).and.(k.lt.n)) then
             if ((k+1).eq.n) la = m - k + 1
-c
+
 c           temporarily  store  beta and  put  zeta(k)  in  a(k, k).
-c
+
             temp = a(k,k)
             a(k,k) = zeta(k)
-c
-c           now perform the operation  a := q(k)*a.
-c
+
+c           now do the operation  a := q(k)*a.
+
 c           let  b  denote  the bottom  (m - k + 1) by (n - k)  part
 c           of  a.
-c
+
 c           first form   work = b'*u.  (work  is stored in the elements
 c           zeta(k + 1), ..., zeta(n).)
-c
+
             call dgemv('t',m-k+1,n-k,1d0,a(k,k+1),la,a(k,k),
      *                 0d0,zeta(k+1))
-c
+
 c           now form  b := b - u*work'.
-c
+
             call dger1 (m-k+1,n-k,a(k,k),zeta(k+1),a(k,k+1),la)
 
 c           restore beta.
-c
+
             a(k,k) = temp
          end if
    20 continue
-c
+
 c     set the final  zeta  when  m.eq.n.
-c
+
       if (m.eq.n) zeta(n) = 0d0
-c
+
       ifail = 0
 
 99999 format ('    the input parameters contained ',i2,' error(s)')
@@ -3977,7 +3971,7 @@ c
 
       subroutine iload (n, const, x, incx)
 
-c  iload performs the operation
+c  iload does the operation
 
 c     x = const*e,   e' = (1  1 ... 1).
 

@@ -124,14 +124,15 @@ c                                 refinement point index
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-4')
          CALL E04UEF ('difference interval = 1d-3')
+         CALL E04UEF ('difference interval = 1d-3')
 
       end if
 
       CALL E04UEF ('derivative level = 0')
 
-      call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
-     *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-     *             m22,work,m23,istuff,stuff,idead,iprint)
+c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
+c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
+c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
 c     call nlpopt (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
 c    *             iter,istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,
@@ -362,7 +363,11 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer liw,lw,mvar,mcon
+      integer liw, lw, mvar, mcon, nvar, i, j
+
+      character cit*4, ctol*14
+
+      double precision scp(k5)
 
       parameter (mvar=m4, mcon=m20, liw=2*mvar+3, 
      *           lw=2*(mcon+1)**2+7*mvar+5*mcon)
@@ -370,10 +375,17 @@ c-----------------------------------------------------------------------
       integer ncon, id, is(mvar+mcon), iw(liw), idead, istart
 
       double precision ax(mcon), clamda(mvar+mcon), wrk(lw), c(mvar),
-     *                 a(mcon,mvar), b(mcon), gopt
+     *                 a(mcon,mvar), bl(mvar+mcon), bu(mvar+mcon), 
+     *                 gopt, sum, b(mcon)
+
+      double precision wmach
+      common/ cstmch /wmach(9)
 
       double precision ayz
       common/ csty2z /ayz(h9,m20,m4)
+
+      double precision ayc
+      common/ csty2c /ayc(h9,k5,m4)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -391,52 +403,111 @@ c-----------------------------------------------------------------------
       integer ldq,ldt,ncolt
       common/ be04nb /ldt,ncolt,ldq
 c-----------------------------------------------------------------------
+      bad = .false.
 c                                 get the disordered p's
       call minfxc (gopt,id,.true.)
-c                                 get the site fraction constraints
-      call p2zind (pa,b,ncon,id)
+
+      nvar = mstot(id)
 c                                 dummy objective function coefficients
 c                                 (only 1 feasible point?)
-      c(1:mstot(id)) = 1d0
+      c(1:nvar) = 1d0
+      bl(1:nvar) = 0d0
+      bu(1:nvar) = 1d0
+c                                 get the site fraction constraints
+      call p2zind (pa,b,ncon,id)
+c                                 load the fractions
+      bl(nvar+1:nvar+ncon) = b(1:ncon)
+      bu(nvar+1:nvar+ncon) = b(1:ncon)
 c                                 load the ayz constraint matrix
-      a(1:ncon,1:mstot(id)) = ayz(id,1:ncon,1:mstot(id))
+      a(1:ncon,1:nvar) = ayz(id,1:ncon,1:nvar)
+c                                 load the ayc constraint matrix
+      a(ncon+1:ncon+icp,1:nvar) = ayc(id,1:icp,1:nvar)
+c                                 get the bulk 
+      call getscp (scp,sum,id,1,.true.)
+      bl(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
+      bu(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
+      ncon = ncon + icp
 c                                 add the closure constraint
       ncon = ncon + 1
       a(ncon,1:mstot(id)) = 1d0
-      b(ncon) = 1d0
+      bl(nvar+ncon) = 1d0
+      bu(nvar+ncon) = 1d0
+c                                 initialize y
+      y(1:mstot(id)) = 0d0
 c                                 cold start
       istart = 0
       ldt = ncon
       ldq = ldt
+      idead = 0
 
       if (lopt(28)) call begtim (2)
-c                                 optimize by nag
-      call lpnag (mstot(id),ncon,a,mcon,b,c,is,y,ax,
-     *            clamda,iw,liw,wrk,lw,idead,l6,istart)
+c                                 optimize by lp
+c     call lpsol (mstot(id),ncon,a,mcon,b,c,is,y,ax,
+c    *            clamda,iw,liw,wrk,lw,idead,l6,istart)
+
+      write (ctol,'(g14.7)') wmach(4)*1d2
+      write (cit,'(i4)') l6
+
+      call e04mhf ('nolist')
+      call e04mhf ('iteration limit = '//cit)
+      call e04mhf ('feasibility tolerance = '//ctol)
+      call e04mhf ('print level = 1')
+      call e04mhf ('cold start')
+      call e04mhf ('problem type = fp')
+      call e04mhf ('minimum sum of infeasibilities = yes')
+
+      call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,gopt,ax,
+     *            clamda,iw,liw,w,lw,idead)
 
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
 
-      if (idead.gt.0.and.idead.ne.3.and.idead.ne.4) then
-c                                 look for severe errors
-         call lpwarn (idead,'LPOPT ')
-         call errpau
+      if (bad.or.idead.ne.0) then
 
-      if (idead.eq.0) then 
+         write (*,'(i2,1x,i2)') idead, ncon
 
-         write (*,*) 'good'
+         do i = 1, ncon
+
+            sum = 0d0
+
+            do j = 1, mstot(id)
+
+               if (y(j).lt.-zero) then 
+                  bad = .true.
+               else if (y(j).lt.zero) then 
+                  y(j) = 0d0
+               end if
+
+               sum = sum + a(i,j)*y(j)
+
+            end do
+
+            write (*,'(i2,1x,3(g14.7,1x))') i, sum, b(i), sum-b(i)
+
+            if (dabs(sum-b(i)).gt.zero) bad = .true.
+
+         end do
 
       end if
 c                                 reset ldt, ldq, istart for phase eq
       ldq = icp + 1
       ldt = ldq
       istart = 0
+
+      if (bad) then
+
+         badinv(id,1) = badinv(id,1) + 1
+
+      else
+
+         badinv(id,2) = badinv(id,2) + 1
 c                                 strip out zero's
-      do ncon = 1, mstot(id)
-         if (is(ncon).ne.0) y(ncon) = 0d0
-         if (dabs(y(ncon)).lt.1d4*zero) y(ncon) = 0d0
-      end do 
+         do ncon = 1, mstot(id)
+            if (dabs(y(ncon)).lt.zero) y(ncon) = 0d0
+         end do 
 c                                 convert the y's to x's
-      call sety2x (id,bad)
+         call sety2x (id,bad)
+
+      end if
 
       end
 
@@ -500,7 +571,7 @@ c DEBUG691
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      external gsol3, e04uef, nlpopt
+      external gsol3
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
@@ -594,9 +665,9 @@ c                                 obj call counter
 
       CALL E04UEF ('derivative level = 0')
 
-      call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
-     *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-     *             m22,work,m23,istuff,stuff,idead,iprint)
+c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
+c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
+c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'
