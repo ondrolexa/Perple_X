@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,liw,lw,k,idead,inc,lphct
+      integer i,liw,lw,k,idead,inc,lphct,jter
 
       character cit*4, ctol*14
 
@@ -121,12 +121,14 @@ c                                 optimize by full version:
       call e04mhf ('nolist')
       call e04mhf ('iteration limit = '//cit)
       call e04mhf ('feasibility tolerance = '//ctol)
-      call e04mhf ('print level = 1')
+      call e04mhf ('print level = 0')
       call e04mhf ('cold start')
       call e04mhf ('problem type = lp')
 
-      call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,gtot,ax,
+      call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,
      *            clamda,iw,liw,w,lw,idead)
+c DEBUG691 to account for the unmodified lpsol ifail setting
+      if (idead.lt.3) idead = 0
 
       if (lopt(28)) call endtim (2,.true.,'Static optimization ')
 
@@ -229,7 +231,7 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j,
-     *        idead1
+     *        idead1, jter
 
       logical quit, kterat
 
@@ -300,6 +302,7 @@ c                                 likely failed aqlagd
       if (kterat) kitmax = iopt(33)
 
       iter = 2
+      ogtot = 1d99
 
       do
 c                                 iter is incremented before the operations,
@@ -327,10 +330,10 @@ c    *               clamda,iw,liw,w,lw,idead,l6,jstart)
          call e04mhf ('nolist')
          call e04mhf ('iteration limit = '//cit)
          call e04mhf ('feasibility tolerance = '//ctol)
-         call e04mhf ('print level = 1')
+         call e04mhf ('print level = 0')
          call e04mhf ('cold start')
          call e04mhf ('problem type = lp')
-         call e04mhf ('minimum sum of infeasibilities = yes')
+c        call e04mhf ('minimum sum of infeasibilities = yes')
 
          bl(1:jphct) = 0d0
          bu(1:jphct) = 1d0
@@ -338,8 +341,10 @@ c    *               clamda,iw,liw,w,lw,idead,l6,jstart)
          bl(jphct+1:jphct+icp) = b(1:icp)
          bu(jphct+1:jphct+icp) = b(1:icp)
 
-         call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,gtot,ax,
+         call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,jter,gtot,ax,
      *               clamda,iw,liw,w,lw,idead)
+c DEBUG691 to account for the unmodified lpsol ifail setting
+         if (idead.lt.3) idead = 0
 
          if (lopt(28)) then 
             call endtim (8,.true.,'Dynamic optimization N ')
@@ -401,9 +406,15 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
          kter = kter + 1
 
+         if (dabs(gtot-ogtot).lt.1d-1) then 
+            quit = .true.
+         end if 
+
+         ogtot = gtot
+
 c        if (lopt(28)) call begtim (7)
 c                                 analyze solution, get refinement points
-         call yclos2 (clamda,x,gtot,is,iter,opt,idead,quit)
+         call yclos2 (clamda,x,is,iter,opt,idead,quit)
 
 c        if (lopt(28)) call endtim (7,.true.,'YCLOS2 ')
 
@@ -1222,7 +1233,7 @@ c                                 get the simplicial coordinates
          call p2yx (ids,bad)
 
          if (bad) then 
-            write (*,*) 'outta da box',y(1:nstot(ids))
+            write (*,*) 'outta da box',y(1:mstot(ids))
             return
          end if
 
@@ -1608,7 +1619,7 @@ c----------------------------------------------------------------------
 
       logical degen, solvus, quit, news, solvnt(1)
 
-      double precision clamda(*), x(*), slam(h9), gtot
+      double precision clamda(*), x(*), slam(h9)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -2189,7 +2200,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine yclos2 (clamda,x,gtot,is,iter,opt,idead,quit)
+      subroutine yclos2 (clamda,x,is,iter,opt,idead,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement, for iteration > 1. quit is true for final
@@ -2206,7 +2217,7 @@ c----------------------------------------------------------------------
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead, j, k
 
-      double precision clamda(*), clam(k19), x(*), gtot, ogtot
+      double precision clamda(*), clam(k19), x(*)
 
       logical stabl(k19), solvnt(k19), quit, abort, test, good, bad
 
@@ -2258,7 +2269,7 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      save tic, ogtot
+      save tic
       data tic/0/
 c----------------------------------------------------------------------
 c                                 npt is the number of points refined
@@ -2276,8 +2287,6 @@ c                                 solution.
 
       npt = 0
       mpt = 0
-      if (iter.eq.2) ogtot = 1d99
-      gtot = 0d0 
 
       do i = 1, jphct
 c                                 id indicates the original refinement
@@ -2297,8 +2306,6 @@ c                                 a stable point, add to list
             jdv(npt) = i
             amt(npt) = x(i)
             if (id.gt.0) stabl(id) = .true.
-
-            gtot = gtot + x(i)*g2(i)
 
             if (lopt(32)) then
 c                                 for lagged aq speciation
@@ -2355,16 +2362,6 @@ c                                 keep the least metastable point
          end if
 
       end do
-c DEBUG691
-      if (iter.eq.iopt(10)) then 
-         write (*,*) 'quitting at iter/dg ',iter,gtot-ogtot
-      end if
-
-      if (dabs(gtot-ogtot).lt.1d-1) then 
-         quit = .true.
-      end if 
-
-      ogtot = gtot
 c                                 abort is set if pure solvent is stable, if 
 c                                 it is the only solvent then reset abort
       if (abort.and.mpt.eq.0) abort = .false.

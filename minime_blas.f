@@ -125,6 +125,7 @@ c                                 refinement point index
          CALL E04UEF ('optimality tolerance =  1d-4')
          CALL E04UEF ('difference interval = 1d-3')
          CALL E04UEF ('difference interval = 1d-3')
+         CALL E04UEF ('print level = 0')
 
       end if
 
@@ -134,9 +135,9 @@ c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
 c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
 c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
-c     call nlpopt (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,
-c    *             iter,istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,
-c    *             m22,work,m23,istuff,stuff,istart)
+      call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
+     *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
+     *            m23,istuff,stuff,idead,iprint)
 
       if (inp) then 
 
@@ -218,7 +219,6 @@ c-----------------------------------------------------------------------
 c DEBUG691 gall
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
@@ -283,7 +283,7 @@ c gsol3 - a shell to call gsol1 from minfxc, ingsol must be called
 c         prior to minfxc to initialize solution specific paramters. only
 c         called for equimolar explicit o/d models. non-equimolar o/d models
 c         (currently melt(G,HGP)) involve non-linear constraints that are not
-c         currently implemented in minfxc/nlpopt.
+c         currently implemented in minfxc/nlpsol.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -363,7 +363,7 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer liw, lw, mvar, mcon, nvar, i, j
+      integer liw, lw, mvar, mcon, nvar, i, j, jter
 
       character cit*4, ctol*14
 
@@ -400,13 +400,15 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer jend
+      common/ cxt23 /jend(h9,m4)
+
       integer ldq,ldt,ncolt
       common/ be04nb /ldt,ncolt,ldq
 c-----------------------------------------------------------------------
       bad = .false.
 c                                 get the disordered p's
       call minfxc (gopt,id,.true.)
-
       nvar = mstot(id)
 c                                 dummy objective function coefficients
 c                                 (only 1 feasible point?)
@@ -445,19 +447,22 @@ c                                 optimize by lp
 c     call lpsol (mstot(id),ncon,a,mcon,b,c,is,y,ax,
 c    *            clamda,iw,liw,wrk,lw,idead,l6,istart)
 
-      write (ctol,'(g14.7)') wmach(4)*1d2
+      write (ctol,'(g14.7)') wmach(4)
       write (cit,'(i4)') l6
 
       call e04mhf ('nolist')
       call e04mhf ('iteration limit = '//cit)
       call e04mhf ('feasibility tolerance = '//ctol)
-      call e04mhf ('print level = 1')
+      call e04mhf ('print level = 10')
       call e04mhf ('cold start')
       call e04mhf ('problem type = fp')
-      call e04mhf ('minimum sum of infeasibilities = yes')
+c     call e04mhf ('minimim sum of infeasibilities = yes')
 
-      call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,gopt,ax,
+      call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
      *            clamda,iw,liw,w,lw,idead)
+
+c DEBUG691 to account for the unmodified lpsol ifail setting
+      if (idead.lt.3) idead = 0
 
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
 
@@ -481,9 +486,12 @@ c    *            clamda,iw,liw,wrk,lw,idead,l6,istart)
 
             end do
 
-            write (*,'(i2,1x,3(g14.7,1x))') i, sum, b(i), sum-b(i)
+            write (*,'(i2,1x,5(g14.7,1x))') i, sum, bl(i+nvar), sum-
+     *                                      bl(i+nvar)
 
-            if (dabs(sum-b(i)).gt.zero) bad = .true.
+            if (dabs(sum-bl(i+nvar)).gt.zero) then 
+               bad = .true.
+            end if 
 
          end do
 
@@ -539,8 +547,8 @@ c-----------------------------------------------------------------------
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19)
-c DEBUG691
-     *                 ,xp(m14), ftol, fdint
+c DEBUG691                    dummies for NCNLN > 0
+     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
       character*14 cdint, ctol
 
       integer nz
@@ -571,7 +579,7 @@ c DEBUG691
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-      external gsol3
+      external gsol3, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
@@ -660,6 +668,7 @@ c                                 obj call counter
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-8')
          CALL E04UEF ('difference interval = 1d-3')
+         CALL E04UEF ('print level = 0')
 
       end if
 
@@ -668,6 +677,10 @@ c                                 obj call counter
 c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
 c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
 c    *             m22,work,m23,istuff,stuff,idead,iprint)
+
+      call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol3,iter,
+     *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
+     *            m23,istuff,stuff,idead,iprint)
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'

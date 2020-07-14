@@ -13501,6 +13501,9 @@ end_of_model
 begin_model
                       Orthopyroxene - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
                       Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
+                      -------------------------------------------------------- 
+                      W(en odi) and the odi DQF revised to destabilize Ca-rich
+                      Opx at high pressure. Eleanor Green. July 13, 2020. 
                       --------------------------------------------------------                    
                       Reformulated as a 2-polytope 688 format model. JADC, 9/19
 
@@ -13531,7 +13534,7 @@ begin_model
                       
                       where 
                       
-                      T' = Al, Fe3, MgTi on M1                      
+                      T' = Al, Fe3, MgTi on M1
                       --------------------------------------------------------
                       First coded for Perple_X by ECR Green and JRDC Aug 2018.
                       Rearranged Apr 2019, JADC.
@@ -13540,7 +13543,7 @@ begin_model
                       definitions in the thermodynamic data file
 
                       odi  = 1 di
-                            DQF = -100 + 0.211 * T + 0.005 * P
+                            DQF = 1900 + 0.005 * P | prior to 13/7/20: -100 + 0.211 * T + 0.005 * P
                       crenh = 1 mgts + 1 kos - 1 jd
                             DQF = -25900 + 15.5 * T + 0.05 * P
                       obuf = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
@@ -13686,7 +13689,9 @@ end_dependent_endmembers
 begin_excess_function
 W(en fs)                 7d3
 W(en fm)                 4d3
-W(en odi)                32.2d3    + 0.12 * p
+                                      | W(en odi) revised from 32.2d3 + 0.12 * p 
+                                      | by ECRG, 13/7/20
+W(en odi)                29d3      + 0.15 * p
 W(en mgts)               12.5d3    - 0.04 * p
 W(en crenh)              8d3
 W(en macm)               8d3

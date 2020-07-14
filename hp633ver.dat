@@ -289,8 +289,10 @@ cren  = 1 mgts + 1 kos - 1 jd
        DQF(J/mol) = 3d3 
 oen   = 1 mgts + 1 acm - 1 jd
        DQF(J/mol) = -15d3 + 0.15 * p_bar
-odi   = 1 di
-       DQF(J/mol) = -100 + 0.211 * T + 0.005 * P | dqf_T corrected from 2.11, ECRG 9/18
+|odi   = 1 di
+|       DQF(J/mol) = -100 + 0.211 * T + 0.005 * P | dqf_T corrected from 2.11, ECRG 9/18
+odi  = 1 di
+       DQF(J/mol) = 1900 + 0.005 * P              | updated by ECRG, 13/7/20
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
        DQF(J/mol) = 4d3     - 0.43 * p_bar 
