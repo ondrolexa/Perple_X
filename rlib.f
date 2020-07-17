@@ -20167,7 +20167,7 @@ c                                with respect to the ordered species
             dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
          end do
 c                                dnu ~0 => speciation reaction is not equimolar
-         if (dnu(im).ne.0d0) then
+         if (dabs(dnu(im)).gt.zero) then
             if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)
