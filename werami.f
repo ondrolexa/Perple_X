@@ -777,6 +777,7 @@ c                                 global assemblage data
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save warned, pi
       data warned/.false./
@@ -4745,9 +4746,10 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa

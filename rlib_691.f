@@ -587,10 +587,11 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
       if (z.gt.-zero.and.z.le.r1) then
          badz = .false.
-      else if (z.gt.-1d4*zero) then
+      else if (z.gt.-zero) then
          z = 0d0
          badz = .false.
       else
@@ -2743,6 +2744,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save izap
       data izap /0/
@@ -3168,6 +3170,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save izap
       data izap /0/
@@ -3291,6 +3294,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save izap
       data izap /0/
@@ -3532,6 +3536,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save jerk
       data jerk /0/
@@ -5052,6 +5057,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer nsub,nterm
       double precision acoef
@@ -5254,7 +5260,7 @@ c                               nreact is returned by readr
                idep(i,j) = inds(j+1)
             end do
 
-            if (dabs(sum-1d0).gt.1d4*zero) then
+            if (dabs(sum-1d0).gt.zero) then
 
                write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
 
@@ -5856,7 +5862,8 @@ c-----------------------------------------------------------------------
      *         gfesic, gfecr1, gerk, ghybrid, gfes, gdqf
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision g
       common/ cst2 /g(k1)
@@ -6026,7 +6033,8 @@ c-----------------------------------------------------------------------
       integer k, id
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision g
       common/ cst2 /g(k1)
@@ -6063,7 +6071,8 @@ c-----------------------------------------------------------------------
       external gcpd
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6096,7 +6105,8 @@ c-----------------------------------------------------------------------
       common/ cst2 /g(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 c----------------------------------------------------------------------
 
       do k = 1, lstot(id)
@@ -6125,7 +6135,8 @@ c-----------------------------------------------------------------------
       external gproj
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6155,7 +6166,8 @@ c-----------------------------------------------------------------------
       external gzero
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6214,6 +6226,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -6291,7 +6304,7 @@ c DEBUG691
 
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
-               if (dabs(zt-1d0).gt.1d4*zero) then
+               if (dabs(zt-1d0).gt.zero) then
 
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
@@ -6338,7 +6351,7 @@ c                                 negative site?
 
       double precision function omega (id,y)
 c----------------------------------------------------------------------
-c subroutine to evaluate the configurational entropy of a solution
+c subroutine to evaluate the delta configurational entropy of a solution
 c with composition y, including the correction for endmember
 c configurational negentropies. reciprocal end-member composition version.
 c----------------------------------------------------------------------
@@ -6346,7 +6359,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision z,zt,dlnw,dlnz,y(m4),n(m11)
+      double precision z,zt,dlnw,dlnz,y(*),n(m11)
 
       integer i,j,k,id
 c                                 configurational entropy variables:
@@ -6421,6 +6434,90 @@ c                                 endmember corrections
       end do
 
       omega = dlnw
+
+      end
+
+      double precision function omega0 (id,y)
+c----------------------------------------------------------------------
+c subroutine to evaluate the absolute configurational entropy of a solution
+c with composition y, including the correction for endmember
+c configurational negentropies. reciprocal end-member composition version.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision z,zt,dlnw,dlnz,y(*),n(m11)
+
+      integer i,j,k,id
+c                                 configurational entropy variables:
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision v,tr,pr,r,ps
+      common / cst5 /v(l2),tr,pr,r,ps
+c----------------------------------------------------------------------
+      dlnw = 0d0
+c                                 for each site
+      do i = 1, msite(id)
+
+         zt = 0d0
+         dlnz = zt
+
+         if (zmult(id,i).ne.0d0) then
+c                                 standard model with fixed site multiplicity
+c                                 get site fractions
+            do j = 1, zsp(id,i)
+
+               z = dcoef(0,j,i,id)
+c                                 for each term:
+               do k = 1, lterm(j,i,id)
+                  z = z + dcoef(k,j,i,id) * y(ksub(k,j,i,id))
+               end do
+
+               zt = zt + z
+               if (z.gt.0d0) dlnz = dlnz - z * dlog (z)
+
+            end do
+
+            z = 1d0 - zt
+            if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
+            dlnw = dlnw + zmult(id,i)*dlnz
+
+         else if (zsp(id,i).gt.1) then
+c                                 variable site multiplicities
+c                                 get site fractions
+            do j = 1, zsp(id,i)
+
+               n(j) = dcoef(0,j,i,id)
+c                                 for each term:
+               do k = 1, lterm(j,i,id)
+c                                 n(j) is molar site population
+                  n(j) = n(j) + dcoef(k,j,i,id) * y(ksub(k,j,i,id))
+               end do
+c                                 zt is the multiplicity
+               zt = zt + n(j)
+
+            end do
+
+            if (zt.gt.0d0) then
+c                                 if site has non-zero multiplicity
+               do j = 1, zsp(id,i)
+c                                 z is site fraction
+                  z = n(j)/zt
+                  if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
+
+               end do
+
+            end if
+
+            dlnw = dlnw + r*zt*dlnz
+
+         end if
+
+      end do
+
+      omega0 = dlnw
 
       end
 
@@ -6842,7 +6939,8 @@ c                                 excess energy variables
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 c                                 special model endmember indexing
       integer jspec
       common/ cxt8 /jspec(h9,m4)
@@ -6896,6 +6994,7 @@ c                                 parameters for autorefine
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer iam
       common/ cst4 /iam
@@ -7748,6 +7847,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8132,6 +8232,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c DEBUG
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -9223,6 +9324,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
@@ -9516,7 +9618,8 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -9849,7 +9952,7 @@ c---------------------------------------------------------------------
 c--------------------------------------------------------------------------
 c soload - loads/requires solution properties:
 
-c   jend(h9,m4)  - h9 is the maximum number of solutions
+c   jend(h9,m14+2)  - h9 is the maximum number of solutions
 c                   k12 is the maximum number of endmembers pers
 c                   solution plus two.
 c   jend(i,1)     - OBSOLETE! is the number of endmembers in solution i.
@@ -9920,7 +10023,7 @@ c--------------------------------------------------------------------------
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -9933,6 +10036,7 @@ c--------------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision exces
       common/ cst304 /exces(m3,k1)
@@ -10491,6 +10595,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
       if (.not.extra) then
 c                                 chopit always generates jsp coordinates
@@ -10730,7 +10835,7 @@ c---------------------------------------------------------------------
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 c----------------------------------------------------------------------
 c                                 could save only nqs-2 coordinates, but
 c                                 will try nqs-1 first.
@@ -10873,7 +10978,7 @@ c-----------------------------------------------------------------------
       integer i, ids
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer jspec
       common/ cxt8 /jspec(h9,m4)
@@ -11212,6 +11317,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       character specie*4
       integer isp, ins
@@ -11436,7 +11542,7 @@ c-----------------------------------------------------------------------
       common/ cst45 /atwt(k0)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       logical mus
       double precision mu
@@ -12454,7 +12560,7 @@ c-----------------------------------------------------------------------
       common/ cst61 /ikp(k1)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer jnd
       double precision aqg,q2,rt
@@ -12830,7 +12936,7 @@ cDEBUG691
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -12860,6 +12966,7 @@ c DEBUG691 gall
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       data switch/.true./
 
@@ -12913,6 +13020,12 @@ c                                 ordering, internal dqfs (last for minfxc)
             do j = 1, jend(i,2)
 
                call setxyp (i,id,.false.,bad)
+
+c              call p2yx (i,bad)
+
+               if (bad) then 
+                  itic = itic + 1
+               end if
 
                if (switch.or.dnu(i).ne.0d0) then
 
@@ -13300,7 +13413,7 @@ c                                 solution model names
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       character tname*10
       logical refine, resub
@@ -13533,7 +13646,7 @@ c                                 solution model names
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -13679,7 +13792,7 @@ c                                 solution model names
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       character tname*10
       logical refine, resub
@@ -13750,7 +13863,7 @@ c                                 solution model names
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -14356,6 +14469,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer jnd
       double precision aqg,qq,rt
@@ -14677,7 +14791,7 @@ c-----------------------------------------------------------------------
      *         gmchpt, gmech0
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer jnd
       double precision aqg,q2s,rt
@@ -15176,6 +15290,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -15483,6 +15598,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
@@ -15679,7 +15795,7 @@ c                               nreact is returned by readr
                   idep(mdep,j) = inds(j+1)
                end do
 
-              if (dabs(sum-1d0).gt.1d4*zero) then 
+              if (dabs(sum-1d0).gt.zero) then 
                   write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
                   call error (72,sum,i,'dependent endmember '//
      *                 mname(inds(1))//' definition coefficients do not'
@@ -16613,6 +16729,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c---------------------------------------------------------------------
 
       dynam = resub
@@ -16891,6 +17008,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -17322,6 +17440,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -17589,7 +17708,7 @@ c                                 working arrays
      *              wl(m17,m18),pp(m4)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer jnd
       double precision aqg,qq,rt
@@ -17684,7 +17803,7 @@ c                                  into the mobile/saturated component space
       subroutine getxcp (xc,ntot,ids)
 c-----------------------------------------------------------------------
 c getxcp gets the normalized chemical composition of solution ids from 
-c its endmember fractions. called by minfxc (only for o/d models). 
+c its endmember fractions. called by minfxc for o/d models. 
 c-----------------------------------------------------------------------
       implicit none
  
@@ -17757,7 +17876,7 @@ c-----------------------------------------------------------------------
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -17773,6 +17892,10 @@ c-----------------------------------------------------------------------
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c-----------------------------------------------------------------------
 
       scp(1:icomp) = 0d0
@@ -17858,7 +17981,10 @@ c                                 pa coordinates used to compute the composition
       scptot = 0d0
 
       do i = 1, icp
+
+         if (scp(i).lt.0d0.and.scp(i).gt.-zero) scp(i) = 0d0
          scptot = scptot + scp(i)
+
       end do
 
       end
@@ -19352,7 +19478,7 @@ c------------------------------------------------------------------------
       integer jd, ii, h, i, j, id, ids
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -19411,6 +19537,7 @@ c DEBUG691 gall
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c---------------------------------------------------------
       nvar = nstot(id) - 1
 c                                 to be counted:
@@ -19524,6 +19651,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19545,7 +19673,7 @@ c                                  get the polytope weight
                pwt(ii) = pwt(ii) + y(k)
             end do
 
-            if (dabs(pwt(ii)).lt.1d4*zero) then
+            if (dabs(pwt(ii)).lt.zero) then
 
                pwt(ii) = 0d0
 
@@ -19553,9 +19681,11 @@ c                                  get the polytope weight
                   y(k) = 0d0
                end do
 
-            else if (pwt(ii).gt.one) then 
+            else if (pwt(ii).gt.r1) then 
 
-               write (*,*) 'wugganoa wugga'
+               write (*,*) 'wugganoa wugga',pwt(ii)
+
+               pwt(ii) = 1d0
 
             end if
 
@@ -19636,6 +19766,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19687,6 +19818,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19760,6 +19892,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19830,7 +19963,7 @@ c           write (*,1001) i,j,1d0-zt
 
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
-               if (dabs(zt-1d0).gt.1d4*zero) then
+               if (dabs(zt-1d0).gt.zero) then
 
                   write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
@@ -19875,7 +20008,7 @@ c                                 negative site?
 
       subroutine makayz (id)
 c----------------------------------------------------------------------
-c subroutine to make the ayc matrix for ayz*y = z, z is the independent
+c subroutine to make the ayz matrix for ayz*y = z, z is the independent
 c subset of the site fractions.
 c----------------------------------------------------------------------
       implicit none
@@ -19908,7 +20041,7 @@ c----------------------------------------------------------------------
      *                nr(j3)
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 c----------------------------------------------------------------------
       ayz(id,:,:) = 0d0
 c                                 independent endmembers:
@@ -19952,24 +20085,18 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, m, n, id
+      integer i, j, k, l, id
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      double precision ayc,cyc
-      common/ csty2c /ayc(h9,k5,m4),cyc(h9,m4)
+      double precision ayc
+      common/ csty2c /ayc(h9,k5,m4)
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
       common/ cst146 /nu(m15,j4),y2p(m4,m15),mdep,jdep(m15),
      *                idep(m15,j4),ndph(m15)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -19979,18 +20106,17 @@ c----------------------------------------------------------------------
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
 
-      integer jend
-      common/ cxt23 /jend(h9,m4)
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 c----------------------------------------------------------------------
       ayc(id,:,:) = 0d0
-      cyc(id,:) = 1d0
 c                                 independent endmembers:
       do k = 1, lstot(id)
 c                                 endmember is in column j
          j = knsp(k,id)
 
          do i = 1, icomp
-            ayc(id,i,j) = cp(i,jend(id,2+k))
+            ayc(id,i,j) = endc(id,k,i)
          end do
 
       end do
@@ -20001,36 +20127,12 @@ c                                 in y is
          j = knsp(lstot(id)+k,id)
 
          do l = 1, ndph(k)
-
-            if (idep(k,l).le.mstot(id)) then
-c                                 the dependent disordered endmember decomposes
-c                                 to independent disordered endmember idep(k,l):
-               do i = 1, icomp
-                  ayc(id,i,j) = ayc(id,i,j) + 
-     *                          nu(k,l)*cp(i,jend(id,2+iy2p(idep(k,l))))
-               end do
-
-            else
-c                                 the dependent disordered endmember decomposes
-c                                 to ordered endmember idep(j,l) - mstot, 
-c                                 decompose the ordered endmember into chemically
-c                                 equivalent disordered endmembers:
-               m = idep(k,l) - mstot(id)
-             
-               do n = 1, nr(m)
-c                                  the endmember decomposes to iddeps(n,m) in the
-c                                  y array, or ideps(n,m,id) in the p array.
-                  cyc(id,ideps(n,m,id)) = 0d0
-
-                  do i = 1, icomp
-
-                     ayc(id,i,j) = ayc(id,i,j) + nu(k,l)*depnu(n,m)
-     *                           * cp(i,jend(id,2+ideps(n,m,id)))
-                  end do 
-
-               end do
-
-            end if
+c                                 the dependent endmember decomposes
+c                                 to independent endmember idep(k,l):
+            do i = 1, icomp
+               ayc(id,i,j) = ayc(id,i,j) + 
+     *                       nu(k,l) * endc(id,iy2p(idep(k,l)),i)
+            end do
 
          end do
 
@@ -20139,7 +20241,7 @@ c---------------------------------------------------------------------
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 endmember pointers
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       double precision cp
       common/ cst12 /cp(k5,k10)
@@ -20168,6 +20270,7 @@ c                                 endmember pointers
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
 c                                 models with speciation:
       do j = 1, norder
@@ -20242,7 +20345,7 @@ c                                with respect to the ordered species
             dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
          end do
 c                                dnu ~0 => speciation reaction is not equimolar
-         if (dabs(dnu(im)).gt.1d4*zero) then
+         if (dabs(dnu(im)).gt.zero) then
             if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)

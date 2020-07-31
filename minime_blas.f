@@ -167,17 +167,6 @@ c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
       end if
 
-c      zp = 0d0
-c      do i = 1, nstot(ids)
-c         zp = zp + ppp(i)
-c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
-c      end do
-
-c      if (zp.lt.one.or.zp.gt.1d0+zero) then 
-c         write (*,*) 'low sum'
-c         call p2z (ppp,zt,ids,.true.)
-c      end if
-
 1000  format (a10,10(g14.7,1x))
 1010  format (i5,1x,10(g14.7,1x))
       end
@@ -208,6 +197,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -293,7 +283,7 @@ c-----------------------------------------------------------------------
 
       double precision ppp(*), gval, psum, ggrd(*), stuff(*)
 
-      double precision gsol1, omega
+      double precision gsol1, omega0
 
       external gsol1, omega
 
@@ -313,6 +303,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
@@ -333,7 +324,7 @@ c                                 free energy minimization
 
       else
 c                                 entropy maximization
-         gval = -omega (jds,pa)
+         gval = -omega0 (jds,pa)
 
       end if
 
@@ -352,7 +343,7 @@ c-----------------------------------------------------------------------
 c converts the independent endmember fractions to 0-1 bounded barycentric 
 c coordinates:
 
-c     number of bounded coordinates -> mstot (<m4)
+c     number of bounding vertices -> mstot (<m4)
 c     number of independent fractions -> nstot (<m14)
 c     number of linear constraints -> the number of independent
 c        site fractions + closure (<m20)
@@ -361,13 +352,13 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad
+      logical bad, site, comp, clos
 
       integer liw, lw, mvar, mcon, nvar, i, j, jter
 
       character cit*4, ctol*14
 
-      double precision scp(k5)
+      double precision scp(k5), tol, xero
 
       parameter (mvar=m4, mcon=m20, liw=2*mvar+3, 
      *           lw=2*(mcon+1)**2+7*mvar+5*mcon)
@@ -376,7 +367,7 @@ c-----------------------------------------------------------------------
 
       double precision ax(mcon), clamda(mvar+mcon), wrk(lw), c(mvar),
      *                 a(mcon,mvar), bl(mvar+mcon), bu(mvar+mcon), 
-     *                 gopt, sum, b(mcon)
+     *                 gopt, sum, b(mcon), yt(mvar)
 
       double precision wmach
       common/ cstmch /wmach(9)
@@ -393,6 +384,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -401,53 +393,65 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
-      integer ldq,ldt,ncolt
-      common/ be04nb /ldt,ncolt,ldq
+      save xero
 c-----------------------------------------------------------------------
       bad = .false.
+      site = .true.
+      comp = .false.
+      clos = .false.
+      tol = 1d2*zero
+      xero = zero
 c                                 get the disordered p's
       call minfxc (gopt,id,.true.)
       nvar = mstot(id)
+      ncon = 0
 c                                 dummy objective function coefficients
 c                                 (only 1 feasible point?)
       c(1:nvar) = 1d0
       bl(1:nvar) = 0d0
       bu(1:nvar) = 1d0
+
+      if (site) then 
 c                                 get the site fraction constraints
-      call p2zind (pa,b,ncon,id)
+         call p2zind (pa,b,ncon,id)
 c                                 load the fractions
-      bl(nvar+1:nvar+ncon) = b(1:ncon)
-      bu(nvar+1:nvar+ncon) = b(1:ncon)
+         bl(nvar+1:nvar+ncon) = b(1:ncon)
+         bu(nvar+1:nvar+ncon) = b(1:ncon)
 c                                 load the ayz constraint matrix
-      a(1:ncon,1:nvar) = ayz(id,1:ncon,1:nvar)
+         a(1:ncon,1:nvar) = ayz(id,1:ncon,1:nvar)
+
+      end if
+
+      if (comp) then 
 c                                 load the ayc constraint matrix
-      a(ncon+1:ncon+icp,1:nvar) = ayc(id,1:icp,1:nvar)
+         a(ncon+1:ncon+icp,1:nvar) = ayc(id,1:icp,1:nvar)
 c                                 get the bulk 
-      call getscp (scp,sum,id,1,.true.)
-      bl(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
-      bu(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
-      ncon = ncon + icp
+         call getscp (scp,sum,id,1,.true.)
+c
+         bl(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
+         bu(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
+         ncon = ncon + icp
+
+      end if
+
+      if (clos) then 
 c                                 add the closure constraint
-      ncon = ncon + 1
-      a(ncon,1:mstot(id)) = 1d0
-      bl(nvar+ncon) = 1d0
-      bu(nvar+ncon) = 1d0
-c                                 initialize y
-      y(1:mstot(id)) = 0d0
+         ncon = ncon + 1
+         a(ncon,1:nvar) = 1d0
+         bl(nvar+ncon) = 1d0
+         bu(nvar+ncon) = 1d0
+
+      end if
 c                                 cold start
       istart = 0
-      ldt = ncon
-      ldq = ldt
-      idead = 0
+      idead = -1
 
       if (lopt(28)) call begtim (2)
-c                                 optimize by lp
-c     call lpsol (mstot(id),ncon,a,mcon,b,c,is,y,ax,
-c    *            clamda,iw,liw,wrk,lw,idead,l6,istart)
 
-      write (ctol,'(g14.7)') wmach(4)
+      write (ctol,'(g14.7)') tol
       write (cit,'(i4)') l6
 
       call e04mhf ('nolist')
@@ -456,12 +460,18 @@ c    *            clamda,iw,liw,wrk,lw,idead,l6,istart)
       call e04mhf ('print level = 10')
       call e04mhf ('cold start')
       call e04mhf ('problem type = fp')
-c     call e04mhf ('minimim sum of infeasibilities = yes')
 
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
      *            clamda,iw,liw,w,lw,idead)
 
 c DEBUG691 to account for the unmodified lpsol ifail setting
+      if (zero.ne.xero) then 
+         write (*,*) 'zero ',zero,xero
+         call errpau
+      else 
+         write (*,*) 'worked'
+         read (*,*) i
+      end if
       if (idead.lt.3) idead = 0
 
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
@@ -476,9 +486,9 @@ c DEBUG691 to account for the unmodified lpsol ifail setting
 
             do j = 1, mstot(id)
 
-               if (y(j).lt.-zero) then 
+               if (y(j).lt.-tol) then 
                   bad = .true.
-               else if (y(j).lt.zero) then 
+               else if (y(j).lt.tol) then 
                   y(j) = 0d0
                end if
 
@@ -489,7 +499,7 @@ c DEBUG691 to account for the unmodified lpsol ifail setting
             write (*,'(i2,1x,5(g14.7,1x))') i, sum, bl(i+nvar), sum-
      *                                      bl(i+nvar)
 
-            if (dabs(sum-bl(i+nvar)).gt.zero) then 
+            if (dabs(sum-bl(i+nvar)).gt.tol) then 
                bad = .true.
             end if 
 
@@ -497,8 +507,6 @@ c DEBUG691 to account for the unmodified lpsol ifail setting
 
       end if
 c                                 reset ldt, ldq, istart for phase eq
-      ldq = icp + 1
-      ldt = ldq
       istart = 0
 
       if (bad) then
@@ -510,7 +518,7 @@ c                                 reset ldt, ldq, istart for phase eq
          badinv(id,2) = badinv(id,2) + 1
 c                                 strip out zero's
          do ncon = 1, mstot(id)
-            if (dabs(y(ncon)).lt.zero) y(ncon) = 0d0
+            if (dabs(y(ncon)).lt.tol) y(ncon) = 0d0
          end do 
 c                                 convert the y's to x's
          call sety2x (id,bad)
@@ -578,6 +586,7 @@ c DEBUG691                    dummies for NCNLN > 0
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       external gsol3, dummy
 c DEBUG691 minfxc
@@ -593,8 +602,9 @@ c                                 initialize bounds
       bu(1:nvar) = 1d20
       bl(1:nvar) = -1d20
 
-      ppp(1:nvar) = pa(1:nvar)
-      xp(1:ntot) = pa(1:ntot)
+      ppp(1:nvar) = pp(1:nvar)
+      xp(1:ntot) = pp(1:ntot)
+      inp = .false.
 c                                 load the local constraints 
 c                                 from the global arrays
       nclin = nz(ids) + icomp
@@ -660,15 +670,19 @@ c                                 obj call counter
 
          CALL E04UEF ('optimality tolerance = '//ctol)
          CALL E04UEF ('difference interval = '//cdint)
+         CALL E04UEF ('print level = 10')
 
       else
 
          iprint = 0 
 
+         write (ctol,'(g14.7)') zero
          CALL E04UEF ('nolist')
-         CALL E04UEF ('optimality tolerance =  1d-8')
+         CALL E04UEF ('optimality tolerance = '//ctol)
+         CALL E04UEF ('feasibility tolerance = '//ctol)
          CALL E04UEF ('difference interval = 1d-3')
-         CALL E04UEF ('print level = 0')
+         write (ctol,'(i4)') iprint
+         CALL E04UEF ('print level = '//ctol)
 
       end if
 
@@ -684,26 +698,27 @@ c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'
-         call errpau
+c        call errpau
       end if
 
       sum = 0d0
 
       do i = 1, nvar
          pa(i) = ppp(i)
-         if (dabs(pa(i)).lt.zero) pa(i) = 0d0
-         sum = sum + ppp(i)
+         if (dabs(pa(i)).lt.1d2*zero) then 
+            pa(i) = 0d0
+         else 
+            sum = sum + ppp(i)
+         end if 
       end do
 
       pa(i) = 1d0 - sum
+c                                 if you touch pa, makepp
+      call makepp (ids)
 
       if (inp) then 
          write (*,*) istuff(4),gfinal,istuff(1)
          goto 10
       end if
-
-c     do i = 1, nstot(ids)
-c        if (dabs(pa(i)).lt.zero) pa(i) = 0d0
-c     end do 
 
       end

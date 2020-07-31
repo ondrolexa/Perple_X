@@ -565,7 +565,8 @@ c----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -825,6 +826,7 @@ c                                 global variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -1180,6 +1182,8 @@ c                                 compound composition into cp3 array
 c----------------------------------------------------------------------
 c subroutine to extract compositional range of endmembers in stable phases
 c for auto_refine option.
+c  ids - pointer to solution model
+c  jd  - pointer to the phase in the final result
 c----------------------------------------------------------------------
       implicit none 
 
@@ -1212,6 +1216,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
 c                                 load the indepedent endmeber fractions 
       pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
@@ -1666,6 +1671,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
@@ -2054,8 +2060,8 @@ c---------------------------------------------------------------------
       integer jphct,istart
       common/ cst111 /jphct,istart
 
-      integer ldt,ncolt,ldq
-      common/ be04nb /ldt,ncolt,ldq
+      integer lennam,ldt,ncolt,ldq
+      common/ be04nb /lennam,ldt,ncolt,ldq
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -2268,6 +2274,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save tic
       data tic/0/
@@ -2573,7 +2580,8 @@ c                                 hcp is different from icp only if usv
       common/ cst330 /mu(k8),mus
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
+      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -2809,6 +2817,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
 
       if (.not.lopt(32)) then
@@ -3190,6 +3199,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated July 17, 2020.',
+     *      'Perple_X version 6.9.0, source updated July 31, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -118,6 +118,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       integer iam
       common/ cst4 /iam
@@ -4772,6 +4773,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
       inum = int(num)
 
@@ -4888,6 +4890,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 c----------------------------------------------------------------------
       inum = int(num)
 
@@ -9366,7 +9369,7 @@ c                                 read header info
          if (ncol*nrow.gt.k2) call error (72,b(1),i,'too many'/
      *      /' coordinates, increase k2 to ncol*nrow in routine FRAC2D')
 
-         if (i.ne.ncol) call error (72,b(1),i,'the number of'//
+         if (i.ne.ncol) call error (72,b(1),i,'the number of '//
      *     'nodes in a column specified in: '//cfname//' must equal the'
      *   //' number of nodes specified in the aux file.')
 

@@ -1569,6 +1569,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save ins, jns
       data ins, jns/ 1,5,6,7,8,1/
@@ -1706,6 +1707,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save ins,jns
       data ins, jns/1,5,7,1/
@@ -2423,6 +2425,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save b,r,p0
       data b,r,p0 /1.465d0,8.314d-3,2d0/
@@ -2558,6 +2561,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       save b,r,p0
 
@@ -6934,6 +6938,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
 
       double precision eqk
       common / csteqk /eqk(nsp)

@@ -85,7 +85,7 @@ c----------------------------------------------------------------------
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,ld
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       integer length,com
       character chars*1
@@ -1314,7 +1314,7 @@ c-----------------------------------------------------------------------
       external endvol
 
       integer jend
-      common/ cxt23 /jend(h9,m4)
+      common/ cxt23 /jend(h9,m14+2)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
