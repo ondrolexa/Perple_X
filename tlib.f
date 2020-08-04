@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated July 31, 2020.',
+     *      'Perple_X version 6.9.0, source updated August 4, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -6696,7 +6696,26 @@ c-----------------------------------------------------------------------
       common/ cst228 /prject,tfname
 c-----------------------------------------------------------------------
       call mertxt (tfname,prject,'_seismic_data.txt',0)
-      open (n8, file = tfname)
+      open (n8, file = tfname, iostat = i)
+
+      if (i.gt.0) then
+c                                 this trap arose due to a condition created by WINDOWS
+         write (*,'(2(/,a))') '**error ver099** unable to open '//tfname
+     *      ,'check that the file is not being used by another program.'
+
+         write (*,'(/,a,i3)') 'IOSTAT = ',i
+
+         inquire (n8, opened=stx, named=notstx, name=tfname)
+
+         if (stx) then
+
+            write (*,'(a)') 'programming error: unit n8 is already open'
+            if (notstx) write (*,'(a)') 'and attached to file: ',tfname
+            write (*,'(a)') 'please report this error'
+
+         end if
+
+      end if
 
       stx = .false.
       notstx = .false.

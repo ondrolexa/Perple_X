@@ -50,10 +50,6 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision mu
       common/ cst330 /mu(k8),mus
 
-c DEBUG691 gall
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
       data iprint,inp/0,.false./
 
       save iprint,inp
@@ -121,11 +117,14 @@ c                                 refinement point index
 
       else
 
+         iprint = 0
+
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-4')
          CALL E04UEF ('difference interval = 1d-3')
          CALL E04UEF ('difference interval = 1d-3')
-         CALL E04UEF ('print level = 0')
+         write (ctol,'(i4)') iprint
+         CALL E04UEF ('print level = '//ctol)
 
       end if
 
@@ -206,9 +205,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c DEBUG691 gall
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
@@ -352,13 +348,13 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, site, comp, clos
+      logical bad, site, comp, clos, inv
 
-      integer liw, lw, mvar, mcon, nvar, i, j, jter
+      integer liw, lw, mvar, mcon, nvar, i, j, jter, iprint
 
       character cit*4, ctol*14
 
-      double precision scp(k5), tol, xero
+      double precision scp(k5), tol
 
       parameter (mvar=m4, mcon=m20, liw=2*mvar+3, 
      *           lw=2*(mcon+1)**2+7*mvar+5*mcon)
@@ -367,7 +363,7 @@ c-----------------------------------------------------------------------
 
       double precision ax(mcon), clamda(mvar+mcon), wrk(lw), c(mvar),
      *                 a(mcon,mvar), bl(mvar+mcon), bu(mvar+mcon), 
-     *                 gopt, sum, b(mcon), yt(mvar)
+     *                 gopt, sum, b(mcon)
 
       double precision wmach
       common/ cstmch /wmach(9)
@@ -395,17 +391,68 @@ c-----------------------------------------------------------------------
       integer jend
       common/ cxt23 /jend(h9,m14+2)
       save / cxt23 /
-
-      save xero
 c-----------------------------------------------------------------------
       bad = .false.
-      site = .true.
-      comp = .false.
-      clos = .false.
+      inv = .false.
+
       tol = 1d2*zero
-      xero = zero
+c                                 primatic, need to invert to vertex fractions
+      if (lstot(id).lt.mstot(id)) inv = .true.
+c                                 choose constraints:
+      if (lorder(id)) then
+c                                 decompose to stoichiometric equivaluents
+         call makepp (id)
+
+         if (inv) then
+c                                 prism
+            site = .true.
+            comp = .false.
+            clos = .false.
+            if (dnu(id).ne.0d0) 
+     *         call errdbg ('unanticipated prism/non-eq molar/py2x')
 c                                 get the disordered p's
-      call minfxc (gopt,id,.true.)
+            call minfxc (gopt,id,.true.)
+
+         else
+c                                get sum (needed for non-eq molar case):
+            sum = 0d0
+
+            do i = 1, lstot(id)
+c DEBUG691
+               if (pp(i).lt.-1d-2) call errdbg ('wtf, p2yx 2')
+               if (pp(i).lt.zero) pp(i) = 0d0
+               sum = sum + pp(i)
+            end do
+
+            x(1,1,1:lstot(id)) = pp(1:lstot(id))/sum
+
+            if (pop1(id).gt.1) 
+     *         call errdbg ('houston we have a problem, p2yx 1')
+
+         end if
+
+      else
+
+         if (inv) then
+c                                 reciprocal and/or relict
+c                                 equipartition
+            comp = .true.
+            clos = .false.
+            site = .false.
+
+         else
+
+            x(1,1,1:lstot(id)) = pa(1:lstot(id))
+
+            if (pop1(id).gt.1) 
+     *         call errdbg ('houston we have a problem, p2yx 1')
+
+         end if
+
+      end if
+
+      if (.not.inv) return
+
       nvar = mstot(id)
       ncon = 0
 c                                 dummy objective function coefficients
@@ -448,6 +495,7 @@ c                                 add the closure constraint
 c                                 cold start
       istart = 0
       idead = -1
+      iprint = 0
 
       if (lopt(28)) call begtim (2)
 
@@ -457,28 +505,21 @@ c                                 cold start
       call e04mhf ('nolist')
       call e04mhf ('iteration limit = '//cit)
       call e04mhf ('feasibility tolerance = '//ctol)
-      call e04mhf ('print level = 10')
+      call e04mhf ('print level = 0')
       call e04mhf ('cold start')
       call e04mhf ('problem type = fp')
 
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
-     *            clamda,iw,liw,w,lw,idead)
+     *            clamda,iw,liw,wrk,lw,idead,iprint)
 
 c DEBUG691 to account for the unmodified lpsol ifail setting
-      if (zero.ne.xero) then 
-         write (*,*) 'zero ',zero,xero
-         call errpau
-      else 
-         write (*,*) 'worked'
-         read (*,*) i
-      end if
       if (idead.lt.3) idead = 0
 
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
 
       if (bad.or.idead.ne.0) then
 
-         write (*,'(i2,1x,i2)') idead, ncon
+c        write (*,'(i2,1x,i2)') idead, ncon
 
          do i = 1, ncon
 
@@ -496,18 +537,39 @@ c DEBUG691 to account for the unmodified lpsol ifail setting
 
             end do
 
-            write (*,'(i2,1x,5(g14.7,1x))') i, sum, bl(i+nvar), sum-
-     *                                      bl(i+nvar)
-
-            if (dabs(sum-bl(i+nvar)).gt.tol) then 
-               bad = .true.
-            end if 
+c           write (*,'(i2,1x,5(g14.7,1x))') i, sum, bl(i+nvar), sum-
+c    *                                      bl(i+nvar)
 
          end do
 
       end if
 c                                 reset ldt, ldq, istart for phase eq
       istart = 0
+c                                 the inversion is generally weak, take
+c                                 any answer within 1% of closure, positivity
+      sum = 0d0
+      bad = .false.
+
+      do i = 1, mstot(id)
+
+         if (y(i).gt.-1d-2.and.y(i).lt.1.01d0) then
+
+            if (y(i).lt.zero) then 
+               y(i) = 0d0
+            else if (y(i).gt.1d0) then
+               y(i) = 1d0
+            end if
+
+            sum = sum + y(i)
+
+         else
+
+            bad = .true.
+c                                 could do another inversion without
+c                                 positivity constraint to see if the
+c                                 answer really is outside the prism.
+         end if 
+      end do
 
       if (bad) then
 
@@ -516,12 +578,12 @@ c                                 reset ldt, ldq, istart for phase eq
       else
 
          badinv(id,2) = badinv(id,2) + 1
-c                                 strip out zero's
-         do ncon = 1, mstot(id)
-            if (dabs(y(ncon)).lt.tol) y(ncon) = 0d0
-         end do 
+c                                 renormalize
+         do i = 1, mstot(id)
+            y(i) = y(i)/sum
+         end do
 c                                 convert the y's to x's
-         call sety2x (id,bad)
+         call sety2x (id)
 
       end if
 
@@ -670,7 +732,8 @@ c                                 obj call counter
 
          CALL E04UEF ('optimality tolerance = '//ctol)
          CALL E04UEF ('difference interval = '//cdint)
-         CALL E04UEF ('print level = 10')
+         write (ctol,'(i4)') iprint
+         CALL E04UEF ('print level = '//ctol)
 
       else
 
@@ -687,10 +750,6 @@ c                                 obj call counter
       end if
 
       CALL E04UEF ('derivative level = 0')
-
-c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol3,
-c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol3,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,

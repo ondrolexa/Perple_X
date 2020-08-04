@@ -1110,18 +1110,6 @@ c     recover the optional parameters set by the user.
          call dcopy (n,w(lgrad),1,gradu,1)
       end if
 
-      if (inform.ne.0 .and. (ifail.eq.0 .or. ifail.eq.-1)) then
-         if (inform.lt.0) write (rec,fmt=99985)
-         if (inform.eq.1) write (rec,fmt=99984)
-         if (inform.eq.2) write (rec,fmt=99983)
-         if (inform.eq.3) write (rec,fmt=99982)
-         if (inform.eq.4) write (rec,fmt=99981)
-         if (inform.eq.6) write (rec,fmt=99980)
-         if (inform.eq.7) write (rec,fmt=99979)
-         if (inform.eq.9) write (rec,fmt=99978) nerror
-         call x04bay(nerr,2,rec)
-      end if
-
       ifail = p01abf(ifail,inform,srname,0,rec)
 
 99999 format (/' exit nlpsol - user requested termination.')
@@ -4174,36 +4162,7 @@ c           general constraint.  install the new row of t.
 
 c     prepare to exit.  check the magnitude of the condition estimator.
 
-   60 if (nanew.gt.0) then
-         if (cond.lt.condmx .and. .not. overfl) then
-
-c           the factorization has been successfully updated.
-
-            inform = 0
-            dtmax = tdtmax
-            dtmin = tdtmin
-            if (cond.ge.condbd) then
-               if (msglvl.gt.0) then
-                  write (rec,fmt=99997) jadd
-                  call x04bay(iprint,5,rec)
-               end if
-            end if
-         else
-
-c           the proposed working set appears to be linearly dependent.
-
-            inform = 1
-
-                  if (nactiv.gt.0) then
-                     write (rec,fmt=99994) asize, dtmax, dtmin, dtnew
-                     call x04bay(iprint,3,rec)
-                  else
-                     write (rec,fmt=99993) asize, dtnew
-                     call x04bay(iprint,3,rec)
-                  end if
-
-         end if
-      end if
+   60 return
 
 c     end of  e04ncv. (lsadd)
 
@@ -18847,16 +18806,8 @@ c        abnormal exit from calling routine
      *       (ifail.gt.0 .and. mod(ifail/10,10).ne.0)) then
 c           noisy exit
             call x04aaf(0,nerr)
-            do 20 i = 1, nrec
-               call x04baf(nerr,rec(i))
-   20       continue
-            if (ifail.ne.-13) then
-               write (mess,fmt=99999) srname, ierror
-               call x04baf(nerr,mess)
-               call x04baf(nerr,
-     *                        ' ** soft failure - control returned')
 
-            end if
+
          end if
       end if
 

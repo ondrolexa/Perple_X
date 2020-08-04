@@ -8353,41 +8353,109 @@ z(B,fe) = 3/4 herc
 end_of_model
                       --------------------------------------------------------
 begin_model
-                      Spinel after White, RW, Powell, R & Clarke, GL (JMG, 2002)
+                      Spinel after White, RW, Powell, R & Clarke, GL (JMG 20:41-55 2002)
+
+                      * to prevent Perple_X from rejecting the Ti endmember (usp) of this
+                        model because of invalid site populations the musp endmember 
+                        be specified by the make definition 
+
+                           musp_d   = 1 usp + 2 sp - 2 herc
+                           DQF = 0
+
+                        in the header of the thermodynamic data file to be used for the 
+                        calculation, for more information on make definitions see: 
+                        www.perplex.ethz.ch/perplex_thermodynamic_data_file_body.html#Make_definitions
+
+                      * Converted to reciprocal 688 format solution model by adding
+                        mft_d and musp_d, JADC Aug 1, 2020.
+
+                      * Replaces Sp(WPH), JADC Mar 5, 2009.
 
                       This model has two fake sites, each with a mulitplicity of one.
-                      Fe3+ Al and Ti mix on the fake A site, and Mg-Fe2+ mix on the fake B site
+                      Fe3+ Al and Ti mix on the fake A site, and Mg-Fe2+ mix on the fake B site,
+                      a mind boggling contortion. There is no way to reproduce this model exactly
+                      in Perple_X because it has no rational expression. In fact, if you wanted
+                      to make something worse than equipartition, this is it. Two semi-rational 
+                      implementations are:
 
-                      Replaces Sp(WPH), JADC Mar 5, 2009.
+                      1) assume a distinct subsite B' and reduce the effective multiplicity of
+                         B and B' to 1/2 so that the total B' + B site configurational entropy
+                         is comparable to the WPC single B site.
 
-                                                      A       B
-                                                     _____________
+                                                      B       B'       A  
+                                                     _____________________
 
-                                      Mutliplicity    1       1
-                                                     _____________
+                                      Mutliplicity    1       1        1
+                            Effective Multiplicity    1/2     1/2      1
+                                                     _____________________
 
-                                      1 sp            Al      Mg
-                            Species:  2 herc          Al      Fe2+
-                                      3 usp           Ti      Fe2+
-                                      4 mt            Fe3+    Fe2+
+                                      1 sp            Al      Al       Mg
+                            Species:  2 herc          Al      Al       Fe
+                                      3 usp           Ti      Fe       Fe
+                                        musp          Ti      Mg       Mg
+                                      4 mt            Fe3+    Fe3+     Fe
+                                        mft_d         Fe3+    Fe3+     Mg
+
+                                                      B       B'       A  
+                                                     _____________________
+
+                                      Mutliplicity    1       1        1
+                            Effective Multiplicity    1/2     1/2      1
+                                                     _____________________
+
+                                      1 sp            Al      Al       Mg
+                            Species:  2 herc          Al      Al       Fe
+                                      3 usp           Ti      Fe       Fe
+                                        musp          Ti      Mg       Mg
+                                      4 mt            Fe3+    Fe3+     Fe
+                                        mft_d         Fe3+    Fe3+     Mg
+
+                      2) Make usp inverse. This is unsatisfactory in the mt IS inverse, but
+                         treated as normal, who knows what usp, etc are.
+
+                                                      B          A
+                                                     ____________________________
+
+                          Effective  Multiplicity     1          1
+                               True  Multiplicity     2          1
+                                                     ____________________________
+
+                                        sp            [Al]2      Mg
+                            Species:    herc          [Al]2      Fe
+                                        usp           TiFe       Fe
+                                        musp_d        TiMg       Mg
+                                        mt            [Fe3+]2    Fe
+                                        mft_d         [Fe3+]2    Mg
+
+                      Scheme 1 is adopted below. The implementation underestimates the
+                      site fraction of Ti compared to the WPC formulation and therefore
+                      is likely to destabilize Ti-solution compared to the THERMOCALC
+                      implementation, the effect seems slight (cf the bl478 benchmark).
 
 Sp(WPC)
 abbreviation Sp
 full_name    spinel
 
-2                                 | model type: simplicial composition space
+688                                | model type: 688 format standard model
+ 
+1                                  | number of polytopes
+2                                  | number of simplices
+2 3                                | number of vertices on each simplex
 
-4                                 | 4 endmembers
-sp
-herc
-usp
-mt
+musp     usp
+mft_d    mt
+sp       herc
 
-0  0  0  0                        | endmember flags
+X_Mg,A  0. 1   .1   0              | imod = 0 -> cartesian subdivision
+X_Fe,A  by difference
 
-0  1  .1 0                        | X(sp) subdivision range,   imod = 0 -> cartesian
-0  1  .1 0                        | X(herc) subdivision range, imod = 1 -> assymmetric stretching
-0  1  .1 0                        | X(usp) subdivision range,  imod = 1 -> assymmetric stretching
+X_MT,B  0. 1   .1   0              | imod = 0 -> cartesian subdivision
+X_Fe,B  0. 1   .1   0              | imod = 0 -> cartesian subdivision
+X_Al,B  by difference
+
+begin_dependent_endmembers
+mft_d    = 1 mt  + 1 sp - 1 herc
+end_dependent_endmembers
 
 begin_excess_function
 W(herc mt)    18.5d3
@@ -8396,14 +8464,22 @@ W(sp mt)      40d3
 W(sp usp)     30d3
 end_excess_function
 
-2                                     2 site entropy model, see comments above
+2                                   | number of sites in configurational entropy model
 
-3 1                                   3 species, site multiplicity of 1
-z(a,Fe3+) =  1 mt
-z(a,Ti)   =  1 usp
+A                                   | site name
+2 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Mg,A)   =  1 sp   + 1 musp
+z(Fe,A)   =  1 herc + 1 usp + 1 mt
 
-2 1                                   2 species, site multiplicity of 1
-z(b,Mg)   =  1 sp
+B                                   | site name
+5 1 2                               | number of species, effective multiplicity, true multiplicity
+z(Ti,B)    =  1/2 usp + 1/2 musp
+z(Fe3,B)   =  1 mt
+z(Al,B)    =  1 herc + 1 sp
+z(Mg,B)    =  1/2 musp
+z(Fe,B)    =  1/2 usp
+
+[cf model comment!]O4               | formula suffix, enter "none" for no suffix.
 
 end_of_model
                      --------------------------------------------------------

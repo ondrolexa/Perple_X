@@ -1086,10 +1086,6 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-c DEBUG691 gall
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
       save / cst59 /

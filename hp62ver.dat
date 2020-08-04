@@ -137,6 +137,10 @@ begin_makes
  |                                   | presumed typo in the WPH (JMG, 2007) paper by L Tajcamanova, 5/11/2007.
  | 13.45e3 0 0                       | fbi = 1 east - 1/2 cor + 1 hem, 8/10/2007, L Tajcamanova               
 
+                                | Mg-uelvospinel for Sp(WPC), this model pushed the
+                                | equipartition nonsense beyond the pale.
+musp   = 1 usp + 2 sp - 2 herc
+DQF = 0
                                 | Fe endmembers for ultramafic mineral solution
                                 | models, based on the talc Fe-Mg exchange.
 fbr = 1 br - 1/3 ta + 1/3 fta
@@ -154,13 +158,13 @@ DQF(J/mol) = 0
 atgts = 4 clin + 9/17 atg - 24/17 br      | Tshermaks antigorite for Atg(PN) model (Padrón-Navarta et al., 2013, Lithos)
 DQF = -2e3 + 46.1*T_K
 
-| ettore's makes for oCCM(EF)
-odo = 1/2 mag 1/2 cc 
-       DQF(J/mol) = -1000
-oank = 1/4 sid 1/2 cc 1/4 mag 
-       DQF(J/mol) = -750 
+| ettore's makes:
+| odo = 1/2 mag 1/2 cc 
+| -1000. 0 0 
+| oank = 1/4 sid 1/2 cc 1/4 mag 
+|  -750 0 0 
 
-| odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model Do(HP)
+| odo = 1/2 mag + 1/2 cc          | ordered dolmite species for H&P dolomite model
 | -13.5d3 0 0 
 
                                 | Green et al (2007) omphacite model, ds6 
@@ -222,7 +226,9 @@ kho = 1 py - 1 gr + 1 andr
                                 | without the Ilm(WPH) model. JADC, 6/19/11.
 dilm = 1 ilm_nol  
                                 | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
-                                | oilm + {DH,R*ln(4),0} 
+                                | oilm + {DH,R*ln(4),0}, where oilm is
+                                | -13608 9.426 0 => the TC DQF coeffecients added to
+                                | smax*tc0*(q0^2-1/3*q0^6), -smax*q0^2, vmax*q0^2 (unlandauing iml_nol)
        DQF(J/mol) = 17043.57559 -13.11797099 .1836386612e-1
                                 | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
 zr8L = 2 zrc                    | Zr-melt endmember

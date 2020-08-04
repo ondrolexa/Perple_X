@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,liw,lw,k,idead,inc,lphct,jter
+      integer i,liw,lw,k,idead,inc,lphct,jter, iprint
 
       character cit*4, ctol*14
 
@@ -109,24 +109,23 @@ c                                load the adaptive refinement cpd g's
 c                                 idead = -1 tells lpnag to save parameters
 c                                 for subsequent warm starts
       idead = -1
+      iprint = 0 
 
       if (lopt(28)) call begtim (2)
-c                                 optimize by nag, original version
-c     call lpsol (jphct,hcp,a,k5,b,c,is,x,ax,
-c    *            clamda,iw,liw,w,lw,idead,l6,istart)
-c                                 optimize by full version:
+
       write (ctol,'(g14.7)') wmach(4)*1d2
       write (cit,'(i4)') l6
 
       call e04mhf ('nolist')
       call e04mhf ('iteration limit = '//cit)
       call e04mhf ('feasibility tolerance = '//ctol)
-      call e04mhf ('print level = 0')
       call e04mhf ('cold start')
       call e04mhf ('problem type = lp')
+      write (ctol,'(i4)') iprint
+      call e04mhf ('print level = '//ctol)
 
       call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,
-     *            clamda,iw,liw,w,lw,idead)
+     *            clamda,iw,liw,w,lw,idead,iprint)
 c DEBUG691 to account for the unmodified lpsol ifail setting
       if (idead.lt.3) idead = 0
 
@@ -231,7 +230,7 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j,
-     *        idead1, jter
+     *        idead1, jter, iprint
 
       logical quit, kterat
 
@@ -317,22 +316,21 @@ c                                 cold start
          jstart = 0 
 c                                 set idead = 0 to prevent lpsol from
 c                                 overwriting warm start parameters
-         idead = 0 
+         idead = 0
+         iprint = 0
 
          if (lopt(28)) call begtim (8)
 c                                 do the optimization
-c        call lpsol (jphct,icp,cp2,k5,b,g2,is,x,ax,
-c    *               clamda,iw,liw,w,lw,idead,l6,jstart)
-
          write (ctol,'(g14.7)') wmach(4)*1d2
          write (cit,'(i4)') l6
 
          call e04mhf ('nolist')
          call e04mhf ('iteration limit = '//cit)
          call e04mhf ('feasibility tolerance = '//ctol)
-         call e04mhf ('print level = 0')
          call e04mhf ('cold start')
          call e04mhf ('problem type = lp')
+         write (ctol,'(i4)') iprint
+         call e04mhf ('print level = '//ctol)
 c        call e04mhf ('minimum sum of infeasibilities = yes')
 
          bl(1:jphct) = 0d0
@@ -342,7 +340,7 @@ c        call e04mhf ('minimum sum of infeasibilities = yes')
          bu(jphct+1:jphct+icp) = b(1:icp)
 
          call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,jter,gtot,ax,
-     *               clamda,iw,liw,w,lw,idead)
+     *               clamda,iw,liw,w,lw,idead,iprint)
 c DEBUG691 to account for the unmodified lpsol ifail setting
          if (idead.lt.3) idead = 0
 
@@ -1221,30 +1219,11 @@ c----------------------------------------------------------------------
 c                                 load the indepedent endmeber fractions 
       pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
 c                                 recover the prismatic composition
-      if (lstot(ids).eq.nstot(ids).and.istg(ids,1).eq.1) then 
-c                                 the model is simplicial
-         do j = 1, ispg(ids,1,1)
-            x(1,1,j) = pa(j)
-         end do
+      call p2yx (ids,bad)
 
-         if (pop1(ids).gt.1) call errdbg ('houston we have a problem')
-
-      else if (lorder(ids).or.lstot(ids).eq.nstot(ids)) then
-c                                 the model is o/d and/or prismatic with
-c                                 no dependent endmembers:
-c                                 get the simplicial coordinates
-         call makepp (ids)
-
-         call p2yx (ids,bad)
-
-         if (bad) then 
-            write (*,*) 'outta da box',y(1:mstot(ids))
-            return
-         end if
-
-      else 
-c                                  reciprocal with dependent endmembers
-         call errdbg ('recip/equip?')
+      if (bad) then 
+         write (*,*) 'outta da box',y(1:mstot(ids))
+         return
       end if
 c                                 set stable flag
       stable(ids) = .true.
@@ -2300,14 +2279,18 @@ c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
 
-         if (is(i).eq.4) then 
+         if (is(i).ne.1) then
 
-            if (x(i).gt.zero) then
-               write (*,*) 'wonka wonak'
-               call errpau
+            if (is(i).eq.4) then 
+
+               if (x(i).gt.zero) then
+                  write (*,*) 'wonka wonak ',x(i)
+c              call errpau
+               else 
+                  write (*,*) 'not wonka wonak ',x(i)
+               end if
+
             end if
-
-         else if (is(i).ne.1) then
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i

@@ -5390,9 +5390,6 @@ c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
 c                                 get derivative of excess function
       dgex = 0d0
@@ -6183,9 +6180,6 @@ c                                 working arrays
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 bookkeeping variables
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -6513,9 +6507,6 @@ c                                 excess energy variables
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m14+2)
@@ -7381,9 +7372,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c-----------------------------------------------------------------------
 c                                 always set p0a because if laar and 
 c                                 .not.recip or recip p0a is used.
@@ -7434,9 +7422,7 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+c-----------------------------------------------------------------------
       do k = 1, nord(id)
          do l = 1, nrct(k,id)
             ind = ideps(l,k,id)
@@ -7475,9 +7461,6 @@ c----------------------------------------------------------------------
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
 
       g = 0d0
@@ -7549,9 +7532,6 @@ c----------------------------------------------------------------------
 
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
       do i = 1, nord(id)
          enth(i) = deph(1,i,id) + t * deph(2,i,id) + p * deph(3,i,id)
@@ -7587,9 +7567,6 @@ c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -7756,9 +7733,6 @@ c                                 configurational entropy variables:
 
       logical pin
       common/ cyt2 /pin(j3)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -8229,9 +8203,6 @@ c----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
       logical pin
       common/ cyt2 /pin(j3)
 
@@ -8551,9 +8522,6 @@ c----------------------------------------------------------------------
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
 c                                 adjust the composition by the increment
       do i = 1, nrct(k,id)
@@ -8822,9 +8790,6 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
@@ -8915,9 +8880,6 @@ c                                 configurational entropy variables:
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
       save / cst59 /
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c----------------------------------------------------------------------
 
       inf = .false.
@@ -13252,11 +13214,15 @@ c                                 charge balance model:
 
       else if (ipop.eq.1) then 
 c                                 single polytope
-         write (lun,1040) 'prismatic model: '//fname(i)
+         if (istg(i,1).gt.1) then
+            write (lun,1040) 'prismatic model: '//fname(i)
+         else 
+            write (lun,1020) fname(i)
+         end if
 
          do j = 1, istg(i,1)
 
-            write (lun,1050) j,' '
+            if (istg(i,1).gt.1) write (lun,1050) j,' '
 
             if (ispg(i,1,j).eq.1) then
 
@@ -13320,12 +13286,12 @@ c                                  polytope
 
       end if
 
-1020  format (/,'Endmember fractions for simplicial model: ',a,//,5x,
-     *          'Endmember     Minimum         Maximum')
+1020  format (/,'Compositions for simplicial model: ',a,//,5x,
+     *          '              Minimum         Maximum')
 1030  format (5x,a8,4x,g12.5,4x,g12.5)
 1040  format (/,'Compositions for ',a)
 1050  format (/,'  Simplex ',i1,a,/,5x,
-     *               'Composition   Minimum         Maximum')
+     *               '              Minimum         Maximum')
 1060  format (8x,'Dummy site generated by model reformulation',/)
 1070  format (8x,i2,7x,g12.5,4x,g12.5)
 1080  format (5x,a10,2x,g12.5,4x,g12.5)
@@ -14870,9 +14836,6 @@ c----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-
       logical pin
       common/ cyt2 /pin(j3)
 
@@ -15018,9 +14981,6 @@ c                                 excess energy variables
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
@@ -20075,9 +20035,6 @@ c---------------------------------------------------------------------
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m14+2)

@@ -1,5 +1,5 @@
       SUBROUTINE lpsol (N,NCLIN,A,LDA,BL,BU,CVEC,ISTATE,X,ITER,OBJ,AX,
-     *                  CLAMDA,IW,LENIW,W,LENW,IFAIL)
+     *                  CLAMDA,IW,LENIW,W,LENW,IFAIL,jprint)
 C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
 C
 C     ******************************************************************
@@ -42,6 +42,10 @@ C     Copyright  1989  Optimates.
 C     ******************************************************************
 C
 C     .. Parameters ..
+      implicit none
+
+      integer jprint
+
       CHARACTER*6       SRNAME
       PARAMETER         (SRNAME='E04MFF')
       INTEGER           LENLC
@@ -495,13 +499,18 @@ C
       CALL F06DFF(MXPARM,IPSVLC,1,IPRMLC,1)
       CALL DCOPY(MXPARM,RPSVLC,1,RPRMLC,1)
 C
-      IF ((INFORM.GE.1 .AND. INFORM.LE.7)
+      IF ((INFORM.GE.1 .AND. INFORM.LE.7.and.jprint.gt.0)
      *    .AND. (IFAIL.EQ.0 .OR. IFAIL.EQ.-1)) CALL X04BAY(NERR,2,
      *    ERRREC)
-      IFAIL = P01ABF(IFAIL,INFORM,SRNAME,0,REC)
-      RETURN
-C
-C
+
+      if (jprint.gt.0) then 
+         IFAIL = P01ABF(IFAIL,INFORM,SRNAME,0,REC)
+      else if (inform.ge.0) then 
+         ifail = inform
+      else
+         call errdbg ('wanola')
+      end if
+
 C
 C     End of  E04MFF.  (LPOPT)
 C
@@ -1217,6 +1226,8 @@ C
          CALL DCOPY(N,W(LGRAD),1,GRADU,1)
       END IF
 C
+      if (jprint.eq.0) inform = 0
+
       IF (INFORM.NE.0 .AND. (IFAIL.EQ.0 .OR. IFAIL.EQ.-1)) THEN
          IF (INFORM.LT.0) WRITE (REC,FMT=99985)
          IF (INFORM.EQ.1) WRITE (REC,FMT=99984)
