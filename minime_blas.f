@@ -54,11 +54,6 @@ c DEBUG691                    dummies for NCNLN > 0
 
       save iprint,inp
 c-----------------------------------------------------------------------
-      if (.not.mus) then 
-         write (*,*) 'no mus'
-         call errpau
-      end if
-
 10    nclin = nz(ids)
       ntot = nstot(ids)
 
@@ -350,7 +345,8 @@ c-----------------------------------------------------------------------
 
       logical bad, site, comp, clos, inv
 
-      integer liw, lw, mvar, mcon, nvar, i, j, jter, iprint
+      integer liw, lw, mvar, mcon, nvar, i, j, jter, iprint, iwarn,
+     *        iwarn1, iwarn2
 
       character cit*4, ctol*14
 
@@ -390,7 +386,13 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      save iwarn, iwarn1, iwarn2
+
+      data iwarn, iwarn1, iwarn2/3*0/
 c-----------------------------------------------------------------------
       bad = .false.
       inv = .false.
@@ -407,9 +409,12 @@ c                                 decompose to stoichiometric equivaluents
 c                                 prism
             site = .true.
             comp = .false.
-            clos = .false.
+c                                 explicit closure definitely helps
+            clos = .true.
+
             if (dnu(id).ne.0d0) 
      *         call errdbg ('unanticipated prism/non-eq molar/py2x')
+
 c                                 get the disordered p's
             call minfxc (gopt,id,.true.)
 
@@ -512,80 +517,136 @@ c                                 cold start
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
      *            clamda,iw,liw,wrk,lw,idead,iprint)
 
-c DEBUG691 to account for the unmodified lpsol ifail setting
-      if (idead.lt.3) idead = 0
-
       if (lopt(28)) call endtim (2,.true.,'p2y inversion')
 
-      if (bad.or.idead.ne.0) then
-
-c        write (*,'(i2,1x,i2)') idead, ncon
-
-         do i = 1, ncon
-
-            sum = 0d0
-
-            do j = 1, mstot(id)
-
-               if (y(j).lt.-tol) then 
-                  bad = .true.
-               else if (y(j).lt.tol) then 
-                  y(j) = 0d0
-               end if
-
-               sum = sum + a(i,j)*y(j)
-
-            end do
-
-c           write (*,'(i2,1x,5(g14.7,1x))') i, sum, bl(i+nvar), sum-
-c    *                                      bl(i+nvar)
-
-         end do
-
-      end if
 c                                 reset ldt, ldq, istart for phase eq
       istart = 0
-c                                 the inversion is generally weak, take
-c                                 any answer within 1% of closure, positivity
-      sum = 0d0
-      bad = .false.
+c DEBUG691 to account for the unmodified lpsol ifail setting
+      if (idead.le.3) then
 
-      do i = 1, mstot(id)
+         idead = 0
 
-         if (y(i).gt.-1d-2.and.y(i).lt.1.01d0) then
+      else
+c                                 really bad inversion result
+         if (iwarn.lt.11) then
 
-            if (y(i).lt.zero) then 
-               y(i) = 0d0
-            else if (y(i).gt.1d0) then
-               y(i) = 1d0
-            end if
+            write (*,1010) fname(id),idead
 
-            sum = sum + y(i)
+            call prtptx
 
-         else
+            if (iwarn.eq.10) call warn (202,0d0,106,'P2YX')
 
-            bad = .true.
-c                                 could do another inversion without
-c                                 positivity constraint to see if the
-c                                 answer really is outside the prism.
-         end if 
-      end do
+            iwarn = iwarn + 1
 
-      if (bad) then
+         end if
 
          badinv(id,1) = badinv(id,1) + 1
 
-      else
+         bad = .true.
 
-         badinv(id,2) = badinv(id,2) + 1
-c                                 renormalize
-         do i = 1, mstot(id)
-            y(i) = y(i)/sum
-         end do
-c                                 convert the y's to x's
-         call sety2x (id)
+         return
 
       end if
+c                                 the inversion is generally weak, take any answer
+c                                 within 10% of closure or positivity
+      sum = 0d0
+
+      do i = 1, mstot(id)
+
+         sum = sum + y(i)
+
+      end do
+
+      if (sum.gt.1.1.or.sum.lt.0.9) then
+c                                 closure violation
+         if (iwarn1.lt.11) then
+
+            write (*,1000) fname(id),(sum-1d0)*1d2
+
+            call prtptx
+
+            if (iwarn.eq.10) call warn (201,0d0,106,'P2YX')
+            
+            iwarn1 = iwarn1 + 1
+
+         end if
+
+         bad = .true.
+
+         badinv(id,1) = badinv(id,1) + 1
+
+         return
+
+      end if
+
+      sum = 0d0
+
+      do i = 1, mstot(id)
+
+         if (y(i).lt.0d0) then
+c                                 could do another inversion without
+c                                 positivity constraint to see if the
+c                                 answer really is outside the prism.
+            if (y(i).lt.-0.05) bad = .true.
+
+            if (iwarn2.lt.11.and.y(i).lt.-tol) then
+
+                write (*,1020) i,y(i),fname(id)
+
+                if (bad) then
+                   write (*,1040)
+                else
+                   write (*,1030) i
+                end if
+
+                call prtptx
+
+                if (iwarn.eq.10) call warn (203,0d0,106,'P2YX')
+
+                iwarn2 = iwarn2 + 1
+
+            end if
+
+            if (bad) then
+
+               badinv(id,1) = badinv(id,1) + 1 
+
+               return
+
+            end if
+
+            y(i) = 0d0
+
+         else 
+
+            sum = sum + y(i)
+
+         end if
+
+      end do
+c                                 renormalize
+      y(1:mstot(id)) = y(1:mstot(id))/sum
+
+      badinv(id,2) = badinv(id,2) + 1
+c                                 convert the y's to x's
+      call sety2x (id)
+
+1000  format (/,'**warning ver201** p2y inversion for ',a,' violates ',
+     *       'closure by ',f5.1,'%, the result',/,'will not be used t',
+     *       'o compute compositional ranges, large violations may ind',
+     *       'icate that',/,'the compositional polyhedron for the mode',
+     *       'l does not span all possible model compositions.',/)
+1010  format (/,'**warning ver202** p2y inversion for ',a,' failed, ',
+     *       'idead = ',i2,', the result',/,'will not be used t',
+     *       'to compute compositional ranges.',/)
+1020  format (/,'**warning ver203** negative vertex fraction y(',i2,
+     *       ') = ',g8.1,' for ',a,'.',/,'Large negative values may ',
+     *       'indicate that the compositional polyhedron for the model',
+     *     /,'does not span all possible model compositions.',/)
+1030  format ('y(',i2,') will be zeroed for computing compositional ',
+     *       'ranges.',/)
+1040  format ('The composition will not be will not be used to compute',
+     *       ' compositional ranges.',/)
 
       end
 

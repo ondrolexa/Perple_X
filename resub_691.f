@@ -139,7 +139,7 @@ c                                 necessary?
          istart = 0
 
       else if (hcp.eq.1.and.isoct.eq.0
-     *        .or.iopt(10).eq.0.or.isoct.eq.0) then 
+     *        .or.iopt(20).eq.0.or.isoct.eq.0) then 
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
@@ -311,7 +311,7 @@ c                                 i.e., on the nth iteration, iter is n+1
             kter = 0
          end if
 c                                 set quit flag
-         if (iter.gt.iopt(10).and.kter.eq.kitmax) quit = .true.
+         if (iter.gt.iopt(20).and.kter.eq.kitmax) quit = .true.
 c                                 cold start
          jstart = 0 
 c                                 set idead = 0 to prevent lpsol from
@@ -564,7 +564,6 @@ c----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -824,7 +823,7 @@ c                                 global variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -1159,6 +1158,19 @@ c                                 check composition against solution model range
          call sollim (ids,i)
 
       end do
+c DEBUG DEBUG
+      j = 0 
+      k = 0
+      do i = 1, isoct
+         write (*,9000) i, badinv(i,1), badinv(i,2), 
+     *         1d2*float(badinv(i,1))/float(badinv(i,2))
+         j = j + badinv(i,1)
+         k = k + badinv(i,2)
+      end do
+
+      write (*,9000) i, j, k, 1d2*float(j)/float(k)
+
+9000  format (i2,3x,i8,3x,i8,3x,g14.6)
 
       do i = 1, ncpd
 
@@ -1214,19 +1226,16 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
 c                                 load the indepedent endmeber fractions 
       pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c                                 set stable flag
+      stable(ids) = .true.
 c                                 recover the prismatic composition
       call p2yx (ids,bad)
 
-      if (bad) then 
-         write (*,*) 'outta da box',y(1:mstot(ids))
-         return
-      end if
-c                                 set stable flag
-      stable(ids) = .true.
+      if (bad) return
 c                                 check x-ranges
       do ii = 1, pop1(ids)
 
@@ -1558,9 +1567,6 @@ c                                 x-coordinates for the final solution
       double precision mu
       common/ cst330 /mu(k8),mus
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c----------------------------------------------------------------------
@@ -1580,7 +1586,7 @@ c                                lagged speciation
 
       end do
 c                                dependent potentials
-      if (jpot.ne.1) write (n5,1010) (mu(i),i=1,kbulk)
+      write (n5,1010) (mu(i),i=1,kbulk)
 
 1010  format (10(g16.8,1x))
 
@@ -1650,7 +1656,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
@@ -1724,6 +1730,11 @@ c                                 new point, add to list
       end do 
 c                                 get mus for lagged speciation
       call getmus (1,0,solvnt,.false.,.false.)
+
+      if (.not.mus) then
+         call muwarn (quit,0)
+         return
+      end if
 
       do i = 1, isoct
          slam(i) = 1d99
@@ -2253,7 +2264,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save tic
       data tic/0/
@@ -2278,19 +2289,14 @@ c                                 solution.
 c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
-
+c                                 is = -1 violates lower bound (bad solution)
+c                                 is = -2 violates upper bound (bad solution)
+c                                 is = 0 not bounding
+c                                 is = 1 lower bound
+c                                 is = 2 upper bound
+c                                 is = 3 input constraint
+c                                 is = 4 temporary constraint (weak solution)
          if (is(i).ne.1) then
-
-            if (is(i).eq.4) then 
-
-               if (x(i).gt.zero) then
-                  write (*,*) 'wonka wonak ',x(i)
-c              call errpau
-               else 
-                  write (*,*) 'not wonka wonak ',x(i)
-               end if
-
-            end if
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -2367,9 +2373,9 @@ c                                 get mu's for lagged speciation
 
          call getmus (iter,iter-1,solvnt,abort,.false.)
 
-         if (abort) then 
+         if (abort.or..not.mus) then 
 c                                 undersaturated solute component
-            quit = .true.
+            if (.not.mus) call muwarn (quit,iter)
 c                                 don't set idead if iopt =1, this
 c                                 allows output of the result.
             if (iopt(22).ne.1.and.iopt(22).ne.99) then 
@@ -2564,7 +2570,6 @@ c                                 hcp is different from icp only if usv
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -2792,23 +2797,13 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
-
-      if (.not.lopt(32)) then
-
-         if ((iter.lt.iopt(10).or.quit).and.jpot.ne.0) return
-
-      end if
-
       ier = 1
 c                                 load c and g into a local array to 
 c                                 avoid a myriad of conditionals
@@ -3182,7 +3177,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)

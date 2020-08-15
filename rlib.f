@@ -640,7 +640,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
       if (z.gt.-zero.and.z.le.r1) then
          badz = .false.
@@ -2652,7 +2652,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save izap
       data izap /0/
@@ -3078,7 +3078,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save izap
       data izap /0/
@@ -3202,7 +3202,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save izap
       data izap /0/
@@ -3444,7 +3444,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save jerk
       data jerk /0/
@@ -4761,7 +4761,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer nsub,nterm
       double precision acoef
@@ -5837,7 +5837,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -6560,7 +6560,7 @@ c                                 parameters for autorefine
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer iam
       common/ cst4 /iam
@@ -7367,7 +7367,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -7736,7 +7736,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c DEBUG
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -8879,7 +8879,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
 
       inf = .false.
@@ -9509,11 +9509,6 @@ c                   solution plus two.
 c   jend(i,1)     - OBSOLETE! is the number of endmembers in solution i.
 c   jend(i,2)     - is the number of pseudocompounds of solution i.
 c   jend(i,3-3+j) - are the indices of the j endmembers in solution i.
-c   sxs(k13)      - contains the mole fractions of the endmembers
-c                   in the pseudocompounds.
-c   ixp(i)        - a pointer that locates the first mole fraction (- 1)
-c                   of the ith pseudocompound, the remaining mole fractions
-c                   follow sequentially (as in jend(i,3-3+j)).
 c   ikp(i)        - the index of the solution corresponding to pseudocompound i.
 c   exces(j,i)    - the excess function of pseudocompound i, accounts for
 c                   excess properties and configurational entropy as a function
@@ -9587,7 +9582,6 @@ c--------------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       double precision exces
       common/ cst304 /exces(m3,k1)
@@ -10223,7 +10217,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
       if (.not.extra) then
 c                                 chopit always generates jsp coordinates
@@ -10945,7 +10939,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       character specie*4
       integer isp, ins

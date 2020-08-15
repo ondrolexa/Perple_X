@@ -1,19 +1,9 @@
 
 c Please do not distribute any part of this source.
  
-c Copyright (c) 1998 by James A. D. Connolly, Institute for Mineralogy
-c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
+c Copyright (c) 1987-2020 by James A. D. Connolly, Institute for Geochemistry
+c & Petrology, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
-
-c compiling with include statements causes run-time crash with Intel 
-c compiler optimized code.
-    
-c      include 'nlib.f'
-c      include 'clib.f'
-c      include 'resub.f'
-c      include 'rlib.f'
-c      include 'tlib.f'
-c      include 'flib.f'
 
       program vertx        
 c----------------------------------------------------------------------
@@ -61,11 +51,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 
 c parameters are assigned in "perplex_parameter.h"
- 
+
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
-      logical first, pots, err
+      logical first, err
 
       character tag*11
 
@@ -76,9 +66,6 @@ c-----------------------------------------------------------------------
       logical refine, resub
       common/ cxt26 /refine,resub,tname
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
@@ -88,7 +75,7 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      save err,first,pots
+      save err,first
       data err,first/.false.,.true./
 
       integer iam
@@ -160,24 +147,12 @@ c                                 inform user of 1st stage
 c                                 header info for print and graphics files
 c                                 title page for print file:
             if (io3.ne.1) call outtit
-c                                 turn of printing of potentials if no
-c                                 print file request.
-            if (.not.first.and.pots) jpot = 0
-            if (icopt.lt.5.and.io3.eq.1) jpot = 1
 
          else 
 c                                 suppress output to graphics and print files
 c                                 (these flags are reset by input1). 
             io4 = 1
             io3 = 1
-
-            if (jpot.ne.1) then 
-               pots = .true.
-               jpot = 0
-            else 
-               pots = .false.
-               jpot = 1
-            end if
 
          end if
 

@@ -63,9 +63,6 @@ c----------------------------------------------------------------------
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
@@ -659,21 +656,17 @@ c         end do
 
 c      end if
 c                                 chemical potentials variance
-      if (jpot.ne.1) then 
-         write (lu,1130) (cname(i), i = 1, kbulk)
-         write (lu,1140) (mu(i), i = 1, kbulk)
-         write (lu,1071) 2, jbulk - ntot + 2 
+      write (lu,1130) (cname(i), i = 1, kbulk)
+      write (lu,1140) (mu(i), i = 1, kbulk)
+      write (lu,1070) 2, jbulk - ntot + 2 
 c                                 test for non-NaN chemical potentials
-         mus = .false.
-         do i = 1, jbulk
-            if (.not.isnan(mu(i))) then
-               mus = .true.
-               exit 
-            end if 
-         end do 
-      else 
-         write (lu,1070) 2, jbulk - ntot + 2 
-      end if 
+      mus = .false.
+      do i = 1, jbulk
+         if (.not.isnan(mu(i))) then
+            mus = .true.
+            exit 
+         end if 
+      end do 
 
       if (laq.and.lopt(25)) then 
 
@@ -705,8 +698,7 @@ c                                 test for non-NaN chemical potentials
      *          ' Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Heat Capacity (J/K/kg) = ',g12.6,/,
      *          ' Specific Heat Capacity (J/K/m3) = ',g12.6,/)
-1070  format ('Variance (c-p+',i1,') = ',i2,/)
-1071  format (/,'Variance (c-p+',i1,') = ',i2,/)
+1070  format (/,'Variance (c-p+',i1,') = ',i2,/)
 1080  format (/,21x,'Complete Assemblage',28x,'Solid+Melt Only',
      *        /,14x,'mol',8x,'g',8x,'wt %',5x,'mol/kg',
      *          10x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
@@ -820,9 +812,6 @@ c                                 bookkeeping variables
       double precision mu
       common/ cst330 /mu(k8),mus
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -874,32 +863,26 @@ c                                 no data test
             kkp(i) = idasls(i,ias)
          end do 
 c                                 get the dependent potentials
-         if (jpot.ne.1) then
+         mu(1:kbulk) = 0d0
+ 
+         do i = 1, ijpt
 
-            do i = 1, jbulk
-               mu(i) = 0d0
+            kd = igrd(itri(i),jtri(i))
+
+            do j = 1, kbulk
+               mu(j) = mu(j) + wt(i) * amu(j,kd)
             end do 
 
-            do i = 1, ijpt
+         end do 
 
-               kd = igrd(itri(i),jtri(i))
+         mus = .false.
 
-               do j = 1, jbulk
-                  mu(j) = mu(j) + wt(i) * amu(j,kd)
-               end do 
-
-            end do 
-
-            mus = .false.
-
-            do i = 1, jbulk
-               if (.not.isnan(mu(i))) then 
-                  mus = .true.
-                  exit
-               end if
-            end do
-
-         end if
+         do i = 1, kbulk
+            if (.not.isnan(mu(i))) then 
+               mus = .true.
+               exit
+            end if
+         end do
 
       end if 
 c                                 initialize system props/flags

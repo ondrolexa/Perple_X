@@ -358,7 +358,7 @@ isp   = 1 nsp
 iherc = 1 nherc
        DQF(J/mol) = 23.6d3  - 5.76303 * T
 imt   = 1 mt 
-       DQF(J/mol) = 300 
+       DQF(J/mol) = 30d3                | corrected from 300, 8/11/2020, Ben Klein, Boston College. 
       |---------------------------  Cpx
 cessh = 1 cats + 1 acm - 1 jd
        DQF = -3450 

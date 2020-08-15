@@ -1452,7 +1452,10 @@ c----------------------------------------------------------------------------
       common/ debug /jtest,jpot
 
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 initialization
       imyn = 1
@@ -1505,7 +1508,7 @@ c                             sum the amounts of component k in the psf
                   sum = sum + cp(k,id(l))
                end do 
 c                             if the component is 0, the psf is degenerate
-               if (sum.lt.1d-5) goto 60
+               if (dabs(sum).lt.zero) goto 60
             end do
 c                             next check if the psf matches any permutation
 c                             of icp-1 phases in a facet tested earlier:
@@ -3299,7 +3302,7 @@ c                                partially located.
       if (ier.lt.2) ibug(irct) = 0
 c                                write stefano's list to 
 c                                reaction_list.dat
-      if (ird.eq.irct.and.jtest.eq.3) call stetxt
+      if (ird.eq.irct.and.lopt(53)) call stetxt
 
       if (ifull.eq.0) then 
          call rxntxt (iend,jend,text,alpha)
@@ -5229,13 +5232,16 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       do i = istct, iphct
 
          kmax(i) = 0
 c                                 sort phases into subcompositions
          do j = 1, icp
-            if (cp(j,i).gt.1d-5) kmax(i) = j
+            if (dabs(cp(j,i)).gt.zero) kmax(i) = j
          end do
 
       end do

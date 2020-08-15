@@ -110,7 +110,12 @@ begin_makes
  |0 0 0 
 
  |fff = 2 fa - 2 iron - 1 fs         | iron fa fs O2 buffer
- |0 0 0 
+ |0 0 0
+
+                                | Mg-uelvospinel for Sp(WPC), this model pushed the
+                                | equipartition nonsense beyond the pale. JADC, 8/14/20.
+musp   = 1 usp + 2 sp - 2 herc
+DQF = 0
 
 tbi = 1 phl - 1 fo + 1 ru + 1 q | Ti-biotite endmember for TiBio(HP) model
  45e3 0 0 

@@ -587,7 +587,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
       if (z.gt.-zero.and.z.le.r1) then
          badz = .false.
@@ -2146,8 +2146,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       idqf = 0
-      reach = 0d0
-      lowrch = .false.
       laar = .false.
       stck = .true.
       norf = .true.
@@ -2162,8 +2160,8 @@ c----------------------------------------------------------------------
             exit
 
          else if (key.eq.'begin_model ') then
-c                              found new model, current
-c                              model does not of end_of_model keyword
+c                              found new model, current model
+c                              lacks end_of_model keyword
             write (*,1000) tname,chars(1:length)
 
             call errpau
@@ -2179,12 +2177,11 @@ c                              read dqf data:
 
          else if (key.eq.'reach_increment') then 
 
-            read (val,*) i
-            reach = dfloat(i)
+            write (*,*) 'reach_increment obsolete, 6.9.1+ '//tname
 
          else if (key.eq.'low_reach') then
 
-            lowrch = .true.
+            write (*,*) 'low_reach obsolete, 6.9.1+ '//tname
 
          else if (key.eq.'reject_bad_composition') then
 
@@ -2744,7 +2741,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save izap
       data izap /0/
@@ -3170,7 +3167,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save izap
       data izap /0/
@@ -3294,7 +3291,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save izap
       data izap /0/
@@ -3536,7 +3533,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       save jerk
       data jerk /0/
@@ -5057,7 +5054,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer nsub,nterm
       double precision acoef
@@ -5860,7 +5857,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision g
       common/ cst2 /g(k1)
@@ -6031,7 +6027,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision g
       common/ cst2 /g(k1)
@@ -6069,7 +6064,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6103,7 +6097,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 c----------------------------------------------------------------------
 
       do k = 1, lstot(id)
@@ -6133,7 +6126,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6164,7 +6156,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6223,7 +6214,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -6931,7 +6922,6 @@ c                                 excess energy variables
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 c                                 special model endmember indexing
       integer jspec
       common/ cxt8 /jspec(h9,m4)
@@ -6985,7 +6975,7 @@ c                                 parameters for autorefine
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer iam
       common/ cst4 /iam
@@ -7058,8 +7048,6 @@ c                                 number of independent disordered endmembers
 c                                 reject bad compositions, only relevant
 c                                 for relict equipartition models
       bdx(im) = badx
-c                                 low-reach flag, lorch is NOT used.
-      lorch(im) = lowrch
 c                                 non-equimolar speciation reaction
       dnu(im) = 0d0
 c                                 override norf if refine_endmembers option is set (default is false)
@@ -7101,6 +7089,7 @@ c                                 variable names.
       end do
 
       k = 0
+      bad = .false.
 
       do ii = 1, pop1(im)
 c                                 number of chemical mixing sites, i.e., simplices, 
@@ -7196,42 +7185,56 @@ c                                 true hard limit record
 
                if (refine) then
 c                                 new values from autorefine file
-                  read (n10,*) pxmn(ii,i,j),pxmx(ii,i,j)
+                  read (n10,*) y(1),y(2)
 
-                  if (icopt.lt.4) then
+                  if (y(2).ge.y(1)) then
+
+                     pxmn(ii,i,j) = y(1)
+                     pxmx(ii,i,j) = y(2)
+
+                     if (icopt.lt.4) then
 c                                 set slop to the initial spacing
-                     dinc = pxnc(ii,i,j)
+                        dinc = pxnc(ii,i,j)
 
-                  else
-c                                 adaptive minimization:
-c                                 set slop to the final compositional
-c                                 resolution of the exploratory stage
-                     dinc = rid(4,1)
+                     else
+c                                 adaptive minimization, 6.9.1 no slop.
+                        dinc = 0d0
 
-                  end if
+                     end if
 c                                 widen the range by the exploratory resolution
-                  if (pimd(ii,i,j).eq.0) then
-                     pxmx(ii,i,j) = pxmx(ii,i,j) + dinc
-                     pxmn(ii,i,j) = pxmn(ii,i,j) - dinc
-                  else
-                     pxmn(ii,i,j) = 
-     *                             stinc (pxmn(ii,i,j),-dinc,im,ii,i,j)
-                     pxmx(ii,i,j) = 
-     *                             stinc (pxmx(ii,i,j),dinc,im,ii,i,j)
-                  end if
+                     if (pimd(ii,i,j).eq.0) then
+                        pxmx(ii,i,j) = pxmx(ii,i,j) + dinc
+                        pxmn(ii,i,j) = pxmn(ii,i,j) - dinc
+                     else
+                        pxmn(ii,i,j) = 
+     *                              stinc (pxmn(ii,i,j),-dinc,im,ii,i,j)
+                        pxmx(ii,i,j) = 
+     *                              stinc (pxmx(ii,i,j),dinc,im,ii,i,j)
+                     end if
 
-                  if (pxmx(ii,i,j).gt.1d0) pxmx(ii,i,j) = 1d0
-                  if (pxmn(ii,i,j).lt.0d0) pxmn(ii,i,j) = 0d0
+                     if (pxmx(ii,i,j).gt.1d0) pxmx(ii,i,j) = 1d0
+                     if (pxmn(ii,i,j).lt.0d0) pxmn(ii,i,j) = 0d0
 
-                  if (lopt(3)) then
+                     if (lopt(3)) then
 c                                 hard_limit test
-                     if (pxmx(ii,i,j).gt.xmxo(im,ii,i,j)) 
-     *                                  pxmx(ii,i,j) = xmxo(im,ii,i,j)
-                     if (pxmn(ii,i,j).lt.xmno(im,1,i,j)) 
-     *                                  pxmn(ii,i,j) = xmno(im,ii,i,j)
-                  end if
+                        if (pxmx(ii,i,j).gt.xmxo(im,ii,i,j)) 
+     *                                    pxmx(ii,i,j) = xmxo(im,ii,i,j)
+                        if (pxmn(ii,i,j).lt.xmno(im,1,i,j)) 
+     *                                    pxmn(ii,i,j) = xmno(im,ii,i,j)
+                     end if
 
-                  pxnc(ii,i,j) = pxnc(ii,i,j)/nopt(17)
+                     pxnc(ii,i,j) = pxnc(ii,i,j)/nopt(17)
+
+                  else if (.not.bad) then 
+
+                     bad = .true.
+
+                     call warn (99,nopt(1),iopt(1),'no successful p2y i'
+     *             //'nversions for '//tname//', compositional range sp'
+     *             //'ecified in the solution model will be used for th'
+     *             //'e autorefine stage.')
+
+                  end if
 
                end if
 
@@ -7253,29 +7256,6 @@ c                                 initialize high/low ranges
             end do
          end do
       end do
-c                                 set reach factors
-      if (lowrch) then 
-
-         reachg(im) = nopt(21)/4d0
-         if (nopt(21).ne.2d0) call error (72,nopt(1),iopt(1),'the low_'/
-     *   /'reach option set in model '//tname//' can only be with '/
-     *   /'refine_factor = 2')
-
-      else if (.not.refine.and.(iam.eq.1.or.iam.eq.15)
-     *                    .and.iopt(20).ne.2.or.iopt(20).eq.0) then
-c                                 if vertex and not in the refine stage
-c                                 shut off reach increments
-         reachg(im) = nopt(21)/2d0
-
-      else if (reach.le.nopt(23)) then
-
-         reachg(im) = nopt(21)/2d0 + nopt(23)
-
-      else
-
-         reachg(im) = nopt(21)/2d0 + reach
-
-      end if
 c                                 -------------------------------------
 c                                 classify the model
       ksmod(im) = jsmod
@@ -7838,7 +7818,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8205,7 +8185,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c DEBUG
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -9288,7 +9268,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
 
       inf = .false.
@@ -9580,7 +9560,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       integer ikp
       common/ cst61 /ikp(k1)
@@ -9720,11 +9699,6 @@ c                                 solution and stores the data (soload/loadgx)
             if (iphct-ophct.gt.0) then
 c                                 write pseudocompound count
                write (*,1100) iphct-ophct, tname
-c                                 low_reach flag is specified
-               if (lorch(im)) write (*,1140) tname
-c                                 write reach_increment
-               if (int(reachg(im)*2d0/nopt(21)-1d0).gt.0)
-     *            write (*,1030) int(reachg(im)*2d0/nopt(21)-1d0), tname
 c                                 indicate site_check_override and refine endmembers
                if (bdx(im)) write (*,1080) tname
                if (.not.nrf(im).and..not.lopt(39)) write (*,1090) tname
@@ -9832,7 +9806,6 @@ c                              close solution model file
 1000  format (/,'the following solution models will be considered:',/)
 1010  format (7(2x,a10))
 1020  format (/,'Of the requested solution models:',/)
-1030  format (9x,'a reach_increment of ',i2,' is specified for ',a)
 1040  format (/,'no models will be considered.',/)
 1060  format (/,'Solution: ',a,/,12x,'Endmember fractions:',
      *        /,12x,20(a,1x))
@@ -9846,7 +9819,6 @@ c                              close solution model file
 1130  format (/,'2 - Proportions output here may sum to <1 ',
      *          'because the ordered species',/,'may have non-zero ',
      *          'initial proportions.',/)
-1140  format (9x,'low_reach is on for ',a)
       end
 
       subroutine err41 (tag)
@@ -9997,7 +9969,7 @@ c--------------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       double precision exces
       common/ cst304 /exces(m3,k1)
@@ -10556,7 +10528,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
       if (.not.extra) then
 c                                 chopit always generates jsp coordinates
@@ -11278,7 +11250,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       character specie*4
       integer isp, ins
@@ -12092,9 +12064,6 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
@@ -12113,16 +12082,6 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 set option flags if necessary
       if (lopt(25).or.lopt(32)) then
-
-         if (jpot.ne.0) then
-
-            call warn (99,0d0,0,'aq_output or aq_lagged_speciation is T'
-     *                        //', but dependent_potentials is off, '//
-     *                         'dependent_potentials set = on (AQIDST)')
-
-            jpot = 0
-
-         end if 
 
          if (ifct.gt.0.and.(iff(1).ne.0.or.iff(2).ne.0)) then 
 
@@ -12924,7 +12883,7 @@ c                                 working arrays
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       data switch/.true./
 
@@ -13360,7 +13319,7 @@ c                                 -------------------------------------
 c                                 local variables:
       integer ii, i, j, k, ibad1, ibad2, ibad3, igood, ipop
 
-      logical bad1, bad2, good, reech, lrch
+      logical bad1, bad2, good
 
       double precision num, mnsum, mxsum
 c                                 -------------------------------------
@@ -13467,16 +13426,9 @@ c                                 solutions on internal limits
 
       end if
 
-      reech = .false.
-      lrch  = .false.
-
       do i = 1, isoct
 
          if (.not.stable(i)) cycle
-
-         if (lorch(i)) lrch = .true.
-
-         if (int(reachg(i)*2d0/nopt(21)-1d0).gt.0) reech = .true.
 
          ipop = pop1(i)
 
@@ -13522,28 +13474,15 @@ c                                 special case (1 component solution).
          call limprt (6,i)
          if (lopt(11)) call limprt (n11,i)
 
+         if (badinv(i,1).gt.0) then
+c                                 warn about bad p2yx inversions
+            write (*,1020) float(badinv(1,i)) /
+     *                     float(badinv(1,i)+badinv(2,i))*1d2,
+     *                     fname(i)
+
+         end if
+
       end do
-
-      if (reech) then
-
-         write (*,1100)
-
-         do i = 1, isoct
-            if (int(reachg(i)*2d0/nopt(21)-1d0).eq.0) cycle
-            write (*,1110) fname(i), int(reachg(i)*2d0/nopt(21)-1d0)
-         end do
-
-      end if
-
-      if (lrch) then
-
-         write (*,1150)
-
-         do i = 1, isoct
-            if (lorch(i)) write (*,1110) fname(i)
-         end do
-
-      end if
 
 99    if (goodc(1)+badc(1).gt.0d0) then
 
@@ -13561,6 +13500,10 @@ c                                 special case (1 component solution).
      *         ,' but are not stable:',/)
 1010  format (/,'**warning ver991** The following solutions have ',
      *          'compositions at an internal limit (i.e., 0<x<1):',/)
+1020  format (/,'**warning ver204** ',f5.1,'% of the p2y inversions fo',
+     *       'r ',a,'. A high failure rate may indicate that',/,
+     *     /,'the compositional polyhedron for the mode',
+     *       'l does not span all possible model compositions.',/)
 1080  format (/,'**warning ver991** The compositions of the following',
      *        ' solutions reached internal',/,
      *        'limits that were automatically relaxed:',/)
@@ -13575,16 +13518,12 @@ c                                 special case (1 component solution).
      *          'exploratory stage may be',/,'problematic, refer to ',
      *          'the *_auto_refine.txt file ',
      *          'for the exploratory stage warnings.',/)
-1100  format (/,'The following solution models have non-zero reach_',
-     *          'increment:',//,t30,'reach_increment')
 1110  format (4x,a,t35,i2)
 1120  format (/,'The failure rate during speciation (order-disorder) ',
      *        'calculations is ',f7.3,'%',/,'out of a total of ',f12.0,
      *        ' calculations.',/)
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
-1150  format (/,'The low_reach flag is set for the following solution ',
-     *          'models:',/)
       end
 
 
@@ -14431,7 +14370,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer jnd
       double precision aqg,qq,rt
@@ -15246,7 +15185,7 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -15554,7 +15493,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
@@ -15833,8 +15772,7 @@ c                                 initialize endmember flags
          iend(i) = 0
       end do 
 c                              look for van laar and/or dqf parameters
-c                              reach_increment, endmember flags
-c                              or the end of model marker
+c                              endmember flags or the end_of_model tag
       call readop (idim,istot-mdep,tname)
 
       if (laar.and.iord.gt.2) call error (999,coeffs(1),800,'RMODEL')
@@ -16685,7 +16623,7 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c---------------------------------------------------------------------
 
       dynam = resub
@@ -16964,7 +16902,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -17396,7 +17334,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -17851,7 +17789,7 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c-----------------------------------------------------------------------
 
       scp(1:icomp) = 0d0
@@ -18885,9 +18823,6 @@ c                                 global assemblage data
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       double precision amu
       common/ cst48 /amu(k8,k2)
 
@@ -18961,23 +18896,18 @@ c                                lagged speciation
          end do 
 
          jxco = kxco  
-c                                 read mu's if available
-         if (jpot.ne.1) then
- 
-            read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, kbulk)
+c                                 read mu's
+         read (n5,*,iostat=ier) (amu(i,ibulk), i = 1, kbulk)
 
-            if (ier.ne.0) then 
+         if (ier.ne.0) then 
 c                                 if error on read most probably its
 c                                 because of NaN's for the chemical 
 c                                 potentials
-               do i = 1, kbulk
-                  amu(i,ibulk) = nopt(7)
-               end do 
- 
-               ier = 0 
+            amu(1:kbulk,ibulk) = nopt(7)
 
-            end if 
-         end if 
+            ier = 0
+
+         end if
 
       end do
 
@@ -19490,7 +19420,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c---------------------------------------------------------
       nvar = nstot(id) - 1
 c                                 to be counted:
@@ -19604,7 +19534,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19710,7 +19640,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19762,7 +19692,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19836,7 +19766,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -20211,7 +20141,7 @@ c                                 endmember pointers
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
 c                                 models with speciation:
       do j = 1, norder

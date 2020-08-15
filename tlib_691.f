@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated August 15, 2020.',
+     *      'Perple_X version 6.9.1, source updated August 13, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -97,14 +97,11 @@ c----------------------------------------------------------------------
       character*3 key*22, val, nval1*12, nval2*12,
      *            nval3*12,opname*100,strg*40,strg1*40
 
-      double precision res0, r2
+      double precision r2
 
       double precision dnan
 
       external dnan
-
-      integer jtest,jpot
-      common/ debug /jtest,jpot
 
       character*100 prject,tfname
       common/ cst228 /prject,tfname
@@ -118,7 +115,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       integer iam
       common/ cst4 /iam
@@ -193,7 +189,7 @@ c                                 -------------------------------------
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_factor
-      nopt(5) = 1d2
+      nopt(5) = 1d-5
 c                                 vrh_weighting keyword
       nopt(6) = 0.5d0
 c                                 bad_number keyword
@@ -231,10 +227,8 @@ c                                 increase in resolution for Schreinemakers diag
       nopt(19) = 3d0 
 c                                 T_melt cutoff 
       nopt(20) = 873d0
-c                                 iteration keyword 1
-      nopt(21) = 2d0
-c                                 global reach factor
-      nopt(23) = 0d0
+c                                 optimization_precision, relative
+      nopt(21) = 1d-8
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -278,14 +272,6 @@ c                                 assume linear boundaries within a cell during 
 c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
       iopt(14) = 1
       valu(14) = 'som'
-c                                 reach_increment_switch 0 - off, 1 - on (for auto-refine), 2 - all
-      iopt(20) = 1 
-      valu(20) = 'on'
-c                                 conditional for MEEMUM
-      if (iam.eq.2) then 
-         valu(20) = 'all'
-         iopt(20) = 2
-      end if 
 c                                 speciation_max_it - for speciation calculations
       iopt(21) = 100
 c                                 aq_bad_results 
@@ -428,12 +414,6 @@ c                                 structural formula options
       lopt(51) = .true.
 c                                 keep_auto
       lopt(52) = .true.
-c                                 final resolution, auto-refine stage
-      rid(2,2) = 1d-3
-c                                 final resolution, exploratory stage
-      rid(2,1) = 1d-2
-c                                 if meemum set auto-refine vale
-      if (iam.eq.2) rid(2,1) = rid(2,2)
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -472,9 +452,6 @@ c                                 efficiency level
 c                                 short print
       io3p = 1
       valu(10) = 'on '
-c                                 print dependent potentials
-      jpot = 0
-      valu(11) = 'on '
 c                                 -------------------------------------
 c                                 look for file
       open (n8, file = opname, iostat = jer, status = 'old')
@@ -689,8 +666,9 @@ c                                 bad number key
 
          else if (key.eq.'speciation_factor') then 
 
+         else if (key.eq.'speciation_precision') then 
+
             read (strg,*) nopt(5)
-            if (nopt(5).lt.10) nopt(5) = 1d1
 
          else if (key.eq.'zero_bulk') then
 c                                 zero_bulk key
@@ -736,7 +714,8 @@ c                                 zero_mode key
          else if (key.eq.'iteration'.or.
      *            key.eq.'resolution_factor') then
 c                                 how fast resolution improves with iteration
-            read (val,*) nopt(21)
+            write (*,'(a)') 'iteration and resolution_factor are obso'//
+     *                      'lete options, 6.9.1+'
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key
@@ -773,10 +752,8 @@ c                                  special backward compatibility msg
 
          else if (key.eq.'final_resolution') then
 c                                 final_resolution keys 
-            read (strg,*) rid(2,1)
-            read (nval1,*,iostat=ier) rid(2,2)
-            if (ier.ne.0) call error (72,r1,i,'the final_resolution '//
-     *                               'option requires two values')
+            write (*,'(a)') 'final_resolution is an obso'//
+     *                      'lete option, 6.9.1+'
 
          else if (key.eq.'fd_expansion_factor') then 
 
@@ -790,7 +767,8 @@ c                                 p fraction
 
          else if (key.eq.'global_reach_increment') then
           
-            read (strg,*) nopt(23) 
+            write (*,'(a)') 'global_reach_increment is an obso'//
+     *                      'lete option, 6.9.1+'
 
          else if (key.eq.'seismic_output') then 
 c                                 seismic data output WERAMI/MEEMUM/FRENDLY
@@ -840,15 +818,8 @@ c                                 back-calculated and lagged speciation
 
          else if (key.eq.'reach_increment_switch') then 
 c                                 reach_increment_switch
-             valu(20) = val
-
-             if (val.eq.'off') then 
-                iopt(20) = 0
-             else if (val.eq.'on ') then
-                iopt(20) = 1
-             else if (val.eq.'all') then 
-                iopt(20) = 2
-             end if 
+            write (*,'(a)') 'reach_increment_switch is an obso'//
+     *                      'lete option, 6.9.1+'
 
          else if (key.eq.'stretch_factor') then
 c                                 stretch_factor key = b - 1       
@@ -987,10 +958,8 @@ c                                 default autorefine relative increment
 
          else if (key.eq.'dependent_potentials') then 
 
-            if (val.eq.'off') then 
-               jpot = 1
-               valu(11) = val
-            end if
+            write (*,'(a)') 'dependent potentials is an obso'//
+     *                      'lete option, 6.9.1+'
 
          else if (key.eq.'hard_limits') then 
 
@@ -1149,11 +1118,6 @@ c                                 -------------------------------------
 c                                 automatic specification of metastable
 c                                 refinement points
       if (lopt(40)) iopt(31) = icp + 2
-c                                 turn dependent potentials on if auto_keep
-      if (lopt(52)) then
-         jpot = 0
-         valu(11) = 'on'
-      end if 
 c                                 always allow null phases if not CONVEX
       if (iam.eq.15) lopt(37) = .true. 
 c                                 write and optional file choices
@@ -1241,11 +1205,6 @@ c                                 dependent parameters and error traps:
 c                                 fractionation theshold flag
       if (nopt(33).gt.nopt(32)) lopt(35) = .true. 
 
-      if (nopt(21).lt.2d0) then 
-         write (*,1040)
-         nopt(21) = 2d0
-      end if
-
       if (iopt(31).gt.k5+2.or.iopt(31).lt.1) then 
          write (*,1090) icp + 2
          iopt(31) = icp + 2
@@ -1295,9 +1254,7 @@ c                                 set autorefine factor
          nopt(17) = nopt(19)
       else if (icopt.le.3) then 
          nopt(17) = nopt(18)
-      end if 
-c                                 compute resolution/number of iterations 
-      nopt(24) = 2d0*nopt(21)/(1d0 + nopt(21))
+      end if
 c                                 effective initial resolution
       if (nopt(13).eq.0d0) then 
 c                                 user wants to use solution model values, set
@@ -1308,38 +1265,6 @@ c                                 initial resolution to a representative value
       end if 
 
       rid(3,2) = rid(3,1)/nopt(17)
-
-      do i = 1, 2
-
-         if (rid(2,i).gt.rid(3,i)) then
-c                                  requested final resolution > requested initial resolution
-c                                  grid(6,i) is the iteration counter
-            grid(6,i) = 0
-c                                  speciation tolerance, later set to nopt(5)
-            rid(5,i) = rid(3,i)/nopt(5)
-
-         else
-          
-            grid(6,i) = 1
-
-            do 
-
-               res0 = rid(3,i)*nopt(24)/nopt(21)**grid(6,i)
-c                                 actual final resolution
-               rid(4,i) = res0
-
-               if (res0.lt.rid(2,i)) exit
-c                                  grid(6,i) is the iteration counter
-               grid(6,i) = grid(6,i) + 1
-
-            end do
-c                                  real final resolution is res0
-c                                  speciation tolerance, later set to nopt(5)
-            rid(5,i) = res0/nopt(5)
-
-         end if
-
-      end do 
 c                                 --------------------------------------
 c                                 output
       if (((iam.eq.1.or.iam.eq.15).and.output).or.iam.eq.2
@@ -1369,12 +1294,6 @@ c                                 file version, create the file name
          end if 
 
       end if 
-c                                 convert speciation factor to speciation tolerance
-c                                 for fluids and frendly assuming final resolution 
-c                                 value, for meemum and vertex this will be over-ridden
-c                                 according to whether the program is in the exploratory
-c                                 or auto-refine stage in setau1. 
-      nopt(5) = rid(5,2)
 c                                 -------------------------------------
 c                                 recalculate parameters:
 c                                 proportionality constant for shear modulus
@@ -1421,9 +1340,6 @@ c                                 consequent value for k1
      *          ' file with only one',/,'initial_resolution value. Corr'
      *         ,'ect the error by adding a second value,',/,'typically',
      *          ' 1/3 the first (exploratory stage) value.')
-1040  format (/,'Warning: iteration keyword value must be ',
-     *         ' > 1',/,'iteration will be',
-     *         ' assigned its default value [2].',/)
 1050  format (/,'Warning: initial_resolution values must be ',
      *         '< 1',/,'the keyword will be',
      *         ' assigned its default values.',/)
@@ -1523,10 +1439,9 @@ c                                 reaction format and lists
      *                    rid(1,2),isec,valu(7),valu(9),valu(8),valu(10)
          else 
 c                                 adaptive optimization
-            write (n,1180) rid(2,1),rid(2,2),int(nopt(21)),
+            write (n,1180) nopt(21),iopt(20),
      *                     iopt(31),k5,lopt(49),lopt(52),iopt(52),
-     *                     k21/10,nval2,
-     *                     int(nopt(23)),valu(20),nopt(9)
+     *                     k21/10,nval2,nopt(9)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1576,7 +1491,7 @@ c                                 for meemum add fd stuff
          if (iam.eq.1.or.iam.eq.15) then 
 c                                 vertex output options, dependent potentials
 c                                 pause_on_error
-            write (n,1013) valu(11),lopt(19)
+            write (n,1013) lopt(19)
 c                                 auto_exclude
             write (n,1234) lopt(5)
 c                                 logarithmic_p, bad_number, interim_results
@@ -1637,13 +1552,6 @@ c                                 info file options
      *                     'seismic_data_file      ',lopt(50),'[F] T;'//
      *                     ' echo seismic wavespeed options'
       end if 
-c                                 resolution blurb
-      if ((iam.le.2.or.iam.eq.15).and.nopt(13).gt.0d0) then
-
-         write (n,1090) rid(4,1),rid(4,2)
-         write (n,1100) grid(6,1),grid(6,2)
-
-      end if 
 
       write (n,1020) 
 
@@ -1673,8 +1581,7 @@ c                                 generic thermo options
      *        4x,'order_check            ',a3,8x,'off [on]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *     4x,'speciation_factor      ',f6.0,5x,'>10 [100] speciation ',
-     *           'precision = final resolution/speciation_factor',/,
+     *   4x,'speciation_precision   ',g7.1E1,4x,'[1d-5] <1, absolute',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
@@ -1687,7 +1594,6 @@ c                                 generic thermo options
      *        4x,'aq_solvent_solvus      ',l1,10x,'[T] F',/,
      *        4x,'aq_vapor_epsilon       ',f3.1,8x,'[1.]')
 1013  format (/,2x,'Input/Output options:',//,
-     *        4x,'dependent_potentials   ',a3,8x,'off [on]',/,
      *        4x,'pause_on_error         ',l1,10x,'[T] F')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
@@ -1706,10 +1612,6 @@ c                                 thermo options for frendly
      *           'fraction = ',d7.1,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
-1090  format (/,2x,
-     *        'Worst-case Cartesian compositional resolution (mol)',
-     *        ': ',//,4x,'Exploratory stage: ',g11.3E1,/,
-     *                4x,'Auto-refine stage: ',g11.3E1)
 1100  format (/,2x,'Adapative minimization will be done with: ',
      *        //,3x,i2,' iterations in the exploratory stage',/,
      *           3x,i2,' iterations in the autorefine stage')
@@ -1727,12 +1629,9 @@ c                                 thermo options for frendly
      *        4x,'console_messages       ',a3,8x,'[on] off',/,
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
-     *        4x,'final_resolution:      ',/,
-     *        4x,'  exploratory stage    ',g7.1E1,4x,
-     *           '[1e-2], target value, see actual values below',/,
-     *        4x,'  auto-refine stage    ',g7.1E1,4x,
-     *           '[1e-3], target value, see actual values below',/,
-     *        4x,'resolution_factor      ',i2,9x,'>= 2 [2]',/,
+     *        4x,'optimization_precision ',/,g7.1E1,4x,
+     *           '[1e-8], relative',/,
+     *        4x,'optimization_iterations',i2,9x,'>= 2 [20]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
@@ -1740,8 +1639,6 @@ c                                 thermo options for frendly
      *        4x,'keep_max              ',i7,5x,
      *           '[20000], ~100 < keep_max < ~k21/10 =',i7,/,
      *        4x,'solvus_tolerance_II     ',a7,3x,'0->1 [0.2]',/,
-     *        4x,'global_reach_increment ',i2,9x,'>= 0 [0]',/,
-     *        4x,'reach_increment_switch  ',a3,7x,'[on] off all',/,
      *        4x,'zero_mode               ',e7.1E2,3x,
      *           '0->1 [1e-6]; < 0 => off')
 1190  format (/,2x,'1D grid options:',//,
@@ -2879,12 +2776,9 @@ c----------------------------------------------------------------------
 
          write (*,58)
          write (*,582)
-         if (nopt(21).gt.2d0) write (*,587)
-         write (*,583)
          if (lopt(49)) write (*,584)
          write (*,585)
          if (lopt(32)) write (*,586)
-         write (*,581)
          write (*,413)
          write (*,580) char
 
@@ -2895,21 +2789,13 @@ c----------------------------------------------------------------------
      *       'following actions (best listed first):',/)
 580   format (2x,'- increase parameter ',a,' and recompile ',
      *           'Perple_X')
-581   format (2x,'- set the low_reach flag for high-dimension ',
-     *           'solution models in solution_model.dat')
 582   format (2x,'- set keep_auto to T or default ',
-     *           'in perplex_option.dat')
-583   format (2x,'- reduce any reach_increments specified ',
-     *           'in solution_model.dat',/,
-     *        2x,'  or set reach_increment_switch to off ',
      *           'in perplex_option.dat')
 584   format (2x,'- set refinement_switch to F ',
      *           'in perplex_option.dat')
 585   format (2x,'- reduce refinement_points (< c+2, > 0) ',
      *           'in perplex_option.dat')
 586   format (2x,'- set aq_solvent_solvus to F ',
-     *           'in perplex_option.dat')
-587   format (2x,'- reduce resolution_factor to 2 (default) ',
      *           'in perplex_option.dat')
 413   format (2x,'- simplify the calculation, e.g., eliminate ',
      *           'components and/or simplify solution models')
@@ -3125,10 +3011,8 @@ c                                 generic warning, also 99
      *          'or because the phases of the system do not span ',
      *          'its bulk composition.',//,
      *          4x,'In the 1st case:',/,
-     *          8x,'increase (sic) final_resolution and/or',/,
-     *          8x,'increase resolution_factor and/or',/,
-     *          8x,'increase reach_increment and/or',/,
-     *          8x,'increase speciation_factor and/or',/,
+     *          8x,'increase (sic) optimization_precision and/or',/,
+     *          8x,'increase speciation_precision and/or',/,
      *          8x,'increase speciation_max_it.',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
@@ -4773,7 +4657,7 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+
 c----------------------------------------------------------------------
       inum = int(num)
 
@@ -4890,7 +4774,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 c----------------------------------------------------------------------
       inum = int(num)
 
@@ -8123,10 +8006,6 @@ c                                 set cycle dependent parameters
             end if
 c                                 solvus tolerance 
             if (lopt(9)) nopt(8) = 1.5d0*rid(3,i)
-c                                 number of iterations
-            iopt(10) = grid(6,i)
-c                                 speciation tolerance
-            nopt(5) = rid(5,i)
 
          else if (iam.eq.13) then
 c                                 the global level of unsplt, which should generate 

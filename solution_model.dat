@@ -13859,12 +13859,7 @@ begin_model
                          to be ordered as is the case in ds6.33, but was NOT the case
                          in earlier versions of ds6, therefore if this model is to be
                          used with earlier versions of ds6, the o/d model must also
-                         be stripped from picr. in fact, it seems that in ds6.33 the
-                         "fac" parameter has been made < 0 for both sp & herc, which
-                         has the consequence that both endmembers are fully ordered at
-                         all conditions and technically obviates the use of nsp and nherc
-                         here. the endmembers are used nonetheless because their absence
-                         in earlier version of ds6 will flag the issue.
+                         be stripped from picr.
 
                       2) the following endmembers must be specified with make
                          definitions in the thermodynamic data file

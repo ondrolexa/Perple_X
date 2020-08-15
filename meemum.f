@@ -1,13 +1,8 @@
-c compiling with include statements causes run-time crash with Intel 
-c compiler optimized code.
-    
-c      include 'nlib.f'
-c      include 'olib.f'
-c      include 'clib.f'
-c      include 'resub.f'
-c      include 'rlib.f'
-c      include 'tlib.f'
-c      include 'flib.f'
+c Please do not distribute any part of this source.
+ 
+c Copyright (c) 1987-2020 by James A. D. Connolly, Institute for Mineralogy
+c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
+c SWITZERLAND. All rights reserved.
 
       program meemm       
 c----------------------------------------------------------------------

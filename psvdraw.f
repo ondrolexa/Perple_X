@@ -1936,7 +1936,7 @@ c                                       get curve midpoint
  
          if (iop9.eq.0) then
 c                                   numeric label:
-             write (lnms,'(i5)') ird
+             write (lnms,'(i6)') ird
 
              call pssctr (ifont,fac,fac,0d0)
              if (ird.lt.10) then

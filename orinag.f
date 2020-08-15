@@ -9029,11 +9029,16 @@ C
 C
 C              Expand  Q  by adding a unit row and column.
 C
-               IF (NFREE.GT.1) THEN
-                  CALL F06FBF(NFREE-1,ZERO,Q(NFREE,1),LDQ)
-                  CALL F06FBF(NFREE-1,ZERO,Q(1,NFREE),1)
-               END IF
-               Q(NFREE,NFREE) = ONE
+               if (nfree.gt.ldq) then
+c DEBUG DEBUG 691
+                  write (*,*) 'wtf nfree > ldq we are gonna crash'
+               else
+                  IF (NFREE.GT.1) THEN
+                     CALL F06FBF(NFREE-1,ZERO,Q(NFREE,1),LDQ)
+                     CALL F06FBF(NFREE-1,ZERO,Q(1,NFREE),1)
+                  END IF
+                  Q(NFREE,NFREE) = ONE
+               end if
             END IF
          ELSE
 C
@@ -13060,6 +13065,14 @@ C
                   MSG = 'optiml'
                END IF
                GO TO 20
+            else 
+c DEBUG DEBUG
+               if (jdel.gt.0.and.nfree.eq.ldq) then 
+                  write (*,*) 'bugwandita!'
+                  msg = 'infeas'
+                  goto 20
+               end if
+
             END IF
 C
 C           Constraint  JDEL  has been deleted.
