@@ -1936,9 +1936,14 @@ c                                       get curve midpoint
  
          if (iop9.eq.0) then
 c                                   numeric label:
-             write (lnms,'(i6)') ird
+             if (ird.lt.100000) then
+                write (lnms,'(i5)') ird
+             else 
+                write (lnms,'(i6)') ird
+             end if
 
              call pssctr (ifont,fac,fac,0d0)
+
              if (ird.lt.10) then
                 call pselip (x(imid),y(imid),
      *                      fac*dcx,fac*1.2d0*dcy,rline,0d0,1,0,1)
@@ -1965,6 +1970,7 @@ c                                   numeric label:
                 call pstext (x(imid)-4d0*dcx*fac,
      *                       y(imid)+0.8d0*dcy*fac,lnms,6)
              end if
+
          else
             if (x(imid).eq.x(imid-1)) then
                theta = 1.5708d0
@@ -1992,6 +1998,7 @@ c                                   get displacements from midpoint:
             call pstext (x(imid)-dx,y(imid)-dy,string,iend)
  
          end if
+
       else
 c                                  invariant point labels:
          if (ird.gt.999) then

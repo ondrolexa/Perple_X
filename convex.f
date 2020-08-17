@@ -7,13 +7,6 @@ c SWITZERLAND. All rights reserved.
 
 c compiling with include statements causes run-time crash with Intel 
 c compiler optimized code.
-    
-c      include 'nlib.f'
-c      include 'clib.f'
-c      include 'resub.f'
-c      include 'rlib.f'
-c      include 'tlib.f'
-c      include 'flib.f'
 
       program convex
 c----------------------------------------------------------------------
@@ -3996,9 +3989,9 @@ c                                 iterate independent variable to refine
 c                                 the conditions of the invariant point:
             call findjp (ivi,ivd,dv,ip,ird,fail)
 
-            if (fail) then 
-               if (outprt) call outrxn (ip,ier)
+            if (fail) then
                ier = 3
+               if (outprt) call outrxn (ip,ier)
                goto 999
             end if 
 
@@ -4006,16 +3999,23 @@ c                                 the conditions of the invariant point:
 c                                 iflag=2 metastable to > 1 phase:
 c                                 reset to last stable condition
 c                                 and redefine increment dv
-            call reptx
-
             dv = dv/2d0
-            if (dabs(dv).gt.delt(ivi)) cycle
+
+            if (dabs(dv).gt.delt(ivi)) then
+
+               call reptx
+
+               cycle
 c                                 refined increment down to dtol, try
 c                                 switching iv's, set iswitch flag
-            if (iswtch.eq.0) then 
+            else if (iswtch.eq.0) then
+
+               dv = dv/dabs(dv) * ddv(ivi)
+
                call switch (dv,ivi,ivd,jer)
                iswtch = 1
                if (jer.eq.0) cycle
+
             end if 
 
             call warn (73,delt(ivi),ivi,'SFOL1 ')

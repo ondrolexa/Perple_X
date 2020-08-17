@@ -1387,7 +1387,7 @@ c---------------------------------------------------------------------
 
       integer ivi,ivd,jer,iovd
 
-      double precision div,vo,s,odiv
+      double precision div, s
 
       double precision vmax,vmin,dv
       common/ cst9 /vmax(l2),vmin(l2),dv(l2)
@@ -1395,12 +1395,14 @@ c---------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
+      double precision delt,dtol,utol,ptol
+      common/ cst87 /delt(l2),dtol,utol,ptol
+
       double precision blim, ulim, dgr
       common/ cxt62 /blim(l2),ulim(l2),dgr
 c---------------------------------------------------------------------
 c                                 reset intensive variables
       call reptx
-      vo = v(ivi)
 c                                 determine the sign for the
 c                                 ivd increment
       call slope(ivd,ivi,s)
@@ -1412,40 +1414,10 @@ c                                 someplace is a bug
          jer = 1
          return
       end if
-c
-      odiv = div
-      div = dv(ivd)
-      if (odiv.gt.0d0) goto 10
-      if (s.gt.0d0) div = -dv(ivd)
-      goto 20
-10    if (s.lt.0d0) div = -dv(ivd)
-c                                 estimate a new value for v(ivi)
-20    v(ivi) = v(ivi)+div/s
-c     call incdep (ivi)
-c                                 switch variables
-      if ((v(ivi).gt.vmin(ivi)).and.(v(ivi).lt.vmax(ivi))) then
-         goto 30
-      else if (v(ivi).lt.blim(ivi).or.v(ivi).gt.ulim(ivi)) then
-         jer = 1
-         return
-      end if
-c                                 call to incdep moved from above 3/2/2011
-c                                 to prevent problem with negative T in
-c                                 subinc (calculation with fugacity).
-      call incdep (ivi)
 
-      div = div/5d0
+      div = s * div
 
-      if (dabs(div).lt.dv(ivd)/1d6) then
-         jer = 1
-         return
-      end if
-
-      v(ivi) = vo
-      call incdep (ivi)
-      goto 20
-
-30    iovd = ivd
+      iovd = ivd
       ivd = ivi
       ivi = iovd
 
@@ -7146,8 +7118,9 @@ c                                  and convex uses solution model value
                      pxnc(ii,i,j) = nopt(13)
 c                                 and for convexhull: perturb xmn by a per-mil scale increment to
 c                                 reduce compositional degeneracies.
-                     if (iam.eq.15) pxmn(ii,i,j) = pxmn(ii,i,j) *
-     *                                      (1d0 + nopt(15)*float(im-5))
+                     if (iam.eq.15) pxnc(ii,i,j) = pxnc(ii,i,j)
+     *                                    * (1d0 + nopt(15)*float(im-5))
+
                   end if
 
                end if
@@ -10138,7 +10111,7 @@ c                                 MEEMUM/VERTEX
 
       else if (iam.eq.15) then 
 c                                 CONVEX
-         do j = 1, icp
+         do j = 1, icomp
             a(j,phct) = scp(j)
          end do
 
