@@ -2149,7 +2149,7 @@ c                              read dqf data:
 
          else if (key.eq.'reach_increment') then 
 
-            write (*,*) 'reach_increment obsolete, 6.9.1+ '//tname
+c           write (*,*) 'reach_increment obsolete, 6.9.1+ '//tname
 
          else if (key.eq.'low_reach') then
 
@@ -5862,9 +5862,9 @@ c                                 macroscopic formulation for normal solutions.
 
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
-         call specis (gg,id,minfx)
+         if (.not.noder(id)) call specis (gg,id,minfx)
 
-         if (minfx) then 
+         if (minfx.or.noder(id)) then 
 c                                 degenerated, minfx only set for equimolar speciation.
             call minfxc (gg,id,.false.)
 
@@ -6812,7 +6812,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character sname*10, text*80
+      character sname*10, text*80, abc*1
 
       logical add, wham, zbad, bad
 
@@ -6948,7 +6948,6 @@ c                                 parameters for autorefine
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       integer iam
       common/ cst4 /iam
 
@@ -6968,6 +6967,15 @@ c                                 check for consistent auto-refine data
          if (tname.ne.sname) call error (63,r,i,'GMODEL')
 
       end if
+c                                 read switch to make GALL use MINFXC
+      read (tname,'(a)') abc
+
+      if (abc.eq.'X') then
+         noder(im) = .true.
+         write (*,*) 'using MINFXC for ',tname
+      else
+         noder(im) = .false.
+      end if 
 c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
@@ -12792,7 +12800,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, switch, minfx
+      logical bad, minfx
 
       integer i, j, k, id, itic
 
@@ -12856,11 +12864,6 @@ c                                 working arrays
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-
-      data switch/.true./
-
-      save switch
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components. 
@@ -12911,55 +12914,29 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,.false.,bad)
 
-c              call p2yx (i,bad)
+               if (noder(i)) then
 
-               if (bad) then 
-                  itic = itic + 1
-               end if
+                  call minfxc(g(id),i,.false.)
 
-               if (switch.or.dnu(i).ne.0d0) then
+               else
 
                   call specis (dg,i,minfx)
 
-                  if (minfx) then 
+                  if (minfx.and.dnu(i).eq.0d0) then 
 c                                 degenerated
                      call minfxc (g(id),i,.false.)
-c                    write (*,*) 'degenerated...'
-c                    call p2z (pa,zt,i,.true.)
 
                   else
-c                                 use old solver:
-c                                 for static composition o/d models 
-c                                 gexces accounts for internal dqf's
-                  g(id) = gexces (id) + dg + gmech (i)
 
-c                 z = pa
-c                 p0a = pa
-c                 dg = 0d0 
-c
-c                 call minfxc(dg,i,.false.)
-
-c                 if (dabs(dg-g(id)).gt.1d0) then 
-c                    write (*,*) ' id i ',dg, g(id), dg - g(id),id,i
-c                    itic = itic + 1
-c                    call p2z (z,zt,i,.true.)
-c                    write (*,*) ' '
-c                    call p2z (pa,zt,i,.true.)
-c                 end if
+                     g(id) = gexces (id) + dg + gmech (i)
 
                   end if
-
-               else 
-
-                  call minfxc(g(id),i,.false.)
 
                end if
 
                id = id + 1
 
             end do
-c DEBUG691
-c           write (*,*) 'itic for ids ',itic,i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:

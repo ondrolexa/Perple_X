@@ -138,8 +138,7 @@ c                                 on severe error do a cold start.
 c                                 necessary?
          istart = 0
 
-      else if (hcp.eq.1.and.isoct.eq.0
-     *        .or.iopt(20).eq.0.or.isoct.eq.0) then 
+      else if (hcp.eq.1.or.isoct.eq.0) then 
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
@@ -311,7 +310,9 @@ c                                 i.e., on the nth iteration, iter is n+1
             kter = 0
          end if
 c                                 set quit flag
-         if (iter.gt.iopt(20).and.kter.eq.kitmax) quit = .true.
+         if (iter.gt.iopt(20).and.kter.eq.kitmax) then 
+            quit = .true.
+         end if
 c                                 cold start
          jstart = 0 
 c                                 set idead = 0 to prevent lpsol from
@@ -404,7 +405,7 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
          kter = kter + 1
 
-         if (dabs(gtot-ogtot).lt.1d-1) then 
+         if (dabs(gtot-ogtot).lt.nopt(21)) then 
             quit = .true.
          end if 
 
@@ -1159,16 +1160,16 @@ c                                 check composition against solution model range
 
       end do
 c DEBUG DEBUG
-      j = 0 
-      k = 0
-      do i = 1, isoct
-         write (*,9000) i, badinv(i,1), badinv(i,2), 
-     *         1d2*float(badinv(i,1))/float(badinv(i,2))
-         j = j + badinv(i,1)
-         k = k + badinv(i,2)
-      end do
+c     j = 0 
+c     k = 0
+c     do i = 1, isoct
+c        write (*,9000) i, badinv(i,1), badinv(i,2), 
+c    *         1d2*float(badinv(i,1))/float(badinv(i,2))
+c        j = j + badinv(i,1)
+c        k = k + badinv(i,2)
+c     end do
 
-      write (*,9000) i, j, k, 1d2*float(j)/float(k)
+c     write (*,9000) i, j, k, 1d2*float(j)/float(k)
 
 9000  format (i2,3x,i8,3x,i8,3x,g14.6)
 

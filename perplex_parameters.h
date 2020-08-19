@@ -224,65 +224,42 @@ c----------------------------------------------------------------------
 c------------------------------------------------------------------------------
 c                                 commons with globally consistent, non-conflicting, variable names:
 
-c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
-c jiinc - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix
-
-c icox(phct) - locates static compositional coordinates for composition phct->gcind
-c jcox(gcind + 1:nsimp)
-c - locates the compositional coordinates for each simplex in xco
-c icoz(phct) - locates dynamic compositional coordinates for composition phct->gcind
-c jcoz(gcind + 1:nsimp)
-c - locates the compositional coordinates for each simplex in zco
-c stind(ii) - starting index - 1 of the simplex indices of polytope ii in the sco array
-c npoly(ii) - number of compositions in polytope ii
-
       integer spx, icox, jcox
       double precision xco
       common/ cxt10 /xco(k18),spx(h4,mst),icox(k1),jcox(k24)
-      save / cxt10 /
 
       double precision zco
       integer icoz, jcoz, jkp, zcoct
       common/ cxt13 /zco(k20),icoz(k21),jkp(k21),jcoz(k25), zcoct
-      save / cxt13 /
 
       double precision simp
       common/ cxt86 /simp(k13)
-      save / cxt86 /
 
       integer scoct, snp, sco, icoct, npol
       common/ junk0 /scoct, snp(mst), sco(k13), icoct, npol(h4)
-      save / junk0 /
 
       integer hkp,mkp
       common/ cst72 /hkp(k21),mkp(k19)
-      save / cst72 /
 c                                 temporary subdivision limits:
       double precision pxmn, pxmx, pxnc
       common/ cxt108 /pxmn(h4,mst,msp),pxmx(h4,mst,msp),pxnc(h4,mst,msp)
-      save / cxt108 /
 
       double precision pwt
       common/ cxt44 /pwt(h4)
-      save / cxt44 /
 c                                 interim storage array
       integer lcoor, lkp
       double precision ycoor
       common/ cxt14 /ycoor(k22),lcoor(k19),lkp(k19)
-      save / cxt14 /
 
       integer jpoint, jiinc
       common/ cxt60 /jpoint,jiinc
-      save / cxt60 /
 
       integer jbulk, kbulk
       double precision cblk
       common/ cst300 /cblk(k5),jbulk,kbulk
-      save / cst300 /
 
       double precision ctot
       common/ cst3  /ctot(k1)
-      save / cst3 /
 c                                 precision stuff used in lpnag 
 
 c                                 outprt is a universal flag
@@ -291,26 +268,17 @@ c                                 stage of two-stage auto-refine calculation.
       logical outprt
       integer isec,icopt,ifull,imsg,io3p
       common/ cst103 /isec,icopt,ifull,imsg,io3p,outprt
-      save / cst103 /
 
 c                                 -------------------------------
 c                                 local solution model variables:
 c                                 -------------------------------
-c       poly(h0) - number of polytopes in a c-space
-c       isimp(poly(h0)) - number of simplices in each polytope
-c       ivert(poly(h0),isimp(poly(h0)) - number of vertices in each simplex
-c       ipvert(poly(h0)) - number of vertices in each polytope
-c       istot - total number of vertices
-c       jmsol(m4,1:isimp(poly(h0)) - pointer from the endmember m4 to its polytope vertex
 
       integer isimp, ipvert, ivert, pimd
       common/ cst688 /isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp)
-      save / cst688 /
 c                                 solution model counter
       integer isoct
       common/ cst79 /isoct
-      save / cst79 /
 c                                 -------------------------------
 c                                 global solution model variables:
 c                                 -------------------------------
@@ -319,23 +287,45 @@ c mstot(i)   - number of vertices for the composition space of solution i (istot
 c nstot(i)   - number of independent endmembers of solution i
 c ndep(i)    - number of dependent endmembers of solution i = mstot(i) - lstot(i)
 c nord(i)    - number of ordered endmembers of solution i = nstot(i) - lstot(i)
+c poly(i)    - number of polytopes for solution i, i = h0 local value for input.
+c msite(i)   - number of sites on which mixing takes place
+c zsp(i, msite)    - number of indepenedntly variable species on msite.
+c zsp1(i, msite)   - total number of species on msite(zsp1 = zsp for temkin models)
+c zmult(i, tsite)  - effective site multiplicity*R used for configurational entropy calculation
+c tzmult(i, tsite) - true site mutliplicity
+c isimp(poly(h0))  - number of simplices in each polytope
+c ivert(poly(h0),isimp(poly(h0)) - number of vertices in each simplex
+c ipvert(poly(h0)) - number of vertices in each polytope
+c istot - total number of vertices
+c jmsol(m4,1:isimp(poly(h0)) - pointer from the endmember m4 to its polytope vertex
+c jpoint - index of the last compound endmember in the icp x jphct optimization matrix
+c jiinc - iphct - jphct, increment between the icp x iphct data matrix index and the optimization matrix
+c icox(phct) - locates static compositional coordinates for composition phct->gcind
+c jcox(gcind + 1:nsimp)  - locates the compositional coordinates for each simplex in xco
+c icoz(phct) - locates dynamic compositional coordinates for composition phct->gcind
+c jcoz(gcind + 1:nsimp)  - locates the compositional coordinates for each simplex in zco
+c stind(ii) - starting index - 1 of the simplex indices of polytope ii in the sco array
+c npoly(ii) - number of compositions in polytope ii
+
+c jmsol(i, j) - species on the simplex j of endmember / vertex i
+c kdsol(i) - identifier / status flag of endmember / vertex i, 0 if missing, > 0 if independent
+c                 endmember, -1 or 0 if ordered(non - vertex), -2 if dependent ? , -3 to be killed.
+c dedpol(ii) - true if polytope ii has no valid endmembers
+c pvptr(ii, 1:2) - beginning and ending indexes of polytope ii
 
       integer lstot,mstot,nstot,ndep,nord
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
-      save / cxt25 /
 c                                 -------------------------------
 c                                 model type
       logical lorder, lexces, llaar, lrecip, specil, simple
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9),
      *               specil(h9),simple(h9)
-      save / cxt27 /
 
-      logical stable,limit,lorch
+      logical stable,limit,noder,lorch
       integer badinv
       double precision xlo,xhi
       common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
-     *               badinv(h9,2),stable(h9),limit(h9),lorch(h9)
-      save / cxt11 /
+     *   badinv(h9,2),stable(h9),limit(h9),noder(h9),lorch(h9)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
@@ -344,48 +334,35 @@ c                                polytope composition variable names are in pona
 c                                polytope names are in poname(id,ipoly+1,1,1..ipoly)
       character poname*10
       common/ cxt47 /poname(h0,h4,mst,msp)
-      save / cxt47 /
+
 c                                site species names are in znames(id,1:nsite,1:nsp), id = h0 on input
 c                                site names are in znames(id,1:nsite, 0)
       character znames*3
       common/ cxt48 /znames(h0,m10,0:m11)
-      save / cxt48 /
 
       double precision dcoef, scoef
       common/ cxt1r /dcoef(0:m0,m11,m10,h9),scoef(m4,h9)
-      save / cxt1r /
-c msite(i)         - number of sites on which mixing takes place
-c zsp(i,msite)     - number of indepenedntly variable species on msite.
-c zsp1(i,msite)    - total number of species on msite (zsp1 = zsp for temkin models)
-c zmult(i,tsite)   - effective site multiplicity*R used for configurational entropy calculation
-c tzmult(i,tsite)  - true site mutliplicity
 
       integer msite, zsp
       double precision zcoef, zmult
       common/ cxt1n /zcoef(0:m0,m11,m10,h0),zmult(h0,m10),
      *               msite(h0),zsp(h0,m10)
-      save / cxt1n /
 
       character*60 zuffix
       integer zsp1
       logical zform
       double precision tzmult
       common/ cxt1m /tzmult(h0,m10),zsp1(h0,m10),zform(h0),zuffix(h0)
-      save / cxt1m /
 
       logical quack
       integer solc, isolc
       common/ cxt1 /solc(k5),isolc,quack(k21)
-      save / cxt1 /
 
       double precision y2pg
       common/ cxt4  /y2pg(m15,m4,h9)
-      save / cxt4 /
-c poly(i) - number of polytopes for solution i, i = h0 local value for input.
 
       integer ksmod, kmsol, knsp
       common/ cxt0  /ksmod(h9),kmsol(h9,m4,mst),knsp(m4,h9)
-      save / cxt0 /
 
       integer istg, ispg, imdg, poly, pvert, pop1, nsum
       double precision xmng, xmxg, xncg, xmno, xmxo, reachg,
@@ -394,16 +371,13 @@ c poly(i) - number of polytopes for solution i, i = h0 local value for input.
      *      xmng(h9,h4,mst,msp),xmxg(h9,h4,mst,msp),xncg(h9,h4,mst,msp),
      *      xmno(h9,h4,mst,msp),xmxo(h9,h4,mst,msp),reachg(h9),
      *      xmnh(h9,h4,mst,msp),xmxh(h9,h4,mst,msp)
-      save / cxt6r /
 
       common/ cxt6i /istg(h9,h4),ispg(h9,h4,mst),pop1(h9),nsum(h9),
      *               imdg(ms1,mst,h4,h9),poly(h0),pvert(h9,h4,2)
-      save / cxt6i /
 
       logical bdx, nrf
       integer ldsol
       common/ cxt36 /ldsol(m4,h9),bdx(h9),nrf(h9)
-      save / cxt36 /
 c                                 -------------------------------
 c                                  variables set from perplex_option.dat
       integer iopt
@@ -411,64 +385,47 @@ c                                  variables set from perplex_option.dat
       character valu*3
       double precision nopt
       common/ opts /nopt(i10),iopt(i10),lopt(i10),valu(i10)
-      save / opts /
 c                                 -------------------------------
 c                                 local solution model variables:
       logical stck, norf, lowrch, badx
       integer xtyp
       double precision reach
       common/ cxt61 /reach,xtyp,stck,norf,lowrch,badx
-      save / cxt61 /
 
       integer jsmod
       double precision vlaar
       common/ cst221 /vlaar(m3,m4),jsmod
-      save / cst221 /
-
-c jmsol(i,j)    - species on the simplex j of endmember/vertex i
-c kdsol(i)      - identifier/status flag of endmember/vertex i, 0 if missing, > 0 if independent
-c                 endmember, -1 or 0 if ordered (non-vertex), -2 if dependent?, -3 to be killed.
-c dedpol(ii)    - true if polytope ii has no valid endmembers
-c pvptr(ii,1:2) - beginning and ending indexes of polytope ii
 
       logical dedpol
       integer jmsol,kdsol,pvptr
       common/ cst142 /jmsol(m4,mst),kdsol(m4),pvptr(h4,2),dedpol(h4)
-      save / cst142 /
-c                                 -------------------------------
+
       integer iemod
       logical smod,pmod
       double precision emod
       common/ cst319 /emod(k15,k10),smod(h9),pmod(h9),iemod(k10)
-      save / cst319 /
 
       double precision times, btime, etime
       common/ time /times(30),btime(30),etime(30)
-      save / time /
 
       double precision thermo
       common/ cst1 /thermo(k4,k10)
-      save / cst1 /
 
       double precision uf
       integer ifug, iff, idss
       common/ cst10 /uf(2),iff(2),idss(h5),ifug
-      save / cst10 /
 
       integer iaq, aqst, aqct
       character aqnam*8
       double precision aqcp, aqtot
       common/ cst336 /aqcp(k0,l9),aqtot(l9),aqnam(l9),iaq(l9),aqst,aqct
-      save / cst336 /
 
       character names*8
       common / cst8 /names(k1)
-      save / cst8 /
 
       integer did, dct
       double precision dgee
       common/ dean /dgee(k10),did(k10),dct
-      save / dean /
 
       logical restrt, dead
       integer ophct
@@ -477,8 +434,6 @@ c                                 -------------------------------
 
       double precision pa3
       common/ cstpa3 /pa3(k5,m14)
-      save / cstpa3 /
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
-      save / cxt3r /

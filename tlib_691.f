@@ -227,8 +227,8 @@ c                                 increase in resolution for Schreinemakers diag
       nopt(19) = 3d0 
 c                                 T_melt cutoff 
       nopt(20) = 873d0
-c                                 optimization_precision, relative
-      nopt(21) = 1d-8
+c                                 optimization_precision, absolute
+      nopt(21) = 1d-1
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -272,6 +272,8 @@ c                                 assume linear boundaries within a cell during 
 c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
       iopt(14) = 1
       valu(14) = 'som'
+c                                 optimization_iterations, max number of iterations
+      iopt(20) = 10
 c                                 speciation_max_it - for speciation calculations
       iopt(21) = 100
 c                                 aq_bad_results 
@@ -669,6 +671,14 @@ c                                 bad number key
          else if (key.eq.'speciation_precision') then 
 
             read (strg,*) nopt(5)
+
+         else if (key.eq.'optimization_precision') then 
+
+            read (strg,*) nopt(21)
+
+         else if (key.eq.'optimization_iterations') then 
+
+            read (strg,*) iopt(20)
 
          else if (key.eq.'zero_bulk') then
 c                                 zero_bulk key
@@ -1630,8 +1640,8 @@ c                                 thermo options for frendly
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'optimization_precision ',/,g7.1E1,4x,
-     *           '[1e-8], relative',/,
-     *        4x,'optimization_iterations',i2,9x,'>= 2 [20]',/,
+     *           '[1e-1], absolute',/,
+     *        4x,'optimization_iterations',i2,9x,'>= 2 [10]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,

@@ -6533,7 +6533,6 @@ c                                 parameters for autorefine
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       integer iam
       common/ cst4 /iam
 
@@ -19943,7 +19942,6 @@ c                                 add magnetic component
       gfesi = gfesi + gmag(y)
 
       end
-
       subroutine setord (im)
 c---------------------------------------------------------------------
 c set global order/disorder models parameters, call by gmodel for 
