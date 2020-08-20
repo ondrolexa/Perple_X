@@ -6847,8 +6847,8 @@ c                                 in which case, why is it here????
       if (laar) then
 
          if (iterm.eq.0) laar = .false.
-         if (dnu(im).ne.0d0) call error (72,r,i,'laar excess function '/
-     *          /'not anticipated for non-equimolar ordering: '//tname)
+c        if (dnu(im).ne.0d0) call error (72,r,i,'laar excess function '/
+c    *          /'not anticipated for non-equimolar ordering: '//tname)
 
       end if
 
@@ -14817,11 +14817,21 @@ c                                 rqmax the maximum amount of the
 c                                 ordered species that can be formed
 c                                 from the fully disordered species
 c                                 fractions
+
+c                                 this solver DOES NOT account for the
+c                                 antiordered state! is there one? i donut
+c                                 think so
       rqmax = 1d0
 
       do i = 1, nrct(1,id)
+c                                 this is probably ok for HP melt models
+c                                 as the endmember fractions are generally
+c                                 related to a site fraction
+         if (dydy(ideps(i,1,id),1,id).gt.0d0) cycle
+
          if (-p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id).lt.rqmax)
      *              rqmax = -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
+
       end do
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
@@ -14935,7 +14945,7 @@ c----------------------------------------------------------------------
       double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2,
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
      *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
-     *                 z, n(m11), dn(m11), d2n(m11), dsinf
+     *                 z, n(m11), dn(m11), d2n(m11), dsinf, t, dt, d2t
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -14953,6 +14963,9 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision alpha,dt0
+      common/ cyt0  /alpha(m4),dt0(j3)
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -15006,18 +15019,48 @@ c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
 
       end do
 
-      do i = 1, jterm(id)
+      if (llaar(id)) then
+
+         t = 0d0
+         dt = 0d0
+         d2t = 0d0
+c                                 h&p van laar
+         do i = 1, nstot(id)
+            t = t + alpha(i)* pa(i)
+            dt = dt + alpha(i)* dp(i)
+            d2t = d2t + alpha(i)* d2p(i)
+         end do
+
+         do i = 1, jterm(id)
+
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
+
+            g = g + w(i) * pa(i1) * pa(i2)
+            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
+            d2g = d2g + w(i) * (pa(i1)*d2p(i2) + pa(i2)*d2p(i1) 
+     *                                         + 2d0*dp(i1)*dp(i2) )
+         end do
+
+         d2g = (d2g + (2d0*g*dt**2/t - (2d0*dg*dt + g*d2t))/t)/t
+         dg =  dg - g*dt/t
+
+      else
+
+         do i = 1, jterm(id)
 c                                 excess g assuming regular terms
-        i1 = jsub(1,i,id)
-        i2 = jsub(2,i,id)
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
 
-        g = g + w(i) * pa(i1) * pa(i2)
-        dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
-        d2g = d2g + w(i) * (      d2p(i1)* pa(i2)
-     *                      + 2d0*dp(i2) * dp(i1)
-     *                      +     d2p(i2)* pa(i1) )
+            g = g + w(i) * pa(i1) * pa(i2)
+            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
+            d2g = d2g + w(i) * (      d2p(i1) * pa(i2)
+     *                           + 2d0*dp(i2) * dp(i1)
+     *                           +    d2p(i2) * pa(i1) )
 
-      end do
+         end do
+
+      end if
 c                                 get the configurational entropy derivatives
       do i = 1, msite(id)
 
@@ -15052,7 +15095,7 @@ c                                 n(j) is molar site population
 
             end do
 
-            if (nt.gt.0d0) then
+            if (nt.gt.zero) then
 c                                 site has non-zero multiplicity
                do j = 1, zsp(id,i)
 
@@ -15061,7 +15104,7 @@ c                                 site has non-zero multiplicity
                   d2z = (2d0*dnt*(z*dnt-dn(j)) + nt*d2n(j) - n(j)*d2nt)
      *                  /nt**2
 
-                  if (z.gt.0d0) then
+                  if (z.gt.zero) then
 
                      lnz = dlog(z)
                      lnz1 = lnz + 1d0
@@ -15070,9 +15113,12 @@ c                                 site has non-zero multiplicity
                      dzlnz = dzlnz + dz * lnz1
                      d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
 
-                  else if (dz.gt.zero) then
+                  else if (dabs(dn(j)/nt).gt.zero) then
 
-                     write (*,*) 'oink'
+                     dz = dn(j)/nt
+                     d2z = (2d0*dnt*(-dn(j)) + nt*d2n(j) - n(j)*d2nt)
+     *                  /nt**2
+                     write (*,*) 'oink temkin dz ',z,dz,d2z,n(j)
 
                   end if
 
@@ -15099,7 +15145,7 @@ c                                 for each term:
                   d2z = d2z + dcoef(k,j,i,id) * d2p(ksub(k,j,i,id))
                end do
 
-               if (z.gt.0d0) then
+               if (z.gt.zero) then
 
                   lnz = dlog(z)
                   lnz1 = 1d0 + lnz
@@ -15123,7 +15169,7 @@ c                                 derivative may be +/-infinite
 c                                 add the contibution from the last species:
             z = 1d0 - nt
 
-            if (z.gt.0d0) then
+            if (z.gt.zero) then
 
                lnz = dlog(z)
                lnz1 = 1d0 + lnz

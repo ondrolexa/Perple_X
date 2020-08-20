@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.1, source updated August 17, 2020.',
+     *      'Perple_X version 6.9.1, source updated August 20, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -205,7 +205,12 @@ c                                 quench temperature (K)
       nopt(12) = 0d0
 c                                 initial resolution for adaptive 
 c                                 refinement
-      nopt(13) = 1d0/16d0
+      if (iam.eq.15) then 
+c                                 convex
+         nopt(13) = 1d0/16d0
+      else 
+         nopt(13) = 1d0/4d0
+      end if
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
@@ -736,7 +741,8 @@ c                                 initial_resolution key
      *                                 'has an invalid value.')
 c                                 initial resolution
             if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then
-               nopt(13) = 1d0/16d0
+               nopt(13) = 1d0/4d0
+               if (iam.eq.15) nopt(13) = 1d0/16d0
                write (*,1050)
             end if
 c                                  686+ read second value as arf value
@@ -752,7 +758,7 @@ c                                  special backward compatibility msg
             end if 
 
             if (nopt(17).ge.1d0.or.nopt(17).lt.0d0) then
-               nopt(17) = 1d0/48d0
+               nopt(17) = nopt(13)/3d0
                write (*,1050)
             end if
 
@@ -1572,7 +1578,7 @@ c                                 info file options
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:    ',/,
      *        4x,'  exploratory stage    ',f6.4,5x,
-     *           '0->1 [1/16], 0 => off',/,
+     * '0->1 [1/4 => VERTEX/MEEMUM, 1/16 => CONVEX], 0 => off',/,
      *        4x,'  auto-refine stage    ',f6.4,5x,
      *           '0->1 [',a,'], 0 => off',/,
      *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,

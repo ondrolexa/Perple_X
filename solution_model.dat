@@ -305,136 +305,6 @@ reach_increment 3
 
 end_of_model
                       --------------------------------------------------------
-begin_model
-
-                             Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
-                             extended for Mn solution after Tinkham et al. 2001.
-
-                             Model entered by Lucie Tajcmanova, December, 2008.
-
-                             NOTE this model requires the following make definitions 
-                             in the thermodynamic data file:
-
-                             tbit = 1 phl - 1 br + 1 ru           84e3 -11.5 0 
-                             fbit = 1 east - 1/2 cor + 1/2 hem    6e3 0 0  
-
-                             site population limits added Feb 20, 2011, JADC.
-
-                             reformulated as a prismatic + orphan vertex model.
-
-                             JADC, 10/5/2018
-
-                             688 format, JADC, 9/9/2019.
-
-
-                                      Site:           M1      M2       T1     H
-                                                     ____________________________
-
-                                      Mutliplicity    1       2        2      2       
-
-                                    endmember        ____________________________   type
-                                    _________                                       _________
-
-
-                                        ffbit         Fe3+   FeFe     AlAl    OH    dependent 
-                                        fbit          Fe3+   MgMg     AlAl    OH
-                          
-                                        ftbit         Fe     TiFe     AlSi    O     dependent
-                                        tbit          Mg     TiMg     AlSi    O
-   
-                                        sdph          Al     FeFe     AlAl    OH    dependent
-                                        east          Al     MgMg     AlAl    OH
-
-                                        mnbi          Mn     MnMn     AlSi    OH    independent orphan
-                                        ann           Fe     FeFe     AlSi    OH
-                                        phl           Mg     MgMg     AlSi    OH
-
-                                        obi           Fe     MgMg     AlSi    OH    ordered
-
-Bio(TCC)                           | model name
-abbreviation Bio
-full_name    biotite
-
-688                                | model type: 688 format standard model
- 
-2                                  | number of polytopes
-                                   | polytope names and composite composition space subdivision schemes 
-[Mn][Mn]  0   .5   .1   0
-[M,T][M]  by difference
-                                   | ----------------------------
-                                   | Polytope 1 - 1 simplex
-1                                  | number of simplices, [Mn][Mn]
-1                                  | number of vertices on each simplex
-mnbi                               | endmembers on the vertices
-                                   | ----------------------------
-                                   | Polytope 2 - 2x4 simplices
-2                                  | number of simplices
-2  4                               | number of vertices on each simplex
-                                   | endmembers on the vertices
-ffbit     fbit
-sdph      east
-ftbit     tbit
-ann       phl
-                                   | First 2-simplex
-X_Mg    0    1   .1  0             | X(1,1) is bulk Fe/M
-X_Fe    by difference
-
-                                   | Second 4-simplex
-X_FeTs  0    1   .1  0             | X(2,1) is Fe3/[T+M] on M1, M on M2
-X_AlTs  0    1   .1  0             | X(2,2) is Al/[T+M]  on M1, M on M2
-X_TiTs  0    1   .1  0             | X(2,3) is MTi/[M+MTi] on M2, M on M1
-X_MBio  by difference
-
-begin_ordered_endmembers
-obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
-end_ordered_endmembers
-
-begin_dependent_endmembers
-sdph    = 1 east + 1 ann    - 1 obi
-ffbit   = 1 fbit + 1 ann    - 1 obi
-ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
-end_dependent_endmembers
-
-begin_excess_function
-W(phl ann)   12000   | excess parameters from Holland & Powell, JMG, 2006
-W(phl east)  10000 
-W(phl obi)    4000
-W(ann east)   3000 
-W(ann obi)    8000
-W(obi east)   7000
-end_excess_function 
-
-4                                   | number of identisites in configurational entropy model
-
-M1                                  | site name
-5 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Al,M1)   = 1 east
-z(Mg,M1)   = 1 phl + 1 tbit
-z(Mn,M1)   = 1 mnbi 
-z(Fe3+,M1) = 1 fbit
-z(Fe,M1)   = 1 ann + 1 obi 
-
-M2                                  | site name
-4 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Fe,M2)   = 1 ann
-z(Ti,M2)   = 1/2 tbit
-z(Mn,M2)   = 1 mnbi
-z(Mg,M2)   = 1 phl + 1 obi + 1 east + 1/2 tbit + 1 fbit
-
-T1                                  | site name
-2 2 2                               | number of species, effective multiplicity, true multiplicity
-z(Si,T1)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
-z(Al,T1)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi + 1 fbit
-
-OH                                  | site name
-2 2 2                               | 2 species on H, 2 site per formula unit.
-z(O,OH)     = 1 tbit
-z(OH,OH)    = 1 east + 1 phl + 1 ann + 1 obi + 1 mnbi + 1 fbit
-
-[Si2O10(OH)2]                       | formula suffix, enter "none" for no suffix.
-
-end_of_model
-                      --------------------------------------------------------
 begin_model                
                            ternary feldsar (fuhrman & lindsley, am min, 1988)
                            for binary plagioclse this model is identical
@@ -1632,17 +1502,12 @@ reach_increment 0
 end_of_model
                            --------------------------------------------------------
 begin_model
-                      Generic Melt - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881–900.
-                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus
+                      Generic Melt - Holland, Green, and Powell; Journal of Petrology, 2018, Vol. 59, 881â€“900.
+                      Intended for pressure to 7 GPa, 923 K < T < peridotite liquidus. JADC 12/18
 
-                      JADC 12/18
+                      * DQF's changed from published values to the values in the TC files. JADC 4/23/19
 
-                      * DQF's changed from published values to the values in the TC files.
-
-                      JADC 4/23/19
-
-                      * the current solver for this model (gpmelt) precludes stability
-                        of antiordered states. 6/27/20, JADC.
+                      * updated to 688 format, added previously missing van Laar size terms. Ben Klein, BC, 8/19/20.
 
                       This model requires the following make definitions in the
                       thermodynamic data file make_definitions section:
@@ -1688,36 +1553,35 @@ melt(HGP)
 abbreviation Melt
 full_name    liquid
 
-6                                   | model type: simplicial composition space with speciation
+688                                | model type: 688 format standard model
 
-11                                  | number of endmembers
+1                                  | number of polytopes
+1                                  | number of simplices
+11                                 | number of vertices (endmembers) on each simplex
 
 foHL     faHL
 jdL      silL     kjL
 woL      ekL      hmL
 tiL      qHL      h2oL
 
-1                                   | ordered species definition
 
+0     1   .1  0                    | range and resolution of X(fo)
+0    .3   .1  0                    | range and resolution of X(fa)
+0    .8   .1  0                    | range and resolution of X(jd)
+0    .3   .1  0                    | range and resolution of X(sil)
+0    .4   .1  0                    | range and resolution of X(kj)
+0    .5   .1  0                    | range and resolution of X(wo)
+0    .1   .1  0                    | range and resolution of X(ek)
+0    .1   .1  0                    | range and resolution of X(hm)
+0    .1   .1  0                    | range and resolution of X(ti)
+0    .6   .1  0                    | range and resolution of X(q)
+
+
+begin_ordered_endmembers
                                     | H(ctL) = -108.3d3  +55*TK  +0.053*Pbar - dqfwol - dqfsil + dqfq/4
-
 ctL = 1 woL + 1 silL - 1/4 qHL        Delta(enthalpy)   = -113995 + 55*TK+ .47025*P
 
-                                    | see commentary in the header of this file for explanation of
-                                    | endmember flags and subdivision schemes.
-
-1 1 1 1 1 1 1 1 1 1 1               | endmember flags
-
-0     1   .1  0                     | range and resolution of X(fo)
-0     .3   .1  0                     | range and resolution of X(fa)
-0     .8   .1  0                     | range and resolution of X(jd)
-0     .3   .1  0                     | range and resolution of X(sil)
-0     .4   .1  0                     | range and resolution of X(kj)
-0     .5   .1  0                     | range and resolution of X(wo)
-0     .1   .1  0                     | range and resolution of X(ek)
-0     .1   .1  0                     | range and resolution of X(hm)
-0     .1   .1  0                     | range and resolution of X(ti)
-0     .6   .1  0                     | range and resolution of X(q)
+end_ordered_endmembers
 
 begin_excess_function
 
@@ -1787,16 +1651,20 @@ end_excess_function
 
 3
 
-2 2                         | water-vacancy site, multiplicity 2
-z(H) = 1 h2oL
+OH
+2 2 1                         | water-vacancy site, multiplicity 2
+z(H)   = 1 h2oL
+z(Vac) = 1 qHL + 1 silL + 1 woL + 1 foHL + 1 faHL + 1 jdL + 1 hmL + 1 ekL + 1 tiL + 1 kjL + 1 ctL  
 
-4 0                         | Temkin M-site
+M
+4 0 0                       | Temkin M-site
 n(Mg) = 4 foHL
 n(Fe) = 4 faHL
 n(Ca) = 1 woL
 n(Al) = 1 silL
 
-10 0                        | Temkin F-site, decomposing "AlSi2" into k/na-jd here eliminates the necessity of the A-site
+F
+10 0 0                      | Temkin F-site, decomposing "AlSi2" into k/na-jd here eliminates the necessity of the A-site
 n(jdL)   = 1 jdL
 n(kjL)   = 1 kjL
 n(alsi)  = 1 silL
@@ -1808,13 +1676,54 @@ n(tiL)   = 1 tiL
 n(ctL)   = 1 ctL
 n(hem)   = 1 hmL
 
+none                              | formula suffix, enter "none" for no suffix. 
+
 begin_dqf_corrections
 dqf(silL)  =  6.2d3          - 0.318   *Pbar
 dqf(woL)   = -0.45d3         - 0.114   *Pbar
 dqf(h2oL)  =  3.2d3  -3.9*TK + 0.00087 *Pbar
 end_dqf_corrections
 
+
+begin_van_laar_sizes
+alpha(qHL)   = 1.0
+alpha(silL)  = 1.2
+alpha(woL)   = 1.4
+alpha(foHL)  = 2.4
+alpha(faHL)  = 1.0
+alpha(jdL)   = 1.2
+alpha(hmL)   = 1.0
+alpha(ekL)   = 1.0
+alpha(tiL)   = 1.0
+alpha(kjL)   = 1.0
+alpha(ctL)   = 1.0
+alpha(h2oL)  = 1.0
+end_van_laar_sizes
+
+begin_flagged_endmembers
+                                    | endmembers listed in this section are not associated with the
+                                    | solution on output and are identified by endmember name. This
+                                    | may be useful for testing purposes for systems in which the 
+                                    | the endmember compositions are not expected to be stable, i.e., 
+                                    | the stability of pure h2oL would alert the user to unexpected 
+                                    | behaviour. if/when endmember compositions of the solution are 
+                                    | expected, those endmembers should be removed from the list of
+                                    | flagged endmembers. 
+foHL     
+faHL
+jdL      
+silL     
+kjL
+woL      
+ekL      
+hmL
+tiL      
+qHL      
+h2oL
+end_flagged_endmembers
+
 end_of_model
+
                            --------------------------------------------------------
 begin_model
                       Tonalitic melt, Green et al., JMG, 2016.
@@ -4028,6 +3937,136 @@ z(m1,fe3+) = 1 mots
 
 2 1                        | 2 species on M2, 1 site per formula unit.
 z(m2,mg) = 1 en + 1 mgts + 1 mots
+
+end_of_model
+                      --------------------------------------------------------
+begin_model
+
+                             Ti-Fe3+ Biotite from Tajcmanova et al., JMG 2009;
+                             extended for Mn solution after Tinkham et al. 2001.
+
+                             Model entered by Lucie Tajcmanova, December, 2008.
+
+                             NOTE this model requires the following make definitions 
+                             in the thermodynamic data file:
+
+                             tbit = 1 phl - 1 br + 1 ru           84e3 -11.5 0 
+                             fbit = 1 east - 1/2 cor + 1/2 hem    6e3 0 0  
+
+                             site population limits added Feb 20, 2011, JADC.
+
+                             reformulated as a prismatic + orphan vertex model.
+
+                             JADC, 10/5/2018
+
+                             688 format, JADC, 9/9/2019.
+
+
+                                      Site:           M1      M2       T1     H
+                                                     ____________________________
+
+                                      Mutliplicity    1       2        2      2       
+
+                                    endmember        ____________________________   type
+                                    _________                                       _________
+
+
+                                        ffbit         Fe3+   FeFe     AlAl    OH    dependent 
+                                        fbit          Fe3+   MgMg     AlAl    OH
+                          
+                                        ftbit         Fe     TiFe     AlSi    O     dependent
+                                        tbit          Mg     TiMg     AlSi    O
+   
+                                        sdph          Al     FeFe     AlAl    OH    dependent
+                                        east          Al     MgMg     AlAl    OH
+
+                                        mnbi          Mn     MnMn     AlSi    OH    independent orphan
+                                        ann           Fe     FeFe     AlSi    OH
+                                        phl           Mg     MgMg     AlSi    OH
+
+                                        obi           Fe     MgMg     AlSi    OH    ordered
+
+Bio(TCC)                           | model name
+abbreviation Bio
+full_name    biotite
+
+688                                | model type: 688 format standard model
+ 
+2                                  | number of polytopes
+                                   | polytope names and composite composition space subdivision schemes 
+[Mn][Mn]  0   .5   .1   0
+[M,T][M]  by difference
+                                   | ----------------------------
+                                   | Polytope 1 - 1 simplex
+1                                  | number of simplices, [Mn][Mn]
+1                                  | number of vertices on each simplex
+mnbi                               | endmembers on the vertices
+                                   | ----------------------------
+                                   | Polytope 2 - 2x4 simplices
+2                                  | number of simplices
+2  4                               | number of vertices on each simplex
+                                   | endmembers on the vertices
+ffbit     fbit
+sdph      east
+ftbit     tbit
+ann       phl
+                                   | First 2-simplex
+X_Mg    0    1   .1  0             | X(1,1) is bulk Fe/M
+X_Fe    by difference
+
+                                   | Second 4-simplex
+X_FeTs  0    1   .1  0             | X(2,1) is Fe3/[T+M] on M1, M on M2
+X_AlTs  0    1   .1  0             | X(2,2) is Al/[T+M]  on M1, M on M2
+X_TiTs  0    1   .1  0             | X(2,3) is MTi/[M+MTi] on M2, M on M1
+X_MBio  by difference
+
+begin_ordered_endmembers
+obi = 2/3 phl + 1/3 ann   enthalpy_of_ordering = -6.8d3 
+end_ordered_endmembers
+
+begin_dependent_endmembers
+sdph    = 1 east + 1 ann    - 1 obi
+ffbit   = 1 fbit + 1 ann    - 1 obi
+ftbit   = 1 tbit + 1/2 ann  + 1/2 obi - 1 phl
+end_dependent_endmembers
+
+begin_excess_function
+W(phl ann)   12000   | excess parameters from Holland & Powell, JMG, 2006
+W(phl east)  10000 
+W(phl obi)    4000
+W(ann east)   3000 
+W(ann obi)    8000
+W(obi east)   7000
+end_excess_function 
+
+4                                   | number of identisites in configurational entropy model
+
+M1                                  | site name
+5 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Al,M1)   = 1 east
+z(Mg,M1)   = 1 phl + 1 tbit
+z(Mn,M1)   = 1 mnbi 
+z(Fe3+,M1) = 1 fbit
+z(Fe,M1)   = 1 ann + 1 obi 
+
+M2                                  | site name
+4 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Fe,M2)   = 1 ann
+z(Ti,M2)   = 1/2 tbit
+z(Mn,M2)   = 1 mnbi
+z(Mg,M2)   = 1 phl + 1 obi + 1 east + 1/2 tbit + 1 fbit
+
+T1                                  | site name
+2 2 2                               | number of species, effective multiplicity, true multiplicity
+z(Si,T1)   = 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi 
+z(Al,T1)   = 1 east + 1/2 phl + 1/2 ann + 1/2 tbit + 1/2 obi + 1/2 mnbi + 1 fbit
+
+OH                                  | site name
+2 2 2                               | 2 species on H, 2 site per formula unit.
+z(O,OH)     = 1 tbit
+z(OH,OH)    = 1 east + 1 phl + 1 ann + 1 obi + 1 mnbi + 1 fbit
+
+[Si2O10(OH)2]                       | formula suffix, enter "none" for no suffix.
 
 end_of_model
                     --------------------------------------------------------
