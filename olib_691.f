@@ -762,11 +762,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ii, i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
+      integer i,j,k,l,ids,kd,lco(3),itri(4),jtri(4),ijpt
 
       double precision wt(3), cst, xt 
 
-      logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
+      logical sick(i8), nodata, ssick, ppois, bulkg, bsick
 c                                 x-coordinates for the assemblage solutions
       integer ld, na1, na2, na3, nat
       double precision x3, caq
@@ -835,6 +835,9 @@ c                                 bookkeeping variables
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
 10    if (lopt(14)) p = 1d1**p 
@@ -909,13 +912,7 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do ii = 1, pop1(ids)
-                  do j = 1, istg(ids,ii)
-                     do k = 1, ispg(ids,ii,j)
-                        x3(i,ii,j,k) = 0d0
-                     end do 
-                  end do 
-               end do 
+               pa3(i,1:nstot(ids)) = 0d0
 
                if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation
@@ -940,13 +937,11 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do ii = 1, pop1(ids)
-                     do j = 1, istg(ids,ii)
-                        do k = 1, ispg(ids,ii,j)
-                           lco(l) = lco(l) + 1
-                           x3(i,ii,j,k) = x3(i,ii,j,k) + cst*xco(lco(l))
-                        end do
-                     end do 
+                  xt = 0d0
+                  do j = 1, nstot(ids)
+                     lco(l) = lco(l) + 1
+                     xt = xt + xco(lco(l))
+                     pa3(i,j) = pa3(i,j) + cst*xco(lco(l))
                   end do
 
                   if (lopt(32).and.ksmod(ids).eq.39) then 
@@ -963,35 +958,12 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do ii = 1, pop1(ids) 
+               xt = 0d0
+               do j = 1, nstot(ids)
+                  xt = xt + pa3(i,j)
+               end do
 
-                  do l = 1, istg(ids,ii)
-                  
-                     xt = 0d0
-
-                     do m = 1, ispg(ids,ii,l)
-
-                        x3(i,ii,l,m) = x3(i,ii,l,m)/cst
-
-                        if (x3(i,ii,l,m).gt.1d0) then 
-                           x3(i,ii,l,m) = 1d0
-                        else if (x3(i,ii,l,m).lt.0d0) then 
-                           x3(i,ii,l,m) = 0d0
-                        end if 
-
-                        xt = xt + x3(i,ii,l,m)
-
-                     end do
-
-                     if (xt.ne.1d0.and.xt.ne.0d0) then 
-                        do m = 1, ispg(ids,ii,l)
-                           x3(i,ii,l,m) = x3(i,ii,l,m)/xt
-                        end do
-                     end if
-
-                  end do
-
-               end do 
+               pa3(i,1:nstot(ids)) = pa3(i,1:nstot(ids)) / xt
 
                if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation
@@ -1004,10 +976,11 @@ c                               lagged speciation
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
-               pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
-               call makepp (ids)
 
             end if
+
+            pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
+            call makepp (ids)
 
          else
 c                                 a compound:
@@ -1569,7 +1542,7 @@ c                                 redundant for frendly
       call getnam (pname(jd),id)
 c                                 if WERAMI recover composition
 c                                 logical arg is irrelevant
-      if (iam.eq.3) call getcmp (jd,jd,id,pois)
+      if (iam.eq.3) call getcmp (jd,id)
 c                                 component counter for frendly is different
 c                                 than for all other programs
       if (iam.ne.5) then 
@@ -3153,14 +3126,14 @@ c                                 total molar amounts
 
       end
 
-      subroutine getcmp (jd,id,ids,dynam)
+      subroutine getcmp (jd,ids)
 c-----------------------------------------------------------------------
-c getcmp gets the composition of pseudocompund id, where:
+c getcmp gets the composition of pseudocompund jd, where:
 c  if ids < 0, -ids points to the composition of a true compound in array cp
 c  if ids > 0, id points to the composition of a solution defined in terms
 c              on endmember fractions
 
-c the composition is saved in arrays cp3 and x3, entry jd
+c the composition is saved in arrays cp3 and pa3, entry jd
 
 c getcmp is called by FRENDLY, WERAMI, MEEMUM and VERTEX
 c-----------------------------------------------------------------------
@@ -3168,9 +3141,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      logical bad, dynam
-
-      integer i, id, jd, ids
+      integer i, jd, ids
 
       double precision scp(k5), scptot
 
@@ -3197,6 +3168,10 @@ c-----------------------------------------------------------------------
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
       kkp(jd) = ids
 
@@ -3209,9 +3184,13 @@ c                                 all programs except frendly
             end do
 c                                 set solution composition 
 c                                 if it's a solution endmember
-            if (ikp(-ids).ne.0) call endx3 (jd,-ids,ikp(-ids))
+c                                 1st argument on endpa is a dummy
+            if (ikp(-ids).ne.0) then 
+               call endpa (ids,-ids,ikp(-ids))
+               pa3(jd,1:nstot(ids)) = pa(1:nstot(ids))
+            end if
 
-         else 
+         else
 c                                 frendly 
             do i = 1, k0
                cp3(i,jd) = cp0(i,-ids)
@@ -3221,23 +3200,6 @@ c                                 frendly
 
       else
 c                                 solutions:
-         if (iam.ne.3) then
-c                                 getcmp is being called by MEEMUM/VERTEX:
-c                                 solution endmember fractions are recovered by 
-c                                 setxyp.
-            call setxyp (ids,id,dynam,bad)
-
-            call setex3 (jd,ids)
-
-         else
-c                                 getcmp is being called by WERAMI:
-c                                 xtoy recovers y from the x3 array.
-            call xtoy (ids,jd,.false.,bad)
-c                                 set pa/p0a/pp arrays
-            call y2p0 (ids)
-
-         end if
-
          call getscp (scp,scptot,ids,jd,.false.)
 
          do i = 1, icomp

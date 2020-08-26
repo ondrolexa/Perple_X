@@ -2100,7 +2100,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, idim, kstot, i
+      integer ier, idim, kstot
 
       character tname*(*), key*22, val*3, nval1*12, nval2*12, nval3*12,
      *          strg*40, strg1*40
@@ -2109,8 +2109,8 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,com,chars(lchar)
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       integer indq,idqf
       double precision dqf
@@ -2122,6 +2122,7 @@ c----------------------------------------------------------------------
       stck = .true.
       norf = .true.
       badx = .false.
+      lres = .false.
 
       do
 
@@ -2154,6 +2155,14 @@ c           write (*,*) 'reach_increment obsolete, 6.9.1+ '//tname
          else if (key.eq.'low_reach') then
 
             write (*,*) 'low_reach obsolete, 6.9.1+ '//tname
+            lres = .true.
+            write (*,*) 'set low res for '//tname
+
+         else if (key.eq.'use_model_resolution') then
+
+            write (*,*) 'low_reach obsolete, 6.9.1+ '//tname
+            lres = .true.
+            write (*,*) 'set low res for '//tname
 
          else if (key.eq.'reject_bad_composition') then
 
@@ -4002,8 +4011,8 @@ c---------------------------------------------------------------------
 
       integer i,j,itic,iwas(mst)
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -4093,8 +4102,8 @@ c                                 dqf variables
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -4708,8 +4717,8 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
@@ -4923,8 +4932,8 @@ c----------------------------------------------------------------------
 
       integer i,j,l,ldep,k,jkill
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -5039,8 +5048,8 @@ c---------------------------------------------------------------------
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -5463,8 +5472,8 @@ c---------------------------------------------------------------------
 
       integer itic,i,j,k
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -6871,8 +6880,8 @@ c---------------------------------------------------------------------
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 c                                 GLOBAL SOLUTION PARAMETERS:
 
 c                                 configurational entropy variables:
@@ -6979,6 +6988,7 @@ c                                 read switch to make GALL use MINFXC
 c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
+      lorch(im) = lres
 c                                 initialize compositional distances
       do i = 1, icp
          dcp(i,im) = 0d0
@@ -7111,7 +7121,11 @@ c                                 make all stretch (if not already)
 
                end if
 
-               if (nopt(13).gt.0d0) then
+               if (lorch(im)) then 
+
+                  pxnc(ii,i,j) = pxnc(ii,i,j)
+
+               else if (nopt(13).gt.0d0) then
 
                   if (pimd(ii,i,j).ne.0) then
 c                                  set XINC for non-linear subdivision:
@@ -7204,8 +7218,11 @@ c                                 hard_limit test
      *                                    pxmn(ii,i,j) = xmno(im,ii,i,j)
                      end if
 
-                     pxnc(ii,i,j) = pxnc(ii,i,j)/nopt(17)
-
+                     if (lorch(im)) then 
+                        pxnc(ii,i,j) = pxnc(ii,i,j)
+                     else
+                        pxnc(ii,i,j) = pxnc(ii,i,j)/nopt(17)
+                     end if 
                   else if (.not.bad) then 
 
                      bad = .true.
@@ -9665,8 +9682,8 @@ c                                 write solution model name/endmembers for pseud
 
             end if
 c                                 subdiv discretizes the composition of the 
-c                                 solution and stores the data (soload/loadgx)
-            call subdiv (im,im,gcind,iphct,.false.)
+c                                 solution and stores the data (soload)
+            call subdiv (im,gcind,iphct)
 
             if (iphct-ophct.gt.0) then
 c                                 write pseudocompound count
@@ -9917,8 +9934,8 @@ c--------------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       double precision pa, p0a, zp, w, y, z, wl, pp
       common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(h4,mst,msp),w(m1),
@@ -12473,7 +12490,7 @@ c                                 a pure compound
 
       else if (lorder(ids)) then
 c                                 get composition
-         call setxyp (ids,id,.false.,bad)
+         call setxyp (ids,id,bad)
 c                                 compute margules coefficients
          call setw (ids)
 c                                 evaluate enthalpies of ordering
@@ -12495,7 +12512,7 @@ c                                 add dqf corrections and mech
 
       else if (ksmod(ids).eq.0) then
 
-         call setxyp (ids,id,.false.,bad)
+         call setxyp (ids,id,bad)
 c                              get the excess and/or ideal mixing effect
 c                              and/or dqf corrections:
          call fexces (id,gph)
@@ -12504,13 +12521,13 @@ c                              and/or dqf corrections:
 
       else if (ksmod(ids).eq.40) then
 c                                 si-o mrk fluid
-         call setxyp (ids,id,.false.,bad)
+         call setxyp (ids,id,bad)
 
          gph = gmech0(ids) + gerk (pa)
 
       else if (ksmod(ids).ge.29.and.ksmod(ids).le.32) then
 c                                 nastia's models:
-          call setxyp (ids,id,.false.,bad)
+          call setxyp (ids,id,bad)
 
           if (ksmod(ids).eq.29) then
 c                                 BCC Fe-Si Lacaze and Sundman
@@ -12535,7 +12552,7 @@ c                                 because it sets lrecip(id) = true.
 
       else if (ksmod(ids).eq.42) then
 
-         call setxyp (ids,id,.false.,bad)
+         call setxyp (ids,id,bad)
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
          gph = gfes (pa(2), gproj (jend(ids,3)), gproj (jend(ids,4)) )
 
@@ -12544,7 +12561,7 @@ c                                 normal models (configurational
 c                                 entropy fixed, excess function
 c                                 linear in p-t) and special models
 c                                 with normal gmech term
-         call setxyp (ids,id,.false.,bad)
+         call setxyp (ids,id,bad)
 
          if (ksmod(ids).eq.41) then
 c                                 ternary coh fluid deltag
@@ -12796,8 +12813,6 @@ c-----------------------------------------------------------------------
       integer i, j, k, id, itic
 
       double precision gval, dg, g0(m14)
-cDEBUG691
-     *,zt(m10,m11)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
      *                 gfecr1, gcpd, gfes, gmech, gexces
@@ -12903,7 +12918,7 @@ c                                 ordering, internal dqfs (last for minfxc)
 
             do j = 1, jend(i,2)
 
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                if (noder(i)) then
 
@@ -12933,7 +12948,7 @@ c                                 degenerated
 c                                 it's normal margules or ideal:
             do j = 1, jend(i,2)
 
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 c                                 gexces returns with excess energy, dqf,
 c                                 and configurational entropy terms for 
 c                                 simple models.
@@ -12953,7 +12968,7 @@ c                                 components.
 
             do j = 1, jend(i,2)
 
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                call fexces (id,gval)
 
@@ -12971,7 +12986,7 @@ c                                 dependent volumes, the full expression
 c                                 must be evaluated here by gex:
             do j = 1, jend(i,2)
 
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 c                                 for simple vanlaar gexces returns dqf
 c                                 and configurational entropy terms
                g(id) = gexces(id) + gex(i,pa) + gmech(i)
@@ -12995,7 +13010,7 @@ c                                 solvent Gibbs energies
 c                                 compute compound properties
             do j = 1, jend(i,2)
 c                                 get the composition
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 c                                 solvent properties
                call slvnt1 (g(id))
 c                                 add in solute properties
@@ -13009,7 +13024,7 @@ c                                 add in solute properties
 c                                 H2O-CO2-Salt:
             do j = 1, jend(i,2)
 
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                call hcneos (g(id),pa(1),pa(2),pa(3))
 
@@ -13023,7 +13038,7 @@ c                                 H2O-CO2-Salt:
 c                                 generic hybrid EoS
             do j = 1, jend(i,2)
 c                                 load composition array and pointers
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 c                                 compute and add in activities
                g(id) = ghybrid(pa) + gmech(i)
 
@@ -13035,7 +13050,7 @@ c                                 compute and add in activities
 c                                 nastia's models:
             do j = 1, jend(i,2)
 c                                 load composition array and pointers
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                if (ksmod(i).eq.29) then
 c                                 BCC Fe-Si Lacaze and Sundman
@@ -13058,7 +13073,7 @@ c                                 BCC Fe-Cr Andersson and Sundman
 
             do j = 1, jend(i,2)
 c                                 hybrid MRK ternary COH fluid
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                call rkcoh6 (pa(2),pa(1),g(id))
 
@@ -13072,7 +13087,7 @@ c                                 hybrid MRK ternary COH fluid
 
             do j = 1, jend(i,2)
 c                                 MRK silicate vapor
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                g(id) = gmech (i) + gerk (pa)
 
@@ -13084,7 +13099,7 @@ c                                 MRK silicate vapor
 c                                 Fe-S fluid (Saxena & Eriksson 2015)
             do j = 1, jend(i,2)
 
-               call setxyp (i,id,.false.,bad)
+               call setxyp (i,id,bad)
 
                g(id) = gfes (1d0-pa(1),g(jend(i,3)),g(jend(i,4)))
 
@@ -13415,14 +13430,6 @@ c                                 special case (1 component solution).
          call limprt (6,i)
          if (lopt(11)) call limprt (n11,i)
 
-         if (badinv(i,1).gt.0) then
-c                                 warn about bad p2yx inversions
-            write (*,1020) float(badinv(1,i)) /
-     *                     float(badinv(1,i)+badinv(2,i))*1d2,
-     *                     fname(i)
-
-         end if
-
       end do
 
 99    if (goodc(1)+badc(1).gt.0d0) then
@@ -13441,10 +13448,6 @@ c                                 warn about bad p2yx inversions
      *         ,' but are not stable:',/)
 1010  format (/,'**warning ver991** The following solutions have ',
      *          'compositions at an internal limit (i.e., 0<x<1):',/)
-1020  format (/,'**warning ver204** ',f5.1,'% of the p2y inversions fo',
-     *       'r ',a,'. A high failure rate may indicate that',/,
-     *     /,'the compositional polyhedron for the mode',
-     *       'l does not span all possible model compositions.',/)
 1080  format (/,'**warning ver991** The compositions of the following',
      *        ' solutions reached internal',/,
      *        'limits that were automatically relaxed:',/)
@@ -13597,7 +13600,14 @@ c                                  polytope
          end do
 
       end if
+c                                 warn about bad p2yx inversions
+      if (badinv(i,1).gt.0) write (lun,1010) float(badinv(i,1)) /
+     *                      float(badinv(i,1)+badinv(i,2))*1d2,fname(i)
 
+1010  format (/,'**warning ver204** ',f5.1,'% of the p2y inversions fo',
+     *       'r ',a,' failed. A high failure rate may indicate that',/,
+     *     /,'the compositional polyhedron for the mode',
+     *       'l does not span all possible model compositions.',/)
 1020  format (/,'Compositions for simplicial model: ',a,//,5x,
      *          '              Minimum         Maximum')
 1030  format (5x,a8,4x,g12.5,4x,g12.5)
@@ -13749,7 +13759,6 @@ c                                 charge balance model:
 
          write (*,1020) fname(ids), char8
          write (*,1030) xmnh(ids,ii,j,k), xmxh(ids,ii,j,k), x(ii,j,k)
-         write (*,1010) incre,upper,y(1)
 
       else if (pop1(ids).eq.1) then 
 c                                 single polytope
@@ -13763,22 +13772,18 @@ c                                 single polytope
      *                     xmxh(ids,ii,j,k), x(ii,j,k)
          end if
 
-         write (*,1010) incre,upper,y(1)
-
       else if (ii.lt.pop1(ids)) then 
 c                                 composite polytope
          write (*,1050) fname(ids), poname(ids,ii,j,k), 
      *                              poname(ids,pop1(ids),1,ii)
          write (*,1035) poname(ids,ii,j,k), xmnh(ids,ii,j,k), 
      *                  xmxh(ids,ii,j,k), x(ii,j,k)
-         write (*,1010) incre,upper,y(1)
 
       else
 
          write (*,1060) fname(ids), poname(ids,pop1(ids),1,1)
          write (*,1035) poname(ids,pop1(ids),1,1),xmnh(ids,ii,j,k),
      *                  xmxh(ids,ii,j,k), x(ii,j,k)
-         write (*,1010) incre,upper,y(1)
 
       end if
 
@@ -13791,30 +13796,26 @@ c     call errpau
      *       ,'because of missing endmembers',/,'the variable indices ',
      *        'may not correspond to the indices in the solution model',
      *        ' file.')
-1010  format (/,'**If computational memory and time are of ',
-     *        'concern, ignore the indicated current value and',/,
-     *        a,' the ',a,' limit of the range to ',f4.2,
-     *        ' in the solution model file.')
-1020  format (/,'**error ver993** the composition of solution: '
-     *       ,a,/'is too far beyond the subdivision range limits for '
+1020  format (/,'**warning ver993** the composition of solution: '
+     *       ,a,/'is beyond the subdivision range limits for '
      *       ,'endmember: ',a)
 1030  format ('the original range was: ',
      *       g12.5,' - ',g12.5,/,'the current** value is: ',g12.5)
 1035  format ('the original range of ',a,' was: ',
      *       g12.5,' - ',g12.5,/,'its current** value is: ',g12.5)
-1040  format (/,'**error ver993** the composition of solution: '
-     *       ,a,/'is too far beyond the subdivision range limits for '
+1040  format (/,'**warning ver993** the composition of solution: '
+     *       ,a,/'is beyond the subdivision range limits for '
      *       ,'composition X(',i1,',',i2')*.')
-1050  format (/,'**error ver993** the composition of solution '
-     *       ,a,' is too far beyond',/,'the subdivision range of'
+1050  format (/,'**warning ver993** the composition of solution '
+     *       ,a,' is beyond',/,'the subdivision range of'
      *       ,' composition variable ',a,' of the ',a
      *       ,' subcomposition.')
-1060  format (/,'**error ver993** the composition of solution: '
-     *       ,a,/'is too far beyond the subdivision range limits for '
+1060  format (/,'**warning ver993** the composition of solution: '
+     *       ,a,/'is beyond the subdivision range limits for '
      *       ,'subcomposition: ',a)
 1070  format (/,'refer to: ',//,a,//'for additional information.',/)
-1080  format (/,'**error ver993** the composition of solution '
-     *       ,a,' is too far beyond',/,'the subdivision range of'
+1080  format (/,'**warning ver993** the composition of solution '
+     *       ,a,' is beyond',/,'the subdivision range of'
      *       ,' composition variable: ',a)
       end
 
@@ -15452,8 +15453,8 @@ c---------------------------------------------------------------------
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -15853,8 +15854,8 @@ c---------------------------------------------------------------------
      *      isub(m1,m2),insp(m4),
      *      rkord(m18),iterm,iord,istot,jstot,kstot
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 c----------------------------------------------------------------------
 
       do ii = 1, poly(h0)
@@ -16155,8 +16156,8 @@ c                                 dqf variables
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
+      logical depend,laar,order,fluid,macro,recip,lres
+      common/ cst160 /depend,laar,order,fluid,macro,recip,lres
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -16569,15 +16570,12 @@ c                                 indices:
 
       end
 
-      subroutine subdiv (ids,kds,gcind,phct,resub)
+      subroutine subdiv (ids,gcind,phct)
 c---------------------------------------------------------------------
-c stattic/dynamic subdivision and data storage
+c static subdivision and data storage
 
-c resub - true indicates dynamic composition, else static
 c ids   - points to the solution/subdivision for the static case
-c kds   - points to the refinement point for the dynamic case, for
-c         indivual compositions hkp(i) gives kds on recovery.
-c phct  - global static/dynamic pseuocompount counter
+c phct  - static pseudocompound counter (now same as iphct)
 c gcind - global simplicial composition counter
 
 c both ids and kds are necessary for dynamic, kds is not used for the
@@ -16587,9 +16585,9 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical resub, simpl
+      logical simpl
 
-      integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
+      integer i, j, ii, ids, ncomp, nind(h4), pos, nc, gcind,
      *        stind(h4), ipop1, phct
 
       double precision twt
@@ -16606,7 +16604,7 @@ c---------------------------------------------------------------------
 
 c---------------------------------------------------------------------
 
-      dynam = resub
+      dynam = .false.
       dead = .false.
 
       if (ksmod(ids).eq.20) then
@@ -16713,7 +16711,7 @@ c                                  compositions at constant wt, initialization:
             nind(ii) = 1
          end do
 
-         call setind (ids,kds,stind,nind,gcind,phct)
+         call setind (ids,stind,nind,gcind,phct)
 
          if (restrt.or.dead) return
 c                                  now generate all permutations of the polytopic 
@@ -16740,7 +16738,7 @@ c                                  figure out the index to be incremented
 
             end do
 c                                 save the indexes
-            call setind (ids,kds,stind,nind,gcind,phct)
+            call setind (ids,stind,nind,gcind,phct)
 
             if (restrt.or.dead) return
 
@@ -16866,17 +16864,15 @@ c                                 figure out which index to increment
 
       end
 
-      subroutine setexs (ids,id,dynam)
+      subroutine setexs (ids,id)
 c-----------------------------------------------------------------------
-c recover the dynamic/static polytopic composition id of solution ids.
+c recover the dstatic polytopic composition id of solution ids.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical dynam
-
-      integer ids, id, ii, i, j, k, pos, ipop, jpos
+      integer ids, id, ii, i, k, pos, ipop, jpos
 
       double precision sum
 
@@ -16889,76 +16885,7 @@ c-----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 c                                 get the simplicial composition indices:
-      j = 1
       ipop = pop1(ids)
-
-      if (dynam) then
-c                                 dynamic:
-         if (ipop.gt.1) then 
-c                                 composite composition space, load 
-c                                 weights
-            sum = 0d0
-            pos = jcoz(icoz(id))
-
-            do ii = 1, ndim(1,ipop,ids)
-
-               pwt(ii) = zco(pos+ii)
-               x(ipop,1,ii) = pwt(ii)
-               sum = sum + pwt(ii)
-
-            end do
-
-            jpos = icoz(id) + 1
-
-            if (sum.lt.one) then
-               pwt(ii) = 1d0 - sum
-            else
-               pwt(ii) = 0d0
-            end if
-
-            x(ipop,1,ii) = pwt(ii)
-
-         else
-
-            jpos = icoz(id)
-            pwt(1) = 1d0
-
-         end if
-
-         do ii = 1, poly(ids)
-c load 0-wt polytopes so the number of indices are cst for a given solution
-c DEBUG   if (pwt(ii).eq.0d0) cycle
-c                                 recover the polytope compositions
-            do i = 1, istg(ids,ii)
-c                                 skip 0-d simplices
-               if (ndim(i,ii,ids).eq.0) then 
-                  x(ii,1,1) = 1d0
-                  cycle
-               end if 
-
-               sum = 0d0
-               pos = jcoz(jpos)
-
-               do k = 1, ndim(i,ii,ids)
-
-                  x(ii,i,k) = zco(pos+k)
-                  sum = sum + zco(pos+k)
-
-               end do
-
-               if (sum.lt.one) then
-                  x(ii,i,k) = 1d0 - sum
-               else 
-                  x(ii,i,k) = 0d0
-               end if
-
-               jpos = jpos + 1
-
-            end do
-
-         end do
-
-      else
 c                                 static:
          if (ipop.gt.1) then 
 c                                 composite composition space, load 
@@ -17025,52 +16952,12 @@ c                                 skip 0-d simplices
 
          end do
 
-      end if 
-
       end
 
-      subroutine setex3 (jd,ids)
-c-----------------------------------------------------------------------
-c set local x-y-p coordinates array and load x into the assemblage indexed 
-c x3 array.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer ids, jd, ii, i, j
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-c-----------------------------------------------------------------------
-      do ii = 1, poly(ids)
-c                                 save the weights as the pop1'th 
-c                                 polytope
-         x3(jd,pop1(ids),1,ii) = pwt(ii)
-c                                 recover the polytope composition
-         do i = 1, istg(ids,ii)
-
-            do j = 1, ispg(ids,ii,i)
-
-               x3(jd,ii,i,j) = x(ii,i,j) 
-
-            end do 
-
-         end do
-
-      end do
-
-      end
-
-      subroutine setind (ids,kds,stind,nind,gcind,phct)
+      subroutine setind (ids,stind,nind,gcind,phct)
 c-----------------------------------------------------------------------
 c after a call to subpol, setind loads the local simplicial indices into
-c the static/dynamic global index arrays and sets the local composition
+c the static global index arrays and sets the local composition
 c arrays. 
 c  ii    - is the polytope index
 c  stind(ii) - locates the starting position of the simplicial indices
@@ -17086,7 +16973,7 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer ii, i, ids, kds, phct, gcind, stind(h4), nind(h4), pos, 
+      integer ii, i, ids, phct, gcind, stind(h4), nind(h4), pos, 
      *        ipop
 
       character tname*10
@@ -17095,102 +16982,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       phct = phct + 1
       ipop = pop1(ids)
-c                                 load simplicial compoisition indices
-      if (resub) then 
-c                                 dynamic arrays:
-         if (phct.gt.k21) then
-
-            if (lopt(52)) then
-               call warn (99,1d0,k21,'number of compositions > k21')
-               restrt = .true.
-            else
-               call lpwarn (58,'K21 LOADGX/SETIND')
-               dead = .true.
-            end if
-
-            return
-
-         end if
-
-         jkp(phct) = ids
-         hkp(phct) = kds
-         icoz(phct) = gcind + 1
-
-         if (ipop.gt.1) then 
-c                                 composite space, save location of 
-c                                 polytopic wts
-            gcind = gcind + 1
-
-            if (gcind.gt.k25) then
-
-               if (lopt(52)) then
-                  call warn (99,1d0,k25,'number of compositional coor'/
-     *                      /'dinates > k25')
-                  restrt = .true.
-               else
-                  call lpwarn (59,'K25 LOADGX/SETIND')
-                  dead = .true.
-               end if
-
-               return
-
-            end if
-
-            jcoz(gcind) = spx(ipop,1) + (nind(ipop)-1)*ndim(1,ipop,ids)
-
-         end if
-c                                 save location of each set of simplicial
-c                                 coordinates in each polytope
-         do ii = 1, poly(ids)
-c load 0-wt polytopes so the number of coordinates for a given solution are cst.
-c DEBUG   if (pwt(ii).le.0d0) cycle
-
-            pos = stind(ii) + (nind(ii)-1)*istg(ids,ii)
-
-            do i = 1, istg(ids,ii)
-c                                 skip 0-d simplices
-               if (ndim(i,ii,ids).eq.0) cycle
-
-               gcind = gcind + 1
-
-               if (gcind.gt.k25) then
-
-                  if (lopt(52)) then
-                     call warn (99,1d0,k25,'number of compositional '/
-     *                      /'coordinates > k25')
-                     restrt = .true.
-                  else
-                     call lpwarn (59,'K25 LOADGX/SETIND')
-                     dead = .true.
-                  end if
-
-                  return
-
-               end if
-
-               jcoz(gcind) = spx(ii,i) 
-     *                       + (sco(pos+i) - 1) * ndim(i,ii,ids)
-
-            end do
-
-         end do
-
-         call setxyp (ids,phct,resub,bad)
-
-         if (bad) then
-
-            gcind = icoz(phct) - 1
-            phct = phct - 1
-
-         else
-
-            call loadgx (kds,ids,gcind,phct)
-            if (restrt.or.dead) return
-
-         end if
-
-      else
-c                                 static arrays:
+c                                 load simplicial composition indices
+c                                 into static arrays:
          if (phct.gt.k1) call err41 ('K1 [SOLOAD/SETIND]')
 
          icox(phct) = gcind + 1
@@ -17223,7 +17016,7 @@ c                                 skip 0-d simplices
 
          end do
 
-         call setxyp (ids,phct,resub,bad)
+         call setxyp (ids,phct,bad)
 
          if (.not.bad) call soload (ids,phct,bad)
 
@@ -17232,11 +17025,9 @@ c                                 skip 0-d simplices
             phct = phct - 1
          end if
 
-      end if
-
       end
 
-      subroutine setxyp (ids,phct,dynam,bad)
+      subroutine setxyp (ids,phct,bad)
 c-----------------------------------------------------------------------
 c load compositional coordinates from the static xco or dynamic zco
 c arrays into simple compositional arrays for the of compound 
@@ -17246,7 +17037,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical dynam, bad, zbad
+      logical bad, zbad
 
       external zbad
 
@@ -17262,12 +17053,12 @@ c-----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 c                                 get the polytopic compositions:
-      call setexs (ids,phct,dynam)
+      call setexs (ids,phct)
 c                                 convert to 1-d polytopic compositions, the bad
 c                                 test is unnecessary for static compositions once
 c                                 they have been loaded by soload. this could be
 c                                 eliminated to save time.
-      call xtoy (ids,ids,.true.,bad)
+      call xtoy (ids,bad)
 c                                 xtoy returns bad if the composition is of a 
 c                                 optionally non-refineable endmember, otherwise
 c                                 xtoy sets the y's for the composite polytopic
@@ -17292,13 +17083,10 @@ c                                 arrays could be used for all solutions.
 
       end
 
-      subroutine xtoy (ids,id,usex,bad)
+      subroutine xtoy (ids,bad)
 c----------------------------------------------------------------------
-c subroutine to convert composite polytopic solution compositions (x/x3)
+c subroutine to convert composite polytopic solution compositions (x)
 c to geometric endmember fractions (y) for solution model ids. 
-
-c usex - use x coordinates, otherwise use x3 coordinates (only done 
-c        when called by werami).
 c----------------------------------------------------------------------
       implicit none
 
@@ -17306,7 +17094,7 @@ c----------------------------------------------------------------------
 
       integer ids, id, ii, k, l, m
 
-      logical bad, usex
+      logical bad
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -17315,15 +17103,12 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 c----------------------------------------------------------------------
 
       bad  = .false.
-
-      if (usex) then
 
          do ii = 1, poly(ids)
 
@@ -17387,150 +17172,8 @@ c                                 reject pure independent endmember compositions
 
          end do
 
-      else
-
-         do ii = 1, poly(ids)
-c                                 setx3 loads the polytope weights in 
-c                                 the pop1'th polytope composition
-            if (poly(ids).gt.1) then 
-               pwt(ii) = x3(id,pop1(ids),1,ii)
-            else 
-               pwt(ii) = 1d0
-            end if 
-
-            if (pwt(ii).lt.zero) then 
-
-               do l = pvert(ids,ii,1), pvert(ids,ii,2)
-
-                  y(l) = 0d0
-
-               end do
-
-               cycle
-
-            end if 
-
-            do l = pvert(ids,ii,1), pvert(ids,ii,2)
-
-               y(l) = 1d0
-
-               do m = 1, istg(ids,ii)
-                  y(l) = y(l)*x3(id,ii,m,kmsol(ids,l,m))
-               end do
-
-               y(l) = y(l) * pwt(ii)
-
-            end do
-
-         end do
-
-      end if
-
       end
 
-      subroutine loadgx (kd,ids,gcind,phct) 
-c----------------------------------------------------------------------
-      implicit none 
-
-      include 'perplex_parameters.h'
-
-      integer kd, ids, gcind, phct
-
-      logical bad
-
-      double precision gsol1
-
-      external gsol1
-
-      logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-c----------------------------------------------------------------------
-      if (lopt(32).and.ksmod(ids).eq.39) then
-
-         if (lopt(46)) then
-c                                 set as aq_solvent_solvus:
-c                                 solute free cpd
-            g2(phct) = gsol1 (ids,.true.)
-
-            call csol (phct,ids,bad)
-
-            if (bad) then
-
-               call reset (phct,gcind)
-
-               return
-
-            end if
-
-            quack(phct) = .true.
-
-            if (phct-ophct.ge.iopt(52).and.lopt(52).and.mus) 
-     *                                 call laggit (phct,gcind,ids,bad)
-c                                 either outcome from laggit requires incementing
-c                                 phct because on a bad outcome laggit decrements
-c                                 phct and resets gcind
-            phct = phct + 1
-
-            if (bad) then
-c                                 laggit has rejected the composition and
-c                                 reset gcind, restore gcind to its former
-c                                 value
-               gcind = icoz(phct)
-
-            else 
-c                                 laggit has accepted pure solvent, need
-c                                 to pad out counters for a solute cpd
-               if (phct.gt.k21) then
-
-                  if (lopt(52)) then
-                     restrt = .true.
-                     call warn (99,1d0,k21,
-     *                         'number of compositions > k21')
-                  else 
-                     call lpwarn (58,'K21 RESUB')
-                     dead = .true.
-                  end if
-
-                  return
-
-               end if
-
-               jkp(phct) = ids
-               hkp(phct) = kd
-               icoz(phct) = icoz(phct - 1)
-
-            end if
-
-         end if
-c                                  solute-bearing compound
-         call aqlagd (1,phct,bad,.false.)
-
-         quack(phct) = .false.
-
-         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus) 
-     *                                  call laggit (phct,gcind,ids,bad)
-
-      else 
-c                                 call gsol to get g of the solution, gsol also
-c                                 computes the p compositional coordinates
-         g2(phct) = gsol1 (ids,.true.)
-c                                 use the coordinates to compute the composition 
-c                                 of the solution
-         call csol (phct,ids,bad)
-
-         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus) 
-     *                                  call laggit (phct,gcind,ids,bad)
-
-      end if
-
-      if (bad) call reset (phct,gcind)
-
-      end
 
       subroutine reset (phct,gcind)
 c-----------------------------------------------------------------------
@@ -17545,134 +17188,6 @@ c-----------------------------------------------------------------------
 
       end 
 
-      subroutine csol (phct,id,bad)
-c-----------------------------------------------------------------------
-c csol computes chemical composition of solution id from the macroscopic
-c endmember fraction array y or p0a (cxt7), these arrays are prepared by a prior
-c call to function gsol. the composition is loaded into the array cp2 at
-c position phct.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, k, id, phct
-
-      logical bad, degen
-
-      double precision ctot2
-
-      external degen
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 adaptive coordinates
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer jend
-      common/ cxt23 /jend(h9,m14+2)
-
-      integer jnd
-      double precision aqg,qq,rt
-      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
-
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-c----------------------------------------------------------------------
-
-      ctot2 = 0d0
-
-      do i = 1, icp
-         cp2(i,phct) = 0d0
-      end do  
-
-      if (lrecip(id).or.lorder(id)) then 
-c                                 solutions with dependent endmembers, p0a 
-c                                 contains the p's. for ksmod=8 these are a 
-c                                 reformulation of the p's to eliminate the ordered 
-c                                 endmembers. p0a is constructed in function gsol.
-         do i = 1, lstot(id)
-            do j = 1, icp 
-               cp2(j,phct) = cp2(j,phct) + pp(i) * cp(j,jend(id,2+i))
-            end do 
-            ctot2 = ctot2 + pp(i)*ctot(jend(id,2+i))
-         end do
-
-      else if (ksmod(id).eq.20) then 
-
-         do i = sn1, nqs
-
-            k = jnd(i) - aqst
-
-            do j = 1, icp 
-               cp2(j,phct) = cp2(j,phct) + y(i) * aqcp(j,k)
-            end do 
-
-            ctot2 = ctot2 + y(i)*aqtot(k)
-
-         end do 
-
-         do i = 1, ns 
-
-            do j = 1, icp 
-               cp2(j,phct) = cp2(j,phct) + y(i) * cp(j,jnd(i))
-            end do 
-
-            ctot2 = ctot2 + y(i)*ctot(jnd(i))
-
-         end do 
-
-      else 
-c                                 general case (y coordinates)
-         do i = 1, mstot(id)
-
-            do j = 1, icp 
-               cp2(j,phct) = cp2(j,phct) + y(i) * cp(j,jend(id,2+i))
-            end do
-
-            ctot2 = ctot2 + y(i)*ctot(jend(id,2+i)) 
-
-         end do 
-
-      end if
-c                                  a phase with a null composition may appear
-c                                  as an endmember of a solution in a calculation
-c                                  with mobile components:
-
-c                                  sept 22 2017: previously null compositions were
-c                                  given unstable properties, bad flag added this 
-c                                  date along with degeneracy check. 
-      bad = .false.
-
-      if (ctot2.ne.0d0) then
-c                                  normalize the composition and free energy
-         g2(phct) = g2(phct)/ctot2
-         c2tot(phct) = ctot2
-
-         do j = 1, icp
-            cp2(j,phct) = cp2(j,phct)/ctot2
-         end do
-
-      else 
-c                                  a solution composition may move entirely 
-c                                  into the mobile/saturated component space
-         bad = .true.
-
-      end if
-
-      end 
 
       subroutine getxcp (xc,ntot,ids)
 c-----------------------------------------------------------------------
@@ -19330,53 +18845,50 @@ c                                 locate the new max
 
       end
 
-
-
-      subroutine endx3 (jd,id,ids)
-c------------------------------------------------------------------------
-c compute the composition of endmember id, for solution ids and load it
-c into the jd'th position of the x3 array.
-c------------------------------------------------------------------------
+      subroutine endpa (ld,jd,ids)
+c----------------------------------------------------------------------
+c generate compositional coordinates for endmember jd of solution ids
+c during adaptive optimization, ld is the associated refinement point.
+c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer jd, ii, h, i, j, id, ids
+      integer i, ids, jd, ld
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
 
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer tphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 c----------------------------------------------------------------------
-c                                 figure out which endmember we
-c                                 are looking at:
-      do h = 1, mstot(ids)
-         if (id.eq.jend(ids,2+h)) exit
+c                                 set refinement point index
+      hkp(jd) = ld
+
+      pa(1:nstot(ids)) = 0d0
+c                                 locate the endmember in the solution
+      do i = 1, lstot(ids)
+         if (jend(ids,2+i).eq.jd) then
+            pa(i) = 1d0
+            exit
+         end if 
       end do
 
-      do ii = 1, poly(ids)
-c                                 initialize wt 
-         x3(jd,pop1(ids),1,ii) = 0d0
-
-         do i = 1, istg(ids,ii)
-c                                 initialize polytope x's
-            do j = 1, ispg(ids,ii,i)
-               x3(jd,ii,i,j) = 0d0
-            end do
-
-            if (h.lt.pvert(ids,ii,1).or.h.gt.pvert(ids,ii,2)) cycle
-c                                 assign endmember fractions
-            x3(jd,ii,i,kmsol(ids,knsp(h,ids),i)) = 1d0
-c                                 assign polytope weight
-            if (pop1(ids).gt.1) x3(jd,pop1(ids),1,ii) = 1d0
-
-         end do 
-
-      end do
+      call makepp (ids)
 
       end
+
 
       subroutine makapz (id)
 c----------------------------------------------------------------------
@@ -19400,7 +18912,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c---------------------------------------------------------
       nvar = nstot(id) - 1
 c                                 to be counted:
@@ -19490,7 +19001,6 @@ c                                 the site
 
       end
 
-
       subroutine sety2x (id)
 c----------------------------------------------------------------------
 c subroutine to convert independent disordered y to subcomposition
@@ -19502,8 +19012,6 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad
-
       integer ii, i, j, k, l, m, id
 
       double precision xt
@@ -19514,7 +19022,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),

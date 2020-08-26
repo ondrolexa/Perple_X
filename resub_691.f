@@ -498,8 +498,8 @@ c                                 special (pointless) iterations?
             end if
 c                                 get the refinement point composition
             if (id.gt.ipoint) then 
-               call setexs (ids,id,.false.)
-               call setxyp (ids,id,.false.,kterat)
+               call setexs (ids,id)
+               call setxyp (ids,id,kterat)
             else
                if (nrf(ids)) cycle
                call endpa (kd,id,ids)
@@ -543,50 +543,6 @@ c                                 refinement point was the same solution.
       end do
 c DEBUG691
       if (jphct.gt.50000) write (*,*) jpoint, jphct, zcoct
-
-      end
-
-      subroutine endpa (ld,jd,ids)
-c----------------------------------------------------------------------
-c generate compositional coordinates for endmember jd of solution ids
-c during adaptive optimization, ld is the associated refinement point.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, ids, jd, ld
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jend
-      common/ cxt23 /jend(h9,m14+2)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer tphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
-c----------------------------------------------------------------------
-c                                 set refinement point index
-      hkp(jd) = ld
-
-      pa(1:nstot(ids)) = 0d0
-c                                 locate the endmember in the solution
-      do i = 1, lstot(ids)
-         if (jend(ids,2+i).eq.jd) then
-            pa(i) = 1d0
-            exit
-         end if 
-      end do
-
-      call makepp (ids)
 
       end
 
@@ -644,6 +600,9 @@ c DEBUG691
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       kcoct = 0
 
@@ -673,7 +632,7 @@ c DEBUG691
             sum = sum + ycoor(lcoor(i)+j)
             pa(j) = zco(icoz(id)+j)
          end do
-         if (sum.lt.0.9999999) then
+         if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids
 c           call errpau
             call p2z(pa,zt,ids,.true.)
@@ -691,6 +650,9 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+cDEBUG691
+      integer i
+      double precision sum
 
       integer id, ids, kcoor
 c                                 working arrays
@@ -701,6 +663,15 @@ c----------------------------------------------------------------------
       kcoor = lcoor(id)
 
       pa(1:nstot(ids)) = ycoor(kcoor+1:kcoor+nstot(ids))
+
+      sum = 0d0
+      do i = 1, nstot(ids) 
+         sum = sum + pa(i)
+      end do 
+
+      if (sum.gt.1.00001d0.or.sum.lt.0.99999d0) then 
+         write (*,*) 'wyf'
+      end if
 
       call makepp (ids)
 
@@ -810,7 +781,7 @@ c----------------------------------------------------------------------
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
      *                 bnew(k5),pnew(k5,m14),ncaq(k5,l10),ximp
-     * , sum, sumx
+     * , sum
 
       logical solvs1, solvs4
       external solvs1, solvs4
@@ -824,7 +795,6 @@ c                                 global variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
@@ -1084,7 +1054,7 @@ c                               lagged speciation
 c                                in case pure and impure solvent is going to be averaged
 c                                count fraction of impure solvent
          ximp = 0d0
-         sumx = 0d0
+         sum = 0d0
 
          do j = 1, idsol(i)
 
@@ -1101,17 +1071,11 @@ c                                save the new compositions
                cpnew(k,i) = cpnew(k,i) + xx*cp3(k,jd)
             end do
 
-            sum = 0d0
-            sumx = sumx + xx
+            sum = sum + xx
             
             do k = 1, nstot(ids)
-               sum = sum + pa3(jd,k)
                pnew(i,k) = pnew(i,k) + xx*pa3(jd,k)
             end do
-c DEBUG691
-            if (sum.lt.one.or.sum.gt.1d0+zero) then
-               write (*,*) 'bad pa3 sum'
-            end if
 
             if (lopt(32).and.ksmod(ids).eq.39) then
 
@@ -1127,7 +1091,7 @@ c                                pH, Delta_pH, solute molality, epsilon (nat)
 
          end do
 
-         if (sumx.lt.0.9999) then 
+         if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then 
             write (*,*) 'wugga'
          end if 
 
@@ -1139,6 +1103,20 @@ c            ncaq(i,na3+3) = ncaq(i,na3+3)/ximp
 c            ncaq(i,nat) = ncaq(i,nat)/ximp
 
 c         end if
+
+      end do
+
+
+      do i = 1, np
+         sum = 0d0
+        
+            do k = 1, nstot(ksol(i,1))
+               sum = sum + pnew(i,k)
+            end do
+c DEBUG691
+            if (sum.lt.one.or.sum.gt.1d0+zero) then
+               write (*,*) 'bad pa3 sum'
+            end if
 
       end do
 c                                 now reform the arrays kdv and b
@@ -1345,11 +1323,11 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer ii,i,j,k,l,m,kdbulk,ic,jc,ids,ioct,inct
+      integer i,j,k,l,kdbulk,ic,jc,ids,ioct,inct
 
       logical reord, match, nomtch, ok 
 
-      double precision cpt(k5,k5),xt(k5,mst,msp),bt(k5),caqt(k5,l10)
+      double precision cpt(k5,k5),pat(k5,m14),bt(k5),caqt(k5,l10)
 c                                 x-coordinates for the final solution
       integer kd, na1, na2, na3, nat
       double precision x3, caq
@@ -1447,12 +1425,8 @@ c                                 load temporary array
                            cpt(l,j) = cp3(l,k)
                         end do
 
-                        do ii = 1, pop1(ids)
-                           do l = 1, istg(ids,ii)
-                              do m = 1, ispg(ids,ii,l)
-                                 xt(j,l,m) = x3(k,ii,l,m)
-                              end do 
-                           end do 
+                        do l = 1, nstot(ids)
+                           pat(j,l) = pa3(k,l)
                         end do
 
                         if (lopt(32).and.ksmod(ids).eq.39) then 
@@ -1487,15 +1461,11 @@ c                                 reload final arrays from temporary
                      cp3(k,j) = cpt(k,j)
                   end do
 
-                  do ii = 1, pop1(ids)
-                     do k = 1, istg(ids,ii)
-                        do l = 1, ispg(ids,ii,k)
-                           x3(j,ii,k,l) = xt(j,k,l)
-                        end do
-                     end do 
-                  end do
+                  do k = 1, nstot(ids) 
+                     pa3(j,k) = pat(j,k)
+                  end do 
 
-                 if (lopt(32).and.ksmod(ids).eq.39) then 
+                  if (lopt(32).and.ksmod(ids).eq.39) then 
 
                      do l = 1, nat
                         caq(j,l) = caqt(j,l)
@@ -1730,7 +1700,7 @@ c                                 new point, add to list
 
       end do 
 c                                 get mus for lagged speciation
-      call getmus (1,0,solvnt,.false.,.false.)
+      call getmus (1,0,solvnt,.false.)
 
       if (.not.mus) then
          call muwarn (quit,0)
@@ -2167,7 +2137,7 @@ c                                                  2 active, upper bound
  
       end do
 
-      call getmus (1,0,solvnt,.false.,.true.)
+      call getmus (1,0,solvnt,.false.)
 
       end
 
@@ -2372,7 +2342,7 @@ c                                 get mu's for lagged speciation
 
          if (test) abort = .true.
 
-         call getmus (iter,iter-1,solvnt,abort,.false.)
+         call getmus (iter,iter-1,solvnt,abort)
 
          if (abort.or..not.mus) then 
 c                                 undersaturated solute component
@@ -2756,7 +2726,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine getmus (iter,jter,solvnt,abort,quit) 
+      subroutine getmus (iter,jter,solvnt,abort) 
 c----------------------------------------------------------------------
 c iter is a flag indicating where the compositions are and is sort of 
 c      related to the iteration count during optimization.
@@ -2766,7 +2736,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvnt(*), quit, bad, abort, cslut(k19), cslvt(k19)
+      logical solvnt(*), bad, abort, cslut(k19), cslvt(k19)
 
       integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
      *        inp(k8)

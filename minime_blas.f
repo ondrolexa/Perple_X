@@ -534,7 +534,7 @@ c                                 really bad inversion result
 
             call prtptx
 
-            if (iwarn.eq.10) call warn (202,0d0,106,'P2YX')
+            if (iwarn.eq.10) call warn (49,0d0,202,'P2YX')
 
             iwarn = iwarn + 1
 
@@ -565,7 +565,7 @@ c                                 closure violation
 
             call prtptx
 
-            if (iwarn.eq.10) call warn (201,0d0,106,'P2YX')
+            if (iwarn1.eq.10) call warn (49,0d0,201,'P2YX')
             
             iwarn1 = iwarn1 + 1
 
@@ -601,7 +601,7 @@ c                                 answer really is outside the prism.
 
                 call prtptx
 
-                if (iwarn.eq.10) call warn (203,0d0,106,'P2YX')
+                if (iwarn2.eq.10) call warn (49,0d0,203,'P2YX')
 
                 iwarn2 = iwarn2 + 1
 
@@ -638,7 +638,7 @@ c                                 convert the y's to x's
      *       'l does not span all possible model compositions.',/)
 1010  format (/,'**warning ver202** p2y inversion for ',a,' failed, ',
      *       'idead = ',i2,', the result',/,'will not be used t',
-     *       'to compute compositional ranges.',/)
+     *       'o compute compositional ranges.',/)
 1020  format (/,'**warning ver203** negative vertex fraction y(',i2,
      *       ') = ',g8.1,' for ',a,'.',/,'Large negative values may ',
      *       'indicate that the compositional polyhedron for the model',

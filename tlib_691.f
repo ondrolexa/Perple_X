@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.1, source updated August 20, 2020.',
+     *      'Perple_X version 6.9.1, source updated August 26, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -209,7 +209,7 @@ c                                 refinement
 c                                 convex
          nopt(13) = 1d0/16d0
       else 
-         nopt(13) = 1d0/4d0
+         nopt(13) = 1d0/5d0
       end if
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
@@ -258,8 +258,15 @@ c                                 interpolation keyword
       iopt(4) = 2
       valu(4) = 'on '
 c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
-      iopt(6) = 2
-      valu(6) = 'aut'
+      if (iam.eq.15.or.iam.eq.2) then 
+c                                 convex, meemum
+         iopt(6) = 2
+         valu(6) = 'aut'
+      else 
+c                                 vertex
+         iopt(6) = 0
+         valu(6) = 'off'
+      end if
 c                                 subdivision model, 0 - solution model
 c                                 1 - cartesian, 2 - stretch
       iopt(13) = 0 
@@ -741,7 +748,7 @@ c                                 initial_resolution key
      *                                 'has an invalid value.')
 c                                 initial resolution
             if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then
-               nopt(13) = 1d0/4d0
+               nopt(13) = 1d0/5d0
                if (iam.eq.15) nopt(13) = 1d0/16d0
                write (*,1050)
             end if
@@ -859,6 +866,8 @@ c                                 autorefine
                iopt(6) = 0
             else if (val.eq.'man') then
                iopt(6) = 1
+            else if (val.eq.'aut') then
+               iopt(6) = 2
             end if 
 
          else if (key.eq.'auto_refine_factor_I') then
@@ -1578,7 +1587,7 @@ c                                 info file options
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:    ',/,
      *        4x,'  exploratory stage    ',f6.4,5x,
-     * '0->1 [1/4 => VERTEX/MEEMUM, 1/16 => CONVEX], 0 => off',/,
+     * '0->1 [1/5 => VERTEX/MEEMUM, 1/16 => CONVEX], 0 => off',/,
      *        4x,'  auto-refine stage    ',f6.4,5x,
      *           '0->1 [',a,'], 0 => off',/,
      *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
@@ -1615,7 +1624,8 @@ c                                 generic thermo options
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
      *        4x,'interim_results        ',a3,8x,'[auto] off manual')
 1015  format (/,2x,'Auto-refine options:',//,
-     *        4x,'auto_refine            ',a3,8x,'off manual [auto]')
+     *        4x,'auto_refine            ',a3,8x,
+     *       '[off => VERTEX] manual [auto => CONVEX/MEEMUM]')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
@@ -8196,7 +8206,7 @@ c-----------------------------------------------------------------------
 
       else 
 
-          if (refine) then
+          if (refine.or.iopt(6).eq.0) then
 
              index = 2
 

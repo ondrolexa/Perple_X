@@ -139,7 +139,7 @@ c                                 -------------------------------------
             tag = 'exploratory'
          end if
 c                                 inform user of 1st stage
-         write (*,1000) tag
+         if (iopt(6).ne.0) write (*,1000) tag
 
          if (outprt) then
 
@@ -1518,7 +1518,7 @@ c                               do all points on lowest level
             call lpopt (i,j,idead)
          end do
 c                               progress info
-         write (*,1030) dfloat(i)/dfloat(loopx)*1d2
+         write (*,1030) dfloat(i/kinc+1)/dfloat(loopx/kinc+1)*1d2
 c                               flush stdout for paralyzer
          flush (6)
 
