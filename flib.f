@@ -2252,6 +2252,11 @@ c----------------------------------------------------------------------
       do k = 1, isp
 
          i = ins(k)
+c DEBUG DEBUG 691
+         if (y(i).lt.-1d-9) then 
+            write (*,*) 'ratso il schmatzo',y(i)
+            return
+         end if
 
          aj2(i) = 0d0
          bx = bx + b(i)*y(i)
@@ -2374,6 +2379,7 @@ c                                 computations, save the root
 
       if (vol.lt.0d0) then
          write (*,*) 'rats II'
+         return
       end if 
 
       iroot = iroots

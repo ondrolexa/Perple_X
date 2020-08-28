@@ -2066,6 +2066,8 @@ c                              read dqf data:
 
             lowrch = .true.
 
+         else if (key.eq.'use_model_resolution') then 
+
          else if (key.eq.'reject_bad_composition') then
 
             badx = .true.

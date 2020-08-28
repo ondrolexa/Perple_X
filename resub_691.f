@@ -498,7 +498,6 @@ c                                 special (pointless) iterations?
             end if
 c                                 get the refinement point composition
             if (id.gt.ipoint) then 
-               call setexs (ids,id)
                call setxyp (ids,id,kterat)
             else
                if (nrf(ids)) cycle
@@ -735,10 +734,6 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer kd, na1, na2, na3, nat
-      double precision x3, caq
-      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
@@ -749,7 +744,7 @@ c-----------------------------------------------------------------------
 
       do i = 1, ns
 
-         if (dabs(x3(id1,1,1,i) - x3(id2,1,1,i)).gt.soltol) then 
+         if (dabs(pa3(id1,i) - pa3(id2,i)).gt.soltol) then 
             solvs4 = .true.
             exit 
          end if 
@@ -885,7 +880,7 @@ c                                 the pseudocompound is a true compound
 c                                 get lagged speciation
 c                                 loaded into caq(i,1:ns+aqct)
                do k = 1, ns
-                  y(k) = x3(i,1,1,k)
+                  y(k) = pa3(i,k)
                end do 
 
                if (abort1) then 

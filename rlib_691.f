@@ -8735,10 +8735,6 @@ c                                 species are necessary to describe the ordering
          minfx = .true.
 
       else if (lord.eq.1) then
-c DEBUG691
-         if (icase(id).eq.2) then 
-            write (*,*) 'wugga wugga?'
-         end if 
 
          do i = 1, nord(id)
             if (pin(i)) then

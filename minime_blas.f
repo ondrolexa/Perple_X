@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical inp
+      logical inp, tick
 
       integer ids, kds, nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
@@ -68,8 +68,18 @@ c                                 coordinate, so choose a feasible
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
 c                                 initialize bounds
-      bu(1:nvar) = 1d20
-      bl(1:nvar) = -1d20
+      if (nclin.gt.0) then 
+c                                 the model has site fractions
+         bu(1:nvar) = 1d20
+         bl(1:nvar) = -1d20
+
+      else 
+c                                 a molecular model, the endmember fractions 
+c                                 are bounded
+         bu(1:nvar) = 1d0
+         bl(1:nvar) = 0d0
+
+      end if 
 c                                 load the local constraints 
 c                                 from the global arrays
       lapz(1:nclin,1:nvar) = apz(ids,1:nclin,1:nvar)
@@ -77,11 +87,23 @@ c                                 from the global arrays
       bl(nvar+1:nvar+nclin) = zl(ids,1:nclin)
       bu(nvar+1:nvar+nclin) = zu(ids,1:nclin)
 
+      tick = .false.
+
       if (nvar.eq.ntot) then
+c                                 closure for non-equimolar ordering
          nclin = nclin + 1
          bl(nvar+nclin) = 1d0
          bu(nvar+nclin) = 1d0
          lapz(nclin,1:nvar) = 1d0
+
+      else if (nclin.eq.0) then 
+c                                 closure for molecular models
+         nclin = nclin + 1
+         bl(nvar+nclin) = 0d0
+         bu(nvar+nclin) = 1d0
+         lapz(nclin,1:nvar) = 1d0
+         tick = .true.
+
       end if
 
       idead = -1
@@ -113,6 +135,7 @@ c                                 refinement point index
       else
 
          iprint = 0
+         if (tick) iprint = 10
 
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-4')

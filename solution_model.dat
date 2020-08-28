@@ -463,8 +463,8 @@ full_name    clinoamphibole
  
 3                                  | number of subcompositions
                                    | subcomposition names and composite composition space subdivision schemes
-Ts-Amph    0   1   .5  0        | X([ ][M][T][M,C,N])
-Pg-Amph    0   1   .5  0        | X([A][M][MT][M,C,N])
+Ts-Amph    0   .5   .25  0        | X([ ][M][T][M,C,N])
+Pg-Amph    0   .5   .25  0        | X([A][M][MT][M,C,N])
 |Pgl-Amph   0   .1   .1  0          | X([A][M][T][MN,CN,N])
 Trem-Amph  by difference           | X([ ][M][M][MC])
 
@@ -491,15 +491,15 @@ mcgrk_d    fcgrk_d                 | [ ][M][Fe][C]      M-Ca-Fe3+_tschermaks (Na
 ts         fcts_d                  | [ ][M][Al][C]      Al-cTs
 
                                    | 1st simplex
-x_Mg,1    0    1  .5  0           | bulk Mg/M
+x_Mg,1    0    1  .25  0           | bulk Mg/M
 x_Fe,1    by difference
                                    | 2nd simplex
-z_Ti,1    0   .5 .5  0           | T on M2
-z_Fe,1    0   1 .5  0           |
+z_Ti,1    0   .5 .25  0           | T on M2
+z_Fe,1    0   1 .25  0           |
 z_Al,1    by difference
                                    | 3rd simplex
-z_Na,1    0   .5 .5  0           | M,C,N on M4
-z_M,1     0   1 .5  0           |
+z_Na,1    0   .5 .25  0           | M,C,N on M4
+z_M,1     0   .5 .25  0           |
 z_Ca,1    by difference
 
                                    | -------------------------------------------
@@ -530,17 +530,17 @@ ocmpg_d    ocfpg_d                 | [N][M][MFe][C]     Na-Fe3-Ca parg
 parg       fcparg_d                | [N][M][MAl][C]     Na-Al-Ca parg
 
                                    | 1st simplex
-x_Mg,2    0    1  .5  0            | bulk Mg/M
+x_Mg,2    0    1  .25  0            | bulk Mg/M
 x_Fe,2    by difference
                                    | 2nd simplex
-z_MTi     0    1  .5  0            | T on M2
-z_MFe     0    1  .5  0
+z_MTi     0    1  .25  0            | T on M2
+z_MFe     0    1  .25  0
 z_MAl     by difference
                                    | 4th simplex
 z_K,2     0   .25   .25  0           | K,Na on A
 z_Na,2    by difference
                                    | 3rd simplex
-z_M,2     0   1   .5  0           | M,C on M4
+z_M,2     0   .5   .25  0           | M,C on M4
 z_C,2     by difference
 
                                    | -------------------------------------------
@@ -962,7 +962,7 @@ full_name    clinoamphibole
  
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-GlRb-Amph  0   .1   .5  0          | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+GlRb-Amph  0   .1   .25  0          | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
 ACMT-Amph  by difference           | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ 
 
                                    | -------------------------------------------
@@ -985,10 +985,10 @@ mrbG       frb_d                   | Fe3-glaucophane, aka riebeckite
 gl         fgl_d                   | Al-glaucophane
 
                                    | First (1d) simplex
-X_Mg1   0    1  .5  0              | X(1,1) = bulk Mg/M
+X_Mg1   0    1  .25  0              | X(1,1) = bulk Mg/M
 X_Fe1   by difference
                                    | Second (3d) simplex
-X_rb    0    1  .5  0              | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
+X_rb    0    1  .25  0              | X(2,1) = Fe3/T' on M2, T' = Al + Fe3+
 X_gl    by difference
                                    | -------------------------------------------
                                    | Polytope 2 [A][M][M,T,MT][M,C]  
@@ -1033,26 +1033,26 @@ cumm       grun                    | M-Ca divalent amphibole
 tr         ftr_d
 
                                    | First (1d) simplex
-X_Mg     0    1   .5  0            | X(1,1) = bulk Mg/M
+X_Mg     0    1   .25  0            | X(1,1) = bulk Mg/M
 X_Fe     by difference
                                    | Second (1d) simplex
-X_M_M2    0   1   .5  0            | X(2,1) = M/[Ca + M] on M4
+X_M_M2    0   1   .25  0            | X(2,1) = M/[Ca + M] on M4
 X_C_M2   by difference
 
                                    | Third simplex 
-X_AlTs   0   .5   .5  0            | X(3,1) = X(Al-Ts)
-X_NaPg   0   .5   .5  0            | X(3,2) = X(Na-Al-Parg)
+X_AlTs   0   .5   .25  0            | X(3,1) = X(Al-Ts)
+X_NaPg   0   .5   .25  0            | X(3,2) = X(Na-Al-Parg)
 
                                    | 0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
                                    | 0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
 
-X_KPg    0   .1   .5  0             | X(3,5) = X(K-Al-Parg)
+X_KPg    0   .1   .25  0             | X(3,5) = X(K-Al-Parg)
 
                                    | 0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
                                    | 0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
                                    
-X_TiTs   0   .2   .5  0            | X(3,8) = X(Ti-Ts)
-X_FeTs   0   .3   .5  0            | X(3,9) = X(Fe3-Ts)
+X_TiTs   0   .25   .25  0            | X(3,8) = X(Ti-Ts)
+X_FeTs   0   .25   .25  0            | X(3,9) = X(Fe3-Ts)
 X_MCamph by difference
 
 
@@ -11443,6 +11443,8 @@ begin_model
 
                                       The DQF specification for acm moved from this solution model to the
                                       thermodynamic data file. March 7, 2018. JADC.
+
+                                      Converted to 688 format. Aug, 2020. JADC.
                                       ---------------------------------------------
 
                                       WARNING: The choice of independent ordered species (here, cfm, om, jac)
@@ -11476,28 +11478,30 @@ Omph(GHP)
 abbreviation Cpx
 full_name    clinopyroxene
 
-6                           | model type
-4                           | disordered endmembers
+
+688                               | model type: 688 format standard model
+
+1                                  | number of polytopes
+1                                  | number of simplices
+4                                  | number of vertices (endmembers) on each simplex
 
 di
 jd
 acm_dqf
 hed
 
-3                            | number of ordered species
-
-om   = 1/2 jd + 1/2 di       enthalpy_of_ordering  =  -2.9d3
-cfm  = 1/2 di + 1/2 hed      enthalpy_of_ordering  =  -1.5d3
-jac  = 1/2 jd + 1/2 acm_dqf  enthalpy_of_ordering  =  -1d3      | this differs from the published value of -3d3 J/mol
-                                                            | because Thermocalc reactions are specified in terms of the
-                                                            | endmember without "DQF" corrections, while in Perple_X
-                                                            | endmember include any DQF corrections.
-
-0  0  0  0                   | endmember flags
-
 0  1   .1  0                 | range and resolution of X(di)
 0  1   .1  0                 | range and resolution of X(jd)
 0  1   .1  0                 | range and resolution of X(acm)
+
+begin_ordered_endmembers
+om   = 1/2 jd + 1/2 di       enthalpy_of_ordering  =  -2.9d3
+cfm  = 1/2 di + 1/2 hed      enthalpy_of_ordering  =  -1.5d3
+jac  = 1/2 jd + 1/2 acm_dqf  enthalpy_of_ordering  =  -1d3      | this differs from the published value of -3d3 J/mol
+                                                                | because Thermocalc reactions are specified in terms of the
+                                                                | endmember without "DQF" corrections, while in Perple_X
+                                                                | endmember include any DQF corrections.
+end_ordered_endmembers
 
 begin_excess_function
 W(jd di)       26d3
@@ -11526,21 +11530,31 @@ end_excess_function
 
 4                                   | 4 site entropy model (m1a, m1b, m2b, m2a)
 
-4  .5                               | 4 species on m1b, mult = 1/2
-z(m1b,al)   = 1 jd + 1 jac
-z(m1b,fe2+) = 1 hed + 1 cfm
-z(m1b,fe3+) = 1 acm_dqf
+M1b
+4  .5  .5                           | 4 species on m1b, mult = 1/2
+z(Al,m1b)   = 1 jd  + 1 jac
+z(Fe,m1b)   = 1 hed + 1 cfm
+z(Fe3,m1b)  = 1 acm_dqf
+z(Mg,m1b)   = 1 di  + 1 om
 
-2  .5                               | 2 species on m2a, mutiplicity = 1/2
-z(m2a,ca)   = 1 di + 1 hed + 1 cfm
+M2a
+2  .5  .5                           | 2 species on m2a, mutiplicity = 1/2
+z(Ca,m2a)   = 1 di + 1 hed + 1 cfm
+z(Na,m2a)   = 1 jd + 1 om  + 1 jac + 1 acm_dqf
 
-2  .5                               | 2 species on m2b, mult. = 1/2
-z(m2b,na)   = 1 jd + 1 acm_dqf + 1 jac
+M2b
+2  .5  .5                           | 2 species on m2b, mult. = 1/2
+z(Na,M2b)   = 1 jd + 1 acm_dqf + 1 jac
+z(Ca,M2b)   = 1 di + 1 hed + 1 om + 1 cfm
 
-4  .5                               | 4 species on m1a, mult = 1/2
-z(m1a,mg)   = 1 di + 1 cfm
-z(m1a,fe2+) = 1 hed
-z(m1a,fe3+) = 1 acm_dqf + 1 jac
+M1a
+4  .5  .5                           | 4 species on m1a, mult = 1/2
+z(Mg,M1a)   = 1 di + 1 cfm
+z(Fe2+,M1a) = 1 hed
+z(Fe3+,M1a) = 1 acm_dqf + 1 jac
+z(Al,M1a)   = 1 jd + 1 om
+
+[Si2O6]                            | formula suffix, enter "none" for no suffix.
 
 reach_increment 0
 
@@ -11793,13 +11807,13 @@ H2O
 
 0 0 0 0 0 0 0 0 0           | endmember flags
 
-1e-6   5e-1      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-6   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-6   1e-3      .1       1        | H2S subdivision ranges, imod = 1 -> non-linear subdivision
-1e-6   2.5e-5    .1       1        | SO2 subdivision ranges, imod = 1 -> non-linear subdivision
-1e-6   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-6   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
-1e-6   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   5e-1      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-3      .1       1        | H2S subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   2.5e-5    .1       1        | SO2 subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 
 ideal
 
