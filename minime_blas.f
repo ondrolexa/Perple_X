@@ -102,7 +102,7 @@ c                                 closure for molecular models
          bl(nvar+nclin) = 0d0
          bu(nvar+nclin) = 1d0
          lapz(nclin,1:nvar) = 1d0
-         tick = .true.
+         tick = .false.
 
       end if
 
@@ -198,10 +198,12 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, jds, nvar, mode, istuff(*), istart
+      logical bad, qwak
+
+      integer i, jds, nvar, mode, istuff(*), istart, iwarn
 
       double precision ppp(*), gval, ggrd(*), stuff(*),
-     *                 gsol1, g, sum, scp(k5), sum1
+     *                 gsol1, g, sum, scp(k5), sum1, smo
 
       external gsol1
 
@@ -214,7 +216,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -223,6 +224,13 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      save iwarn
+
+      data iwarn/0/
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
@@ -235,11 +243,62 @@ c-----------------------------------------------------------------------
 
       if (nvar.lt.nstot(jds)) pa(nstot(jds)) = 1d0 - sum1
 
+      if (ksmod(jds).eq.39) then
+
+         do i = 1, nstot(jds)
+
+            if (pa(i).gt.1d0.or.pa(i).lt.0d0) then
+
+               if (pa(i).gt.1d0.and.pa(i).lt.1d0+zero) then 
+                  pa(i) = 1d0
+               else if (pa(i).lt.0d0.and.dabs(pa(i)).lt.zero) then
+                  pa(i) = 0d0
+               else
+                  mode = -1
+                  return
+               end if
+
+            end if
+
+         end do
+
+      end if
+
       call makepp (jds)
-c                                 T use explicit ordering
-      g = gsol1 (jds,.false.)
+
+      if (ksmod(jds).eq.39.and.lopt(32)) then 
+c                                 the last argument cancels recalc, in
+c                                 which case i is a dummy. smo the total
+c                                 species molality it is necessary for 
+c                                 renormalization.
+         call gaqlgd (g,scp,sum,smo,i,bad,.false.)
+
+         qwak = .false.
+
+         if (bad) then 
+c                                 on failure revert to molecular fluid
+            g = gsol1 (jds,.false.)
+            call getscp (scp,sum,jds,jds,.false.)
+            qwak = .true.
+
+            if (iwarn.lt.11) then
+               write (*,1000) fname(jds)
+               call prtptx
+               if (iwarn.eq.10) call warn (49,0d0,205,'MINFRC')
+               iwarn = iwarn + 1
+            end if
+
+         end if
+
+      else
+c                                 if logical arg = T use implicit ordering
+         g = gsol1 (jds,.false.)
 c                                 get the bulk composition from pp
-      call getscp (scp,sum,jds,jds,.false.)
+         call getscp (scp,sum,jds,jds,.false.)
+
+         qwak = .true.
+
+      end if
 
       gval = g
 
@@ -266,7 +325,13 @@ c                                 save the normalized g
 c                                 save the normalized bulk
          cp2(1:icomp,jphct) = scp(1:icomp)/sum
 c                                 sum scp(1:icp)
-         c2tot(jphct) = sum
+         if (ksmod(jds).eq.39.and.lopt(32).and..not.qwak) then 
+            c2tot(jphct) = sum/smo
+         else
+            c2tot(jphct) = sum
+         end if
+
+         quack(jphct) = qwak
 c                                 save the endmember fractions
          icoz(jphct) = zcoct
 
@@ -276,8 +341,9 @@ c                                 save the endmember fractions
 
       end if
 
-1000  format (2(g12.6,1x),12(f8.5,1x))
-1010  format (2(g14.7,2x))
+1000  format (/,'**warning ver205** lagged speciation failed, ',
+     *       'for ',a,'. The molecular',/,'speciation will be ',
+     *       'output.',/)
 
       end
 
@@ -399,7 +465,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)

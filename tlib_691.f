@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.1, source updated August 26, 2020.',
+     *      'Perple_X version 6.9.1, source updated August 30, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -1169,7 +1169,7 @@ c                                 vertex only files:
 
          end if 
 c                                 auto refine summary
-         if (iopt(6).ne.0.and.io9.eq.0) then
+         if (io9.eq.0) then
  
             if (lopt(11)) then 
                call mertxt (tfname,prject,'_auto_refine.txt',0)
@@ -2841,6 +2841,8 @@ c----------------------------------------------------------------------
          write (*,61) char
       else if (ier.eq.63) then
          write (*,63)
+      else if (ier.eq.64) then
+         write (*,64) realv
       else if (ier.eq.68) then
          write (*,68)
       else if (ier.eq.72) then
@@ -3107,6 +3109,11 @@ c                                 generic warning, also 99
      *       'MatLab or PYWERAMI.',//,'program/routine: ',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
+64    format (/,'**warning ver064** AQSOLV failed to converge on ionic',
+     *       ' stength, currently =',f7.1,', this',/,
+     *       'usually occurs at conditions where the HKF assumptions a',
+     *       're invalid. To force convergence',/,
+     *       'increase the speciation_max_it option value.',/)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
      *          'COFACE, this should never occur',/,'if you see this ',
      *          'message please report the problem',/)
@@ -7966,18 +7973,14 @@ c                                 no auto_refine data
 c                                 changed to .and. 9/10/19
                if (iopt(6).ne.2.and.outprt) write (*,1030) n10nam
 
-               if (iopt(6).eq.1) then 
-c                                 manual mode, allow reinitialization
-c                                 or suppression.
+               if (iopt(6).ne.2) then 
+c                                 allow use of auto_refine data
                   write (*,1060) 
                   read (*,'(a)') y
 
                   if (y.eq.'y'.or.y.eq.'Y') then
 
-                     iopt(6) = 0
-
-                  else 
-
+                     iopt(6) = 1
                      refine = .true.  
 
                   end if
@@ -8153,7 +8156,10 @@ c                                  results file
      *       'for explanation of subdivision schemes',//,  
      *       'and:',//,a,//'for additional information.',//)
 1030  format (/,'Reading data for auto-refinement from file: ',a,/)
-1060  format ('Suppress or reinitialize auto-refinement (y/n)?')
+1060  format ('Auto-refine data for this project exists from a previous'
+     *       ,' calculation, do you want',/,'to use it (y/n)? ',
+     *        'Auto-refine data improves quality but usually slows '
+     *        'calculations')
 1070  format ('Eliminating solution model: ',a,' in auto-refinement.')
 
       end 

@@ -13931,6 +13931,7 @@ c                                  solvent is pure water
 
       end
 
+
       subroutine aqsolv (g0,gso,mo,mu,is,gamm0,lnkw,bad)
 c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
@@ -13938,7 +13939,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, it, jt, iexp
+      integer i, j, k, it, jt, iexp, iwarn
 
       logical bad, kill
 
@@ -13973,6 +13974,9 @@ c-----------------------------------------------------------------------
 
       logical abort
       common/ cstabo /abort
+
+      save iwarn
+      data iwarn /0/
 c----------------------------------------------------------------------
       if (epsln.lt.nopt(34).or.abort) then
 c                                  vapor, same as checking lnkw
@@ -14083,6 +14087,7 @@ c                                  solve charge balance for ion
 
             if (bad) then
                xis = is
+               kill = .false.
                exit
             end if
 c                                  back calculate charged species molalities
@@ -14124,7 +14129,9 @@ c                                 try again?
 
                else
 c                                 diverging
-                  bad = .true.
+                  kill = .true.
+                  bad = kill
+
                   exit
 
                end if
@@ -14149,6 +14156,18 @@ c                                 switch to the backup ion
          end if
 
       end do
+c                                 failure is the only path here
+      if (kill.and.iwarn.lt.11) then
+
+         call warn (64,is,it,' ')
+
+         call prtptx
+
+         if (iwarn.eq.10) call warn (49,0d0,64,'AQSOLV')
+
+         iwarn = iwarn + 1
+
+      end if
 
       end
 

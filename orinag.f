@@ -4618,6 +4618,12 @@ C
             IF (HALF*(STEPBL+STEPBU).LT.ZERO) DELTA = -DELTA
 C
             X(J) = XJ + DELTA
+
+c           if (x(J).lt.0d0.or.x(j).gt.1d0) then 
+c              xj = xj*one
+c              write (*,*) x(J)
+c           end if
+
             IF (NCOLJ.GT.0) THEN
                CALL CONFUN(MODE,NCNLN,N,LDCJU,NEEDC,X,C1,CJACU,NSTATE,
      *                     IUSER,USER)
@@ -4634,6 +4640,11 @@ C              ---------------------------------------------------------
 C              Central differences.
 C              ---------------------------------------------------------
                X(J) = XJ + DELTA + DELTA
+
+c           if (x(J).lt.0d0.or.x(j).gt.1d0) then
+c              xj = xj*one
+c              write (*,*) x(J)
+c           end if
 C
                IF (NCOLJ.GT.0) THEN
                   CALL CONFUN(MODE,NCNLN,N,LDCJU,NEEDC,X,C2,CJACU,

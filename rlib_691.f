@@ -113,11 +113,11 @@ c                                 type 0 - a binary solution in which the
 c                                 first endmember is always the second 
 c                                 special component. this model cannot be
 c                                 called if there are no special components?
-      xco2 = y(1)
+      xco2 = pa(1)
 
       call cfluid (fo2,fs2)
 
-      dg = dg + r*t*(y(2)*f(1) + y(1)*f(2))
+      dg = dg + r*t*(pa(2)*f(1) + pa(1)*f(2))
 
       end
 
@@ -5684,7 +5684,7 @@ c                                 h&p van laar
             dtphi = 0d0
 
             do i = 1, nstot(id)
-               tphi = tphi + alpha(i)* y(i)
+               tphi = tphi + alpha(i)* pa(i)
                dtphi = dtphi + alpha(i)*dydy(i,1,id)
             end do
 
@@ -5695,9 +5695,9 @@ c                                 assume holland powell form, all terms regular
               i1 = jsub(1,i,id)
               i2 = jsub(2,i,id)
 
-              gex = gex + w(i) * y(i1) * y(i2)
-              dgex = dgex + w(i) * (y(i1)*dydy(i2,1,id)
-     *                            + y(i2)*dydy(i1,1,id))
+              gex = gex + w(i) * pa(i1) * pa(i2)
+              dgex = dgex + w(i) * (pa(i1)*dydy(i2,1,id)
+     *                            + pa(i2)*dydy(i1,1,id))
 
             end do
 c                                note the excess energy is gex/tphi
@@ -6726,7 +6726,7 @@ c------------------------------------------------------------------------
 
       integer i,j,k,ids
 
-      double precision y(m4), tphi, xpr, lex(m17,m18)
+      double precision y(*), tphi, xpr, lex(m17,m18)
 
       double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6825,11 +6825,9 @@ c---------------------------------------------------------------------
 
       logical add, wham, zbad, bad
 
-      integer im, nloc, i, j, id, jd, k, l, m, n, ii, 
-     *        killct, killid(20)
+      integer im, nloc, i, j, id, jd, k, l, m, n, ii, killct, killid(20)
 
-      double precision dinc, dx, gcpd, stinc, getstr,
-     *                 zsite(m10,m11)
+      double precision dinc, dx, gcpd, stinc, getstr, zsite(m10,m11)
 
       external gcpd, zbad, stinc, getstr
 
@@ -6972,8 +6970,8 @@ c----------------------------------------------------------------------
 c                                 auto_refine changes
       if (refine) then
 c                                 check for consistent auto-refine data
-         read (n10,'(a)') sname
-         if (tname.ne.sname) call error (63,r,i,'GMODEL')
+         read (n10,'(a)',iostat=i) sname
+         if (i.ne.0.or.tname.ne.sname) call error (63,r,i,'GMODEL')
 
       end if
 c                                 read switch to make GALL use MINFXC
@@ -7348,24 +7346,19 @@ c                                 term may be of order < iord
          end do
 
       end do
-
-      do i = 1, mstot(im)
 c                                 save global copy of kdsol
-         ldsol(i,im) = kdsol(i)
+      ldsol(1:mstot(im),im) = kdsol(1:mstot(im))
 c                                 insp points to the original position
 c                                 of endmember i in the solution model input:
-         knsp(i,im) = insp(i)
-
-      end do
+      knsp(1:mstot(im),im) = insp(1:mstot(im))
 c                                 kmsol points to the species on the j'th site
 c                                 of the i'th endmember, used for the xtoy
 c                                 conversion
        do ii = 1, poly(h0)
-          do i = pvert(im,ii,1), pvert(im,ii,2)
-             do j = 1, istg(im,ii)
-               kmsol(im,i,j) = jmsol(i,j)
-             end do 
-          end do
+
+          kmsol(im,pvert(im,ii,1):pvert(im,ii,2),1:istg(im,ii)) 
+     *    = jmsol(pvert(im,ii,1):pvert(im,ii,2),1:istg(im,ii))
+
        end do
 c                                 ----------------------------------------------
 c                                 configurational entropy models
@@ -7397,6 +7390,7 @@ c                                 pad zuffix with the remaining species
                zuffix(h0) = text
                zuffix(im) = text
                cycle
+
             end if
          else
             if (zsp(h0,i).eq.1d0) then
@@ -7451,11 +7445,7 @@ c                                 van laar volumes, and pointers for "in" endmem
       do i = 1, nstot(im)
 c                                 if the solution is van laar save
 c                                 the "volume" function.
-         if (laar) then
-            do l = 1, m3
-               vlar(l,i,im) = vlaar(l,jnsp(i))
-            end do
-         end if
+         if (laar) vlar(1:m3,i,im) = vlaar(1:m3,jnsp(i))
 c                                 initialize scoef's to zero for config
 c                                 entropy calculation (done by snorm).
          scoef(i,im) = 0d0
@@ -7471,16 +7461,12 @@ c                                 save y -> p array
          ndep(im) = mdep
 
          do i = 1, nstot(im)
-            do j = 1, mdep
-               y2pg(j,i,im) = y2p(i,j)
-            end do
+            y2pg(1:mdep,i,im) = y2p(i,1:mdep)
          end do
 
          do j = 1, mdep
 
-            do i = 1, mstot(im)
-               y(i) = 0d0
-            end do
+            y(1:mstot(im)) = 0d0
 
             y(knsp(lstot(im)+j,im)) = 1d0
 
@@ -7635,10 +7621,7 @@ c                                 save the total mols of the endmember in a solu
 c                                 specific array, this is done so the ordered 
 c                                 endmembers do not need to be treated as a special case
          endt(im,i) = ctot(id)
-
-         do j = 1, icomp
-            endc(im,i,j) = cp(j,id)
-         end do
+         endc(im,i,1:icomp) = cp(1:icomp,id)
 c                                 figure out the compositional distance between
 c                                 the endmembers, this is used to scale the solvus
 c                                 tolerance
@@ -7817,15 +7800,12 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 c                                 initialize ordered species
-      do k = 1, nord(id)
-         pa(lstot(id)+k) = 0d0
-      end do
+      pa(lstot(id)+1:nstot(id)) = 0d0
 
       do k = 1, nstot(id)
 c                                 initialize the independent species
@@ -7875,7 +7855,7 @@ c                                 usually fully disordered
          end do
       end do
 c                                 zero ordered pp's
-      pp( lstot(id) + 1: nstot(id) ) = 0d0
+      pp( lstot(id) + 1:nstot(id) ) = 0d0
 
       end
 
@@ -9970,7 +9950,7 @@ c--------------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 reject special case:
 c                                 ternary coh fluids above the CH4-CO join
-      if (ksmod(im).eq.41.and.y(1).ge.r13+y(2)) then 
+      if (ksmod(im).eq.41.and.pa(1).ge.r13+pa(2)) then 
          bad = .true.
          return
       end if
@@ -10086,7 +10066,7 @@ c                                 -------------------------------------
             h = lstot(im)
          end if
 c                                 write composition name to pseudocompound list file
-          write (n8,1050) names(phct),(y(j), j = 1, h)
+          write (n8,1050) names(phct),(pa(j), j = 1, h)
 
       end if
 c                                 bulk composition stuff
@@ -10162,12 +10142,14 @@ c                                 redlich kister; expand polynomial
 c                                 G Helffrich, 4/16
             do i = 1, jterm(im)
                do j = 1, rko(i,im)
-                  zpr = y(jsub(1,i,im))*y(jsub(2,i,im))
-     *                * (y(jsub(1,i,im))-y(jsub(2,i,im)))**(j-1)
+
+                  zpr = pa(jsub(1,i,im))*pa(jsub(2,i,im))
+     *                * (pa(jsub(1,i,im)) - pa(jsub(2,i,im)))**(j-1)
+
                   do l = 1, m3
-                     exces(l,phct) = exces(l,phct) +
-     *                  zpr * wkl(l,j,i,im)
+                     exces(l,phct) = exces(l,phct) + zpr * wkl(l,j,i,im)
                   end do
+
                end do
             end do
          end if
@@ -10191,7 +10173,7 @@ c                              or a dependent endmember
             end do
          else
             do j = 1, m3
-               exces(j,phct) = exces(j,phct) + y(index)*dqfg(j,i,im)
+               exces(j,phct) = exces(j,phct) + pa(index)*dqfg(j,i,im)
             end do
          end if
 
@@ -11044,18 +11026,18 @@ c----------------------------------------------------------------------
 
       do i = 1, ns
 c                                 solvent mass, kg/mol compound
-         msol   = msol + y(i) * fwt(jnd(i))
+         msol   = msol + pa(i) * fwt(jnd(i))
 c                                 g mech mix term for solvent:
-         gsolv  = gsolv + aqg(i) * y(i)
+         gsolv  = gsolv + aqg(i) * pa(i)
 
-         ysum = ysum + y(i)
+         ysum = ysum + pa(i)
 
       end do
 c                                 compute normalized fractions and correct solvent
 c                                 gibbs energy for ideal solute concentration
       do i = 1, ns
 
-         ysolv(i) = y(i)/ysum
+         ysolv(i) = pa(i)/ysum
 
       end do
 c                                 compute and add in solvent activities by calling
@@ -11101,7 +11083,7 @@ c                                 used by hkf
       subroutine slvnt2 (gsolv)
 c-----------------------------------------------------------------------
 c computes: debye-hueckel (adh) and solute contribution of the fluid
-c gibbs energy. assumes the molar speciation is stored in y. called
+c gibbs energy. assumes the molar speciation is stored in pa. called
 c only for solution model type 20.
 c-----------------------------------------------------------------------
       implicit none
@@ -11138,7 +11120,7 @@ c----------------------------------------------------------------------
 c                                 molalities and ionic strength
       do k = sn1, nqs
 c                                 ln molality of solutes
-         mo(k) = y(k)/msol
+         mo(k) = pa(k)/msol
          is = is + q2(k) * mo(k)
 
       end do
@@ -11148,9 +11130,9 @@ c                                 Davies extension.
 c                                 add in the solute gibbs energies
       do k = sn1, nqs
 
-         if (y(k).le.0d0) cycle
+         if (pa(k).le.0d0) cycle
 
-         gsolv = gsolv + y(k) *
+         gsolv = gsolv + pa(k) *
      *           (gcpd(jnd(k),.true.) + rt*(dlog(mo(k)) + lng0*q2(k)))
 
       end do
@@ -11578,10 +11560,10 @@ c                                 compute mole fractions, total moles first
       do i = 1, ns
 c                                 moles/kg-solvent
          do j = 1, kbulk
-            blk(j) = blk(j) + y(i)*cp(j,jnd(i))/msol
+            blk(j) = blk(j) + pa(i)*cp(j,jnd(i))/msol
          end do
 
-        smot = smot + y(i)/msol
+        smot = smot + pa(i)/msol
 
       end do
 
@@ -11645,10 +11627,10 @@ c                                 solvent speciation
 
             if (lopt(26)) then
 c                                 mole fraction
-               prop(k) = y(i)/msol/smot
+               prop(k) = pa(i)/msol/smot
             else
 c                                 molality
-               prop(k) = y(i)/msol
+               prop(k) = pa(i)/msol
             end if
 
          end do
@@ -11762,7 +11744,8 @@ c                               lagged
 
             do i = 1, ns
 
-               write (lu,1150) names(jnd(i)), y(i)/msol, y(i)/msol/smot,
+               write (lu,1150) names(jnd(i)), pa(i)/msol, 
+     *                         pa(i)/msol/smot,
      *                         ysp(i,jd), vf(ins(i)), vhyb(ins(i)),
      *                         int(gso(i)), int(gcpd(jnd(i),.true.))
 
@@ -11815,7 +11798,7 @@ c                                 lagged model
                   do j = 1, kbulk
 
                      if (i.lt.sn1) then
-                        dn = y(i)/caq(jd,na3) * cp(j,jnd(i))
+                        dn = pa(i)/caq(jd,na3) * cp(j,jnd(i))
                      else
                         dn = caq(jd,i) * aqcp(j,i-ns)
                      end if
@@ -13786,8 +13769,6 @@ c                                 composite polytope
       write (*,1070) 'www.perplex.ethz.ch/perplex/faq/warning_'//
      *               'ver991_relax_solution_model_limits.txt'
 
-c     call errpau
-
 1000  format (/,'*NOTE: if this solution model has been reformulated '
      *       ,'because of missing endmembers',/,'the variable indices ',
      *        'may not correspond to the indices in the solution model',
@@ -13816,7 +13797,7 @@ c     call errpau
       end
 
 
-      subroutine aqlagd (id,phct,bad,recalc)
+      subroutine gaqlgd (gtot,blk,totm,smo,id,bad,recalc)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c configured to be called from resub with output to the (molar normalized)
@@ -13827,11 +13808,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, badct, phct
+      integer i, j, id, badct
 
       logical bad, recalc, lmus, feos
 
-      double precision mo(l9), blk(k5), gamm0, totm, g0(l9), lmu(k8),
+      double precision mo(l9), blk(*), gamm0, totm, g0(l9), lmu(k8),
      *                 tmu(k8),is, gso(nsp), lnkw, gtot, smo, err,
      *                 slvmo(nsp), solmol, negox, posox
 
@@ -13926,9 +13907,7 @@ c----------------------------------------------------------------------
 c                                 load dependent chemical potentials
          if (recalc) then
 c                                 use lagged chemical potentials
-            do i = 1, kbulk
-               tmu(i) = lmu(i)
-            end do
+            tmu(1:kbulk) = lmu(1:kbulk)
 c                                 set flag so slvnt3 evaluates pure
 c                                 fluid eos (not clear if this is necessary).
             feos = .true.
@@ -13947,7 +13926,7 @@ c                                 check that the solvent does not contain
 c                                 the absent component
                   do j = 1, ns
 
-                     if (y(j).gt.0d0.and.cp(i,jnd(j)).gt.0d0) then
+                     if (pa(j).gt.0d0.and.cp(i,jnd(j)).gt.0d0) then
 
                         bad = .true.
                         return
@@ -13984,9 +13963,13 @@ c                                 iterate on speciation
 
          badct = badct + 1
 
-         if (badct.lt.11)
-     *        call warn (99,0d0,0,'AQLAGD did not converge on solute '//
-     *                       'speciation')
+         if (badct.lt.11) then
+
+            call warn (99,0d0,0,'AQLAGD did not converge on solute '//
+     *                'speciation, current solvent speciation:')
+            write (*,'(12(f7.4,1x))') pa(1:ns)
+
+         end if
 
          if (badct.eq.10) call warn (49,0d0,99,'AQLAGD')
 
@@ -13994,10 +13977,7 @@ c                                 iterate on speciation
 
       end if
 c                                 back calculated bulk composition
-      do j = 1, kbulk
-         blk(j) = 0d0
-      end do
-
+      blk(1:kbulk) = 0d0
       smo = 0d0
       gtot = 0d0
       err = 0d0
@@ -14043,7 +14023,7 @@ c                                 moles/kg-solvent
 c                                 solvent bulk mole fraction:
          caq(id,i) = slvmo(i)/smo
          if (caq(id,i).le.0d0) cycle
-          gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
+         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
 
       end do
 c                                 bulk fluid composition
@@ -14118,29 +14098,15 @@ c                                  dielectric cst
 
       else
 c                                 stuff need for optimization:
-c                                 load into molar normalized arrays
-c                                 used by resub
-         do j = 1, kbulk
-c                                 bulk composition per mole of components
-            cp2(j,phct) = blk(j)/totm
-         end do
 c                                 legendre transform for saturated/mobile components
          do j = icp+1, kbulk
             gtot = gtot - blk(j) * mu(j)
          end do
-c                                 c2tot is the number of moles of the
-c                                 components in a solution with 1 mole of
-c                                 species, this is needed for consistent
-c                                 output (i.e., a mol of the phase is per
-c                                 mol of species rather than per mole of
-c                                 components). at the cost of k21 real vars
-         c2tot(phct) = totm/smo
-c                                 g per mole of components
-         g2(phct) = gtot/totm
 
       end if
 
       end
+
 
       subroutine slvnt3 (gso,whysp,feos,id)
 c-----------------------------------------------------------------------
@@ -14215,13 +14181,11 @@ c                                 a multi species solvent is present:
             ysum = 0d0
 
             do i = 1, ns
-               y(i) = ysp(i,id)
-               ysum = ysum + y(i)
+               pa(i) = ysp(i,id)
+               ysum = ysum + pa(i)
             end do
 c                                 renormalize
-            do i = 1, ns
-               y(i) = y(i)/ysum
-            end do
+            pa(1:ns) = pa(1:ns)/ysum
 
          end if
 
@@ -14264,7 +14228,7 @@ c                                 g(i) = gs0(i) + RT ln x(i).
 
       else
 c                                  solvent is pure water
-         y(1) = 1d0
+         pa(1) = 1d0
          ysp(1,id) = 1d0
 
          call slvnt0 (gso(1),dum)
@@ -14280,7 +14244,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, it, jt, iexp
+      integer i, j, k, it, jt, iexp, iwarn
 
       logical bad, kill
 
@@ -14309,13 +14273,15 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
       logical abort
       common/ cstabo /abort
+
+      save iwarn
+      data iwarn /0/
 c----------------------------------------------------------------------
       if (epsln.lt.nopt(34).or.abort) then
 c                                  vapor, same as checking lnkw
@@ -14426,6 +14392,7 @@ c                                  solve charge balance for ion
 
             if (bad) then
                xis = is
+               kill = .false.
                exit
             end if
 c                                  back calculate charged species molalities
@@ -14467,7 +14434,9 @@ c                                 try again?
 
                else
 c                                 diverging
-                  bad = .true.
+                  kill = .true.
+                  bad = kill
+
                   exit
 
                end if
@@ -14492,6 +14461,18 @@ c                                 switch to the backup ion
          end if
 
       end do
+c                                 failure is the only path here
+      if (kill.and.iwarn.lt.11) then
+
+         call warn (64,is,it,' ')
+
+         call prtptx
+
+         if (iwarn.eq.10) call warn (49,0d0,64,'AQSOLV')
+
+         iwarn = iwarn + 1
+
+      end if
 
       end
 
@@ -14712,7 +14693,7 @@ c                                 compute solvent mass and gibbs energy:
 
             do k = 1, ns
 c                                 solvent species gibbs energy and volumes
-               if (y(k).le.0d0) cycle
+               if (pa(k).le.0d0) cycle
                aqg(k) = gcpd(jnd(k),.true.)
 
             end do
@@ -15390,9 +15371,7 @@ c----------------------------------------------------------------------
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c----------------------------------------------------------------------
-         do j = 1, nstot(ids)
-            y(j) = 0d0
-         end do
+         y(1:nstot(ids)) = 0d0
 
          y(l) = 1d0
 
@@ -15470,7 +15449,6 @@ c---------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
@@ -17088,7 +17066,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ids, id, ii, k, l, m
+      integer ids, ii, k, l, m
 
       logical bad
 
@@ -17228,6 +17206,10 @@ c-----------------------------------------------------------------------
 c getscp gets the bulk chemical composition of solution ids from the composition
 c of its endmembers. the composition of the solution in terms of its endmembers
 c must be set by a prior call to setxyp.
+
+c jd is a pointer that is used only for lagged speciation. For 
+c meemum/vertex it points to the the composition in the cp2 array.
+c For werami it points to the composition in the local caq array.
 c-----------------------------------------------------------------------
       implicit none
  
@@ -17280,25 +17262,22 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c-----------------------------------------------------------------------
 
       scp(1:icomp) = 0d0
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
-         if ((iam.eq.1.or.iam.eq.2).and.resub) then 
+         if ((iam.eq.1.or.iam.eq.2).and..not.pure) then 
 c                                  meemum, vertex => during dynamic optimization
-            i = jdv(jd)
-
             do j = 1, icomp
-               scp(j) = cp2(j,i)*c2tot(i)
+               scp(j) = cp2(j,jd)*c2tot(jd)
             end do
 
          else
 
             if (pure.or.caq(jd,na1).eq.0d0) then
-c                                  pure solvent, use the y array to be safe
+c                                  pure solvent
                do i = 1, ns
                   do j = 1, icomp 
                      scp(j) = scp(j) + pa(i) * cp(j,jnd(i))

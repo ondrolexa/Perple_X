@@ -448,9 +448,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical kterat
+      logical kterat, bad
 
       integer i, ids, lds, id, kd, iter
+
+      double precision g, scp(k5), sum, smo
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -535,7 +537,39 @@ c                                 gsol1, don't call if the previous
 c                                 refinement point was the same solution.
          if (ids.ne.lds) call ingsol (ids)
 
-         call minfrc (ids,kd)
+         if (nstot(ids).gt.1) then 
+c                                  normal solution
+            call minfrc (ids,kd)
+
+         else 
+c                                  lagged speciation pure solvent
+            call gaqlgd (g,scp,sum,smo,i,bad,.false.)
+
+            if (.not.bad) then 
+c                                 save the composition
+               jphct = jphct + 1
+c                                 the solution model pointer
+               jkp(jphct) = ids
+c                                 the refinement point pointer
+               hkp(jphct) = kd
+c                                 save the normalized g
+               g2(jphct) = g/sum
+c                                 save the normalized bulk
+               cp2(1:icomp,jphct) = scp(1:icomp)/sum
+c                                 sum scp(1:icp)
+               c2tot(jphct) = sum/smo
+
+               quack(jphct) = .false.
+c                                 save the endmember fractions
+               icoz(jphct) = zcoct
+
+               zco(zcoct+1:zcoct+nstot(ids)) = 1d0
+
+               zcoct = zcoct + nstot(ids)
+
+            end if
+
+         end if
 
          lds = ids
 
@@ -880,7 +914,7 @@ c                                 the pseudocompound is a true compound
 c                                 get lagged speciation
 c                                 loaded into caq(i,1:ns+aqct)
                do k = 1, ns
-                  y(k) = pa3(i,k)
+                  pa(k) = pa3(i,k)
                end do 
 
                if (abort1) then 
@@ -895,9 +929,9 @@ c                                 pure solvent phase
 
                   do k = 1, ns
 
-                     caq(i,k) = y(k)
+                     caq(i,k) = pa(k)
 c                                 solvent molar weight
-                     msol = msol + y(k) * fwt(jnd(k))
+                     msol = msol + pa(k) * fwt(jnd(k))
 
                   end do 
 
@@ -910,7 +944,8 @@ c                                 total molality
 
                else
 c                                 impure solvent, get speciation
-                  call aqlagd (i,i,bad,.true.)
+c                                 ximp, xb, sum, and msol are dummies
+                  call gaqlgd (ximp,xb,sum,msol,i,bad,.true.)
 
                end if
 
@@ -2586,9 +2621,9 @@ c                                 get and save endmember fractions
 
             pa3(i,1:nstot(jds)) = pa(1:nstot(jds))
 c                                 get and save the composition
-c                                 nothing special needs to be done
-c                                 here for lagged speciation
-            call getscp (scp,cptot(i),jds,1,.false.)
+c                                 getscp uses the jdv pointer
+c                                 only for lagged speciation
+            call getscp (scp,cptot(i),jds,jdv(i),.false.)
 
             cp3(1:icomp,i) = scp(1:icomp)
 

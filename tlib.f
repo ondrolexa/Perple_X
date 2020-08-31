@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.0, source updated August 20, 2020.',
+     *      'Perple_X version 6.9.0, source updated August 30, 2020.',
 
      *      'Copyright (C) 1986-2020 James A D Connolly '//
      *      '<www.perplex.ethz.ch/copyright.html>.'
@@ -2929,6 +2929,8 @@ c----------------------------------------------------------------------
          write (*,61) char
       else if (ier.eq.63) then
          write (*,63)
+      else if (ier.eq.64) then
+         write (*,64) realv
       else if (ier.eq.68) then
          write (*,68)
       else if (ier.eq.72) then
@@ -3197,6 +3199,11 @@ c                                 generic warning, also 99
      *       'MatLab or PYWERAMI.',//,'program/routine: ',a,/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
+64    format (/,'**warning ver064** AQSOLV failed to converge on ionic',
+     *       ' stength, currently =',f7.1,', this',/,
+     *       'usually occurs at conditions where the HKF assumptions a',
+     *       're invalid. To force convergence',/,
+     *       'increase the speciation_max_it option value.',/)
 68    format (/,'**warning ver068** degenerate initial assemblage in ',
      *          'COFACE, this should never occur',/,'if you see this ',
      *          'message please report the problem',/)

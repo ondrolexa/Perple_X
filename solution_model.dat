@@ -797,7 +797,6 @@ OH                                  | site name
 z(O,OH)    = 1 tts
 z(OH,OH)   = 1 cumm + 1 grun + 1 ts + 1 tr + 1 parg + 1 kprg + 1 mrbG + 1 gl + 1 b + 1 a
 
-
 [Si4O22]                            | formula suffix, enter "none" for no suffix.
 
 begin_van_laar_sizes
@@ -829,7 +828,7 @@ end_flagged_endmembers
 reach_increment 0
                                     | low_reach and reach_increment conflict, set only one.
 
-use_model_resolution
+| use_model_resolution
 
 end_of_model
                       --------------------------------------------------------
@@ -1235,7 +1234,7 @@ end_flagged_endmembers
 
 | reach_increment 0
                                     | low_reach and reach_increment conflict, set only one.
-use_model_resolution
+| use_model_resolution
 
 end_of_model
                       --------------------------------------------------------
@@ -15149,9 +15148,9 @@ Sp(HGP)
 abbreviation Sp
 full_name    spinel
 
-8                           | model type: prism , order-disorder
-
-2                           | prism: two simplicies with a common vertex
+688                         | model type: prism , order-disorder
+1                           | number of prisms
+2                           | two simplicies
 2 4                         | number of cations on independent sites forming simplices:
                             | fold prism (Al - Fe3+ - Cr - Ti) + binary simplices (Mg Fe on T)
 
@@ -15162,28 +15161,25 @@ qnd   fqnd
 imgmt imt
 isp   iherc
 
-3                            | ordered species:
+X_Fe2+  0  1   .1  0        | subdivision scheme for Fe2/(Fe2+Mg)
+X_Mg    by difference
 
+Z_Cr    0  1   .1  0        | subdivision scheme for X(Cr)
+Z_MTi   0  1   .1  0        | subdivision scheme for X(Ti)
+Z_Fe3+  0  1   .1  0        | subdivision scheme for X(Fe3+)
+Z_MAl   by difference
+
+begin_ordered_endmembers
 nmt   =    1 imt           enthalpy_of_ordering  =    0     + 5.76303 * T
 nsp   =    1 isp           enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
 nherc =    1 iherc         enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
+end_ordered_endmembers 
 
-3                           | number of dependent endmembers and definitions
-
+begin_dependent_endmembers
 imgmt =  1 isp - 1 iherc  + 1 imt
 fpcr  = -1 nsp + 1 nherc  + 1 picr
 fqnd  = -1 nsp - 1 isp    + 1 nherc + 1 iherc + 1 qnd
-
-                            | see commentary in the header of this file for explanation of
-                            | endmember flags and subdivision schemes.
-
-0 0 0 0 0 0 0 0             | endmember flags
-
-0  1   .1  0                | subdivision scheme for Fe2/(Fe2+Mg)
-
-0  1   .1  0                | subdivision scheme for X(Cr)
-0  1   .1  0                | subdivision scheme for X(Ti)
-0  1   .1  0                | subdivision scheme for X(Fe3+)
+end_dependent_endmembers
 
 begin_excess_function
 W(nsp   isp)          -8.2d3
@@ -15216,21 +15212,24 @@ W(imt   qnd)           24.3d3
 W(picr  qnd)           60d3
 end_excess_function
 
-2                                   | 2 site entropy model (M , T)
+2                                    | 2 site entropy model (M , T)
+M
+4  1  1                              | 4 species on M, mult. = 1
+z(Fe,M)   = 1 nherc + 1 nmt
+z(Fe3,M)  = 1 imt
+z(Al,M)   = 1 isp + 1 iherc
+z(Mg,M)  = 1 nsp   + 1 picr + 1 qnd
 
-4 1                                 | 4 species on M, mult. = 1
-|z(m,mg)  = 1 nsp   + 1 picr + 1 qnd
-z(m,fe)   = 1 nherc + 1 nmt
-z(m,fe3)  = 1 imt
-z(m,al)   = 1 isp + 1 iherc
-
-6 1                                 | 6 species on T, effective mult. = 1
-z(mg,T)   = 1/2 isp + 1/2 qnd
-z(fe,T)   = 1/2 iherc + 1/2 imt
-| z(al,T) = 1 nsp + 1/2 isp + 1 nherc + 1/2 iherc
-z(ti,T)   = 1/2 qnd
-z(fe3,T)  = 1 nmt + 1/2 imt
+T
+6  1  2                              | 6 species on T, effective mult. = 1, true mult = 2
+z(Mg,T)   = 1/2 isp + 1/2 qnd
+z(Fe,T)   = 1/2 iherc + 1/2 imt
+z(Ti,T)   = 1/2 qnd
+z(Fe3,T)  = 1 nmt + 1/2 imt
 z(Cr,T)   = 1 picr
+z(Al,T) = 1 nsp + 1/2 isp + 1 nherc + 1/2 iherc
+
+[O4]                                 | formula suffix, enter "none" for no suffix.
 
 begin_dqf_corrections
 dqf(qnd)  = -30000
