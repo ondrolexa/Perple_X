@@ -7511,6 +7511,8 @@ c                                 configurational entropies) for entropy model:
 c                                 -------------------------------------
 c                                 organize O/D model parameters
       call setord (im)
+c                                 set derivatives
+      call setder (im)
 
       if (dnu(im).ne.0d0) then
 c                                 non-equimolar restrictions:
@@ -18912,8 +18914,7 @@ c                                 Az*p >= 0 constraints:
             do k = 1, lterm(j,i,id)
 
                m = ksub(k,j,i,id)
-
-               if (m.ne.nstot(id).or.dnu(id).ne.0d0) then 
+               if (m.ne.nstot(id).or.dnu(id).ne.0d0) then
 
                   apz(id,nz(id),m) = apz(id,nz(id),m) 
      *                               + dcoef(k,j,i,id)
@@ -19204,141 +19205,297 @@ c                                 for each term:
 
       end
 
-      subroutine p2z (y,z,ids,prnt)
+
+      subroutine setder (im)
+c---------------------------------------------------------------------
+c evaluate coefficients for diff(g,p')
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical zbad
+
+      integer im, i, j, ind, id, k, l,itic, ii, imatch, 
+     *        il, ik, kk, jp1, ntot, nvar
+
+      double precision dzt, dx, delta, c0(0:20), c1(0:20), s, dsdp(m14),
+     *                 ds0dp(m14,h9)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
+
+      integer nsub,nterm
+      double precision acoef
+      common/ cst107 /acoef(m10,m11,0:m0),
+     *                nterm(m10,m11),nsub(m10,m11,m0)
+
+      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
+      double precision wg,wk
+      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
+     *      isub(m1,m2),insp(m4),
+     *      rkord(m18),iterm,iord,istot,jstot,kstot
+
+      integer iddeps,norder,nr
+      double precision depnu,denth
+      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
+     *                nr(j3)
+
+      integer iorig,jnsp,iy2p
+      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision dzdp, dmdp
+c                                 derivative of site fraction z(m10,m11) with 
+c                                 respect to endmember pa(m14)
+c                                 derivative of site mulitplicity (m1) with
+c                                 respect to endmember pa(14)
+      common/ cdzdp /dzdp(m11,m10,m14,h9), dmdp(m19,m14,h9)
+
+c                                 endmember pointers
+      integer jend
+      common/ cxt23 /jend(h9,m14+2)
+
+      double precision cp
+      common/ cst12 /cp(k5,k10)
+
+      integer ln,lt,lid,jt,jid
+      double precision lc, l0c, jc
+      common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
+     *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
+     *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
+
+      integer spct
+      double precision ysp
+      character spnams*8
+      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
+
+      character specie*4
+      integer jsp, ins
+      common/ cxt33 /jsp,ins(nsp),specie(nsp)
+
+      character mname*8
+      common/ cst18a /mname(m4)
+
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
-c subroutine to compute site fractions computed from equations entered by
-c user for configurational entropy (macroscopic form). with range checks.
-c
-c non-temkin models:
-c     z(i,j) - molar site fraction of species j on site i.
-c temkin models:
-c     z(i,j) - molar amount of species j on site i.
+
+      ntot = nstot(im)
+      nvar = ntot - 1
+c                                 site fraction derivatives:
+c                                 for each site
+      do i = 1, msite(im)
+c                                 site fraction sum derivative (for temkin models)
+         dmdp(i,1:nvar,im) = 0d0
+c                                 for each species
+         do j = 1, zsp(im,i)
+
+            dzdp(j,i,1:nvar,im) = 0d0
+c                                 for each term:
+            do k = 1, lterm(j,i,im)
+c                                 endmember index
+               ind = ksub(k,j,i,im)
+
+               if (ind.le.nvar) then 
+c                                 coefficient of endmembers in dz/dp
+                  dzdp(j,i,ind,im) = dzdp(ind,j,i,im) + dcoef(k,j,i,im)
+               else
+c                                  the eliminated endmember contributes to 
+c                                  to all remaining endmembers
+                  do l = 1, nvar
+                     dzdp(j,i,l,im) = dzdp(j,i,l,im) 
+     *                                  - dcoef(k,j,i,im)
+                  end do
+
+               end if
+
+               do l = 1, nvar
+                  dmdp(i,l,im) = dmdp(i,l,im) + dzdp(j,i,l,im)
+               end do
+
+            end do
+
+            if (zmult(im,i).ne.0d0) then
+c                                scale the derivatives by r*multiplicity
+               dzdp(j,i,1:nvar,im) = dzdp(j,i,1:nvar,im)*zmult(im,i)
+            end if
+
+         end do
+
+      end do
+c----------------------------------------------------------------------
+c                                 endmember configurational derivatives
+      do l = 1, ntot
+         if (l.le.nvar) then
+            ds0dp(l,im) = scoef(l,im)
+         else
+            do k = 1, nvar
+               ds0dp(k,im) = ds0dp(k,im) - scoef(l,im)
+            end do
+         end if
+      end do
+
+      call p2sds (pa,s,dsdp,im)
+
+      do l = 1, nvar
+c                                 add in out endmember configurational entropy
+c                                 CHECK Sign
+         dsdp(l) = dsdp(l) + ds0dp(l,im)
+
+      end do
+c                                 at this point dsdp is really -dsdp (entropy units).
+      end
+
+      subroutine p2sds (pa,s,dsdp,ids)
+c----------------------------------------------------------------------
+c subroutine to configurational negentropy  and its derivatives with
+c respect to the endmember fractions p
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical badz, bad, prnt
+      double precision pa(*), zt, z(m11), dsdp(*), dzlnz, s, zlnz
 
-      external badz
-
-      double precision y(*), zt, z(m10,m11)
-
-      integer i,j,k,ids
+      integer i, j, k, l, ids, nvar
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
+      double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dzdp, dmdp
+c                                 derivative of site fraction z(m10,m11) with 
+c                                 respect to endmember pa(m14)
+c                                 derivative of site mulitplicity (m1) with
+c                                 respect to endmember pa(14)
+      common/ cdzdp /dzdp(m11,m10,m14,h9), dmdp(m19,m14,h9)
 c----------------------------------------------------------------------
-      bad = .false.
 c                                 for each site
+      s = 0d0
+      nvar = nstot(ids) - 1
+      dsdp(1:nvar) = 0d0
+
       do i = 1, msite(ids)
 
          zt = 0d0
+         zlnz = 0d0
 
-         if (zmult(ids,i).ne.0d0.and.ksmod(ids).ne.688) then
+         if (zmult(ids,i).ne.0d0) then
+c                                 non-temkin:
 c                                 get site fractions
             do j = 1, zsp(ids,i)
 
-               z(i,j) = dcoef(0,j,i,ids)
+               z(j) = dcoef(0,j,i,ids)
 c                                 for each term:
                do k = 1, lterm(j,i,ids)
-
-                  z(i,j) = z(i,j) +
-     *                     dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
-
+                  z(j) = z(j) + dcoef(k,j,i,ids) * pa(ksub(k,j,i,ids))
                end do
 
-               bad = badz(z(i,j))
+               zt = zt + z(j)
+               if (z(j).gt.0d0) zlnz = zlnz + z(j) * dlog(z(j))
 
-               if (bad) exit 
-
-               zt = zt + z(i,j)
+               do l = 1, nvar
+                  if (z(j).gt.0d0) then 
+                     dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
+     *                                            * (1d0 + dlog(z(j)))
+                  else 
+                     dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (-1d20)
+                  end if 
+               end do
 
             end do
 
-            if (bad) exit
+            zt = 1d0 - zt
+c                                 site negentropy
+            if (zt.gt.0d0) zlnz = zlnz + zt * dlog(zt)
 
-            z(i,j) = 1d0 - zt
+            zlnz = zmult(ids,i) * zlnz
+c                                 for non-temkin sites dzdp is already scaled by q*R
+            do l = 1, nvar
+               if (zt.gt.0d0) then 
+                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (1d0 + dlog(zt))
+               else 
+                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (-1d20)
+               end if
+            end do
 
-            bad = badz(z(i,j))
-
-         else if (zsp1(ids,i).gt.1) then
-c                                 temkin or 688 model format, all species fractions are available
-            do j = 1, zsp1(ids,i)
+         else 
+c                                 temkin
+            do j = 1, zsp(ids,i)
 c                                 molar site population
-               z(i,j) = dcoef(0,j,i,ids)
+               z(j) = dcoef(0,j,i,ids)
 c                                 for each term:
                do k = 1, lterm(j,i,ids)
-
-                  z(i,j) = z(i,j) + 
-     *                     dcoef(k,j,i,ids) * y(ksub(k,j,i,ids))
-
+                  z(j) = z(j) + dcoef(k,j,i,ids) * pa(ksub(k,j,i,ids))
                end do
-
-               if (prnt) write (*,1001) i,j,z(i,j)
-c                                 non-temkin (688)
-               if (zmult(ids,i).gt.0d0.and.badz(z(i,j))) then 
-c DEBUG691
-                     call warn (72,
-     *                       zt,i,'the expression for z('//
-     *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
-     *                       ' in '//' is incorrect.')
-
-
-               end if
-
-               zt = zt + z(i,j)
+c                                 zt is the multiplicity here
+               zt = zt + z(j)
 
             end do
+c                                 site doesn't exist if zt = 0
+            if (zt.lt.zero) cycle
+c                                 convert molar amounts to fractions
+            z(1:zsp(ids,i)) = z(1:zsp(ids,i)) / zt
 
-c           write (*,1001) i,j,1d0-zt
+            do j = 1, zsp(ids,i)
+               if (z(j).gt.0d0) zlnz = zlnz + z(j) * dlog(z(j))
+            end do
+c                                 site negentropy
+            zlnz = r * zlnz
+c                                 derivatives
+            do l = 1, nvar
 
-            if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
-c                                 non-temkin, fractions must sum to 1
-               if (dabs(zt-1d0).gt.zero) then
-
-                  write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
-
-                  call warn (72,zt,i,
-     *                       'site fractions on '//znames(ids,i,0)// 
-     *                       ' in  do not sum to 1.')
-
-               end if
-
-            else if (zt.gt.0d0) then
-c                                 temkin, if site exists, check fractions
+               dzlnz = 0d0
+c                                 for each species
                do j = 1, zsp(ids,i)
 
-                  bad = badz(z(i,j)/zt)
-
-                  if (bad) exit
+                  if (z(j).gt.0d0) then 
+                     dzlnz = dzlnz + dzdp(j,i,l,ids) 
+     *                                    * (1d0 + dlog(z(j)))
+                  else
+                     dzlnz = dzlnz + dzdp(j,i,l,ids) * (-1d20)
+                  end if
 
                end do
 
-            else if (zt.lt.-zero) then
-c                                 negative site?
-               bad = .true.
+               dsdp(l) = dsdp(l) + dmdp(i,l,ids)*zlnz + r*zt*dzlnz
 
-            end if
+            end do
 
          end if
 
-         if (bad) exit 
+         s = s + zlnz
 
       end do
-
-1000  format (/,'**error ver071** during testing of dependent endmember'
-     *       ,' ',a,' the following invalid site fraction (z = ',g12.6,
-     *        ')',/,'was found. The cause of this error may be either ',
-     *       'the dependent endmember definition or invalid site',/,
-     *       'fraction expressions for one or more of the independent ',
-     *       'endmembers of ',a,/)
-
-1001  format (i2,1x,i2,2x,g14.6)
 
       end
 

@@ -666,9 +666,9 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
-            write (*,*) 'low sum, savpa, suspect zs, ids:',ids
+            write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
 c           call errpau
-            call p2z(pa,zt,ids,.true.)
+            call p2zall (pa,zt,m10,ids)
          end if 
 
       end do 
@@ -703,7 +703,7 @@ c----------------------------------------------------------------------
       end do 
 
       if (sum.gt.1.00001d0.or.sum.lt.0.99999d0) then 
-         write (*,*) 'wyf'
+         write (*,*) 'wyf',sum
       end if
 
       call makepp (ids)

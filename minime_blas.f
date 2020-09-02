@@ -176,7 +176,7 @@ c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
          end do
 
-         call p2z (pa,zt,ids,.true.)
+         call p2zall (pa,zt,m10,ids)
 
          write (*,*) istuff(3),gfinal,kds
 
