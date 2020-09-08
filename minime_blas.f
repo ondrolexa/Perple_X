@@ -66,6 +66,8 @@ c                                 finite difference increments
 c                                 will be estimated at this 
 c                                 coordinate, so choose a feasible 
 c                                 composition
+c DEBUGXXX
+c     pa(1:ntot) = 0.25d0
       ppp(1:nvar) = pa(1:nvar)
 c                                 initialize bounds
       if (nclin.gt.0) then 
@@ -135,7 +137,7 @@ c                                 refinement point index
       else
 
          iprint = 0
-         if (tick) iprint = 10
+         if (tick.or.deriv(ids)) iprint = 10
 
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-4')
@@ -146,7 +148,16 @@ c                                 refinement point index
 
       end if
 
-      CALL E04UEF ('derivative level = 0')
+      if (deriv(ids)) then
+
+         CALL E04UEF ('verify level 1')
+         CALL E04UEF ('derivative level = 3')
+
+      else
+
+         CALL E04UEF ('derivative level = 0')
+
+      end if
 
 c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
 c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
@@ -188,7 +199,7 @@ c    *             m22,work,m23,istuff,stuff,idead,iprint)
 1010  format (i5,1x,10(g14.7,1x))
       end
 
-      subroutine gsol2 (mode,nvar,ppp,gval,ggrd,istart,istuff,stuff)
+      subroutine gsol2 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
 c-----------------------------------------------------------------------
 c function to evaluate gibbs energy of a solution for minfrc. can call 
 c either gsol1 with order true or false, true seems to give better results
@@ -200,9 +211,9 @@ c-----------------------------------------------------------------------
 
       logical bad, qwak
 
-      integer i, jds, nvar, mode, istuff(*), istart, iwarn
+      integer i, j, jds, nvar, mode, istuff(*), istart, iwarn
 
-      double precision ppp(*), gval, ggrd(*), stuff(*),
+      double precision ppp(*), gval, dgdp(*), stuff(*),
      *                 gsol1, g, sum, scp(k5), sum1, smo
 
       external gsol1
@@ -266,7 +277,21 @@ c-----------------------------------------------------------------------
 
       call makepp (jds)
 
-      if (ksmod(jds).eq.39.and.lopt(32)) then 
+      if (deriv(jds)) then
+
+         call getder (g,dgdp,jds)
+c                                 get the bulk composition from pp
+         call getscp (scp,sum,jds,jds,.false.)
+c                                 convert dgdp to dg'dp
+         do i = 1, nvar
+            do j = 1, icp
+               dgdp(i) = dgdp(i) - dcdp(j,i,jds)*mu(j)
+            end do
+         end do
+
+         qwak = .true.
+
+      else if (ksmod(jds).eq.39.and.lopt(32)) then 
 c                                 the last argument cancels recalc, in
 c                                 which case i is a dummy. smo the total
 c                                 species molality it is necessary for 
@@ -306,7 +331,7 @@ c                                 get the bulk composition from pp
          gval = gval - scp(i)*mu(i)
       end do
 c                                  normalize for appearances
-      gval = gval/sum
+c     gval = gval/sum
 
       istuff(3) = istuff(3) + 1
 
@@ -377,9 +402,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision apc, endt, endc
-      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -773,9 +795,6 @@ c DEBUG691                    dummies for NCNLN > 0
       integer nz
       double precision apz, zl, zu
       common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
-
-      double precision apc, endt, endc
-      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),

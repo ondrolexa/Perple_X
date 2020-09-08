@@ -5646,7 +5646,7 @@ c----------------------------------------------------------------------
 
       integer i,i1,i2,id
 
-      double precision gex,dgex,dsconf,tphi,dtphi
+      double precision gex,dgx,dsconf,tphi,dtphi
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -5675,8 +5675,8 @@ c                                 regular excess function
             do i = 1, jterm(id)
                i1 = jsub(1,i,id)
                i2 = jsub(2,i,id)
-               dgex = dgex + w(i)*( pa(i1)*dydy(i2,1,id)
-     *                            + pa(i2)*dydy(i1,1,id))
+               dgx = dgx + w(i)*( pa(i1)*dydy(i2,1,id)
+     *                          + pa(i2)*dydy(i1,1,id))
             end do
          else
 c                                 h&p van laar
@@ -5696,18 +5696,18 @@ c                                 assume holland powell form, all terms regular
               i2 = jsub(2,i,id)
 
               gex = gex + w(i) * pa(i1) * pa(i2)
-              dgex = dgex + w(i) * (pa(i1)*dydy(i2,1,id)
-     *                            + pa(i2)*dydy(i1,1,id))
+              dgx = dgx + w(i) * (pa(i1)*dydy(i2,1,id)
+     *                          + pa(i2)*dydy(i1,1,id))
 
             end do
 c                                note the excess energy is gex/tphi
-            dgex = (dgex - dtphi*gex/tphi)/tphi
+            dgx = (dgx - dtphi*gex/tphi)/tphi
 
          end if
 
       end if
 c                                 now get dg/dy(jd)
-      dgdp = enth(1) + dgex - v(2)*dsconf(id)
+      dgdp = enth(1) + dgx - v(2)*dsconf(id)
 
       end
 
@@ -6825,7 +6825,7 @@ c---------------------------------------------------------------------
 
       logical add, wham, zbad, bad
 
-      integer im, nloc, i, j, id, jd, k, l, m, n, ii, killct, killid(20)
+      integer im, nloc, i, j, id, jd, k, m, n, ii, killct, killid(20)
 
       double precision dinc, dx, gcpd, stinc, getstr, zsite(m10,m11)
 
@@ -6921,9 +6921,6 @@ c                                 parameters for autorefine
       common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
      *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
      *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
-
-      double precision apc, endt, endc
-      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 
       integer ifp
       logical fp
@@ -7511,8 +7508,6 @@ c                                 configurational entropies) for entropy model:
 c                                 -------------------------------------
 c                                 organize O/D model parameters
       call setord (im)
-c                                 set derivatives
-      call setder (im)
 
       if (dnu(im).ne.0d0) then
 c                                 non-equimolar restrictions:
@@ -7778,6 +7773,8 @@ c                                 y2c
       call makayc (im)
 c                                 p'2c
       call makapc (im)
+c                                 set derivatives for minfrc
+      call setder (im)
 
       end
 
@@ -17184,9 +17181,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision apc, endt, endc
-      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 c-----------------------------------------------------------------------
       xc(1:icomp) = 0d0
       ntot = 0d0
@@ -17202,6 +17196,7 @@ c-----------------------------------------------------------------------
       end do
 
       end
+
 
       subroutine getscp (scp,scptot,ids,jd,pure)
 c-----------------------------------------------------------------------
@@ -17310,14 +17305,6 @@ c                                 convert molality to mole fraction (xx)
 
          end if
 
-      else if (lorder(ids)) then
-
-         do i = 1, lstot(ids)
-            do j = 1, icomp 
-               scp(j) = scp(j) + pp(i) * cp(j,jend(ids,2+i))
-            end do 
-         end do
-
       else if (ksmod(ids).eq.20) then 
 c                                 electrolyte:
 c                                 solute species  
@@ -17338,14 +17325,15 @@ c                                 solutions with no dependent endmembers:
 c                                 pa coordinates used to compute the composition
          do i = 1, nstot(ids)
             do j = 1, icomp
-               scp(j) = scp(j) + pa(i) * cp(j,jend(ids,2+i))
+               scp(j) = scp(j) + pa(i) * endc(ids,i,j)
             end do
          end do
 
       end if
 
       scptot = 0d0
-
+c                                 note normalization is to the total amount of
+c                                 thermodynamic components.
       do i = 1, icp
 
          if (scp(i).lt.0d0.and.scp(i).gt.-zero) scp(i) = 0d0
@@ -19205,29 +19193,164 @@ c                                 for each term:
 
       end
 
-
-      subroutine setder (im)
+      subroutine setder (ids)
 c---------------------------------------------------------------------
-c evaluate coefficients for diff(g,p')
+c evaluate coefficients for diff(g,p') computed by getder as called by
+c minfrc.
 c---------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical zbad
-
-      integer im, i, j, ind, id, k, l,itic, ii, imatch, 
-     *        il, ik, kk, jp1, ntot, nvar
-
-      double precision dzt, dx, delta, c0(0:20), c1(0:20), s, dsdp(m14),
-     *                 ds0dp(m14,h9)
-
-      character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      integer ids, ind, i, j, k, l, ntot, nvar
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+c                                 configurational entropy variables:
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+c----------------------------------------------------------------------
+      if (ksmod(ids).eq.0.or.
+     *    (ksmod(ids).ge.20.and.ksmod(ids).le.50)) then 
+
+          deriv(ids) = .false.
+          write (*,*) 'no derivatives for special case: ',fname(ids)
+
+      else if (llaar(ids)) then
+
+          deriv(ids) = .false.
+          write (*,*) 'no derivatives for van laar: ',fname(ids)
+
+      else if (extyp(ids).eq.1) then 
+
+          deriv(ids) = .false.
+          write (*,*) 'no derivatives for redlich-kistler: ',fname(ids)
+
+      else if (jord(ids).gt.2) then
+
+          deriv(ids) = .false.
+          write (*,*) 'no derivatives for high order excess: ',
+     *                fname(ids)
+
+      else
+
+          deriv(ids) = .true.
+
+      end if
+
+      if (.not.deriv(ids)) return
+
+      ntot = nstot(ids)
+      nvar = ntot - 1
+c----------------------------------------------------------------------
+c                                 configurational negentropy derivatives:
+c                                 for each site
+      do i = 1, msite(ids)
+c                                 multiplicity derivatives (for temkin models)
+         dmdp(i,1:nvar,ids) = 0d0
+c                                 site fraction derivatives
+         dzdp(1:zsp1(ids,i),i,1:nvar,ids) = 0d0
+c                                 for each species
+         do j = 1, zsp(ids,i)
+c                                 for each term:
+            do k = 1, lterm(j,i,ids)
+c                                 endmember index
+               ind = ksub(k,j,i,ids)
+
+               if (ind.le.nvar) then 
+c                                 coefficient of endmembers in dz/dp
+                  dzdp(j,i,ind,ids) = dzdp(ind,j,i,ids) 
+     *                                + dcoef(k,j,i,ids)
+               else
+c                                  the eliminated endmember contributes to 
+c                                  to all remaining endmembers
+                  do l = 1, nvar
+                     dzdp(j,i,l,ids) = dzdp(j,i,l,ids) 
+     *                                 - dcoef(k,j,i,ids)
+                  end do
+
+               end if
+
+               do l = 1, nvar
+                  dmdp(i,l,ids) = dmdp(i,l,ids) + dzdp(j,i,l,ids)
+               end do
+
+            end do
+
+         end do
+c                                need dzdp for j = zsp + 1 species
+c                                this would not be necessary for
+c                                688 format if the zsp1(ids,i) 
+c                                counter were used above.
+         do l = 1, nvar
+            do k = 1, zsp(ids,i)
+               dzdp(j,i,l,ids) = dzdp(j,i,l,ids) - dzdp(k,i,l,ids) 
+            end do
+         end do
+
+         if (zmult(ids,i).ne.0d0) then
+c                                scale the derivatives by r*multiplicity
+            do j = 1, zsp(ids,i) + 1
+               dzdp(j,i,1:nvar,ids) = dzdp(j,i,1:nvar,ids)*zmult(ids,i)
+            end do
+
+         end if
+
+      end do
+c----------------------------------------------------------------------
+c                                 endmember configurational derivatives
+      do l = 1, nvar
+c                                 these are negentropy derivatives
+         ds0dp(l,ids) = scoef(l,ids) - scoef(ntot,ids)
+
+      end do
+c----------------------------------------------------------------------
+c                                 endmember configurational derivatives
+      dcdp(1:icp,1:nvar,ids) = 0d0
+c                                 solutions with no dependent endmembers:
+c                                 pa coordinates used to compute the composition
+      do i = 1, nvar
+         do j = 1, icp
+            dcdp(j,i,ids) = endc(ids,i,j) - endc(ids,ntot,j)
+         end do
+      end do
+c----------------------------------------------------------------------
+c                                 excess function derivatives
+         do i = 1, jterm(ids)
+            do j = 1, jord(ids)
+               k = jsub(j,i,ids)
+               do l = 1, nvar
+                  if (k.eq.l) then
+                     dgex(l,j,i,ids) = 1d0
+                  else if (k.eq.ntot) then
+                     dgex(l,j,i,ids) = -1d0
+                  else 
+                     dgex(l,j,i,ids) = 0d0
+                  end if
+               end do 
+            end do 
+         end do
+
+      end
+
+      subroutine getder (g,dgdp,ids)
+c---------------------------------------------------------------------
+c compute g(p') and diff(g,p') for minfrc.
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ids, l, ntot, nvar
+
+      double precision g, dgdp(*)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19235,142 +19358,125 @@ c---------------------------------------------------------------------
 
       double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
+c----------------------------------------------------------------------
+      ntot = nstot(ids)
+      nvar = ntot - 1
 
-      integer nsub,nterm
-      double precision acoef
-      common/ cst107 /acoef(m10,m11,0:m0),
-     *                nterm(m10,m11),nsub(m10,m11,m0)
+      g = 0d0
+      dgdp(1:nvar) = 0d0
+c                                 configurational negentropy and derivatives
+      call p2sds (g,dgdp,nvar,ids)
+c                                 correct derivatives for mechanical configurational 
+c                                 negentropy, multiply by t to convert to configurational
+c                                 gibbs energy
+      do l = 1, ntot
+         g = g + pa(l)*scoef(l,ids)
+         if (l.gt.nvar) exit
+         dgdp(l) = t*(dgdp(l) + ds0dp(l,ids))
+      end do
+c                                 at this point dsdp is really -dsdp (entropy units).
+      g = t*g
+c                                 add excess gibbs energy and derivatives
+      call p2gdg (g,dgdp,nvar,ids)
+c                                 add mechanical mix and derivatives
+      do l = 1, ntot
+         g = g + pa(l) * gend(l)
+         if (l.gt.nvar) exit
+         dgdp(l) = dgdp(l) + gend(l) - gend(ntot)
+      end do
 
-      integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
-      double precision wg,wk
-      common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
-     *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+      end
 
-      integer iddeps,norder,nr
-      double precision depnu,denth
-      common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
-     *                nr(j3)
 
-      integer iorig,jnsp,iy2p
-      common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
+      subroutine ingend (id)
+c-----------------------------------------------------------------------
+c make a generic endmember g0 array for solution id, used only by gsol2
+c for minfrc
+c-----------------------------------------------------------------------
+      implicit none
 
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+      include 'perplex_parameters.h'
 
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+      integer id,i,k,l,ind
 
-      double precision dzdp, dmdp
-c                                 derivative of site fraction z(m10,m11) with 
-c                                 respect to endmember pa(m14)
-c                                 derivative of site mulitplicity (m1) with
-c                                 respect to endmember pa(14)
-      common/ cdzdp /dzdp(m11,m10,m14,h9), dmdp(m19,m14,h9)
-
-c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m14+2)
 
-      double precision cp
-      common/ cst12 /cp(k5,k10)
+      double precision g
+      common/ cst2 /g(k1)
 
-      integer ln,lt,lid,jt,jid
-      double precision lc, l0c, jc
-      common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
-     *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
-     *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
-
-      integer spct
-      double precision ysp
-      character spnams*8
-      common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
-
-      character specie*4
-      integer jsp, ins
-      common/ cxt33 /jsp,ins(nsp),specie(nsp)
-
-      character mname*8
-      common/ cst18a /mname(m4)
-
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
-     *               jsub(m2,m1,h9)
+      double precision enth
+      common/ cxt35 /enth(j3)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
+      do i = 1, lstot(id)
+c DEBUGXXX
+c        g(jend(id,2+i)) = 0d0
+         gend(i) = g(jend(id,2+i))
+      end do
 
-      ntot = nstot(im)
-      nvar = ntot - 1
-c                                 site fraction derivatives:
-c                                 for each site
-      do i = 1, msite(im)
-c                                 site fraction sum derivative (for temkin models)
-         dmdp(i,1:nvar,im) = 0d0
-c                                 for each species
-         do j = 1, zsp(im,i)
+      do k = 1, nord(id)
 
-            dzdp(j,i,1:nvar,im) = 0d0
-c                                 for each term:
-            do k = 1, lterm(j,i,im)
-c                                 endmember index
-               ind = ksub(k,j,i,im)
+         i = lstot(id) + k
 
-               if (ind.le.nvar) then 
-c                                 coefficient of endmembers in dz/dp
-                  dzdp(j,i,ind,im) = dzdp(ind,j,i,im) + dcoef(k,j,i,im)
-               else
-c                                  the eliminated endmember contributes to 
-c                                  to all remaining endmembers
-                  do l = 1, nvar
-                     dzdp(j,i,l,im) = dzdp(j,i,l,im) 
-     *                                  - dcoef(k,j,i,im)
-                  end do
+         gend(i) = enth(k)
 
-               end if
+         do l = 1, nrct(k,id)
 
-               do l = 1, nvar
-                  dmdp(i,l,im) = dmdp(i,l,im) + dzdp(j,i,l,im)
-               end do
+            ind = ideps(l,k,id)
 
-            end do
-
-            if (zmult(im,i).ne.0d0) then
-c                                scale the derivatives by r*multiplicity
-               dzdp(j,i,1:nvar,im) = dzdp(j,i,1:nvar,im)*zmult(im,i)
-            end if
+            gend(i) = gend(i) + dydy(ind,k,id) * gend(ind)
 
          end do
 
       end do
-c----------------------------------------------------------------------
-c                                 endmember configurational derivatives
-      do l = 1, ntot
-         if (l.le.nvar) then
-            ds0dp(l,im) = scoef(l,im)
-         else
-            do k = 1, nvar
-               ds0dp(k,im) = ds0dp(k,im) - scoef(l,im)
-            end do
-         end if
-      end do
 
-      call p2sds (pa,s,dsdp,im)
-
-      do l = 1, nvar
-c                                 add in out endmember configurational entropy
-c                                 CHECK Sign
-         dsdp(l) = dsdp(l) + ds0dp(l,im)
-
-      end do
-c                                 at this point dsdp is really -dsdp (entropy units).
       end
 
-      subroutine p2sds (pa,s,dsdp,ids)
+      subroutine p2gdg (g,dgdp,nvar,ids)
+c----------------------------------------------------------------------
+c subroutine to compute the excess energy and its derivatives with
+c respect to the p' endmember fractions
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision dgdp(*), g
+
+      integer i, l, nvar, ids
+
+      double precision z, pa, p0a, x, w, yy, wl, pp
+      common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+c                                 local alpha
+      double precision alpha,dt
+      common/ cyt0  /alpha(m4),dt(j3)
+c----------------------------------------------------------------------
+
+         do i = 1, jterm(ids)
+
+            g = g + w(i) * pa(jsub(1,i,ids)) * pa(jsub(2,i,ids)) 
+
+            do l = 1, nvar
+
+               dgdp(l) = dgdp(l) + w(i) * ( 
+     *                             pa(jsub(1,i,ids)) * dgex(l,2,i,ids)
+     *                           + pa(jsub(2,i,ids)) * dgex(l,1,i,ids))
+
+            end do
+
+         end do
+
+      end
+
+      subroutine p2sds (s,dsdp,nvar,ids)
 c----------------------------------------------------------------------
 c subroutine to configurational negentropy  and its derivatives with
 c respect to the endmember fractions p
@@ -19379,7 +19485,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision pa(*), zt, z(m11), dsdp(*), dzlnz, s, zlnz
+      double precision zt, z(m11), dsdp(*), dzlnz, s, zlnz
 
       integer i, j, k, l, ids, nvar
 
@@ -19389,21 +19495,14 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
 
+      double precision zz, pa, p0a, x, w, yy, wl, pp
+      common/ cxt7 /yy(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dzdp, dmdp
-c                                 derivative of site fraction z(m10,m11) with 
-c                                 respect to endmember pa(m14)
-c                                 derivative of site mulitplicity (m1) with
-c                                 respect to endmember pa(14)
-      common/ cdzdp /dzdp(m11,m10,m14,h9), dmdp(m19,m14,h9)
 c----------------------------------------------------------------------
 c                                 for each site
-      s = 0d0
-      nvar = nstot(ids) - 1
-      dsdp(1:nvar) = 0d0
-
       do i = 1, msite(ids)
 
          zt = 0d0
@@ -19428,7 +19527,8 @@ c                                 for each term:
                      dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
      *                                            * (1d0 + dlog(z(j)))
                   else 
-                     dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (-1d20)
+                     dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
+     *                                            * (1d0 + dlog(zero))
                   end if 
                end do
 
@@ -19444,7 +19544,8 @@ c                                 for non-temkin sites dzdp is already scaled by
                if (zt.gt.0d0) then 
                   dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (1d0 + dlog(zt))
                else 
-                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (-1d20)
+                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
+     *                                              * (1d0 + dlog(zero))
                end if
             end do
 
@@ -19482,7 +19583,8 @@ c                                 for each species
                      dzlnz = dzlnz + dzdp(j,i,l,ids) 
      *                                    * (1d0 + dlog(z(j)))
                   else
-                     dzlnz = dzlnz + dzdp(j,i,l,ids) * (-1d20)
+                     dzlnz = dzlnz + dzdp(j,i,l,ids) 
+     *                                    * (1d0 + dlog(zero))
                   end if
 
                end do
@@ -19598,9 +19700,6 @@ c----------------------------------------------------------------------
       double precision depnu,denth
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
-
-      double precision apc, endt, endc
-      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 c----------------------------------------------------------------------
       ayc(id,:,:) = 0d0
 c                                 independent endmembers:
@@ -19646,9 +19745,6 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      double precision apc, endt, endc
-      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 c----------------------------------------------------------------------
 
       do j = 1, nstot(id)

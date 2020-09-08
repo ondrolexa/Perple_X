@@ -317,24 +317,22 @@ c pvptr(ii, 1:2) - beginning and ending indexes of polytope ii
       common/ cxt25 /lstot(h9),mstot(h9),nstot(h9),ndep(h9),nord(h9)
 c                                 -------------------------------
 c                                 model type
-      logical lorder, lexces, llaar, lrecip, specil, simple
+      logical lorder, lexces, llaar, lrecip, specil, simple, deriv
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9),
-     *               specil(h9),simple(h9)
+     *               specil(h9),simple(h9),deriv(h9)
 
-      logical stable,limit,noder,lorch
+      logical stable, limit, noder, lorch
       integer badinv
-      double precision xlo,xhi
-      common/ cxt11 /xlo(m4,mst,h4,h9),xhi(m4,mst,h4,h9),
-     *   badinv(h9,2),stable(h9),limit(h9),noder(h9),lorch(h9)
+      double precision xlo, xhi
+      common / cxt11 / xlo(m4, mst, h4, h9), xhi(m4, mst, h4, h9),
+     *       badinv(h9, 2), stable(h9), limit(h9), noder(h9), lorch(h9)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)
-      save / cxt24 /
 c                                polytope composition variable names are in poname(id,ii,j,k)
 c                                polytope names are in poname(id,ipoly+1,1,1..ipoly)
       character poname*10
       common/ cxt47 /poname(h0,h4,mst,msp)
-
 c                                site species names are in znames(id,1:nsite,1:nsp), id = h0 on input
 c                                site names are in znames(id,1:nsite, 0)
       character znames*3
@@ -430,10 +428,23 @@ c                                 local solution model variables:
       logical restrt, dead
       integer ophct
       common/ lop28 /ophct,restrt,dead
-      save / lop28 /
 
       double precision pa3
       common/ cstpa3 /pa3(k5,m14)
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+
+      double precision dzdp, dmdp, ds0dp, dgex, dcdp, gend
+c                                 derivatives with respect to the p' th endmember fraction:
+c                                 derivative of site fraction (endmember, species, site, model)
+c                                 derivative of site mulitplicity (site,endmember,model) 
+c                                 derivative of the mechanical negentropy (endmember,model)
+c                                 derivative of the excess function (endmember,factor,term,model)
+c                                 derivative of the bulk composition (component,endmember,model)
+      common/ cdzdp /dzdp(m11,m10,m14,h9), dmdp(m19,m14,h9),
+     *               ds0dp(m14,h9), dgex(m14,m2,m1,h9), 
+     *               dcdp(k5,m14,h9), gend(m14)
+
+      double precision apc, endt, endc
+      common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)

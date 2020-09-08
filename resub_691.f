@@ -535,7 +535,10 @@ c                                 solution refinement point:
 c                                 set solution model parameters for
 c                                 gsol1, don't call if the previous
 c                                 refinement point was the same solution.
-         if (ids.ne.lds) call ingsol (ids)
+         if (ids.ne.lds) then
+            call ingsol (ids)
+            if (deriv(ids)) call ingend (ids)
+         end if
 
          if (nstot(ids).gt.1) then 
 c                                  normal solution
