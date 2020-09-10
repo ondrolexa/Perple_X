@@ -5634,159 +5634,6 @@ c                                 are allocated independent of ifct!
 
       end
 
-      double precision function dgdp (id)
-c----------------------------------------------------------------------
-c subroutine to compute the G derivative of solution id with respect to
-c the concentration of the 1st ordered species. assumes the excess function
-c is not higher than second order.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,i1,i2,id
-
-      double precision gex,dgx,dsconf,tphi,dtphi
-
-      double precision enth
-      common/ cxt35 /enth(j3)
-
-      double precision r,v,tr,pr,ps
-      common/ cst5   /v(l2),tr,pr,r,ps
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      double precision alpha,dt
-      common/ cyt0  /alpha(m4),dt(j3)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
-     *               jsub(m2,m1,h9)
-c----------------------------------------------------------------------
-c                                 get derivative of excess function
-      dgex = 0d0
-
-      if (lexces(id)) then
-
-         if (.not.llaar(id)) then
-c                                 regular excess function
-            do i = 1, jterm(id)
-               i1 = jsub(1,i,id)
-               i2 = jsub(2,i,id)
-               dgx = dgx + w(i)*( pa(i1)*dydy(i2,1,id)
-     *                          + pa(i2)*dydy(i1,1,id))
-            end do
-         else
-c                                 h&p van laar
-            tphi = 0d0
-            dtphi = 0d0
-
-            do i = 1, nstot(id)
-               tphi = tphi + alpha(i)* pa(i)
-               dtphi = dtphi + alpha(i)*dydy(i,1,id)
-            end do
-
-            gex = 0d0
-
-            do i = 1, jterm(id)
-c                                 assume holland powell form, all terms regular
-              i1 = jsub(1,i,id)
-              i2 = jsub(2,i,id)
-
-              gex = gex + w(i) * pa(i1) * pa(i2)
-              dgx = dgx + w(i) * (pa(i1)*dydy(i2,1,id)
-     *                          + pa(i2)*dydy(i1,1,id))
-
-            end do
-c                                note the excess energy is gex/tphi
-            dgx = (dgx - dtphi*gex/tphi)/tphi
-
-         end if
-
-      end if
-c                                 now get dg/dy(jd)
-      dgdp = enth(1) + dgx - v(2)*dsconf(id)
-
-      end
-
-      double precision function dsconf (id)
-c----------------------------------------------------------------------
-c subroutine to the derivative of the configurational entropy of a
-c solution with respect to the proportion of a dependent species.
-
-c THIS DOES NOT INCLUDE ENDMEMBER CONFIGURATION ENTROPY DERIVATIVES!
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,k,id
-
-      double precision dlnz,dscon,zt,q,dzdy,z,dd
-c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c                                 configurational entropy variables:
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-c----------------------------------------------------------------------
-      dscon = 0d0
-c                                 for each site
-      do i = 1, msite(id)
-
-         zt = 0d0
-         dd = 0d0
-         q = zmult(id,i)
-c                                 get site fractions
-         do j = 1, zsp(id,i)
-
-            z = dcoef(0,j,i,id)
-c                                 for each term:
-            do k = 1, lterm(j,i,id)
-               z = z + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-            end do
-
-            zt = zt + z
-c                                 sdzdp is (dz(i,j)/dp(k))
-            dzdy = sdzdp(1,j,i,id)
-
-            if (dzdy.eq.0d0) cycle
-
-            if (z.gt.0d0) then
-               dlnz = 1d0 + dlog(z)
-            else
-c                                 the term should goto -Inf
-               dlnz = 1d0
-            end if
-
-            dscon = dscon - q * dzdy * dlnz
-
-            dd = dd + dzdy
-
-         end do
-
-         z = 1d0 - zt
-
-         if (z.gt.0d0) then
-            dlnz = 1d0 + dlog(z)
-         else
-            dlnz = 1d0
-         end if
-
-         dscon = dscon - q * sdzdp(1,j,i,id) * dlnz
-
-      end do
-
-      dsconf = dscon
-
-      end
-
       double precision function gsol1 (id,order)
 c-----------------------------------------------------------------------
 c gsol1 computes the complete gibbs energy of a solution identified by 
@@ -15189,8 +15036,9 @@ c                                 h&p van laar
      *                                         + 2d0*dp(i1)*dp(i2) )
          end do
 
-         d2g = (d2g + (2d0*g*dt**2/t - (2d0*dg*dt + g*d2t))/t)/t
-         dg =  dg - g*dt/t
+         g = g/t
+         dg =  dg - g*dt
+         d2g = (d2g - 2d0*dt/t*dg - g*d2t)/t
 
       else
 
@@ -19223,11 +19071,6 @@ c----------------------------------------------------------------------
           deriv(ids) = .false.
           write (*,*) 'no derivatives for special case: ',fname(ids)
 
-      else if (llaar(ids)) then
-
-          deriv(ids) = .false.
-          write (*,*) 'no derivatives for van laar: ',fname(ids)
-
       else if (extyp(ids).eq.1) then 
 
           deriv(ids) = .false.
@@ -19266,7 +19109,7 @@ c                                 endmember index
 
                if (ind.le.nvar) then 
 c                                 coefficient of endmembers in dz/dp
-                  dzdp(j,i,ind,ids) = dzdp(ind,j,i,ids) 
+                  dzdp(j,i,ind,ids) = dzdp(j,i,ind,ids) 
      *                                + dcoef(k,j,i,ids)
                else
 c                                  the eliminated endmember contributes to 
@@ -19377,7 +19220,7 @@ c                                 gibbs energy
 c                                 at this point dsdp is really -dsdp (entropy units).
       g = t*g
 c                                 add excess gibbs energy and derivatives
-      call p2gdg (g,dgdp,nvar,ids)
+      call p2gdg (g,dgdp,nvar,ntot,ids)
 c                                 add mechanical mix and derivatives
       do l = 1, ntot
          g = g + pa(l) * gend(l)
@@ -19387,11 +19230,10 @@ c                                 add mechanical mix and derivatives
 
       end
 
-
       subroutine ingend (id)
 c-----------------------------------------------------------------------
-c make a generic endmember g0 array for solution id, used only by gsol2
-c for minfrc
+c make a generic endmember g0' array for solution id, used only by gsol2
+c for minfrc. g0' = g0(p,t) + dqf(p,t)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -19408,15 +19250,22 @@ c-----------------------------------------------------------------------
       double precision enth
       common/ cxt35 /enth(j3)
 
+      integer jndq, jdqf, iq
+      double precision dqfg, dq
+      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
+
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
       do i = 1, lstot(id)
-c DEBUGXXX
-c        g(jend(id,2+i)) = 0d0
          gend(i) = g(jend(id,2+i))
       end do
-
+c                                 add in the dqf's, these can only
+c                                 be for the first lstot endmembers:
+      do i = 1, jdqf(id)
+         gend(iq(i)) = gend(iq(i)) + dq(i)
+      end do
+c                                 make the ordered endmembers:
       do k = 1, nord(id)
 
          i = lstot(id) + k
@@ -19435,7 +19284,7 @@ c        g(jend(id,2+i)) = 0d0
 
       end
 
-      subroutine p2gdg (g,dgdp,nvar,ids)
+      subroutine p2gdg (g,dgdp,nvar,ntot,ids)
 c----------------------------------------------------------------------
 c subroutine to compute the excess energy and its derivatives with
 c respect to the p' endmember fractions
@@ -19444,9 +19293,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision dgdp(*), g
+      double precision dgdp(*), g, t
 
-      integer i, l, nvar, ids
+      integer i, l, nvar, ntot, ids
 
       double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19459,20 +19308,39 @@ c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 c----------------------------------------------------------------------
+      do i = 1, jterm(ids)
 
-         do i = 1, jterm(ids)
+         g = g + w(i) * pa(jsub(1,i,ids)) * pa(jsub(2,i,ids)) 
 
-            g = g + w(i) * pa(jsub(1,i,ids)) * pa(jsub(2,i,ids)) 
+         do l = 1, nvar
 
-            do l = 1, nvar
-
-               dgdp(l) = dgdp(l) + w(i) * ( 
-     *                             pa(jsub(1,i,ids)) * dgex(l,2,i,ids)
-     *                           + pa(jsub(2,i,ids)) * dgex(l,1,i,ids))
-
-            end do
+            dgdp(l) = dgdp(l) + w(i) * ( 
+     *                          pa(jsub(1,i,ids)) * dgex(l,2,i,ids)
+     *                        + pa(jsub(2,i,ids)) * dgex(l,1,i,ids))
 
          end do
+
+      end do
+
+      if (llaar(ids)) then
+
+         t = 0d0 
+
+         do i = 1, ntot
+
+            t = t + alpha(i)*pa(i)
+
+         end do
+
+         g = g / t
+
+         do i = 1, nvar
+
+            dgdp(i) = (dgdp(i) - g * (alpha(i)-alpha(ntot))) / t
+
+         end do
+
+      end if
 
       end
 

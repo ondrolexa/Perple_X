@@ -5346,7 +5346,7 @@ c----------------------------------------------------------------------
 
       integer i,i1,i2,id
 
-      double precision gex,dgex,dsconf,tphi,dtphi
+      double precision gex,dgx,dsconf,tphi,dtphi
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -5366,7 +5366,7 @@ c                                 excess energy variables
      *               jsub(m2,m1,h9)
 c----------------------------------------------------------------------
 c                                 get derivative of excess function
-      dgex = 0d0
+      dgx = 0d0
 
       if (lexces(id)) then
 
@@ -5375,8 +5375,8 @@ c                                 regular excess function
             do i = 1, jterm(id)
                i1 = jsub(1,i,id)
                i2 = jsub(2,i,id)
-               dgex = dgex + w(i)*( pa(i1)*dydy(i2,1,id)
-     *                            + pa(i2)*dydy(i1,1,id))
+               dgx = dgx + w(i)*( pa(i1)*dydy(i2,1,id)
+     *                          + pa(i2)*dydy(i1,1,id))
             end do
          else
 c                                 h&p van laar
@@ -5396,18 +5396,18 @@ c                                 assume holland powell form, all terms regular
               i2 = jsub(2,i,id)
 
               gex = gex + w(i) * y(i1) * y(i2)
-              dgex = dgex + w(i) * (y(i1)*dydy(i2,1,id)
-     *                            + y(i2)*dydy(i1,1,id))
+              dgx = dgx + w(i) * (y(i1)*dydy(i2,1,id)
+     *                          + y(i2)*dydy(i1,1,id))
 
             end do
 c                                note the excess energy is gex/tphi
-            dgex = (dgex - dtphi*gex/tphi)/tphi
+            dgx = (dgx - dtphi*gex/tphi)/tphi
 
          end if
 
       end if
 c                                 now get dg/dy(jd)
-      dgdp = enth(1) + dgex - v(2)*dsconf(id)
+      dgdp = enth(1) + dgx - v(2)*dsconf(id)
 
       end
 
@@ -6099,7 +6099,7 @@ c                                 model:
 
       end
 
-      subroutine gdqf (id,g,y)
+      subroutine gdqf (id,g,pp)
 c----------------------------------------------------------------------
 c subroutine to evaluate the excess G of solution id with macroscopic
 c composition y. assumes a previous call to setdqf. When setdqf is
@@ -6111,17 +6111,15 @@ c-----------------------------------------------------------------------
 
       integer i, id
 c                                 working arrays
-      double precision g, y(m4)
+      double precision g, pp(*)
 c                                 dqf corrections
       integer jndq, jdqf, iq
-
       double precision dqfg, dq
-
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 c----------------------------------------------------------------------
       do i = 1, jdqf(id)
 
-         g = g + y(iq(i))*dq(i)
+         g = g + pp(iq(i))*dq(i)
 
       end do
 
@@ -15063,8 +15061,11 @@ c                                 h&p van laar
      *                                         + 2d0*dp(i1)*dp(i2) )
          end do
 
-         d2g = (d2g + (2d0*g*dt**2/t - (2d0*dg*dt + g*d2t))/t)/t
-         dg =  dg - g*dt/t
+c        d2g = (d2g + (2d0*g*dt**2/t - (2d0*dg*dt + g*d2t))/t)/t
+c        dg =  dg - g*dt/t
+         g = g/t
+         dg =  dg - g*dt
+         d2g = (d2g - 2d0*dt/t*dg - g*d2t)/t
 
       else
 

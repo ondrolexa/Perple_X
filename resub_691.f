@@ -2382,7 +2382,7 @@ c                                 undersaturated solute component
             if (.not.mus) call muwarn (quit,iter)
 c                                 don't set idead if iopt =1, this
 c                                 allows output of the result.
-            if (iopt(22).ne.1.and.iopt(22).ne.99) then 
+            if (lopt(32).and.iopt(22).ne.1.and.iopt(22).ne.99) then 
                idead = 101
             else 
                call lpwarn (101,'YCLOS2')

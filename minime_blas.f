@@ -31,7 +31,7 @@ c DEBUG691
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),yt(m14),zp,zt(m10,m11),
+     *                 ,c(1),cjac(1,1),yt(m4),zp,zt(m10,m11),
      *                 ftol,fdint
 
       character ctol*20,cdint*20
@@ -46,6 +46,9 @@ c DEBUG691                    dummies for NCNLN > 0
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
@@ -54,6 +57,20 @@ c DEBUG691                    dummies for NCNLN > 0
 
       save iprint,inp
 c-----------------------------------------------------------------------
+      zp = 0d0
+      ftol = 1d-1
+
+      do i = 1, nstot(ids)
+         if (pa(i).eq.0d0) then 
+            pa(i) = ftol
+         end if
+         zp = zp + pa(i)
+      end do
+
+      pa(1:nstot(ids)) = pa(1:nstot(ids)) / zp
+
+      yt = pa
+
 10    nclin = nz(ids)
       ntot = nstot(ids)
 
@@ -130,9 +147,10 @@ c                                 refinement point index
          read (*,*) ftol, fdint
          write (ctol,'(g14.7)') ftol
          write (cdint,'(g14.7)') fdint
-
          CALL E04UEF ('optimality tolerance = '//ctol)
          CALL E04UEF ('difference interval = '//cdint)
+         write (ctol,'(i4)') iprint
+         CALL E04UEF ('print level = '//ctol)
 
       else
 
@@ -141,8 +159,7 @@ c                                 refinement point index
 
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-4')
-         CALL E04UEF ('difference interval = 1d-3')
-         CALL E04UEF ('difference interval = 1d-3')
+c        CALL E04UEF ('difference interval = 1d-3')
          write (ctol,'(i4)') iprint
          CALL E04UEF ('print level = '//ctol)
 
@@ -155,6 +172,7 @@ c                                 refinement point index
 
       else
 
+         CALL E04UEF ('verify level 0')
          CALL E04UEF ('derivative level = 0')
 
       end if
@@ -169,25 +187,9 @@ c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
       if (inp) then 
 
-         zp = 0d0
-         do i = 1, nstot(ids)
-            zp = zp + ppp(i)
-         end do
+         deriv(ids) = .false.
 
-         write (*,1000) 'pas',pa(1:3)
-         write (*,1000) 'p0as',p0a(1:3)
-
-         do i = 1, nclin
-            zp = 0d0 
-            do j = 1, nvar
-               zp = zp + lapz(i,j) * ppp(j)
-            end do
-
-            write (*,1010) i, bl(i),zp,bu(i)
-
-         end do
-
-         call p2zall (pa,zt,m10,ids)
+         pa = yt
 
          write (*,*) istuff(3),gfinal,kds
 
