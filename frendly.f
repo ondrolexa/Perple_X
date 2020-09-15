@@ -1996,6 +1996,8 @@ c                               initialization for k10 endnmembers
       end if
 c                               jj is the pointer to the reaction props
       jj = isct+1
+c                               initialize fluid counter outside loop, 9/18/20
+      ifct = 0 
 c                               get composition vectors for entities
 c                               defined by a make definition:
       do i = 1, isct
@@ -2073,8 +2075,6 @@ c                                 set special flag if O2
          end if
  
          if (lopt(7)) then 
-
-            ifct = 0 
 
             do k = 1, ispec
                if (exname(1).ne.cmpnt(idspe(k))) cycle 

@@ -961,7 +961,7 @@ full_name    clinoamphibole
  
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-GlRb-Amph  0   .1   .25  0          | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
+GlRb-Amph  0   .15   .25  0          | X([ ][M][Fe3,Al][N]), Mg-Fe-Al-Fe3+ "glaucophane"
 ACMT-Amph  by difference           | X([A][M][M,T,MT][M,C]), K-Na-Mg-Fe-Al-Ti-Fe3+ 
 
                                    | -------------------------------------------
@@ -1039,8 +1039,8 @@ X_M_M2    0   1   .25  0            | X(2,1) = M/[Ca + M] on M4
 X_C_M2   by difference
 
                                    | Third simplex 
-X_AlTs   0   .5   .25  0            | X(3,1) = X(Al-Ts)
-X_NaPg   0   .5   .25  0            | X(3,2) = X(Na-Al-Parg)
+X_AlTs   0   .4   .25  0            | X(3,1) = X(Al-Ts)
+X_NaPg   0   .7   .25  0            | X(3,2) = X(Na-Al-Parg)
 
                                    | 0   .45  .1  0                     | X(3,3) = X(Na-Fe3+-Parg)
                                    | 0   .3   .1  0                     | X(3,4) = X(Na-Ti-Parg)
@@ -1050,8 +1050,8 @@ X_KPg    0   .1   .25  0             | X(3,5) = X(K-Al-Parg)
                                    | 0   .1   .1  0                     | X(3,6) = X(K-Fe3+-Parg)
                                    | 0   .1   .1  0                     | X(3,7) = X(K-Ti-Parg)
                                    
-X_TiTs   0   .25   .25  0            | X(3,8) = X(Ti-Ts)
-X_FeTs   0   .25   .25  0            | X(3,9) = X(Fe3-Ts)
+X_TiTs   0   .2   .25  0            | X(3,8) = X(Ti-Ts)
+X_FeTs   0   .4   .25  0            | X(3,9) = X(Fe3-Ts)
 X_MCamph by difference
 
 
@@ -2011,7 +2011,7 @@ full_name    clinopyroxene
 
 2                                 | number of polytopes
                                   | polytope names and composite composition space subdivision schemes 
-[T][N,C] 0    .25  .1  0
+[T][N,C] 0    .2  .1  0
 TM+MC    by difference            | = [M,T][M,C]
 
                                   | -------------------------------------------
@@ -2035,12 +2035,12 @@ mats_d  fats_d
 cenjh   cfsg
 di      hed_d
                                   | Simplex 1
-X_Mg     .1  .8   .1  0           | X(1,1) => bulk Mg/M
+X_Mg     .0  .7  .1  0           | X(1,1) => bulk Mg/M
 X_Fe     by difference
                                   | Simplex 2
 X_MFeTs  0  .2  .1  0             | X(2,1) - M-Fe3+
 X_MAlTs  0  .1  .1  0             | X(2,2) - M-Ts
-X_MMPx   0  .2  .1  0             | X(2,3) - M-M
+X_MMPx   0  .25  .1  0             | X(2,3) - M-M
 X-MCPx   by difference 
 
 begin_ordered_endmembers
@@ -3970,7 +3970,7 @@ full_name    orthopyroxene
 
 2                                  | number of polytopes
                                    | polytope names and composite composition space subdivision schemes 
-[Mn][Mn]   0   .5   .1   0
+[Mn][Mn]   0   .7   .1   0
 [M,T][M,C] by difference  
                                    | ----------------------------
                                    | Polytope 1 
@@ -3992,7 +3992,7 @@ X_Mg    0  .8  .1  0              | X(1,1) => bulk Mg/M
 X_Fe    by difference
                                   | Simplex 2
 X_FeTs  0  .1  .1  0              | X(2,1) - M-Fe3+
-X_CaPx  0  .1  .1  0              | X(2,2) - M-Ca
+X_CaPx  0  .2  .1  0              | X(2,2) - M-Ca
 X_AlTs  0  .1  .1  0              | X(2,3) - M-Ts
 X_MPx   by difference 
 

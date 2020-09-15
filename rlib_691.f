@@ -2154,15 +2154,12 @@ c           write (*,*) 'reach_increment obsolete, 6.9.1+ '//tname
 
          else if (key.eq.'low_reach') then
 
-            write (*,*) 'low_reach obsolete, 6.9.1+ '//tname
-            lres = .true.
-            write (*,*) 'set low res for '//tname
+c           write (*,*) 'low_reach obsolete, 6.9.1+ '//tname
 
          else if (key.eq.'use_model_resolution') then
 
-            write (*,*) 'low_reach obsolete, 6.9.1+ '//tname
             lres = .true.
-            write (*,*) 'set low res for '//tname
+c           write (*,*) 'set low res for '//tname
 
          else if (key.eq.'reject_bad_composition') then
 
@@ -19082,6 +19079,12 @@ c----------------------------------------------------------------------
           write (*,*) 'no derivatives for high order excess: ',
      *                fname(ids)
 
+      else if (dnu(ids).ne.0d0) then
+
+          deriv(ids) = .false.
+          write (*,*) 'no derivatives for non-equimolar ordering: ',
+     *                fname(ids)
+
       else
 
           deriv(ids) = .true.
@@ -19193,7 +19196,7 @@ c---------------------------------------------------------------------
 
       integer ids, l, ntot, nvar
 
-      double precision g, dgdp(*)
+      double precision g, dgdp(*), gx, dgxdp(m14)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19217,15 +19220,17 @@ c                                 gibbs energy
          if (l.gt.nvar) exit
          dgdp(l) = t*(dgdp(l) + ds0dp(l,ids))
       end do
+c                                 compute excess gibbs energy and it's
+c                                 derivatives are added to dgdp
+      call p2gdg (gx,dgxdp,nvar,ntot,ids)
 c                                 at this point dsdp is really -dsdp (entropy units).
-      g = t*g
-c                                 add excess gibbs energy and derivatives
-      call p2gdg (g,dgdp,nvar,ntot,ids)
+c                                 add in excess as well
+      g = t*g + gx
 c                                 add mechanical mix and derivatives
       do l = 1, ntot
          g = g + pa(l) * gend(l)
          if (l.gt.nvar) exit
-         dgdp(l) = dgdp(l) + gend(l) - gend(ntot)
+         dgdp(l) = dgdp(l) + dgxdp(l) + gend(l) - gend(ntot)
       end do
 
       end
@@ -19276,7 +19281,7 @@ c                                 make the ordered endmembers:
 
             ind = ideps(l,k,id)
 
-            gend(i) = gend(i) + dydy(ind,k,id) * gend(ind)
+            gend(i) = gend(i) - dydy(ind,k,id) * gend(ind)
 
          end do
 
@@ -19308,6 +19313,9 @@ c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
 c----------------------------------------------------------------------
+      g = 0d0
+      dgdp(1:nvar) = 0d0
+
       do i = 1, jterm(ids)
 
          g = g + w(i) * pa(jsub(1,i,ids)) * pa(jsub(2,i,ids)) 

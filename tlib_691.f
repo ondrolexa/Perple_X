@@ -31,10 +31,10 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *      'Perple_X version 6.9.1, source updated August 30, 2020.',
+     *     'Perple_X version 6.9.1, source updated September 15, 2020.',
 
-     *      'Copyright (C) 1986-2020 James A D Connolly '//
-     *      '<www.perplex.ethz.ch/copyright.html>.'
+     *     'Copyright (C) 1986-2020 James A D Connolly '//
+     *     '<www.perplex.ethz.ch/copyright.html>.'
 
       end
 
@@ -1169,7 +1169,7 @@ c                                 vertex only files:
 
          end if 
 c                                 auto refine summary
-         if (io9.eq.0) then
+         if (iopt(6).ne.0.and.io9.eq.0) then
  
             if (lopt(11)) then 
                call mertxt (tfname,prject,'_auto_refine.txt',0)
@@ -7973,14 +7973,18 @@ c                                 no auto_refine data
 c                                 changed to .and. 9/10/19
                if (iopt(6).ne.2.and.outprt) write (*,1030) n10nam
 
-               if (iopt(6).ne.2) then 
-c                                 allow use of auto_refine data
+               if (iopt(6).eq.1) then 
+c                                 manual mode, allow reinitialization
+c                                 or suppression.
                   write (*,1060) 
                   read (*,'(a)') y
 
                   if (y.eq.'y'.or.y.eq.'Y') then
 
-                     iopt(6) = 1
+                     iopt(6) = 0
+
+                  else 
+
                      refine = .true.  
 
                   end if
@@ -8156,10 +8160,7 @@ c                                  results file
      *       'for explanation of subdivision schemes',//,  
      *       'and:',//,a,//'for additional information.',//)
 1030  format (/,'Reading data for auto-refinement from file: ',a,/)
-1060  format ('Auto-refine data for this project exists from a previous'
-     *       ,' calculation, do you want',/,'to use it (y/n)? ',
-     *        'Auto-refine data improves quality but usually slows '
-     *        'calculations')
+1060  format ('Suppress or reinitialize auto-refinement (y/n)?')
 1070  format ('Eliminating solution model: ',a,' in auto-refinement.')
 
       end 

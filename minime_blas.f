@@ -25,7 +25,7 @@ c-----------------------------------------------------------------------
       integer ids, kds, nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
-     *         , i, j, iprint
+     *         , i, j, iprint,mode
 
       double precision ggrd(m19), lapz(m20,m19),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
@@ -52,6 +52,9 @@ c DEBUG691                    dummies for NCNLN > 0
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       data iprint,inp/0,.false./
 
@@ -155,11 +158,11 @@ c                                 refinement point index
       else
 
          iprint = 0
-         if (tick.or.deriv(ids)) iprint = 10
+         if (tick.or.deriv(ids)) iprint = 0
 
          CALL E04UEF ('nolist')
          CALL E04UEF ('optimality tolerance =  1d-4')
-c        CALL E04UEF ('difference interval = 1d-3')
+         CALL E04UEF ('difference interval = 1d-3')
          write (ctol,'(i4)') iprint
          CALL E04UEF ('print level = '//ctol)
 
@@ -167,7 +170,7 @@ c        CALL E04UEF ('difference interval = 1d-3')
 
       if (deriv(ids)) then
 
-         CALL E04UEF ('verify level 1')
+c        CALL E04UEF ('verify level 1')
          CALL E04UEF ('derivative level = 3')
 
       else
@@ -181,9 +184,38 @@ c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
 c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
 c    *             m22,work,m23,istuff,stuff,idead,iprint)
 
+c     write (*,*) '*****with derivatives****',fname(ids)
+
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
+
+c     call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
+
+c     if (deriv(ids)) then 
+c        deriv(ids) = .false.
+c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
+c        deriv(ids) = .true.
+c     end if 
+
+
+c     if (deriv(ids)) then 
+c     write (*,*) '*****without derivatives*****',fname(ids)
+c     pa = yt
+c        deriv(ids) = .false.
+c        CALL E04UEF ('optimality tolerance =  1d-4')
+c        CALL E04UEF ('difference interval = 1d-3')
+c        CALL E04UEF ('verify level 0')
+c        CALL E04UEF ('derivative level = 0')
+c     call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
+c    *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
+c    *            m23,istuff,stuff,idead,iprint)
+c        deriv(ids) = .true.
+
+c     end if
+
+
+
 
       if (inp) then 
 
