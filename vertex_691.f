@@ -163,6 +163,8 @@ c                                 first is a dummy.
 c                                 start auto-refine stage
          outprt = .true.
          first = .false.
+
+         call setau2
 c                                 set refine to indicate the stage
          refine = .true.
 c                                 suppress output to print file
@@ -278,6 +280,8 @@ c                                 reset iphct and reload static
          end do
 
       end do
+
+      call initlp
 
       end
 

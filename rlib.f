@@ -5334,6 +5334,83 @@ c                                 are allocated independent of ifct!
 
       end
 
+      double precision function dgdp (id)
+c----------------------------------------------------------------------
+c subroutine to compute the G derivative of solution id with respect to
+c the concentration of the 1st ordered species. assumes the excess function
+c is not higher than second order.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,i1,i2,id
+
+      double precision gex,dgx,dsconf,tphi,dtphi
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision r,v,tr,pr,ps
+      common/ cst5   /v(l2),tr,pr,r,ps
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision alpha,dt
+      common/ cyt0  /alpha(m4),dt(j3)
+c                                 excess energy variables
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+c----------------------------------------------------------------------
+c                                 get derivative of excess function
+      dgx = 0d0
+
+      if (lexces(id)) then
+
+         if (.not.llaar(id)) then
+c                                 regular excess function
+            do i = 1, jterm(id)
+               i1 = jsub(1,i,id)
+               i2 = jsub(2,i,id)
+               dgx = dgx + w(i)*( pa(i1)*dydy(i2,1,id)
+     *                          + pa(i2)*dydy(i1,1,id))
+            end do
+         else
+c                                 h&p van laar
+            tphi = 0d0
+            dtphi = 0d0
+
+            do i = 1, nstot(id)
+               tphi = tphi + alpha(i)* y(i)
+               dtphi = dtphi + alpha(i)*dydy(i,1,id)
+            end do
+
+            gex = 0d0
+
+            do i = 1, jterm(id)
+c                                 assume holland powell form, all terms regular
+              i1 = jsub(1,i,id)
+              i2 = jsub(2,i,id)
+
+              gex = gex + w(i) * y(i1) * y(i2)
+              dgx = dgx + w(i) * (y(i1)*dydy(i2,1,id)
+     *                          + y(i2)*dydy(i1,1,id))
+
+            end do
+c                                note the excess energy is gex/tphi
+            dgx = (dgx - dtphi*gex/tphi)/tphi
+
+         end if
+
+      end if
+c                                 now get dg/dy(jd)
+      dgdp = enth(1) + dgx - v(2)*dsconf(id)
+
+      end
+
       double precision function dsconf (id)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a
@@ -9424,9 +9501,8 @@ c--------------------------------------------------------------------------
 
       integer im, h, i, j, l, index, i228, oim, phct
 
-      character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -9542,17 +9618,17 @@ c use mname array to flag retained absent endmembers
 
       if (istg(im,1).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(phct),1020) tname, znm(1,1),znm(2,1)
+         write (names(phct),1020) fname(im), znm(1,1),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.3)
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(phct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
+         write (names(phct),1060) fname(im), znm(1,1),znm(1,2),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.2)
      *        then
 c                                special case 3, bin-tern reciprocal solution
-         write (names(phct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
+         write (names(phct),1060) fname(im), znm(1,1),znm(2,1),znm(2,2)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
@@ -9580,14 +9656,14 @@ c                                ternary solutions
      *                             pnm(j), j = 1, 2)
       else if (mstot(im).eq.4) then
 c                                quaternary solutions
-         write (names(phct),1060) tname, (pnm(j), j = 1, 3)
+         write (names(phct),1060) fname(im), (pnm(j), j = 1, 3)
 
       else
 c                                all the rest:
          if (phct.lt.1000000) then
-            write (names(phct),1080) tname, phct
+            write (names(phct),1080) fname(im), phct
          else if (phct.lt.10000000) then
-            write (names(phct),1100) tname, phct
+            write (names(phct),1100) fname(im), phct
          else
             write (names(phct),'(i8)') phct
          end if
@@ -9620,7 +9696,7 @@ c                                 bulk composition stuff
             scp(l) = 0d0
          else if (scp(l).lt.0d0.and.im.ne.i228) then
             i228 = im
-            call warn (228,scp(l),l,tname)
+            call warn (228,scp(l),l,fname(im))
          end if
 
       end do
@@ -9628,7 +9704,7 @@ c                                 check if the phase consists
 c                                 entirely of saturated components:
       if (ctot(phct).lt.zero) then
 
-         if (im.ne.oim) call warn (55,scp(1),l,tname)
+         if (im.ne.oim) call warn (55,scp(1),l,fname(im))
 
          bad = .true.
          oim = im
@@ -9705,7 +9781,7 @@ c                              model:
 c                              user has made a dqf to an ordered species
 c                              or a dependent endmember
          if (kdsol(knsp(index,im)).lt.0)
-     *                        call error (227,exces(1,1),index,tname)
+     *                       call error (227,exces(1,1),index,fname(im))
 
          if (depend) then
             do j = 1, m3

@@ -2070,7 +2070,6 @@ c---------------------------------------------------------------------
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
-
       double precision bl,bu
       common/ cstbup /bl(k1+k5),bu(k1+k5)
 

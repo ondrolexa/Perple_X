@@ -9721,9 +9721,8 @@ c--------------------------------------------------------------------------
 
       integer im, h, i, j, l, index, i228, oim
 
-      character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -9774,7 +9773,6 @@ c--------------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 
       double precision exces
       common/ cst304 /exces(m3,k1)
@@ -9841,17 +9839,17 @@ c use mname array to flag retained absent endmembers
 
       if (istg(im,1).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(iphct),1020) tname, znm(1,1),znm(2,1)
+         write (names(iphct),1020) fname(im), znm(1,1),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.3)
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
+         write (names(iphct),1060) fname(im), znm(1,1),znm(1,2),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.2)
      *        then
 c                                special case 3, bin-tern reciprocal solution
-         write (names(iphct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
+         write (names(iphct),1060) fname(im), znm(1,1),znm(2,1),znm(2,2)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
@@ -9879,14 +9877,14 @@ c                                ternary solutions
      *                             pnm(j), j = 1, 2)
       else if (mstot(im).eq.4) then
 c                                quaternary solutions
-         write (names(iphct),1060) tname, (pnm(j), j = 1, 3)
+         write (names(iphct),1060) fname(im), (pnm(j), j = 1, 3)
 
       else
 c                                all the rest:
          if (iphct.lt.1000000) then
-            write (names(iphct),1080) tname, iphct
+            write (names(iphct),1080) fname(im), iphct
          else if (iphct.lt.10000000) then
-            write (names(iphct),1100) tname, iphct
+            write (names(iphct),1100) fname(im), iphct
          else
             write (names(iphct),'(i8)') iphct
          end if
@@ -9919,7 +9917,7 @@ c                                 bulk composition stuff
             scp(l) = 0d0
          else if (scp(l).lt.0d0.and.im.ne.i228) then
             i228 = im
-            call warn (228,scp(l),l,tname)
+            call warn (228,scp(l),l,fname(im))
          end if
 
       end do
@@ -9927,7 +9925,7 @@ c                                 check if the phase consists
 c                                 entirely of saturated components:
       if (ctot(iphct).lt.zero) then
 
-         if (im.ne.oim) call warn (55,scp(1),l,tname)
+         if (im.ne.oim) call warn (55,scp(1),l,fname(im))
 
          bad = .true.
          oim = im
@@ -10006,7 +10004,7 @@ c                              model:
 c                              user has made a dqf to an ordered species
 c                              or a dependent endmember
          if (kdsol(knsp(index,im)).lt.0)
-     *                        call error (227,exces(1,1),index,tname)
+     *                       call error (227,exces(1,1),index,fname(im))
 
          if (depend) then
             do j = 1, m3
@@ -16871,7 +16869,22 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      integer iam
+      common/ cst4 /iam
 c-----------------------------------------------------------------------
+      if (iam.eq.1.and.refine) then
+c                                 auto-refine in vertex
+         pa(1:nstot(ids)) = txco(itxp(id) + 1:itxp(id) + nstot(ids))
+         call makepp (ids)
+
+         return
+
+      end if
 c                                 get the polytopic compositions:
       call setexs (ids,id)
 c                                 convert to 1-d polytopic compositions, the bad
@@ -16896,9 +16909,7 @@ c                                 site fractions:
 
       end if 
 c                                 convert the y's into p0a/pp/pa arrays indexed
-c                                 only by independent endmembers, if this were
-c                                 done for models without disorder the p-
-c                                 arrays could be used for all solutions.
+c                                 only by independent endmembers.
       call y2p0 (ids)
 
       end
