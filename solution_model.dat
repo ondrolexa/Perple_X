@@ -2011,7 +2011,7 @@ full_name    clinopyroxene
 
 2                                 | number of polytopes
                                   | polytope names and composite composition space subdivision schemes 
-[T][N,C] 0    .2  .1  0
+[T][N,C] 0    .25 .1  0
 TM+MC    by difference            | = [M,T][M,C]
 
                                   | -------------------------------------------
@@ -2035,12 +2035,12 @@ mats_d  fats_d
 cenjh   cfsg
 di      hed_d
                                   | Simplex 1
-X_Mg     .0  .7  .1  0           | X(1,1) => bulk Mg/M
+X_Mg     .0  .75  .1  0           | X(1,1) => bulk Mg/M
 X_Fe     by difference
                                   | Simplex 2
 X_MFeTs  0  .2  .1  0             | X(2,1) - M-Fe3+
 X_MAlTs  0  .1  .1  0             | X(2,2) - M-Ts
-X_MMPx   0  .25  .1  0             | X(2,3) - M-M
+X_MMPx   0  .25  .1  0            | X(2,3) - M-M
 X-MCPx   by difference 
 
 begin_ordered_endmembers
@@ -4146,8 +4146,8 @@ X_Mg   0   .6   .1  0              | X(1,1) is bulk Fe/M
 X_Fe   by difference
                                    | Second 4-simplex
 X_FeTs 0   .1   .1  0              | X(2,1) is Fe3/[T+M] on M1, M on M2
-X_AlTs 0   .1   .1  0              | X(2,2) is Al/[T+M]  on M1, M on M2
-X_TiTs 0   .2   .1  0              | X(2,3) is Ti/[M+T] on M2, M on M1
+X_AlTs 0   .15  .1  0              | X(2,2) is Al/[T+M]  on M1, M on M2
+X_TiTs 0   .25  .1  0              | X(2,3) is Ti/[M+T] on M2, M on M1
 X_MBio by difference
 
 begin_ordered_endmembers

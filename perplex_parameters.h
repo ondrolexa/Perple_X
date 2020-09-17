@@ -7,7 +7,7 @@
       integer k16,k17,k18,k19,k20,k21,k22,k23,k24,kd2,k25
       integer l2,l3,l5,l6,l7,l8,l9,l10,lchar
       integer m0,m1,m2,m3,m4,m6,m7,m8,m9,m10,m11,m12,m14,m15
-      integer m16,m17,m18,m19,m20,m21,m22,m23
+      integer m16,m17,m18,m19,m20,m21,m22,m23,m24,m25
       integer msp,mst,mdim,ms1
       integer n0,n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,nsp,nx,ny
       integer memory,k31,k32
@@ -131,7 +131,6 @@ c----------------------------------------------------------------------
 !     parameter (k13=k1/k33)
 !     parameter (k21=((memory-(k31+k32+1)*k1)-k13)/(1+k31+k32))
 !     parameter (k18=k1*k31, k20=k21*k31, k24=k1*k32, k25=k21*k32)
-
 !                                 laggit version static: 
 !                                    k18 = k1 * k31
 !                                    k24 = k1 * k32
@@ -197,10 +196,16 @@ c----------------------------------------------------------------------
 !                                m21 - m20 + m19, NLP constraints
 !                                m22 - 3*m19 + m20, NLP integer workspace
 !                                m23 - 2*m19**2 + 20*m19 + 11*m20, NLP real workspace
-      parameter (m0=12,m1=60,m2=8,m3=3,m4=96,m6=6,m7=15,m8=9,m9=10,
-     *           m10=6,m11=11,m12=4,m14=14,m15=85,m16=6,m17=5,
-     *           m18=6,m19=m14-1,m20=m10*(m11-2)+1,m21=m20+m19,
-     *           m22=3*m19+m20,m23=2*m19**2+20*m19+11*m20)
+!                                m24 - max number of dynamic compositions to be saved for use as 
+!                                      static compositions during auto-refine stage 
+!                                m25 - max number of dynamic compositional coordinates to be saved
+!                                      for use as static compositions during auto-refine stage.
+      parameter (m0=12, m1=60, m2=8, m3=3, m4=96, m6=6, m7=15, m8=9,
+     *           m9=10,
+     *           m10=6, m11=11, m12=4, m14=14, m15=85, m16=6, m17=5,
+     *           m18=6, m19=m14-1, m20=m10*(m11-2)+1, m21=m20+m19,
+     *           m22=3*m19+m20, m23=2*m19**2+20*m19+11*m20, 
+     *           m24 = 60*60*k5, m25 = m24*m14)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)
@@ -448,3 +453,7 @@ c                                 derivative of the bulk composition (component,
 
       double precision apc, endt, endc
       common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
+
+      integer tpct, tcct, itxp, dkp
+      double precision txco
+      common/ csts2d /txco(m25), tpct, tcct, itxp(m24), dkp(m24)

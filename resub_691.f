@@ -24,7 +24,7 @@ c-----------------------------------------------------------------------
 
       double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot
 
-      integer is(k1+k5),iw(liw)
+      integer iw(liw)
 
       logical quit, abort
 
@@ -40,8 +40,9 @@ c-----------------------------------------------------------------------
       integer jphct,istart
       common/ cst111 /jphct,istart
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       double precision bl,bu
       common/ cstbup /bl(k1+k5),bu(k1+k5)
@@ -69,7 +70,7 @@ c-----------------------------------------------------------------------
       double precision wmach
       common/ cstmch /wmach(9)
 
-      save ax, x, clamda, w, is, iw
+      save ax, x, clamda, w, iw
 c-----------------------------------------------------------------------
       idegen = 0
       jcp = 0
@@ -152,7 +153,7 @@ c                                 find discretization points
 c                                 for refinement
 c        if (lopt(28)) call begtim (3)
 
-         call yclos1 (clamda,x,is,jphct,quit)
+         call yclos1 (clamda,x,jphct,quit)
 
 c        if (lopt(28)) call endtim (3,.true.,'Static YCLOS1 ')
 
@@ -255,8 +256,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer xis
       double precision xa,b,xc
-      common/ cst313 /xa(k5,k1),b(k5),xc(k1)
+      common/ cst313 /xa(k5,k1),b(k5),xc(k1),xis(k1+k5)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -863,6 +865,10 @@ c                                  x-coordinates for the final solution
 
       logical abort1
       common/ cstabo /abort1
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 c-----------------------------------------------------------------------
       abort = .false.
 c                                first check if solution endmembers are
@@ -1168,19 +1174,11 @@ c                                 and solvent mass.
 c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          call sollim (ids,i)
+c                                 sollim loads the composition into pa, so no 
+c                                 phase pointer needed here.
+         if (.not.refine) call savdyn (ids)
 
       end do
-c DEBUG DEBUG
-c     j = 0 
-c     k = 0
-c     do i = 1, isoct
-c        write (*,9000) i, badinv(i,1), badinv(i,2), 
-c    *         1d2*float(badinv(i,1))/float(badinv(i,2))
-c        j = j + badinv(i,1)
-c        k = k + badinv(i,2)
-c     end do
-
-c     write (*,9000) i, j, k, 1d2*float(j)/float(k)
 
 9000  format (i2,3x,i8,3x,i8,3x,g14.6)
 
@@ -1199,6 +1197,34 @@ c                                 compound composition into cp3 array
       ntot = np + ncpd
 
 99    end 
+
+      subroutine savdyn (ids)
+c----------------------------------------------------------------------
+c subroutine to save exploratory stage dynamic compositions for use
+c as static compositions during auto-refine, pa loaded by sollim
+c  ids - pointer to solution model
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      integer ids
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      tpct = tpct + 1
+c                                 solution pointer
+      dkp(tpct) = ids
+c                                 save the composition
+      txco(tcct+1:tcct+nstot(ids)) = pa(1:nstot(ids))
+c                                 save the starting position - 1
+      itxp(tpct) = tcct
+c                                 increment the counter
+      tcct = tcct + nstot(ids)
+
+      end 
 
       subroutine sollim (ids,jd)
 c----------------------------------------------------------------------
@@ -1238,7 +1264,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
 c                                 load the indepedent endmeber fractions 
       pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
@@ -1596,7 +1621,7 @@ c                                dependent potentials
 
       end 
 
-      subroutine yclos1 (clamda,x,is,jphct,quit)
+      subroutine yclos1 (clamda,x,jphct,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement. this routine is only called as preparation
@@ -1606,7 +1631,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jphct, i, j, k, is(*), idsol(k5), kdv(h9), nsol, ids,
+      integer jphct, i, j, k, idsol(k5), kdv(h9), nsol, ids,
      *        mpt, iam, id, jdsol(k5,k5), ksol(k5), max
 
       external ffirst, degen 
@@ -1655,8 +1680,9 @@ c----------------------------------------------------------------------
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -1872,8 +1898,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
@@ -2039,8 +2066,10 @@ c---------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
+
 
       double precision bl,bu
       common/ cstbup /bl(k1+k5),bu(k1+k5)
@@ -2721,8 +2750,9 @@ c----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer hcp, idv
       common/ cst52  /hcp,idv(k7) 
@@ -3070,8 +3100,9 @@ c----------------------------------------------------------------------
       character*5 cname
       common/ csta4 /cname(k5)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
@@ -3182,8 +3213,9 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin 
