@@ -364,8 +364,6 @@ c                                 get the bulk composition from pp
       do i = 1, icp
          gval = gval - scp(i)*mu(i)
       end do
-c                                  normalize for appearances
-c     gval = gval/sum
 
       istuff(3) = istuff(3) + 1
 
@@ -406,7 +404,7 @@ c                                 save the endmember fractions
 
       end
 
-      subroutine gsol3 (mode,nvar,ppp,gval,ggrd,istart,istuff,stuff)
+      subroutine gsol3 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
 c-----------------------------------------------------------------------
 c gsol3 - a shell to call gsol1 from minfxc, ingsol must be called
 c         prior to minfxc to initialize solution specific paramters. only
@@ -420,7 +418,7 @@ c-----------------------------------------------------------------------
 
       integer i, jds, nvar, istart, mode, istuff(*)
 
-      double precision ppp(*), gval, psum, ggrd(*), stuff(*)
+      double precision ppp(*), gval, psum, dgdp(*), stuff(*)
 
       double precision gsol1, omega0
 
@@ -455,8 +453,16 @@ c-----------------------------------------------------------------------
       pa(nstot(jds)) = 1d0 - psum
 
       if (istuff(3).eq.0d0) then
+
+         if (deriv(jds)) then 
+
+            call getder (gval,dgdp,jds)
+
+         else 
 c                                 free energy minimization
-         gval = gsol1 (jds,.false.)
+            gval = gsol1 (jds,.false.)
+
+         end if
 
       else
 c                                 entropy maximization
@@ -951,7 +957,17 @@ c                                 obj call counter
 
       end if
 
-      CALL E04UEF ('derivative level = 0')
+      if (deriv(ids)) then
+
+c        CALL E04UEF ('verify level 1')
+         CALL E04UEF ('derivative level = 3')
+
+      else
+
+         CALL E04UEF ('verify level 0')
+         CALL E04UEF ('derivative level = 0')
+
+      end if
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol3,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,

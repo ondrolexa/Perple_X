@@ -76,6 +76,9 @@ c-----------------------------------------------------------------------
       save err,first
       data err,first/.false.,.true./
 
+      character prject*100,tfname*100
+      common/ cst228 /prject,tfname
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -120,6 +123,8 @@ c                                 blurb dumped by redop1
       call setau1
 c                                 read data for solution phases on n9:
       call input9 (first)
+c                                 load static compositions for manual autorefine
+      if (refine) call reload
 c                                 seismic data summary file
       if (lopt(50)) call outsei
 
@@ -131,17 +136,14 @@ c                                 stage static compositions
 c                                 -------------------------------------
 c                                 at this point the exploratory problem is 
 c                                 fully configured,
-      if (iopt(6).ne.0) then
+      if (.not.refine) then
 c                                 two-stage calculation,
 c                                 inform user of 1st stage
          write (*,1000) 'exploratory'
-c                                 suppress output to graphics
-c                                 (these flags are reset by input1). 
-         io4 = 1
 
       else
-c                                 stopping after exploratory stage
-         io4 = 0
+
+         write (*,1000) 'auto-refine'
 c                                 header info for print and graphics files
 c                                 title page for print file:
          if (io3.ne.1) call outtit
@@ -151,9 +153,9 @@ c                                 do the calculation
       call docalc
 c                                 output compositions for autorefine,
 c                                 these could be used by MEEMUM
-      call outlim 
+      call outlim
 
-      if (iopt(6).eq.0) then
+      if (iopt(6).ne.2) then
 c                                 quitting after exploratory stage:
 c                                 close n4/n5, delete interim results,
 c                                 first is a dummy.
@@ -163,12 +165,25 @@ c                                 first is a dummy.
 c                                 start auto-refine stage
          outprt = .true.
          first = .false.
-
-         call setau2
 c                                 set refine to indicate the stage
-         refine = .true.
+         call setau1
+c                                 set grid parameters
+         call setau2
 c                                 suppress output to print file
          io3 = 1
+c                                 close/open prt/plt/blk
+         if (io3.eq.0) then
+c                                 prt output file
+            call mertxt (tfname,prject,'.prn',0)
+            call inqopn (n3,tfname)
+
+         end if
+c                                 plt output file
+         call mertxt (tfname,prject,'.plt',0)
+         call inqopn (n4,tfname)
+c                                 blk output file
+         call mertxt (tfname,prject,'.blk',0)
+         call inqopn (n5,tfname)
 c                                 load the former dynamic compositions
 c                                 into the static arrays
          call reload
@@ -176,6 +191,8 @@ c                                 into the static arrays
          write (*,1000) 'auto-refine'
 c                                 repeat the calculation
          call docalc
+c                                 clean up intermediate results
+         call interm (outprt,err)
 
       end if
 
@@ -195,6 +212,15 @@ c-----------------------------------------------------------------------
       logical bad
 
       integer id, i, j, ntot
+
+      character sname(h9)*10
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
@@ -216,52 +242,94 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
-      id = 0
-      zcoct = 0
+      if (refine) then 
+c                                 manual auto-refine, read the static 
+c                                 compositions from the arf file
+         read (n10,*) i
+         read (n10,*) sname(1:i)
+         read (n10,*) jend(1:i,2)
+         if (i.ne.isoct) call error (63,y(1),i,'GMODEL/isoct')
 
-      do i = 1, isoct
+         tcct = 0
 
-         jend(i,2) = 0
+         do i = 1, isoct
 
-         if (.not.stable(i)) cycle
+            if (sname(i).ne.fname(i)) 
+     *         call error (63,y(1),i,'GMODEL/sname')
+            tpct = jend(i,2)*nstot(i)
+            read (n10,*) txco(tcct+1:tcct+tpct)
+            tcct = tcct + tpct
+
+         end do
+
+         iphct = ipoint
+         tcct = 0
+
+         do i = 1, isoct
+
+            ntot = nstot(i)
+
+            do j = 1, jend(i,2)
+
+               iphct = iphct + 1
+               itxp(iphct) = tcct
+               tcct = tcct + ntot
+
+            end do
+
+         end do
+
+      else
+c                                 automatic, read the data from memory
+         id = 0
+         zcoct = 0
+
+         do i = 1, isoct
+
+            jend(i,2) = 0
+            ntot = nstot(i)
+
+            if (.not.stable(i)) cycle
 c                                 for each stable solution cycle 
 c                                 through the unsorted compositions
-         do j = 1, tpct
+            do j = 1, tpct
 
-            if (i.ne.dkp(j)) cycle
+               if (i.ne.dkp(j)) cycle
 c                                 its a composition of solution i
-            id = id + 1
-            jend(i,2) = jend(i,2) + 1
+               id = id + 1
+               jend(i,2) = jend(i,2) + 1
 c                                 load temporarily into the static compound 
 c                                 a array
-            is(id) = zcoct
-            a(zcoct+1:zcoct+nstot(i)) = 
-     *                             txco(itxp(j)+1:itxp(j)+nstot(i))
+               is(id) = zcoct
+               a(zcoct+1:zcoct+ntot) = txco(itxp(j)+1:itxp(j)+ntot)
+               zcoct = zcoct + ntot
+
+            end do
 
          end do
 
-      end do
-
-      zcoct = 0
+         zcoct = 0
+         id = 0
 c                                 copy the sorted results back into txco
-      do i = 1, isoct
+         do i = 1, isoct
 
-         ntot = nstot(i)
+            ntot = nstot(i)
 
-         do j = 1, jend(i,2)
+            do j = 1, jend(i,2)
 
-            id = id + 1
+               id = id + 1
 
-            txco(zcoct+1:zcoct+ntot) =  a(is(id)+1:is(id)+ntot)
-            itxp(id) = zcoct
-            zcoct = zcoct + ntot
+               txco(zcoct+1:zcoct+ntot) =  a(is(id)+1:is(id)+ntot)
+               itxp(ipoint+id) = zcoct
+               zcoct = zcoct + ntot
+
+            end do
 
          end do
 
-      end do
+      end if
 c                                 reset iphct and reload static
       iphct = ipoint
-      zcoct = 0
 
       do i = 1, isoct
 
@@ -269,19 +337,16 @@ c                                 reset iphct and reload static
 
          do j = 1, jend(i,2)
 
-            pa(1:ntot) = txco(itxp(id) + 1:itxp(id) + ntot)
-            call makepp (i)
-
             iphct = iphct + 1
-            id = id + 1
+
+            pa(1:ntot) = txco(itxp(iphct) + 1:itxp(iphct) + ntot)
+            call makepp (i)
 
             call soload (i,bad)
 
          end do
 
       end do
-
-      call initlp
 
       end
 
@@ -1559,6 +1624,8 @@ c---------------------------------------------------------------------
      *        ii,jj,kk,hh,hhot,jcent,icent,jjc,iic,h,jtic,khot,k,
      *        ktic,j,jhot,klow,kinc2,kinc21,idead
 
+      double precision dinc, tot
+
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
 
@@ -1637,6 +1704,10 @@ c                               increments at each level
 
       kinc = jinc(1)
       jinc1 = kinc
+c                               init progress info
+      tot = loopx/kinc + 1
+      dinc = 1d2/tot
+      tot = 0d0
 
       call setvar 
 c                               do all points on lowest level
@@ -1646,7 +1717,8 @@ c                               do all points on lowest level
             call lpopt (i,j,idead)
          end do
 c                               progress info
-         write (*,1030) dfloat(i/kinc+1)/dfloat(loopx/kinc+1)*1d2
+         tot = tot + dinc
+         write (*,1030) tot
 c                               flush stdout for paralyzer
          flush (6)
 

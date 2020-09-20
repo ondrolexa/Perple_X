@@ -6665,13 +6665,13 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character sname*10, text*80, abc*1
+      character text*80, abc*1, sname*10
 
       logical add, wham, zbad, bad
 
       integer im, nloc, i, j, id, jd, k, m, n, ii, killct, killid(20)
 
-      double precision dinc, dx, gcpd, stinc, getstr, zsite(m10,m11)
+      double precision dx, gcpd, stinc, getstr, zsite(m10,m11), dinc
 
       external gcpd, zbad, stinc, getstr
 
@@ -6759,7 +6759,7 @@ c                                 dqf parameters
       integer jndq, jdqf, iq
       double precision dqfg, dq
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
-c                                 parameters for autorefine
+
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
       common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
@@ -6809,10 +6809,10 @@ c                                 parameters for autorefine
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 c----------------------------------------------------------------------
 c                                 auto_refine changes
-      if (refine) then
+      if (refine.and.iam.eq.15) then
 c                                 check for consistent auto-refine data
-         read (n10,'(a)',iostat=i) sname
-         if (i.ne.0.or.tname.ne.sname) call error (63,r,i,'GMODEL')
+         read (n10,'(a)') sname
+         if (tname.ne.sname) call error (63,r,i,'GMODEL')
 
       end if
 c                                 read switch to make GALL use MINFXC
@@ -6991,7 +6991,6 @@ c                                 in the solution model:
 
                   dx = pxnc(ii,i,j)
                   if (pxmn(ii,i,j).eq.0d0) pxmn(ii,i,j) = nopt(14)
-                  if (refine) dx = dx/nopt(17)
                   stch(im,ii,i,j,1) = getstr (dx,pxmn(ii,i,j),bad)
 
                   if (bad) then 
@@ -7017,61 +7016,44 @@ c                                 true hard limit record
                xmnh(im,ii,i,j) = pxmn(ii,i,j)
                xmxh(im,ii,i,j) = pxmx(ii,i,j)
 
-               if (refine) then
+               if (refine.and.iam.eq.15) then
 c                                 new values from autorefine file
-                  read (n10,*) y(1),y(2)
+                  read (n10,*) pxmn(ii,i,j),pxmx(ii,i,j)
 
-                  if (y(2).ge.y(1)) then
-
-                     pxmn(ii,i,j) = y(1)
-                     pxmx(ii,i,j) = y(2)
-
-                     if (icopt.lt.4) then
+                  if (icopt.lt.4) then
 c                                 set slop to the initial spacing
-                        dinc = pxnc(ii,i,j)
+                     dinc = pxnc(ii,i,j)
 
-                     else
-c                                 adaptive minimization, 6.9.1 no slop.
-                        dinc = 0d0
-
-                     end if
-c                                 widen the range by the exploratory resolution
-                     if (pimd(ii,i,j).eq.0) then
-                        pxmx(ii,i,j) = pxmx(ii,i,j) + dinc
-                        pxmn(ii,i,j) = pxmn(ii,i,j) - dinc
-                     else
-                        pxmn(ii,i,j) = 
-     *                              stinc (pxmn(ii,i,j),-dinc,im,ii,i,j)
-                        pxmx(ii,i,j) = 
-     *                              stinc (pxmx(ii,i,j),dinc,im,ii,i,j)
-                     end if
-
-                     if (pxmx(ii,i,j).gt.1d0) pxmx(ii,i,j) = 1d0
-                     if (pxmn(ii,i,j).lt.0d0) pxmn(ii,i,j) = 0d0
-
-                     if (lopt(3)) then
-c                                 hard_limit test
-                        if (pxmx(ii,i,j).gt.xmxo(im,ii,i,j)) 
-     *                                    pxmx(ii,i,j) = xmxo(im,ii,i,j)
-                        if (pxmn(ii,i,j).lt.xmno(im,1,i,j)) 
-     *                                    pxmn(ii,i,j) = xmno(im,ii,i,j)
-                     end if
-
-                     if (lorch(im)) then 
-                        pxnc(ii,i,j) = pxnc(ii,i,j)
-                     else
-                        pxnc(ii,i,j) = pxnc(ii,i,j)/nopt(17)
-                     end if 
-                  else if (.not.bad) then 
-
-                     bad = .true.
-
-                     call warn (99,nopt(1),iopt(1),'no successful p2y i'
-     *             //'nversions for '//tname//', compositional range sp'
-     *             //'ecified in the solution model will be used for th'
-     *             //'e autorefine stage.')
+                  else
+c                                 adaptive minimization:
+c                                 set slop to the final compositional
+c                                 resolution of the exploratory stage
+                     dinc = rid(4,1)
 
                   end if
+c                                 widen the range by the exploratory resolution
+                  if (pimd(ii,i,j).eq.0) then
+                     pxmx(ii,i,j) = pxmx(ii,i,j) + dinc
+                     pxmn(ii,i,j) = pxmn(ii,i,j) - dinc
+                  else
+                     pxmn(ii,i,j) = 
+     *                             stinc (pxmn(ii,i,j),-dinc,im,ii,i,j)
+                     pxmx(ii,i,j) = 
+     *                             stinc (pxmx(ii,i,j),dinc,im,ii,i,j)
+                  end if
+
+                  if (pxmx(ii,i,j).gt.1d0) pxmx(ii,i,j) = 1d0
+                  if (pxmn(ii,i,j).lt.0d0) pxmn(ii,i,j) = 0d0
+
+                  if (lopt(3)) then
+c                                 hard_limit test
+                     if (pxmx(ii,i,j).gt.xmxo(im,ii,i,j)) 
+     *                                  pxmx(ii,i,j) = xmxo(im,ii,i,j)
+                     if (pxmn(ii,i,j).lt.xmno(im,1,i,j)) 
+     *                                  pxmn(ii,i,j) = xmno(im,ii,i,j)
+                  end if
+
+                  pxnc(ii,i,j) = pxnc(ii,i,j)/nopt(17)
 
                end if
 
@@ -7339,11 +7321,18 @@ c                                 dqf parameters
       jdqf(im) = idqf
 
       do i = 1, idqf
+
+c                                 a dqf to an ordered species
+c                                 or a dependent endmember
+         if (kdsol(indq(i)).lt.0)
+     *                       call error (227,r,indq(i),fname(im))
 c                                 shift pointer from y array to p array
          jndq(i,im) = iy2p(indq(i))
+
          do j = 1, m3
             dqfg(j,i,im) = dqf(j,i)
          end do
+
       end do
 c                                 -------------------------------------
 c                                 if msite(h0) ne 0 get "normalization" constants (endmember
@@ -7355,8 +7344,6 @@ c                                 organize O/D model parameters
 
       if (dnu(im).ne.0d0) then
 c                                 non-equimolar restrictions:
-c        if (laar) call error (72,r,i,'laar excess function not antici'/
-c    *                     /'pated for non-equimolar ordering: '//tname)
          if (lrecip(im)) call error (72,r,i,'prismatic composition spa'/
      *        /'ce not anticipated for non-equimolar ordering: '//tname)
          if (ksmod(im).ne.688) call error (72,r,i,'non-equimolar order'/
@@ -7698,7 +7685,7 @@ c                                 usually fully disordered
          end do
       end do
 c                                 zero ordered pp's
-      pp( lstot(id) + 1:nstot(id) ) = 0d0
+      pp(lstot(id) + 1:nstot(id)) = 0d0
 
       end
 
@@ -9500,20 +9487,25 @@ c                                 write solution model name/endmembers for pseud
                write (n8,1060) tname,(mname(iorig(knsp(i,im))), i= 1, j)
 
             end if
+
+            if (.not.refine.or.iam.eq.15) then 
 c                                 subdiv discretizes the composition of the 
 c                                 solution and stores the data (soload)
-            call subdiv (im,gcind)
+               call subdiv (im,gcind)
 
-            if (iphct-ophct.gt.0) then
+               if (iphct-ophct.gt.0) then
 c                                 write pseudocompound count
-               write (*,1100) iphct-ophct, tname
+                  write (*,1100) iphct-ophct, tname
 c                                 indicate site_check_override and refine endmembers
-               if (bdx(im)) write (*,1080) tname
-               if (.not.nrf(im).and..not.lopt(39)) write (*,1090) tname
+                  if (bdx(im)) write (*,1080) tname
+                  if (.not.nrf(im).and..not.lopt(39)) 
+     *               write (*,1090) tname
+
+               end if
+
+               jend(im,2) = iphct - ophct
 
             end if
-
-            jend(im,2) = iphct - ophct
 
          end if
 c                               read next solution
@@ -9550,7 +9542,7 @@ c                                  add to not found list:
 
          end do
 c                                  total pseudocompound count:
-         write (*,1110) iphct - ipoint
+         if (.not.refine.or.iam.eq.15) write (*,1110) iphct - ipoint
 c                                  list of found solutions
          if (im.gt.0) then
             write (*,'(/,a,/)') 'Summary of included solution models:'
@@ -9708,7 +9700,6 @@ c                   of pressure and temperature:
 
 c                       gexces(i) = exces(1) + exces(2)*T + exces(3)*P
 c--------------------------------------------------------------------------
-
       implicit none
 
       include 'perplex_parameters.h'
@@ -9955,7 +9946,7 @@ c                                 not worth the effort
 
       exces(1:m3,iphct) = 0d0
 
-      if (.not.order) then 
+      if (.not.lorder(im)) then 
 c                                 configurational negentropy:
          if (msite(im).ne.0) exces(2,iphct) = -omega(im,pa)
 c                                 load excess terms, if not Laar or ordered:
@@ -10001,20 +9992,10 @@ c                              endmembers.
 c                              index points to the endmember in the full
 c                              model:
          index = jndq(i,im)
-c                              user has made a dqf to an ordered species
-c                              or a dependent endmember
-         if (kdsol(knsp(index,im)).lt.0)
-     *                       call error (227,exces(1,1),index,fname(im))
 
-         if (depend) then
-            do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + pp(index)*dqfg(j,i,im)
-            end do
-         else
-            do j = 1, m3
-               exces(j,iphct) = exces(j,iphct) + pa(index)*dqfg(j,i,im)
-            end do
-         end if
+         do j = 1, m3
+            exces(j,iphct) = exces(j,iphct) + pp(index)*dqfg(j,i,im)
+         end do
 
       end do
 
@@ -12629,7 +12610,7 @@ c-----------------------------------------------------------------------
 
       logical bad, minfx
 
-      integer i, j, k, id, itic
+      integer i, j, k, id
 
       double precision gval, dg, g0(m14)
 
@@ -12729,8 +12710,6 @@ c                                 a liquid below T_melt option threshold
             end do
 
          else if (lorder(i)) then
-c DEBUG691 GALL
-            itic = 0
 c                                 initialize margules, enthalpy of
 c                                 ordering, internal dqfs (last for minfxc)
             call ingsol (i)
@@ -12740,7 +12719,7 @@ c                                 ordering, internal dqfs (last for minfxc)
                call setxyp (i,id,bad)
 
                if (noder(i)) then
-
+c DEBUG691 GALL
                   call minfxc(g(id),i,.false.)
 
                else
@@ -13100,12 +13079,21 @@ c                                 local variables:
 c                                 -------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m14+2)
+
+      integer iam
+      common/ cst4 /iam
 
       character tname*10
       logical refine, resub
@@ -13148,7 +13136,30 @@ c----------------------------------------------------------------------
 
       end do
 
-      if (.not.refine) write (n10,*) ibad1,0,igood
+      if (.not.refine.and.icopt.eq.1) then
+c                                 load the former dynamic compositions
+c                                 into the static arrays
+         call reload
+c                                 output to arf
+         write (n10,*) isoct
+         write (n10,*) fname(1:isoct)
+         write (n10,*) jend(1:isoct,2)
+
+         tcct = 0
+
+         do i = 1, isoct
+
+            tpct = jend(i,2)*nstot(i)
+            write (n10,*) txco(tcct+1:tcct+tpct)
+            tcct = tcct + tpct
+
+         end do
+
+      else if (.not.refine) then
+
+         write (n10,*) ibad1,0,igood
+
+      end if
 c                                 write solutions present that are
 c                                 not stable
       if (bad1) then
@@ -13159,7 +13170,7 @@ c                                 not stable
          do i = 1, isoct
             if (.not.stable(i)) then
                write (*,'(5x,a)') fname(i)
-               if (.not.refine) write (n10,'(a)') fname(i)
+               if (.not.refine.and.iam.ne.1) write (n10,'(a)') fname(i)
                if (lopt(11)) write (n11,'(5x,a)') fname(i)
             end if
          end do
@@ -13230,7 +13241,7 @@ c                                 for 0-wt subcompositions
 
          end if
 
-         if (.not.refine) then
+         if (.not.refine.and.iam.eq.15) then
 
             write (n10,'(a)') fname(i)
 

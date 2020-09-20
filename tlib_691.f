@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 15, 2020.',
+     *     'Perple_X version 6.9.1, source updated September 20, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -258,15 +258,8 @@ c                                 interpolation keyword
       iopt(4) = 2
       valu(4) = 'on '
 c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
-      if (iam.eq.15.or.iam.eq.2) then 
-c                                 convex, meemum
-         iopt(6) = 2
-         valu(6) = 'aut'
-      else 
-c                                 vertex
-         iopt(6) = 0
-         valu(6) = 'off'
-      end if
+      iopt(6) = 2
+      valu(6) = 'aut'
 c                                 subdivision model, 0 - solution model
 c                                 1 - cartesian, 2 - stretch
       iopt(13) = 0 
@@ -2275,7 +2268,7 @@ c---------------------------------------------------------------------
       else if (ier.eq.62) then
          write (*,62) char, int, realv
       else if (ier.eq.63) then 
-         write (*,63) 
+         write (*,63) char
       else if (ier.eq.64) then
          write (*,64) char
       else if (ier.eq.65) then
@@ -2539,8 +2532,8 @@ c                                 accordingly:
      *        /,' do the reformulation because the initial_reolution ',
      *          'keyword specified in',/,' perplex_option.dat (',f5.2,
      *          ') is invalid',/)
-63    format (/,'**error ver063** inconsistent auto-refine data.',
-     *        ' Suppress or reinitialize auto-refinement.',/) 
+63    format (/,'**error ver063** inconsistent auto-refine data: ',a,/,
+     *        'Suppress or reinitialize auto-refinement.',/) 
 64    format (/,'**error ver064** PSVDRAW plots only ',
      *          'binary mixed-variable and ',/,
      *          'ternary composition diagrams (',a,').',/)
@@ -6574,6 +6567,59 @@ c----------------------------------------------------------------------
 
       end 
 
+      subroutine inqopn (lun,fname)
+c-----------------------------------------------------------------------
+c subroutine to open temporary (deleteable) files named fname on unit
+c lun. this routine is used to avoid timing conflicts that arise to the
+c time lag between a runtime close request and its implementation by 
+c WINDOWS.
+c-----------------------------------------------------------------------
+      include 'perplex_parameters.h'
+
+      integer ier, lun
+
+      logical lopen, lname
+
+      character fname*(*)
+c-----------------------------------------------------------------------
+      open (lun, file = fname, iostat = ier, status = 'new')
+
+      if (ier.ne.0) then
+
+         open (lun, file = fname, iostat = ier)
+
+         if (ier.ne.0) then 
+c                                 this case is that WINDOWS hasn't yet
+c                                 implemented a previous close request.
+            write (*,'(2(/,a))') '**error ver099** unable to open '
+     *                            //fname
+     *      ,'check that the file is not being used by another program.'
+            write (*,'(/,a,i3)') 'IOSTAT = ',ier
+
+            inquire (lun, opened=lopen, named=lname, name=fname)
+
+            if (lopen) then
+
+               write (*,'(a,i3,a)') 'system or programming error: LUN ',
+     *                              lun,'is already open'
+               if (lname) write (*,'(a)') 'and attached to file: ',
+     *                    fname
+               call errdbg ('please report this error')
+
+            end if
+
+         else
+c                                 this case is just that the file hasn't
+c                                 been closed
+            close (lun, status = 'delete')
+            open (lun, file = fname)
+
+         end if
+
+      end if
+
+      end
+
       subroutine outsei
 c-----------------------------------------------------------------------
 c output details of modulus computation for endmembers and solutions
@@ -6612,26 +6658,8 @@ c-----------------------------------------------------------------------
       common/ cst228 /prject,tfname
 c-----------------------------------------------------------------------
       call mertxt (tfname,prject,'_seismic_data.txt',0)
-      open (n8, file = tfname, iostat = i)
 
-      if (i.gt.0) then
-c                                 this trap arose due to a condition created by WINDOWS
-         write (*,'(2(/,a))') '**error ver099** unable to open '//tfname
-     *      ,'check that the file is not being used by another program.'
-
-         write (*,'(/,a,i3)') 'IOSTAT = ',i
-
-         inquire (n8, opened=stx, named=notstx, name=tfname)
-
-         if (stx) then
-
-            write (*,'(a)') 'programming error: unit n8 is already open'
-            if (notstx) write (*,'(a)') 'and attached to file: ',tfname
-            write (*,'(a)') 'please report this error'
-
-         end if
-
-      end if
+      call inqopn (n8,tfname)
 
       stx = .false.
       notstx = .false.
@@ -7898,7 +7926,6 @@ c                                 open solution model file
 
       end
 
-
       subroutine setau1
 c----------------------------------------------------------------------
 c setau1 sets autorefine dependent parameters. called by vertex, werami,
@@ -7951,11 +7978,11 @@ c                                 are present and it is requested.
 c                                 VERTEX, MEEMUM, or CONVEX:
             if (iam.eq.1.or.iam.eq.15) then 
 
-               open (n8, file = n8nam, status = 'unknown')
+               call inqopn (n8,n8nam)
 c                                 user friendly text version 
                if (lopt(11)) then 
                   call mertxt (n11nam,prject,'_auto_refine.txt',0)
-                  open (n11, file = n11nam, status = 'unknown')
+                  call inqopn (n11,n11nam)
                end if 
 
             end if 
@@ -7968,8 +7995,10 @@ c                                 no auto_refine data
 
             else if (ier.eq.0.and.(iam.eq.1.or.iam.eq.15)) then 
 
-               read (n10,*,iostat=ier) ibad1, ibad2, igood
-               if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
+               if (iam.eq.15) then 
+                  read (n10,*,iostat=ier) ibad1, ibad2, igood
+                  if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
+               end if 
 c                                 changed to .and. 9/10/19
                if (iopt(6).ne.2.and.outprt) write (*,1030) n10nam
 
@@ -8013,9 +8042,7 @@ c                                 to use the data
 
                else 
 
-                  refine = .true.  
-                  read (n10,*,iostat=ier) ibad1, ibad2, igood
-                  if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
+                  refine = .true.
                   iopt(6) = 1
 
                   write (*,1030) n10nam
@@ -8053,25 +8080,6 @@ c                                 open and kill the irf file
             call mertxt (n8nam,prject,'.irf',0)
             open (n8, file = n11nam, iostat=ier, status = 'unknown')
             close (n8,status = 'delete')
-
-         else
-c                                 werami/pssect if refine, get the 
-c                                 solution models to be rejected
-            open (n8, file = n8nam, iostat=ier, status = 'old')
-        
-            if (ier.eq.0) then 
-c                                 write a flag to indicate if auto-refine
-c                                 has been used, this is necessary so that other
-c                                 perplex programs know whether to reject the
-c                                 badnam phases:
-               read (n8,*,iostat=ier) refine
-c                                 read phases to be rejected if in auto-refine
-               if (refine) then 
-                  read (n10,*,iostat=ier) ibad1, ibad2, igood
-                  if (ibad1.gt.0) read (n10,'(a)') (badnam(i),i=1,ibad1)
-               end if 
-
-            end if 
 
          end if
 c                                 only want *_auto_refine.txt for the exploratory
