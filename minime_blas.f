@@ -652,7 +652,7 @@ c                                 cold start
       idead = -1
       iprint = 0
 
-      if (lopt(28)) call begtim (2)
+      if (lopt(28)) call begtim (9)
 
       write (ctol,'(g14.7)') tol
       write (cit,'(i4)') l6
@@ -667,7 +667,7 @@ c                                 cold start
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
      *            clamda,iw,liw,wrk,lw,idead,iprint)
 
-      if (lopt(28)) call endtim (2,.true.,'p2y inversion')
+      if (lopt(28)) call endtim (9,.true.,'p2y inversion')
 
 c                                 reset ldt, ldq, istart for phase eq
       istart = 0
@@ -990,7 +990,7 @@ c        call errpau
       end do
 
       pa(i) = 1d0 - sum
-c                                 if you touch pa, makepp
+c                                 you toucha pa, makepp
       call makepp (ids)
 
       if (inp) then 

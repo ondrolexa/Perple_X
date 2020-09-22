@@ -225,11 +225,13 @@ C                  The first three elements of  IW  contain details
 C                  on the dimension of the initial working set.
 C     ==================================================================
       IF (LCRASH.EQ.0) THEN
-         START = 'COLD'
+         START = 'cold'
       ELSE IF (LCRASH.EQ.1) THEN
-         START = 'WARM'
+         START = 'warm'
+         lcrash = 2
+         START  = 'hot '
       ELSE IF (LCRASH.EQ.2) THEN
-         START = 'HOT '
+         START = 'hot '
       END IF
 C
       COLD = LCRASH .EQ. 0
@@ -1519,9 +1521,9 @@ C
 C        ---------------------------------------------------------------
 C        Check  ISTATE.
 C        ---------------------------------------------------------------
-         IF (START.EQ.'WARM' .OR. START.EQ.'HOT ') THEN
-            IF (START.EQ.'WARM') CSTART = 'Warm'
-            IF (START.EQ.'HOT ') CSTART = 'Hot '
+         IF (START.EQ.'warm' .OR. START.EQ.'hot ') THEN
+            IF (START.EQ.'warm') CSTART = 'warm'
+            IF (START.EQ.'hot ') CSTART = 'hot '
             DO 40 J = 1, N + NCLIN + NCNLN
                IS = ISTATE(J)
                OK = IS .GE. (-2) .AND. IS .LE. 4
@@ -14498,8 +14500,8 @@ C     .. Equivalences ..
 C     .. Save statement ..
       SAVE              /AX02ZA/, /BE04MF/, /FE04MF/, /GE04MF/
 C     .. Data statements ..
-      DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'COLD', 'WARM',
-     *                  'HOT '/
+      DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'cold', 'warm',
+     *                  'hot '/
       DATA              LPTYPE(1), LPTYPE(2)/'     FP', '     LP'/
       DATA              LPTYPE(3), LPTYPE(4), LPTYPE(5),
      *                  LPTYPE(6)/'ILLEGAL', 'ILLEGAL', 'ILLEGAL',
@@ -14980,8 +14982,8 @@ C     .. Save statement ..
       SAVE              /AX02ZA/, /EE04UC/, /DE04NC/, /EE04NC/,
      *                  /GE04UC/, /HE04UC/
 C     .. Data statements ..
-      DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'COLD', 'WARM',
-     *                  'HOT '/
+      DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'cold', 'warm',
+     *                  'hot '/
       DATA              CHESS(0), CHESS(1)/' NO', 'YES'/
 C     .. Executable Statements ..
 C
@@ -17855,13 +17857,13 @@ C
       NACTIV = 0
       NARTIF = 0
 C
-      IF (START.EQ.'COLD') THEN
+      IF (START.EQ.'cold') THEN
          DO 40 J = 1, NCTOTL
             ISTATE(J) = 0
             IF (BL(J).EQ.BU(J)) ISTATE(J) = 3
    40    CONTINUE
 C
-      ELSE IF (START.EQ.'WARM') THEN
+      ELSE IF (START.EQ.'warm') THEN
          DO 60 J = 1, NCTOTL
             IF (ISTATE(J).GT.3 .OR. ISTATE(J).LT.0) ISTATE(J) = 0
             IF (BL(J).NE.BU(J) .AND. ISTATE(J).EQ.3) ISTATE(J) = 0
@@ -17895,7 +17897,7 @@ C     ------------------------------------------------------------------
 C     If a cold start is required,  attempt to add as many
 C     constraints as possible to the working set.
 C     ------------------------------------------------------------------
-      IF (START.EQ.'COLD') THEN
+      IF (START.EQ.'cold') THEN
 C
 C        See if any bounds are violated or nearly satisfied.
 C        If so,  add these bounds to the working set and set the

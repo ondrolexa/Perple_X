@@ -124,7 +124,7 @@ c                                 blurb dumped by redop1
 c                                 read data for solution phases on n9:
       call input9 (first)
 c                                 load static compositions for manual autorefine
-      if (refine) call reload
+      if (refine) call reload (refine)
 c                                 seismic data summary file
       if (lopt(50)) call outsei
 
@@ -186,7 +186,15 @@ c                                 blk output file
          call inqopn (n5,tfname)
 c                                 load the former dynamic compositions
 c                                 into the static arrays
-         call reload
+         if (iopt(6).eq.1) then
+c                                 manual auto-refine, read from arf
+            call reload (refine)
+
+         else
+c                                 auto auto-refine, read from memory
+            call reload (.false.)
+
+         end if
 
          write (*,1000) 'auto-refine'
 c                                 repeat the calculation
@@ -197,156 +205,6 @@ c                                 clean up intermediate results
       end if
 
 1000  format (/,'** Starting ',a,' computational stage **',/)
-
-      end
-
-      subroutine reload
-c----------------------------------------------------------------------
-c load the saved exploratory stage compositions into the static array
-c for the auto-refine stage.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical bad
-
-      integer id, i, j, ntot
-
-      character sname(h9)*10
-
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
-
-      integer jend
-      common/ cxt23 /jend(h9,m14+2)
-
-      integer ikp
-      common/ cst61 /ikp(k1)
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer is
-      double precision a,b,c
-      common/ cst313 /a(k5*k1),b(k5),c(k1),is(k1+k5)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c-----------------------------------------------------------------------
-      if (refine) then 
-c                                 manual auto-refine, read the static 
-c                                 compositions from the arf file
-         read (n10,*) i
-         read (n10,*) sname(1:i)
-         read (n10,*) jend(1:i,2)
-         if (i.ne.isoct) call error (63,y(1),i,'GMODEL/isoct')
-
-         tcct = 0
-
-         do i = 1, isoct
-
-            if (sname(i).ne.fname(i)) 
-     *         call error (63,y(1),i,'GMODEL/sname')
-            tpct = jend(i,2)*nstot(i)
-            read (n10,*) txco(tcct+1:tcct+tpct)
-            tcct = tcct + tpct
-
-         end do
-
-         iphct = ipoint
-         tcct = 0
-
-         do i = 1, isoct
-
-            ntot = nstot(i)
-
-            do j = 1, jend(i,2)
-
-               iphct = iphct + 1
-               itxp(iphct) = tcct
-               tcct = tcct + ntot
-
-            end do
-
-         end do
-
-      else
-c                                 automatic, read the data from memory
-         id = 0
-         zcoct = 0
-
-         do i = 1, isoct
-
-            jend(i,2) = 0
-            ntot = nstot(i)
-
-            if (.not.stable(i)) cycle
-c                                 for each stable solution cycle 
-c                                 through the unsorted compositions
-            do j = 1, tpct
-
-               if (i.ne.dkp(j)) cycle
-c                                 its a composition of solution i
-               id = id + 1
-               jend(i,2) = jend(i,2) + 1
-c                                 load temporarily into the static compound 
-c                                 a array
-               is(id) = zcoct
-               a(zcoct+1:zcoct+ntot) = txco(itxp(j)+1:itxp(j)+ntot)
-               zcoct = zcoct + ntot
-
-            end do
-
-         end do
-
-         zcoct = 0
-         id = 0
-c                                 copy the sorted results back into txco
-         do i = 1, isoct
-
-            ntot = nstot(i)
-
-            do j = 1, jend(i,2)
-
-               id = id + 1
-
-               txco(zcoct+1:zcoct+ntot) =  a(is(id)+1:is(id)+ntot)
-               itxp(ipoint+id) = zcoct
-               zcoct = zcoct + ntot
-
-            end do
-
-         end do
-
-      end if
-c                                 reset iphct and reload static
-      iphct = ipoint
-
-      do i = 1, isoct
-
-         ntot = nstot(i)
-
-         do j = 1, jend(i,2)
-
-            iphct = iphct + 1
-
-            pa(1:ntot) = txco(itxp(iphct) + 1:itxp(iphct) + ntot)
-            call makepp (i)
-
-            call soload (i,bad)
-
-         end do
-
-      end do
 
       end
 

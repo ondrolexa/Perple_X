@@ -7976,16 +7976,7 @@ c                                 are present and it is requested.
 
          if (iam.eq.1.or.iam.eq.2.or.iam.eq.15) then
 c                                 VERTEX, MEEMUM, or CONVEX:
-            if (iam.eq.1.or.iam.eq.15) then 
-
-               call inqopn (n8,n8nam)
-c                                 user friendly text version 
-               if (lopt(11)) then 
-                  call mertxt (n11nam,prject,'_auto_refine.txt',0)
-                  call inqopn (n11,n11nam)
-               end if 
-
-            end if 
+            if (iam.eq.1.or.iam.eq.15) call inqopn (n8,n8nam)
 
             ibad1 = 0 
 
@@ -8087,8 +8078,9 @@ c                                 stage. VERTEX or CONVEX:
          if (refine) then
 
             lopt(11) = .false.
+            close (n11)
 
-         else if (.not.refine.and.(iam.eq.1.or.iam.eq.15)) then
+         else if (iam.eq.1.or.iam.eq.15) then
 c                                 user friendly text version of the exploratory stage
 c                                 auto_refine file:
             if (lopt(11)) then 

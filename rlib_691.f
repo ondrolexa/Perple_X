@@ -6008,8 +6008,16 @@ c                                 evaluate margules coefficients
       call setw (id)
 c                                 evaluate dqf coefficients
       call setdqf (id)
-c                                 evaluate enthalpies of ordering
-      if (lorder(id)) call oenth (id)
+c                                 load enthalpies of ordering
+c                                 and load gend on the off-chance
+c                                 that minfxc is used
+      if (lorder(id)) then
+
+         call oenth (id)
+
+         call ingend (id)
+
+      end if
 
       end
 
@@ -8869,7 +8877,8 @@ c                                 check that the ordered species are in the subc
                  do j = 1, nrct(k,id)
                      do i = 1, iout
                         if (ideps(j,k,id).eq.ibad(i)) then
-                           lord = 0
+                           write (*,*) 'dbug'
+c                          lord = 0
                            return
                         end if
                      end do
@@ -9818,7 +9827,7 @@ c                                during debugging.
 
          h = idint(1d2*pa(j))
 
-         if (h.eq.100.or.h.lt.0d0) then
+         if (h.ge.1d2.or.h.lt.0d0) then
             pnm(j) = '**'
          else
             write (pnm(j),'(i2)') h
@@ -10005,6 +10014,156 @@ c                              model:
 1070  format (a3,'_',f4.1)
 1080  format (a2,i6)
 1100  format (a1,i7)
+
+      end
+
+      subroutine reload (file)
+c----------------------------------------------------------------------
+c load the saved exploratory stage compositions into the static array
+c for the auto-refine stage.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical bad, file
+
+      integer id, i, j, ntot
+
+      character sname(h9)*10
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
+      integer jend
+      common/ cxt23 /jend(h9,m14+2)
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer is
+      double precision a,b,c
+      common/ cst313 /a(k5*k1),b(k5),c(k1),is(k1+k5)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c-----------------------------------------------------------------------
+      if (file) then 
+c                                 manual auto-refine, read the static 
+c                                 compositions from the arf file
+         read (n10,*) i
+         read (n10,*) sname(1:i)
+         read (n10,*) jend(1:i,2)
+         if (i.ne.isoct) call error (63,y(1),i,'GMODEL/isoct')
+
+         tcct = 0
+
+         do i = 1, isoct
+
+            if (sname(i).ne.fname(i)) 
+     *         call error (63,y(1),i,'GMODEL/sname')
+            tpct = jend(i,2)*nstot(i)
+            read (n10,*) txco(tcct+1:tcct+tpct)
+            tcct = tcct + tpct
+
+         end do
+
+         iphct = ipoint
+         tcct = 0
+
+         do i = 1, isoct
+
+            ntot = nstot(i)
+
+            do j = 1, jend(i,2)
+
+               iphct = iphct + 1
+               itxp(iphct) = tcct
+               tcct = tcct + ntot
+
+            end do
+
+         end do
+
+      else
+c                                 automatic, read the data from memory
+         id = 0
+         zcoct = 0
+
+         do i = 1, isoct
+
+            jend(i,2) = 0
+            ntot = nstot(i)
+
+            if (.not.stable(i)) cycle
+c                                 for each stable solution cycle 
+c                                 through the unsorted compositions
+            do j = 1, tpct
+
+               if (i.ne.dkp(j)) cycle
+c                                 its a composition of solution i
+               id = id + 1
+               jend(i,2) = jend(i,2) + 1
+c                                 load temporarily into the static compound 
+c                                 a array
+               is(id) = zcoct
+               a(zcoct+1:zcoct+ntot) = txco(itxp(j)+1:itxp(j)+ntot)
+               zcoct = zcoct + ntot
+
+            end do
+
+         end do
+
+         zcoct = 0
+         id = 0
+c                                 copy the sorted results back into txco
+         do i = 1, isoct
+
+            ntot = nstot(i)
+
+            do j = 1, jend(i,2)
+
+               id = id + 1
+
+               txco(zcoct+1:zcoct+ntot) =  a(is(id)+1:is(id)+ntot)
+               itxp(ipoint+id) = zcoct
+               zcoct = zcoct + ntot
+
+            end do
+
+         end do
+
+      end if
+c                                 reset iphct and reload static
+      iphct = ipoint
+
+      do i = 1, isoct
+
+         ntot = nstot(i)
+
+         do j = 1, jend(i,2)
+
+            iphct = iphct + 1
+
+            pa(1:ntot) = txco(itxp(iphct) + 1:itxp(iphct) + ntot)
+            call makepp (i)
+
+            call soload (i,bad)
+
+         end do
+
+      end do
 
       end
 
@@ -12612,7 +12771,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id
 
-      double precision gval, dg, g0(m14)
+      double precision gval, dg, g0(m14), g1
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
      *                 gfecr1, gcpd, gfes, gmech, gexces
@@ -12718,9 +12877,35 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,bad)
 
-               if (noder(i)) then
+               if (noder(i).or.deriv(i)) then
 c DEBUG691 GALL
-                  call minfxc(g(id),i,.false.)
+
+                  y = p0a
+
+10                call minfxc(g(id),i,.false.)
+
+                  g1 = g(id)
+
+                  p0a = y
+                  pa = p0a
+
+                  call specis (dg,i,minfx)
+
+                  g(id) = gexces (id) + dg + gmech (i)
+
+                  if (dabs(g(id)-g1).gt.1d1.and..not.minfxc) then
+
+
+                     write (*,5000) 'dg = ',g(id)-g1
+                     write (*,5000) 'pa0  ',p0a(1:nstot(i))
+                     write (*,5000) 'pa   ',pa(1:nstot(i))
+                     write (*,5000) 'xpa  ',y(1:nstot(i))
+
+                  end if
+
+c                 if (j.eq.32) goto 10
+
+5000   format (a,12(g10.4,1x))
 
                else
 
@@ -13136,10 +13321,10 @@ c----------------------------------------------------------------------
 
       end do
 
-      if (.not.refine.and.icopt.eq.1) then
+      if (.not.refine.and.iam.eq.1) then
 c                                 load the former dynamic compositions
 c                                 into the static arrays
-         call reload
+         call reload (.false.)
 c                                 output to arf
          write (n10,*) isoct
          write (n10,*) fname(1:isoct)
@@ -14520,11 +14705,11 @@ c                                 to the p0a values
 c                                 get the speciation, excess and entropy effects.
             call specis (g,id,minfx)
 
-            if (minfx) then 
+            if (minfx) then
+c                                 dumbass call to get endmember g's
+               g = gmchpt (id)
 c                                 degenerated speciation
                call minfxc (g,id,.false.)
-               write (*,*) 'need to compute g''s first, e.g., gmchpt'
-               call errpau
 
             else 
 
@@ -16888,7 +17073,7 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 c-----------------------------------------------------------------------
-      if (iam.eq.1.and.refine) then
+      if (refine) then
 c                                 auto-refine in vertex
          pa(1:nstot(ids)) = txco(itxp(id) + 1:itxp(id) + nstot(ids))
          call makepp (ids)
@@ -18795,7 +18980,7 @@ c                                 the algebra
 
             end do
 
-            xt = xt / pwt(ii)
+            if (pwt(ii).gt.zero) xt = xt / pwt(ii)
 
             if (xt.lt.zero) then 
                xt = 0d0

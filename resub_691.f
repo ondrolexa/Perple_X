@@ -120,7 +120,18 @@ c                                 for subsequent warm starts
       call e04mhf ('nolist')
       call e04mhf ('iteration limit = '//cit)
       call e04mhf ('feasibility tolerance = '//ctol)
-      call e04mhf ('cold start')
+
+      if (istart.eq.0) then
+
+         call e04mhf ('cold start')
+         istart = 1
+
+      else
+
+         call e04mhf ('warm start')
+
+      end if
+
       call e04mhf ('problem type = lp')
       write (ctol,'(i4)') iprint
       call e04mhf ('print level = '//ctol)
@@ -3176,6 +3187,10 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
       logical first, err 
 c----------------------------------------------------------------------- 
       first = .true.
@@ -3196,6 +3211,8 @@ c                                 seismic data summary file
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp
+
+      if (refine) call reload (refine)
 
       end
 
