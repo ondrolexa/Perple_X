@@ -56,6 +56,10 @@ c DEBUG691                    dummies for NCNLN > 0
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      double precision wmach
+      common/ cstmch /wmach(9)
+
+
       data iprint,inp/0,.false./
 
       save iprint,inp
@@ -161,8 +165,24 @@ c                                 refinement point index
          if (tick.or.deriv(ids)) iprint = 0
 
          CALL E04UEF ('nolist')
-         CALL E04UEF ('optimality tolerance =  1d-4')
-         CALL E04UEF ('difference interval = 1d-3')
+c        CALL E04UEF ('optimality tolerance =  1d-4')
+c        CALL E04UEF ('difference interval = 1d-3')
+c        write (ctol,'(i4)') iprint
+c        CALL E04UEF ('print level = '//ctol)
+
+
+         write (ctol,'(g14.7)') (wmach(1)*1d1)
+         CALL E04UEF ('function precision = '//ctol)
+         write (ctol,'(g14.7)') (wmach(1)*1d1)**(0.8)
+         CALL E04UEF ('optimality tolerance = '//ctol)
+         write (ctol,'(g14.7)') zero
+         CALL E04UEF ('feasibility tolerance = '//ctol)
+c step limit < nopt(5) leads to bad results, coincidence?
+         write (ctol,'(g14.7)') 0.5
+         CALL E04UEF ('step limit = '//ctol)
+c low values -> more accurate search -> more function calls
+c                              0.05-.4 seem best
+         CALL E04UEF ('linesearch tolerance = 0.225')
          write (ctol,'(i4)') iprint
          CALL E04UEF ('print level = '//ctol)
 
@@ -574,7 +594,12 @@ c                                get sum (needed for non-eq molar case):
 
             do i = 1, lstot(id)
 c DEBUG691
-               if (pp(i).lt.-1d-2) call errdbg ('wtf, p2yx 2')
+               if (pp(i).lt.-1d-2) then 
+                  write (*,*) 'wtf, p2yx 2',fname(id),' pp ',
+     *                        pp(1:lstot(id))
+                  bad = .true.
+                  return
+               end if 
                if (pp(i).lt.zero) pp(i) = 0d0
                sum = sum + pp(i)
             end do
@@ -652,7 +677,7 @@ c                                 cold start
       idead = -1
       iprint = 0
 
-      if (lopt(28)) call begtim (9)
+c     if (lopt(28)) call begtim (9)
 
       write (ctol,'(g14.7)') tol
       write (cit,'(i4)') l6
@@ -667,7 +692,7 @@ c                                 cold start
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
      *            clamda,iw,liw,wrk,lw,idead,iprint)
 
-      if (lopt(28)) call endtim (9,.true.,'p2y inversion')
+c     if (lopt(28)) call endtim (9,.true.,'p2y inversion')
 
 c                                 reset ldt, ldq, istart for phase eq
       istart = 0
@@ -858,6 +883,9 @@ c DEBUG691                    dummies for NCNLN > 0
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
       save / cst59 /
 
+      double precision wmach
+      common/ cstmch /wmach(9)
+
       external gsol3, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
@@ -946,12 +974,20 @@ c                                 obj call counter
       else
 
          iprint = 0 
+c        if (ids.eq.4) iprint = 10
 
-         write (ctol,'(g14.7)') zero
          CALL E04UEF ('nolist')
+         write (ctol,'(g14.7)') (wmach(1)*1d3)
+         CALL E04UEF ('function precision = '//ctol)
+         write (ctol,'(g14.7)') (wmach(1)*1d3)**(0.8)
          CALL E04UEF ('optimality tolerance = '//ctol)
+         write (ctol,'(g14.7)') zero
          CALL E04UEF ('feasibility tolerance = '//ctol)
-         CALL E04UEF ('difference interval = 1d-3')
+c step limit < nopt(5) leads to bad results, coincidence?
+         write (ctol,'(g14.7)') nopt(5)/1d-1
+         CALL E04UEF ('step limit = '//ctol)
+c low values -> more accurate search -> more function calls
+         CALL E04UEF ('linesearch tolerance = 0.1')
          write (ctol,'(i4)') iprint
          CALL E04UEF ('print level = '//ctol)
 
@@ -959,11 +995,13 @@ c                                 obj call counter
 
       if (deriv(ids)) then
 
-c        CALL E04UEF ('verify level 1')
+c        CALL E04UEF ('difference interval = -1')
+         if (ids.eq.4) CALL E04UEF ('verify level 1')
          CALL E04UEF ('derivative level = 3')
 
       else
 
+         CALL E04UEF ('difference interval = 1d-3')
          CALL E04UEF ('verify level 0')
          CALL E04UEF ('derivative level = 0')
 

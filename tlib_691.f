@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 20, 2020.',
+     *     'Perple_X version 6.9.1, source updated September 25, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -203,14 +203,8 @@ c                                 be zero during fractionation
       nopt(11) = 1d-6
 c                                 quench temperature (K)
       nopt(12) = 0d0
-c                                 initial resolution for adaptive 
-c                                 refinement
-      if (iam.eq.15) then 
-c                                 convex
-         nopt(13) = 1d0/16d0
-      else 
-         nopt(13) = 1d0/5d0
-      end if
+c                                 initial resolution
+      nopt(13) = 1d0/16d0
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
@@ -741,8 +735,7 @@ c                                 initial_resolution key
      *                                 'has an invalid value.')
 c                                 initial resolution
             if (nopt(13).ge.1d0.or.nopt(13).lt.0d0) then
-               nopt(13) = 1d0/5d0
-               if (iam.eq.15) nopt(13) = 1d0/16d0
+               nopt(13) = 1d0/16d0
                write (*,1050)
             end if
 c                                  686+ read second value as arf value
@@ -1223,7 +1216,7 @@ c                                 dependent parameters and error traps:
 c                                 fractionation theshold flag
       if (nopt(33).gt.nopt(32)) lopt(35) = .true. 
 
-      if (iopt(31).gt.k5+2.or.iopt(31).lt.1) then 
+      if (iopt(31).gt.k19.or.iopt(31).lt.1) then 
          write (*,1090) icp + 2
          iopt(31) = icp + 2
       end if 
@@ -1367,7 +1360,7 @@ c                                 consequent value for k1
      *         '< 1',/,'the keyword will be',
      *         ' assigned its default value (',i2,').',/)
 1090  format (/,'Warning: refinement_points must be ',
-     *         ' >1 and <k5+2',/,'refinement_points will be',
+     *         ' >1 and <k19',/,'refinement_points will be',
      *         ' assigned its default value [',i2,'].',/)
 1120  format (/,'Warning: the Perple_X option file: ',a,/,
      *       'was not found, default option values will be used.',/) 
@@ -1494,8 +1487,13 @@ c                                 generic subdivision parameters:
             numb = '1/48'
          end if 
 
-         write (n,1010) nopt(13),nopt(13)/nopt(17),numb,nopt(14),
-     *                  lopt(38),valu(13),valu(16),lopt(39)
+         if (iam.eq.15) then
+            write (n,1009) nopt(13),nopt(13)/nopt(17),numb
+         else 
+            write (n,1008) nopt(13)
+         end if
+
+         write (n,1010) nopt(14),lopt(38),valu(13),valu(16),lopt(39)
 
          if (iam.eq.15)  write (n,1011) nopt(15)
 c                                 generic thermo parameters:
@@ -1576,13 +1574,19 @@ c                                 info file options
 1000  format (/,'Perple_X computational option settings for ',a,':',//,
      *      '    Keyword:               Value:     Permitted values ',
      *          '[default]:')
-
-1010  format (/,2x,'Solution subdivision options:',//,
+c                                 VERTEX/MEEMUM
+1008  format (/,2x,'Solution subdivision options:',//,
+     *        4x,'initial_resolution:    ',f6.4,5x,
+     *           '0->1 [1/16], 0 => off')
+c                                 CONVEX
+1009  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:    ',/,
      *        4x,'  exploratory stage    ',f6.4,5x,
-     * '0->1 [1/5 => VERTEX/MEEMUM, 1/16 => CONVEX], 0 => off',/,
+     *            '0->1 [1/16], 0 => off',/,
      *        4x,'  auto-refine stage    ',f6.4,5x,
-     *           '0->1 [',a,'], 0 => off',/,
+     *           '0->1 [',a,'], 0 => off')
+c                                 ALL
+1010  format (
      *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
      *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
      *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
@@ -1617,8 +1621,7 @@ c                                 generic thermo options
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
      *        4x,'interim_results        ',a3,8x,'[auto] off manual')
 1015  format (/,2x,'Auto-refine options:',//,
-     *        4x,'auto_refine            ',a3,8x,
-     *       '[off => VERTEX] manual [auto => CONVEX/MEEMUM]')
+     *        4x,'auto_refine            ',a3,8x,'[auto]')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
@@ -1648,7 +1651,7 @@ c                                 thermo options for frendly
      *        4x,'console_messages       ',a3,8x,'[on] off',/,
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
-     *        4x,'optimization_precision ',/,g7.1E1,4x,
+     *        4x,'optimization_precision ',g7.1E1,4x,
      *           '[1e-1], absolute',/,
      *        4x,'optimization_iterations',i2,9x,'>= 2 [10]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,

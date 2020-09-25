@@ -8736,7 +8736,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,id,jd,lord,iout,ibad(m4)
+      integer i,j,k,id,jd,lord,iout
+c,ibad(m4)
 
       double precision dp,pmn,pmx,dpp(j3),dinc,tinc
 c                                 working arrays
@@ -8859,34 +8860,34 @@ c                                 unanticipated case?
 
       end if
 c                                 check for degenerate compositions
-      if (lord.gt.0) then
-
-         iout = 0
-
-         do i = 1, lstot(id)
-            if (p0a(i).eq.0d0) then
-               iout = iout + 1
-               ibad(iout) = i
-            end if
-         end do
-c                                 the indices of the present components are igood(1..in)
-         if (iout.gt.0) then
-            do k = 1, nord(id)
-               if (pin(k)) then
-c                                 check that the ordered species are in the subcomposition
-                 do j = 1, nrct(k,id)
-                     do i = 1, iout
-                        if (ideps(j,k,id).eq.ibad(i)) then
-                           write (*,*) 'dbug'
-c                          lord = 0
-                           return
-                        end if
-                     end do
-                  end do
-               end if
-            end do
-         end if
-      end if
+!      if (lord.gt.0) then
+!
+!         iout = 0
+!
+!         do i = 1, lstot(id)
+!            if (p0a(i).eq.0d0) then
+!               iout = iout + 1
+!               ibad(iout) = i
+!            end if
+!         end do
+!c                                 the indices of the present components are igood(1..in)
+!         if (iout.gt.0) then
+!            do k = 1, nord(id)
+!               if (pin(k)) then
+!c                                 check that the ordered species are in the subcomposition
+!                 do j = 1, nrct(k,id)
+!                     do i = 1, iout
+!                        if (ideps(j,k,id).eq.ibad(i)) then
+!                           write (*,*) 'dbug'
+!c                          lord = 0
+!                           return
+!                        end if
+!                     end do
+!                  end do
+!               end if
+!            end do
+!         end if
+!      end if
 
       end
 
@@ -10147,10 +10148,14 @@ c                                 copy the sorted results back into txco
       end if
 c                                 reset iphct and reload static
       iphct = ipoint
+      id = 0
 
       do i = 1, isoct
 
          ntot = nstot(i)
+
+         write (*,1100) jend(i,2), fname(i)
+         id = id + jend(i,2)
 
          do j = 1, jend(i,2)
 
@@ -10164,6 +10169,11 @@ c                                 reset iphct and reload static
          end do
 
       end do
+
+      write (*,1110) id
+
+1100  format (i8,' pseudocompounds generated for: ',a)
+1110  format (/,'Total number of pseudocompounds:',i8)
 
       end
 
@@ -12771,7 +12781,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id
 
-      double precision gval, dg, g0(m14), g1
+      double precision gval, dg, g0(m14), g1, junk(m4)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
      *                 gfecr1, gcpd, gfes, gmech, gexces
@@ -12877,15 +12887,16 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,bad)
 
-               if (noder(i).or.deriv(i)) then
+               if (noder(i)) then
 c DEBUG691 GALL
-
+c                 if (i.eq.4) deriv(i) = .false.
                   y = p0a
 
-10                call minfxc(g(id),i,.false.)
-
+10                call minfxc (g(id),i,.false.)
+c                 if (i.eq.4) deriv(i) = .true.
                   g1 = g(id)
 
+                  junk = pa
                   p0a = y
                   pa = p0a
 
@@ -12893,17 +12904,19 @@ c DEBUG691 GALL
 
                   g(id) = gexces (id) + dg + gmech (i)
 
-                  if (dabs(g(id)-g1).gt.1d1.and..not.minfxc) then
+                  if (dabs(g(id)-g1).gt.1d-1.and..not.minfx) then
 
-
+                     write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
                      write (*,5000) 'dg = ',g(id)-g1
-                     write (*,5000) 'pa0  ',p0a(1:nstot(i))
+                     write (*,5000) 'pan  ',junk(1:nstot(i))
                      write (*,5000) 'pa   ',pa(1:nstot(i))
-                     write (*,5000) 'xpa  ',y(1:nstot(i))
+                     write (*,5000) 'pa0  ',p0a(1:nstot(i))
 
                   end if
 
+c                 if (i.eq.4) goto 10
 c                 if (j.eq.32) goto 10
+
 
 5000   format (a,12(g10.4,1x))
 
@@ -13620,9 +13633,9 @@ c                                 warn about bad p2yx inversions
      *                      float(badinv(i,1)+badinv(i,2))*1d2,fname(i)
 
 1010  format (/,'**warning ver204** ',f5.1,'% of the p2y inversions fo',
-     *       'r ',a,' failed. A high failure rate may indicate that',/,
-     *     /,'the compositional polyhedron for the mode',
-     *       'l does not span all possible model compositions.',/)
+     *       'r ',a,' failed. A high',/,'failure rate may indicate th',
+     *       'at the compositional polyhedron for the model does',/,
+     *       'not span all possible model compositions.',/)
 1020  format (/,'Compositions for simplicial model: ',a,//,5x,
      *          '              Minimum         Maximum')
 1030  format (5x,a8,4x,g12.5,4x,g12.5)
@@ -19183,6 +19196,12 @@ c----------------------------------------------------------------------
           write (*,*) 'no derivatives for non-equimolar ordering: ',
      *                fname(ids)
 
+c     else if (fname(ids).eq.'Ep(HP11)') then 
+
+c         deriv(ids) = .false.
+c         write (*,*) 'turned off deriv for  ',
+c    *                fname(ids)
+
       else
 
           deriv(ids) = .true.
@@ -19463,8 +19482,8 @@ c----------------------------------------------------------------------
 
       integer i, j, k, l, ids, nvar
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision wmach
+      common/ cstmch /wmach(9)
 
       double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
@@ -19497,12 +19516,12 @@ c                                 for each term:
                if (z(j).gt.0d0) zlnz = zlnz + z(j) * dlog(z(j))
 
                do l = 1, nvar
-                  if (z(j).gt.0d0) then 
+                  if (z(j).gt.wmach(1)) then 
                      dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
      *                                            * (1d0 + dlog(z(j)))
                   else 
                      dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
-     *                                            * (1d0 + dlog(zero))
+     *                                         * (1d0 + dlog(wmach(1)))
                   end if 
                end do
 
@@ -19515,11 +19534,11 @@ c                                 site negentropy
             zlnz = zmult(ids,i) * zlnz
 c                                 for non-temkin sites dzdp is already scaled by q*R
             do l = 1, nvar
-               if (zt.gt.0d0) then 
+               if (zt.gt.wmach(1)) then 
                   dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (1d0 + dlog(zt))
                else 
                   dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
-     *                                              * (1d0 + dlog(zero))
+     *                                          * (1d0 + dlog(wmach(1)))
                end if
             end do
 
@@ -19537,7 +19556,7 @@ c                                 zt is the multiplicity here
 
             end do
 c                                 site doesn't exist if zt = 0
-            if (zt.lt.zero) cycle
+            if (zt.lt.wmach(1)) cycle
 c                                 convert molar amounts to fractions
             z(1:zsp(ids,i)) = z(1:zsp(ids,i)) / zt
 
@@ -19553,12 +19572,12 @@ c                                 derivatives
 c                                 for each species
                do j = 1, zsp(ids,i)
 
-                  if (z(j).gt.0d0) then 
+                  if (z(j).gt.wmach(1)) then 
                      dzlnz = dzlnz + dzdp(j,i,l,ids) 
      *                                    * (1d0 + dlog(z(j)))
                   else
                      dzlnz = dzlnz + dzdp(j,i,l,ids) 
-     *                                    * (1d0 + dlog(zero))
+     *                                    * (1d0 + dlog(wmach(1)))
                   end if
 
                end do
@@ -20115,16 +20134,12 @@ c                                 initialize p0 term counter for limit
 c                                 load the p0 coefficients, if simplicial p0 > lstot(im) = 0
                      do ik = 1, nstot(im)
 
-                        if (jsmod.eq.6.and.ik.gt.lstot(im)) exit
                         if (dabs(c0(ik)).lt.zero) cycle
 c                                 increment term counter:
                         lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
 c                                 save the coefficient and index:
                         lc(lt(ln(k,im),k,im),ln(k,im),k,im) = c0(ik)
                         lid(lt(ln(k,im),k,im),ln(k,im),k,im) = ik
-
-c                          write (*,*) i,j,ln(k,im),lt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
 
                      end do
 c                                 initialize p term counter for limit

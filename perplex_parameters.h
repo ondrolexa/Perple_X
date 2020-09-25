@@ -142,7 +142,7 @@ c----------------------------------------------------------------------
 !                                  and solving for k21 
 !                                    k21 = (memory - k1*(2*k31 + k32 + 2))/(k32+1)
 ! DEBUG691
-      parameter(memory=80000000,k31=2,k32=10,k1=4800000)
+      parameter(memory=70000000,k31=2,k32=10,k1=4300000)
 !     parameter(memory=42000000,k31=2,k32=10,k1=1800000)
 !                                  static
       parameter(k18=k1*k31,k24=k1*k32,k13=k1)
@@ -205,7 +205,7 @@ c----------------------------------------------------------------------
      *           m10=6, m11=11, m12=4, m14=14, m15=85, m16=6, m17=5,
      *           m18=6, m19=m14-1, m20=m10*(m11-2)+1, m21=m20+m19,
      *           m22=3*m19+m20, m23=2*m19**2+20*m19+11*m20, 
-     *           m24 = 60*60*k5, m25 = m24*m14)
+     *           m24 = 10*60*60*k5, m25 = m24*m14)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
       parameter (nx=500,ny=500)

@@ -185,16 +185,8 @@ c                                 blk output file
          call mertxt (tfname,prject,'.blk',0)
          call inqopn (n5,tfname)
 c                                 load the former dynamic compositions
-c                                 into the static arrays
-         if (iopt(6).eq.1) then
-c                                 manual auto-refine, read from arf
-            call reload (refine)
-
-         else
-c                                 auto auto-refine, read from memory
-            call reload (.false.)
-
-         end if
+c                                 into the static arrays if manual
+         if (iopt(6).eq.1) call reload (refine)
 
          write (*,1000) 'auto-refine'
 c                                 repeat the calculation
@@ -1568,6 +1560,8 @@ c                               init progress info
       tot = 0d0
 
       call setvar 
+
+      if (lopt(28)) call begtim (11)
 c                               do all points on lowest level
       do i = 1, loopx, kinc
          do j = 1, loopy, kinc
@@ -1581,6 +1575,8 @@ c                               flush stdout for paralyzer
          flush (6)
 
       end do
+
+      if (lopt(28)) call endtim (11,.true.,'low level grid')
 c                               output interim plt file
       if (iopt(34).ne.0) call outgrd (loopx,loopy,kinc,1000,1)
 c                               get hot points
@@ -1625,7 +1621,9 @@ c                              now working on new level
 c
          write (*,1060) ihot,k
 c                               flush stdout for paralyzer
-         flush (6)      
+         flush (6)
+
+         if (lopt(28)) call begtim (12)
 c                              compute assemblages at refinement
 c                              points
          do h = 1, ihot
@@ -1745,6 +1743,8 @@ c                                fill hot cells
          ktic = ktic + jtic
  
          write (*,1080) ktic,(loopx/kinc+1)*(loopy/kinc+1)
+
+         if (lopt(28)) call endtim (12,.true.,'nth level grid')
 
          if (khot.eq.0.or.k.eq.jlev) exit 
 c                             now switch new and old hot list

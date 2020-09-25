@@ -94,11 +94,11 @@ c                                logarithmic_p option
 c                                t_stop option
       if (t.lt.nopt(12)) t = nopt(12)
 
-      if (lopt(28)) call begtim (1)
+c     if (lopt(28)) call begtim (1)
 
       call gall
 
-      if (lopt(28)) call endtim (1,.true.,'Static GALL ')
+c     if (lopt(28)) call endtim (1,.true.,'Static GALL ')
 
       do k = 1, jphct
          c(k) = g(k+inc)/ctot(k+inc)
@@ -112,7 +112,7 @@ c                                 for subsequent warm starts
       idead = -1
       iprint = 0 
 
-      if (lopt(28)) call begtim (2)
+c     if (lopt(28)) call begtim (2)
 
       write (ctol,'(g14.7)') wmach(4)*1d2
       write (cit,'(i4)') l6
@@ -141,7 +141,7 @@ c                                 for subsequent warm starts
 c DEBUG691 to account for the unmodified lpsol ifail setting
       if (idead.lt.3) idead = 0
 
-      if (lopt(28)) call endtim (2,.true.,'Static optimization ')
+c     if (lopt(28)) call endtim (2,.true.,'Static optimization ')
 
       if (idead.gt.0) then
 c                                 look for severe errors                                            
@@ -333,7 +333,7 @@ c                                 overwriting warm start parameters
          idead = 0
          iprint = 0
 
-         if (lopt(28)) call begtim (8)
+c        if (lopt(28)) call begtim (8)
 c                                 do the optimization
          write (ctol,'(g14.7)') wmach(4)*1d2
          write (cit,'(i4)') l6
@@ -358,10 +358,10 @@ c        call e04mhf ('minimum sum of infeasibilities = yes')
 c DEBUG691 to account for the unmodified lpsol ifail setting
          if (idead.lt.3) idead = 0
 
-         if (lopt(28)) then 
-            call endtim (8,.true.,'Dynamic optimization N ')
-            write (666,'(a,i6)') 'jphct = ',jphct
-         end if 
+c        if (lopt(28)) then 
+c           call endtim (8,.true.,'Dynamic optimization N ')
+c           write (666,'(a,i6)') 'jphct = ',jphct
+c        end if 
 c                                 warn if severe error
          if (idead.gt.0) then
 
@@ -554,8 +554,12 @@ c                                 refinement point was the same solution.
          end if
 
          if (nstot(ids).gt.1) then 
+
+c           if (lopt(28)) call begtim (9)
 c                                  normal solution
             call minfrc (ids,kd)
+
+c           if (lopt(28)) call endtim (9,.true.,'minfrc')
 
          else 
 c                                  lagged speciation pure solvent
@@ -646,6 +650,10 @@ c DEBUG691
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -681,6 +689,9 @@ c DEBUG691
             sum = sum + ycoor(lcoor(i)+j)
             pa(j) = zco(icoz(id)+j)
          end do
+
+         if (.not.refine) call savdyn (ids)
+
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
 c           call errpau
@@ -719,7 +730,7 @@ c----------------------------------------------------------------------
       end do 
 
       if (sum.gt.1.00001d0.or.sum.lt.0.99999d0) then 
-         write (*,*) 'wyf',sum
+         write (*,*) 'wyf sum id',sum,ids
       end if
 
       call makepp (ids)
@@ -826,7 +837,7 @@ c----------------------------------------------------------------------
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
      *                 bnew(k5),pnew(k5,m14),ncaq(k5,l10),ximp
-     * , sum
+     * , sum, sum1
 
       logical solvs1, solvs4
       external solvs1, solvs4
@@ -1109,6 +1120,12 @@ c                                count fraction of impure solvent
          do j = 1, idsol(i)
 
             jd = jdsol(i,j)
+
+c           if (.not.refine) then 
+c                                load into pa and save for refinement
+c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c              call savdyn (ids)
+c           end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 
                xx =  amt(jd)/bnew(i)
@@ -1187,7 +1204,7 @@ c                                 check composition against solution model range
          call sollim (ids,i)
 c                                 sollim loads the composition into pa, so no 
 c                                 phase pointer needed here.
-         if (.not.refine) call savdyn (ids)
+c        if (.not.refine) call savdyn (ids)
 
       end do
 
@@ -1226,6 +1243,9 @@ c----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
       tpct = tpct + 1
+
+      if (tpct.gt.m24) call errdbg ('increase m24')
+      if (tcct+nstot(ids).gt.m25) call errdbg ('increase m25')
 c                                 solution pointer
       dkp(tpct) = ids
 c                                 save the composition
