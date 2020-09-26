@@ -4,7 +4,7 @@ c Copyright (c) 1987-2020 by James A. D. Connolly, Institute for Mineralogy
 c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
 
-      program meemm       
+      program meemm
 c----------------------------------------------------------------------
       implicit none
 
@@ -61,8 +61,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 2
-c                                 version info
-      call vrsion (6)
 c                                 initialization, read files etc.
       call iniprp
 
@@ -77,8 +75,7 @@ c                                 bulk is true, user enters composition and p-t 
 c                                 else user enters only p-t and composition read from input file.
          bulk = .false.
 
-      end if 
-
+      end if
 c                                 iwt is set by input, it is only used below to determine
 c                                 whether to convert weight compositions to molar. the 
 c                                 computations are done solely in molar units. 

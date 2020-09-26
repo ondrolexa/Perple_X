@@ -338,7 +338,7 @@ c                                 overwriting warm start parameters
 
 c        if (lopt(28)) call begtim (8)
 c                                 do the optimization
-         write (ctol,'(g14.7)') wmach(4)*1d2
+         write (ctol,'(g14.7)') zero
          write (cit,'(i4)') l6
 
          call e04mhf ('nolist')
