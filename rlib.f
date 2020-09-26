@@ -9644,7 +9644,7 @@ c                                binary solutions
          else if (pa(1).lt.1d-6) then
             write (names(phct),'(a3,a)') names(jend(im,3)),'_0*'
          else if (pa(1).lt.0.02d0) then
-            write (names(phct),'(a2,a,f5.4)')
+            write (names(phct),'(a2,a,f5.3)')
      *             names(jend(im,3)),'_',1d2*pa(1)
          else
             write (names(phct),1070) names(jend(im,3)),1d2*pa(1)
@@ -12044,17 +12044,17 @@ c                          CONVEX
          if (icp.gt.3) then
             write (n3,1150) (cname(i), i = 1, icp)
             do i = istct, iphct
-               write (n3,'(3x,a,12(1x,f5.3,1x))')
+               write (n3,'(3x,a,12(1x,f6.3,1x))')
      *            names(i), (a(j,i)/ctot(i), j = 1, icp)
             end do
          else if (icp.eq.3) then
             write (n3,1090) (cname(i), i = 2, 3)
-            write (n3,'(3(1x,a,2x,f5.3,2x,f5.3,5x))')
+            write (n3,'(3(1x,a,1x,f6.3,1x,f6.3,5x))')
      *         (names(i), a(2,i)/ctot(i), a(3,i)/ctot(i),
      *                                             i = istct, iphct)
          else if (icp.eq.2) then
             write (n3,1040) cname(2)
-            write (n3,'(4(2x,a,1x,f5.3))')
+            write (n3,'(4(2x,a,1x,f6.3))')
      *         (names(i), a(2,i)/ctot(i), i = istct, iphct)
          else if (icp.eq.1) then
             write (n3,1130)
@@ -12066,17 +12066,17 @@ c                          MEEMUM/VERTEX
          if (icp.gt.3) then
             write (n3,1150) (cname(i), i = 1, icp)
             do i = istct, ipoint
-               write (n3,'(3x,a,12(1x,f5.3,1x))')
+               write (n3,'(3x,a,12(1x,f6.3,1x))')
      *            names(i), (cp(j,i)/ctot(i), j = 1, icp)
             end do
          else if (icp.eq.3) then
             write (n3,1090) (cname(i), i = 2, 3)
-            write (n3,'(3(1x,a,2x,f5.3,2x,f5.3,5x))')
+            write (n3,'(3(1x,a,1x,f6.3,1x,f6.3,5x))')
      *         (names(i), cp(2,i)/ctot(i), cp(3,i)/ctot(i),
      *                                             i = istct, ipoint)
          else if (icp.eq.2) then
             write (n3,1040) cname(2)
-            write (n3,'(4(2x,a,1x,f5.3))')
+            write (n3,'(4(2x,a,1x,f6.3))')
      *         (names(i), cp(2,i)/ctot(i), i = istct, ipoint)
          else if (icp.eq.1) then
             write (n3,1130)
@@ -12112,7 +12112,7 @@ c                          excluded phases
 1130  format (/,'Phases:',/)
 1140  format (/,'Excluded phases:',/)
 1150  format (/,'Phases and (projected) compositions:',//,
-     *        11x,12(1x,a5,1x),/)
+     *        11x,12(1x,a5,2x),/)
 1180  format (/,'Saturated or buffered components:',//,3x,7(a,3x))
 1190  format (/,'Problem title: ',a,/)
 1200  format (/,'Saturated phase components:',//,3x,5(a,3x))

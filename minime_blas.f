@@ -881,7 +881,6 @@ c DEBUG691                    dummies for NCNLN > 0
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       double precision wmach
       common/ cstmch /wmach(9)

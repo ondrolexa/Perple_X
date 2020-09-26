@@ -82,7 +82,7 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
-c                                 iam is a flag indicating the Perple_X program
+c                                 iam indicates the Perple_X program
 c                                    iam = 1  - vertex
 c                                    iam = 2  - meemum
 c                                    iam = 3  - werami 
@@ -98,44 +98,9 @@ c                                    iam = 13 - unsplt (global)
 c                                    iam = 14 - unsplt (local)
 c                                    iam = 15 - convex
       iam = 1
-c                                 version info
-      call vrsion (6)
-c                                 initialize outprt to .false. to force input1 to 
-c                                 read input, subsequently outprt is set in setau2
-      outprt = .false.
-c                                 set refine to indicate the stage
-      refine = .false.
-c                                 -------------------------------------
-c                                 open statements for units n1-n6 and n9
-c                                 are in subroutine input1
- 
-c                                 read input from unit n1 (terminal/disk).
-c                                 input1 also initializes: conditions,
-c                                 equilibrium counters; units n2 n4 and n6;
-c                                 and the limits for numerical results.
-      call input1 (first,err)
-c                                 read thermodynamic data on unit n2:
-      call input2 (first)
-c                                 read/set autorefine dependent parameters, 
-c                                 it would be logical to output context specific 
-c                                 parameter settings here instead of the generic 
-c                                 blurb dumped by redop1
-      call setau1
-c                                 read data for solution phases on n9:
-      call input9 (first)
-c                                 load static compositions for manual autorefine
-      if (refine) call reload (refine)
-c                                 seismic data summary file
-      if (lopt(50)) call outsei
+c                                 initialization
+      call iniprp
 
-      call setau2
-c                                 initialize the counter for future auto-refine
-c                                 stage static compositions
-      tpct = 0
-      tcct = 0
-c                                 -------------------------------------
-c                                 at this point the exploratory problem is 
-c                                 fully configured,
       if (.not.refine) then
 c                                 two-stage calculation,
 c                                 inform user of 1st stage
@@ -325,9 +290,6 @@ c-----------------------------------------------------------------------
       loopy = jlow
 c                                 get phases to be fractionated
       call frname 
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp 
 
       open (n0-1,status='scratch')
 c                                 patch to initialize unused potentials
@@ -584,9 +546,6 @@ c                                 the molar composition of the infiltrant
       end do
 c                                 get phases to be fractionated
       call frname 
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp
 
       do j = 1, iopt(36) + 1
 
@@ -924,10 +883,6 @@ c                                 number of variables in table
 
       n5name = '_cumulative_change_column'
       call tabhed (lun + 2*ilay + 1,vmn(1),dvr(1),two,1,n5name,n6name)
-
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp
 
       write (*,'(/)')
 
@@ -1509,8 +1464,6 @@ c                               call old routine for 1d grid
          call wavgrd
          return
       end if 
-c                               load arrays for lp solution
-      call initlp 
 c                               jlow is the number of nodes
 c                               at the lowest level, the number of
 c                               nodes is
@@ -1803,8 +1756,6 @@ c----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc1
       common/ cst312 /jlow,jlev,loopx,loopy,jinc1
 c-----------------------------------------------------------------------
-c                               load arrays for lp solution
-      call initlp
 c                               jlow is the number of nodes
 c                               at the lowest level, the number of
 c                               nodes is

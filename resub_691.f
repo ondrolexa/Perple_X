@@ -64,6 +64,9 @@ c-----------------------------------------------------------------------
       integer idegen, idg(k5), jcp, jin(k5)
       common/ cst315 /idegen, idg, jcp, jin
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       logical abort1
       common/ cstabo /abort1
 
@@ -114,7 +117,7 @@ c                                 for subsequent warm starts
 
 c     if (lopt(28)) call begtim (2)
 
-      write (ctol,'(g14.7)') wmach(4)*1d2
+      write (ctol,'(g14.7)') zero
       write (cit,'(i4)') l6
 
       call e04mhf ('nolist')
@@ -3212,9 +3215,15 @@ c----------------------------------------------------------------------
       common/ cxt26 /refine,resub,tname
 
       logical first, err 
-c----------------------------------------------------------------------- 
+c-----------------------------------------------------------------------
+c                                 version info
+      call vrsion (6)
+c                                 stage flag
+      refine = .false.
+
       first = .true.
-c                                 set false for input1
+c                                 initialize outprt to .false. to force input1 to 
+c                                 read input, subsequently outprt is set in setau2
       outprt = .false.
 c                                 -------------------------------------------
 c                                 open statements for units n1-n5 and n9
@@ -3226,13 +3235,19 @@ c                                 allow reading of auto-refine data
       call setau1 
 c                                 read data for solution phases on n9:
       call input9 (first)
+c                                 load static compositions for manual autorefine
+      if (refine) call reload (refine)
 c                                 seismic data summary file
       if (lopt(50)) call outsei
 c                                 call initlp to initialize arrays 
 c                                 for optimization.
       call initlp
-
-      if (refine) call reload (refine)
+c                                 unnecessary stuff for meemum
+      call setau2
+c                                 initialize the counter for future auto-refine
+c                                 stage static compositions
+      tpct = 0
+      tcct = 0
 
       end
 
