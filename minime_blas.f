@@ -1,7 +1,7 @@
       subroutine dummy
       end 
 
-      subroutine minfrc (ids,kds)
+      subroutine minfrc
 c-----------------------------------------------------------------------
 c minimize the omega function for the independent endmember fractions
 c of solution ids subject to site fraction constraints
@@ -22,17 +22,16 @@ c-----------------------------------------------------------------------
 
       logical inp, tick
 
-      integer ids, kds, nvar, iter, iwork(m22),
+      integer nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
-     *         , i, j, iprint,mode
+     *        ,iprint,mode
 
       double precision ggrd(m19), lapz(m20,m19),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),yt(m4),zp,zt(m10,m11),
-     *                 ftol,fdint
+     *                 ,c(1),cjac(1,1),yt(m4),fdint,ftol
 
       character ctol*20,cdint*20
 
@@ -59,29 +58,28 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision wmach
       common/ cstmch /wmach(9)
 
-
       data iprint,inp/0,.false./
 
       save iprint,inp
 c-----------------------------------------------------------------------
-      zp = 0d0
-      ftol = 1d-1
+c     zp = 0d0
+c     ftol = 1d-1
 
-      do i = 1, nstot(ids)
-         if (pa(i).eq.0d0) then 
-            pa(i) = ftol
-         end if
-         zp = zp + pa(i)
-      end do
+c     do i = 1, nstot(rids)
+c        if (pa(i).eq.0d0) then 
+c           pa(i) = ftol
+c        end if
+c        zp = zp + pa(i)
+c     end do
 
-      pa(1:nstot(ids)) = pa(1:nstot(ids)) / zp
+c     pa(1:nstot(ids)) = pa(1:nstot(ids)) / zp
 
-      yt = pa
+c     yt = pa
 
-10    nclin = nz(ids)
-      ntot = nstot(ids)
+10    nclin = nz(rids)
+      ntot = nstot(rids)
 
-      if (dnu(ids).eq.0d0) then
+      if (dnu(rids).eq.0d0) then
          nvar = ntot - 1
       else 
          nvar = ntot
@@ -108,10 +106,10 @@ c                                 are bounded
       end if 
 c                                 load the local constraints 
 c                                 from the global arrays
-      lapz(1:nclin,1:nvar) = apz(ids,1:nclin,1:nvar)
+      lapz(1:nclin,1:nvar) = apz(rids,1:nclin,1:nvar)
 
-      bl(nvar+1:nvar+nclin) = zl(ids,1:nclin)
-      bu(nvar+1:nvar+nclin) = zu(ids,1:nclin)
+      bl(nvar+1:nvar+nclin) = zl(rids,1:nclin)
+      bu(nvar+1:nvar+nclin) = zu(rids,1:nclin)
 
       tick = .false.
 
@@ -133,16 +131,10 @@ c                                 closure for molecular models
       end if
 
       idead = -1
-c                                 the solution model index
-      istuff(1) = ids
-c                                 print/save obj value 
-c     istuff(2) set by nlpopt
 c                                 obj call counter
       istuff(3) = 0
 c                                 saved obj value counter
       istuff(4) = 0
-c                                 refinement point index
-      istuff(5) = kds
 
       if (inp) then
 
@@ -162,7 +154,7 @@ c                                 refinement point index
       else
 
          iprint = 0
-         if (tick.or.deriv(ids)) iprint = 0
+         if (tick.or.deriv(rids)) iprint = 0
 
          CALL E04UEF ('nolist')
 c        CALL E04UEF ('optimality tolerance =  1d-4')
@@ -188,7 +180,7 @@ c                              0.05-.4 seem best
 
       end if
 
-      if (deriv(ids)) then
+      if (deriv(rids)) then
 
 c        CALL E04UEF ('verify level 1')
          CALL E04UEF ('derivative level = 3')
@@ -235,15 +227,13 @@ c        deriv(ids) = .true.
 c     end if
 
 
-
-
       if (inp) then 
 
-         deriv(ids) = .false.
+         deriv(rids) = .false.
 
          pa = yt
 
-         write (*,*) istuff(3),gfinal,kds
+         write (*,*) istuff(3),gfinal,rkds
 
          goto 10
 
@@ -265,10 +255,10 @@ c-----------------------------------------------------------------------
 
       logical bad, qwak
 
-      integer i, j, jds, nvar, mode, istuff(*), istart, iwarn
+      integer i, j, nvar, mode, istuff(*), istart, iwarn
 
       double precision ppp(*), gval, dgdp(*), stuff(*),
-     *                 gsol1, g, sum, scp(k5), sum1, smo
+     *                 gsol1, g, sum1
 
       external gsol1
 
@@ -276,15 +266,8 @@ c-----------------------------------------------------------------------
       double precision mu
       common/ cst330 /mu(k8),mus
 
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -293,12 +276,13 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
       save iwarn
 
       data iwarn/0/
 c-----------------------------------------------------------------------
-      jds = istuff(1)
-
       sum1 = 0d0
 
       do i = 1, nvar
@@ -306,11 +290,11 @@ c-----------------------------------------------------------------------
          pa(i) = ppp(i)
       end do
 
-      if (nvar.lt.nstot(jds)) pa(nstot(jds)) = 1d0 - sum1
+      if (nvar.lt.nstot(rids)) pa(nstot(rids)) = 1d0 - sum1
 
-      if (ksmod(jds).eq.39) then
+      if (ksmod(rids).eq.39) then
 
-         do i = 1, nstot(jds)
+         do i = 1, nstot(rids)
 
             if (pa(i).gt.1d0.or.pa(i).lt.0d0) then
 
@@ -329,39 +313,39 @@ c-----------------------------------------------------------------------
 
       end if
 
-      call makepp (jds)
+      call makepp (rids)
 
-      if (deriv(jds)) then
+      if (deriv(rids)) then
 
-         call getder (g,dgdp,jds)
+         call getder (g,dgdp,rids)
 c                                 get the bulk composition from pp
-         call getscp (scp,sum,jds,jds,.false.)
+         call getscp (rcp,rsum,rids,rids,.false.)
 c                                 convert dgdp to dg'dp
          do i = 1, nvar
             do j = 1, icp
-               dgdp(i) = dgdp(i) - dcdp(j,i,jds)*mu(j)
+               dgdp(i) = dgdp(i) - dcdp(j,i,rids)*mu(j)
             end do
          end do
 
-         qwak = .true.
+         rkwak = .true.
 
-      else if (ksmod(jds).eq.39.and.lopt(32)) then 
+      else if (ksmod(rids).eq.39.and.lopt(32)) then 
 c                                 the last argument cancels recalc, in
 c                                 which case i is a dummy. smo the total
 c                                 species molality it is necessary for 
 c                                 renormalization.
-         call gaqlgd (g,scp,sum,smo,i,bad,.false.)
+         call gaqlgd (g,rcp,rsum,rsmo,i,bad,.false.)
 
          qwak = .false.
 
          if (bad) then 
 c                                 on failure revert to molecular fluid
-            g = gsol1 (jds,.false.)
-            call getscp (scp,sum,jds,jds,.false.)
+            g = gsol1 (rids,.false.)
+            call getscp (rcp,rsum,rids,rids,.false.)
             qwak = .true.
 
             if (iwarn.lt.11) then
-               write (*,1000) fname(jds)
+               write (*,1000) fname(rids)
                call prtptx
                if (iwarn.eq.10) call warn (49,0d0,205,'MINFRC')
                iwarn = iwarn + 1
@@ -371,50 +355,28 @@ c                                 on failure revert to molecular fluid
 
       else
 c                                 if logical arg = T use implicit ordering
-         g = gsol1 (jds,.false.)
+         g = gsol1 (rids,.false.)
 c                                 get the bulk composition from pp
-         call getscp (scp,sum,jds,jds,.false.)
+         call getscp (rcp,rsum,rids,rids,.false.)
 
-         qwak = .true.
+         rkwak = .true.
 
       end if
 
       gval = g
 
       do i = 1, icp
-         gval = gval - scp(i)*mu(i)
+         gval = gval - rcp(i)*mu(i)
       end do
 
       istuff(3) = istuff(3) + 1
 
-      if (istuff(2).ne.0.and.(nvar.lt.nstot(jds).or.
-     *    sum1.ge.one.and.sum1.le.1d0+zero).and.sum.gt.zero) then
+      if (istuff(2).ne.0.and.(nvar.lt.nstot(rids).or.
+     *    sum1.ge.one.and.sum1.le.1d0+zero).and.rsum.gt.zero) then
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         jphct = jphct + 1
-c                                 the solution model pointer
-         jkp(jphct) = jds
-c                                 the refinement point pointer
-         hkp(jphct) = istuff(5)
-c                                 save the normalized g
-         g2(jphct) = g/sum
-c                                 save the normalized bulk
-         cp2(1:icomp,jphct) = scp(1:icomp)/sum
-c                                 sum scp(1:icp)
-         if (ksmod(jds).eq.39.and.lopt(32).and..not.qwak) then 
-            c2tot(jphct) = sum/smo
-         else
-            c2tot(jphct) = sum
-         end if
-
-         quack(jphct) = qwak
-c                                 save the endmember fractions
-         icoz(jphct) = zcoct
-
-         zco(zcoct+1:zcoct+nstot(jds)) = pa(1:nstot(jds))
-
-         zcoct = zcoct + nstot(jds)
+         call savrpc (g)
 
       end if
 
@@ -423,6 +385,54 @@ c                                 save the endmember fractions
      *       'output.',/)
 
       end
+
+      subroutine savrpc (g)
+c-----------------------------------------------------------------------
+c save a dynamic composition for the lp solver
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision g
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+c-----------------------------------------------------------------------
+c                                 increment the counter
+      jphct = jphct + 1
+c                                 the solution model pointer
+      jkp(jphct) = rids
+c                                 the refinement point pointer
+      hkp(jphct) = rkds
+c                                 save the normalized g
+      g2(jphct) = g/rsum
+c                                 save the normalized bulk
+      cp2(1:icomp,jphct) = rcp(1:icomp)/rsum
+c                                 sum scp(1:icp)
+      if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then 
+         c2tot(jphct) = rsum/rsmo
+      else
+         c2tot(jphct) = rsum
+      end if
+
+      quack(jphct) = rkwak
+c                                 save the endmember fractions
+      icoz(jphct) = zcoct
+
+      zco(zcoct+1:zcoct+nstot(rids)) = pa(1:nstot(rids))
+
+      zcoct = zcoct + nstot(rids)
+
+      end 
 
       subroutine gsol3 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
 c-----------------------------------------------------------------------
@@ -516,7 +526,7 @@ c-----------------------------------------------------------------------
 
       logical bad, site, comp, clos, inv
 
-      integer liw, lw, mvar, mcon, nvar, i, j, jter, iprint, iwarn,
+      integer liw, lw, mvar, mcon, nvar, i, jter, iprint, iwarn,
      *        iwarn1, iwarn2
 
       character cit*4, ctol*14

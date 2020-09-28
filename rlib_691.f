@@ -1919,6 +1919,7 @@ c----------------------------------------------------------------------
 
       iterm = 0
       iord = 0
+      xtyp = 0
 
       call readcd (n9,ier,.true.)
 
@@ -7613,7 +7614,7 @@ c                                 y2c
 c                                 p'2c
       call makapc (im)
 c                                 set derivatives for minfrc
-      call setder (im)
+      call setder (im,tname)
 
       end
 
@@ -7694,6 +7695,49 @@ c                                 usually fully disordered
       end do
 c                                 zero ordered pp's
       pp(lstot(id) + 1:nstot(id)) = 0d0
+
+      end
+
+      subroutine setpmx (id)
+c----------------------------------------------------------------------
+c subroutine to set ordered speciation to disordered limit as a starting
+c point for minfrc, there is no reason to favor this starting condition 
+c other than HP O/D models are often calibrated for the ordered rather 
+c than the antiordered speciation.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id
+
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      if (dnu(id).ne.0d0) then
+
+         call gpmlt1 (g,id,error)
+
+      else
+c                                 initialize limit expressions
+         call p0limt (id)
+c                                 as most models are single species and
+c                                 there is so much overhead in computing
+c                                 multiple speciation, use a special routine
+c                                 for single species models:
+         if (nord(id).gt.1) then
+
+            call speci2 (g,id,error,minfx)
+
+         else
+
+            call speci1 (g,id,1,error)
+
+         end if
+
+      end if
 
       end
 
@@ -8736,7 +8780,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,id,jd,lord,iout
+      integer i,k,id,jd,lord,iout
 c,ibad(m4)
 
       double precision dp,pmn,pmx,dpp(j3),dinc,tinc
@@ -10052,6 +10096,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer jphct,istart
+      common/ cst111 /jphct,istart
+
       integer is
       double precision a,b,c
       common/ cst313 /a(k5*k1),b(k5),c(k1),is(k1+k5)
@@ -10169,6 +10216,8 @@ c                                 reset iphct and reload static
          end do
 
       end do
+c                                 reset istart to cold start
+      istart = 0 
 
       write (*,1110) id
 
@@ -10509,11 +10558,7 @@ c                                 generate coordinates for i'th component
 
          ync = pxnc(lpoly,lsite,k)/wt
 
-         if (dynam.and.ync.gt.xncg(ids,lpoly,lsite,k)) then 
-            ync = xncg(ids,lpoly,lsite,k)
-         else if (ync.gt.0.5d0) then
-            ync = 0.5d0
-         end if
+         if (ync.gt.0.5d0) ync = 0.5d0
 
          if (ync.eq.0d0) cycle
 
@@ -16617,21 +16662,12 @@ c---------------------------------------------------------------------
 
       double precision twt
 
-      character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
-
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c---------------------------------------------------------------------
-
-      dynam = .false.
-      dead = .false.
-
       if (ksmod(ids).eq.20) then
 c                                 subdivision with charge balance
          call cartaq (ids)
@@ -16693,12 +16729,7 @@ c                                 get the polytope weights
 
                pos = pos + 1
 
-               if (dynam) then
-                  pwt(j) = zco(pos)
-               else 
-                  pwt(j) = xco(pos)
-               end if
-
+               pwt(j) = xco(pos)
                twt = twt + pwt(j)
 
             end do
@@ -16737,8 +16768,6 @@ c                                  compositions at constant wt, initialization:
          end do
 
          call setind (ids,stind,nind,gcind)
-
-         if (restrt.or.dead) return
 c                                  now generate all permutations of the polytopic 
 c                                  compositions:
          do 
@@ -16765,8 +16794,6 @@ c                                  figure out the index to be incremented
 c                                 save the indexes
             call setind (ids,stind,nind,gcind)
 
-            if (restrt.or.dead) return
-
          end do 
 
       end do
@@ -16789,10 +16816,6 @@ c---------------------------------------------------------------------
 
       double precision wt
 
-      character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
-
       integer ntot,npairs
       common/ cst86 /ntot,npairs
 c---------------------------------------------------------------------
@@ -16812,13 +16835,8 @@ c                                 copy these into the static or dynamic array
 
             icoct = icoct + 1
 c
-            if (dynam) then
-               if (icoct.gt.k20) call error (58,0d0,0,'K20')
-               zco(icoct) = simp(h)
-            else
-               if (icoct.gt.k18) call err41 ('K18')
-               xco(icoct) = simp(h)
-            end if
+            if (icoct.gt.k18) call err41 ('K18')
+            xco(icoct) = simp(h)
 
          end do
 c                                 the number of compositions in the simplex
@@ -16834,14 +16852,7 @@ c                                 number of compositions in the polytope
 c                                 initialize the indices
          nind(i) = 1
          scoct = scoct + 1
-
-         if (scoct.gt.k13) then 
-            if (dynam) then
-               call error (58,0d0,0,'K13')
-            else
-               call err41 ('K13')
-            end if
-         end if
+         if (scoct.gt.k13) call err41 ('K13')
 
          sco(scoct) = 1
 
@@ -16872,14 +16883,7 @@ c                                 figure out which index to increment
          do i = 1, isite
 
             scoct = scoct + 1
-
-            if (scoct.gt.k13) then 
-               if (dynam) then
-                  call error (58,0d0,0,'K13')
-               else
-                  call err41 ('K13')
-               end if
-            end if
+            if (scoct.gt.k13) call err41 ('K13')
 
             sco(scoct) = nind(i)
 
@@ -16903,7 +16907,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19149,7 +19152,7 @@ c                                 for each term:
 
       end
 
-      subroutine setder (ids)
+      subroutine setder (ids,tname)
 c---------------------------------------------------------------------
 c evaluate coefficients for diff(g,p') computed by getder as called by
 c minfrc.
@@ -19160,8 +19163,7 @@ c---------------------------------------------------------------------
 
       integer ids, ind, i, j, k, l, ntot, nvar
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character tname*(*)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -19177,24 +19179,24 @@ c----------------------------------------------------------------------
      *    (ksmod(ids).ge.20.and.ksmod(ids).le.50)) then 
 
           deriv(ids) = .false.
-          write (*,*) 'no derivatives for special case: ',fname(ids)
+          write (*,*) 'no derivatives for special case: ',tname
 
       else if (extyp(ids).eq.1) then 
 
           deriv(ids) = .false.
-          write (*,*) 'no derivatives for redlich-kistler: ',fname(ids)
+          write (*,*) 'no derivatives for redlich-kistler: ',tname
 
       else if (jord(ids).gt.2) then
 
           deriv(ids) = .false.
           write (*,*) 'no derivatives for high order excess: ',
-     *                fname(ids)
+     *                tname
 
       else if (dnu(ids).ne.0d0) then
 
           deriv(ids) = .false.
           write (*,*) 'no derivatives for non-equimolar ordering: ',
-     *                fname(ids)
+     *                tname
 
 c     else if (fname(ids).eq.'Ep(HP11)') then 
 

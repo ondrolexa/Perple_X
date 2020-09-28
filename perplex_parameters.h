@@ -142,7 +142,7 @@ c----------------------------------------------------------------------
 !                                  and solving for k21 
 !                                    k21 = (memory - k1*(2*k31 + k32 + 2))/(k32+1)
 ! DEBUG691
-      parameter(memory=70000000,k31=2,k32=10,k1=4300000)
+      parameter(memory=70000000,k31=2,k32=10,k1=3500000)
 !     parameter(memory=42000000,k31=2,k32=10,k1=1800000)
 !                                  static
       parameter(k18=k1*k31,k24=k1*k32,k13=k1)
@@ -457,3 +457,8 @@ c                                 derivative of the bulk composition (component,
       integer tpct, tcct, itxp, dkp
       double precision txco
       common/ csts2d /txco(m25), tpct, tcct, itxp(m24), dkp(m24)
+
+      logical rkwak
+      integer rids, rkds, rnpt
+      double precision rcp, rsum, rsmo
+      common/ cxt12a /rcp(k5),rsum,rsmo,rids,rkds,rnpt,rkwak

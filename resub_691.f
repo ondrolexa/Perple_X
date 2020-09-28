@@ -189,13 +189,7 @@ c                                 reoptimize with refinement
 c            if (lopt(28)) call endtim (4,.true.,'Dynamic optimization ')
 
 c                                 final processing, .false. indicates dynamic
-            if (dead) then 
-c                                 ran out of dynamic memory
-               idead = 105
-
-               call lpwarn (idead,'LPOPT0')
-
-            else if (idead.eq.0) then 
+             if (idead.eq.0) then 
 
                call rebulk (abort)
 
@@ -284,7 +278,6 @@ c-----------------------------------------------------------------------
 c                                 the pseudocompounds to be refined
 c                                 are identified in jdv(1..npt)
       quit = .false.
-      restrt = .false.
       opt = npt
       kterat = .false.
       kitmax = 0
@@ -299,11 +292,7 @@ c                                 generate pseudo compounds for the first
 c                                 iteration from static arrays
       call resub (1,kterat)
 
-      if (dead) then
-c                                 ran out of dynamic memory.
-         return
-
-      else if (jphct.eq.jpoint) then
+      if (jphct.eq.jpoint) then
 c                                 if nothing to refine, set idead 
 c                                 to recover previous solution,
 c                                 DEBUG DEBUG set to error 102 because
@@ -449,8 +438,6 @@ c                                 the zco array.
 c                                 generate new pseudocompounds
          call resub (iter,kterat)
 
-         if (dead) exit
-
       end do
 
       end
@@ -468,7 +455,7 @@ c----------------------------------------------------------------------
 
       integer i, ids, lds, id, kd, iter
 
-      double precision g, scp(k5), sum, smo
+      double precision g
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -497,6 +484,9 @@ c                                 reset refinement point flags
       do i = 1, jpoint
          hkp(i) = 0
       end do
+
+c     jphct = jpoint
+c     zcoct = 0
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
@@ -548,6 +538,9 @@ c                                 solution refinement point:
             end if 
 
          end if
+c                                 set local model and refinempoint pointers
+         rids = ids
+         rkds = kd 
 c                                 set solution model parameters for
 c                                 gsol1, don't call if the previous
 c                                 refinement point was the same solution.
@@ -560,35 +553,19 @@ c                                 refinement point was the same solution.
 
 c           if (lopt(28)) call begtim (9)
 c                                  normal solution
-            call minfrc (ids,kd)
+            call minfrc
 
 c           if (lopt(28)) call endtim (9,.true.,'minfrc')
 
          else 
 c                                  lagged speciation pure solvent
-            call gaqlgd (g,scp,sum,smo,i,bad,.false.)
+            call gaqlgd (g,rcp,rsum,rsmo,i,bad,.false.)
 
             if (.not.bad) then 
+
+               rkwak = .true.
 c                                 save the composition
-               jphct = jphct + 1
-c                                 the solution model pointer
-               jkp(jphct) = ids
-c                                 the refinement point pointer
-               hkp(jphct) = kd
-c                                 save the normalized g
-               g2(jphct) = g/sum
-c                                 save the normalized bulk
-               cp2(1:icomp,jphct) = scp(1:icomp)/sum
-c                                 sum scp(1:icp)
-               c2tot(jphct) = sum/smo
-
-               quack(jphct) = .false.
-c                                 save the endmember fractions
-               icoz(jphct) = zcoct
-
-               zco(zcoct+1:zcoct+nstot(ids)) = 1d0
-
-               zcoct = zcoct + nstot(ids)
+               call savrpc (g)
 
             end if
 
@@ -693,7 +670,7 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
 
-         if (.not.refine) call savdyn (ids)
+c        if (.not.refine) call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
@@ -840,7 +817,7 @@ c----------------------------------------------------------------------
 
       double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
      *                 bnew(k5),pnew(k5,m14),ncaq(k5,l10),ximp
-     * , sum, sum1
+     * , sum
 
       logical solvs1, solvs4
       external solvs1, solvs4
@@ -1207,7 +1184,7 @@ c                                 check composition against solution model range
          call sollim (ids,i)
 c                                 sollim loads the composition into pa, so no 
 c                                 phase pointer needed here.
-c        if (.not.refine) call savdyn (ids)
+         if (.not.refine) call savdyn (ids)
 
       end do
 
