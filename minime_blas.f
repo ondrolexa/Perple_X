@@ -835,7 +835,7 @@ c                                 convert the y's to x's
 
       end
 
-      subroutine minfxc (gfinal,ids,maxs)
+      subroutine xmnfxc (gfinal,ids,maxs)
 c-----------------------------------------------------------------------
 c optimize solution gibbs energy or configurational entropy at constant 
 c composition subject to site fraction constraints.
@@ -914,7 +914,7 @@ c                                 initialize bounds
       inp = .false.
 c                                 load the local constraints 
 c                                 from the global arrays
-      nclin = nz(ids) + icomp
+      nclin = nz(ids)
 c                                 first the site fraction constraints
       lapz(1:nclin,1:nvar) = apz(ids,1:nclin,1:nvar)
 
@@ -923,9 +923,11 @@ c                                 first the site fraction constraints
          bu(nvar+i) = zu(ids,i)
       end do
 c                                 get the normalized bulk composition of the solution
-      call getxcp (b,stuff(1),ids)
+c     call getxcp (b,stuff(1),ids)
 
-c     call getscp (b,sum,ids,ids,.false.)
+      nclin = nclin + icomp
+
+      call getscp (b,sum,ids,ids,.false.)
 c                                 --------------------------------
 c                                 the bulk composition constraints
       do k = 1, icomp
@@ -939,7 +941,7 @@ c                                 the bulk composition constraints
          end do
 
          bl(nvar+i) = b(k) - apc(ids,k,ntot)
-         if (dabs(bl(nvar+i)).lt.zero) bl(nvar+i) = 0d0
+c        if (dabs(bl(nvar+i)).lt.zero) bl(nvar+i) = 0d0
          bu(nvar+i) = bl(nvar+i)
 
 c        write (*,*) 'sum, b ',bl(nvar+i),sum
@@ -983,8 +985,6 @@ c                                 obj call counter
       else
 
          iprint = 0 
-c        if (ids.eq.4) iprint = 10
-
          CALL E04UEF ('nolist')
          write (ctol,'(g14.7)') (wmach(1)*1d3)
          CALL E04UEF ('function precision = '//ctol)
@@ -1046,3 +1046,230 @@ c                                 you toucha pa, makepp
       end if
 
       end
+
+
+      subroutine minfxc (gfinal,ids,maxs)
+c-----------------------------------------------------------------------
+c optimize solution gibbs energy or configurational entropy at constant 
+c composition subject to site fraction constraints.
+
+c     number of independent endmember fractions -> <j3)
+c     number of constraints -> < j3*j5 * 2
+c     requires that pp has been loaded in cxt7
+
+c ingsol MUST be called prior to minfxc to initialize solution/p-t
+c specific properties!
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical maxs, inp
+
+      integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
+     *        istuff(10),istate(m21), idead, nclin, ntot
+
+     *       ,lord
+
+      double precision sum, ggrd(m19), b(k5),
+     *                 bl(m21), bu(m21), gfinal, ppp(m19), 
+     *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
+     *                 lapz(m20,m19),gsol1
+c DEBUG691                    dummies for NCNLN > 0
+     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
+      character*14 cdint, ctol
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      integer ln,lt,lid,jt,jid
+      double precision lc, l0c, jc
+      common/ cxt29 /lc(j6,j5,j3,h9),l0c(2,j5,j3,h9),lid(j6,j5,j3,h9),
+     *               ln(j3,h9),lt(j5,j3,h9),jc(j3,j5,j3,h9),
+     *               jid(j3,j5,j3,h9),jt(j5,j3,h9)
+
+      double precision tsum
+      common/ cxt31 /tsum(j5,j3)
+
+      logical mus
+      double precision mu
+      common/ cst330 /mu(k8),mus
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+
+      external gsol3, gsol1, dummy
+c DEBUG691 minfxc
+      data iprint,inp/0,.false./
+
+      save iprint,inp
+c-----------------------------------------------------------------------
+c                                 initialize limit expressions
+      call p0limt (ids)
+c                                 set initial p values and count the
+c                                 the number of non-frustrated od
+c                                 variables.
+      call pinc0 (ids,lord)
+c                                 if no ordering is possible compute
+c                                 g and return
+      if (lord.eq.0) then
+         if (maxs) return
+         gfinal = gsol1 (ids,.false.)
+         return
+      end if
+
+      nvar = nord(ids)
+c                                 variable bounds and local (ppp) variable
+c                                 initialization
+      do k = 1, nord(ids)
+
+         if (pin(k)) then
+            bu(k) = 1d0
+            bl(k) = -1d0
+         else
+            bu(k) = 1d0
+            bl(k) = -1d0
+         end if
+
+         ppp(k) = pa(lstot(ids)+k)
+
+      end do
+c                                constraints
+      nclin = 0
+
+      do k = 1, nord(ids)
+c                                for each constraint
+         do i = 1, ln(k,ids)
+
+            nclin = nclin + 1
+c                                bounds
+            bl(nvar+nclin) = -tsum(i,k)
+            bu(nvar+nclin) = -tsum(i,k) - l0c(2,i,k,ids)
+c                                coefficients
+            lapz(nclin,1:nvar) = 0d0
+
+            do j = 1, jt(i,k,ids)
+
+               lapz(nclin,jid(j,i,k,ids)-lstot(ids)) = jc(j,i,k,ids)
+
+            end do
+
+            if (lapz(nclin,k).ne.0d0) then 
+               write (*,*) 'wtf',lapz(nclin,k)
+            end if
+
+            lapz(nclin,k) = -1d0
+
+         end do
+
+      end do
+
+      idead = -1
+
+      iprint = 0
+c                                 solution model index
+      istuff(1) = ids
+c                                 istuff(2) is set by NLP and is
+c                                 irrelevant.
+c                                 istuff(3) = 1 min g, 0 max entropy
+      if (maxs) then 
+         istuff(3) = 1
+      else 
+         istuff(3) = 0
+      end if
+c                                 obj call counter
+      istuff(4) = 0
+
+10    if (inp) then
+
+         istuff(4) = 0
+
+         iprint = 10
+
+         ppp(1:nvar) = xp(1:nvar)
+
+         write (*,*) 'ftol,fdint'
+         read (*,*) ftol, fdint
+         write (ctol,'(g14.7)') ftol
+         write (cdint,'(g14.7)') fdint
+
+         CALL E04UEF ('optimality tolerance = '//ctol)
+         CALL E04UEF ('difference interval = '//cdint)
+         write (ctol,'(i4)') iprint
+         CALL E04UEF ('print level = '//ctol)
+
+      else
+
+         iprint = 0 
+         CALL E04UEF ('nolist')
+         write (ctol,'(g14.7)') (wmach(1)*1d3)
+         CALL E04UEF ('function precision = '//ctol)
+         write (ctol,'(g14.7)') (wmach(1)*1d3)**(0.8)
+         CALL E04UEF ('optimality tolerance = '//ctol)
+         write (ctol,'(g14.7)') zero
+         CALL E04UEF ('feasibility tolerance = '//ctol)
+c step limit < nopt(5) leads to bad results, coincidence?
+         write (ctol,'(g14.7)') nopt(5)/1d-1
+         CALL E04UEF ('step limit = '//ctol)
+c low values -> more accurate search -> more function calls
+         CALL E04UEF ('linesearch tolerance = 0.1')
+         write (ctol,'(i4)') iprint
+         CALL E04UEF ('print level = '//ctol)
+
+      end if
+
+      if (deriv(ids)) then
+
+c        CALL E04UEF ('difference interval = -1')
+         if (ids.eq.4) CALL E04UEF ('verify level 1')
+         CALL E04UEF ('derivative level = 3')
+
+      else
+
+         CALL E04UEF ('difference interval = 1d-3')
+         CALL E04UEF ('verify level 0')
+         CALL E04UEF ('derivative level = 0')
+
+      end if
+
+      call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol3,iter,
+     *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
+     *            m23,istuff,stuff,idead,iprint)
+
+      if (idead.eq.2) then 
+         write (*,*) 'minfxc infeasible initial conditions'
+c        call errpau
+      end if
+
+      sum = 0d0
+
+      do i = 1, nvar
+         pa(i) = ppp(i)
+         if (dabs(pa(i)).lt.1d2*zero) then 
+            pa(i) = 0d0
+         else 
+            sum = sum + ppp(i)
+         end if 
+      end do
+
+      pa(i) = 1d0 - sum
+c                                 you toucha pa, makepp
+      call makepp (ids)
+
+      if (inp) then 
+         write (*,*) istuff(4),gfinal,istuff(1)
+         goto 10
+      end if
+
+      end
+

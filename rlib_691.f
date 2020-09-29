@@ -7709,33 +7709,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id
-
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
+      integer id, lord
 c----------------------------------------------------------------------
       if (dnu(id).ne.0d0) then
-
-         call gpmlt1 (g,id,error)
+c                                
+c nothing yet
 
       else
 c                                 initialize limit expressions
          call p0limt (id)
-c                                 as most models are single species and
-c                                 there is so much overhead in computing
-c                                 multiple speciation, use a special routine
-c                                 for single species models:
-         if (nord(id).gt.1) then
 
-            call speci2 (g,id,error,minfx)
-
-         else
-
-            call speci1 (g,id,1,error)
-
-         end if
+         call pinc0 (id,lord)
 
       end if
 
@@ -12932,13 +12916,20 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,bad)
 
-               if (noder(i)) then
+               if (noder(i).or.deriv(i)) then
+
+10                pa(1) = 0.5d0
+                  pa(2) = 0.5d0
+                  pa(3) = 0d0
+                  p0a = pa
 c DEBUG691 GALL
 c                 if (i.eq.4) deriv(i) = .false.
                   y = p0a
 
-10                call minfxc (g(id),i,.false.)
-c                 if (i.eq.4) deriv(i) = .true.
+c                 call setpmx (i)
+
+                  call minfxc (g(id),i,.false.)
+
                   g1 = g(id)
 
                   junk = pa
@@ -19745,7 +19736,8 @@ c----------------------------------------------------------------------
       do j = 1, nstot(id)
 
          do i = 1, icomp
-            apc(id,i,j) = endc(id,j,i) / endt(id,j)
+            apc(id,i,j) = endc(id,j,i)
+c           apc(id,i,j) = endc(id,j,i) / endt(id,j)
          end do
 
       end do

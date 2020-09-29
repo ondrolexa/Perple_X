@@ -142,7 +142,7 @@ c----------------------------------------------------------------------
 !                                  and solving for k21 
 !                                    k21 = (memory - k1*(2*k31 + k32 + 2))/(k32+1)
 ! DEBUG691
-      parameter(memory=70000000,k31=2,k32=10,k1=3500000)
+      parameter(memory=70000000,k31=2,k32=10,k1=3000000)
 !     parameter(memory=42000000,k31=2,k32=10,k1=1800000)
 !                                  static
       parameter(k18=k1*k31,k24=k1*k32,k13=k1)
