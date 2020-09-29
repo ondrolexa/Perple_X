@@ -17362,7 +17362,7 @@ c                                  solute-bearing compound
 
          quack(phct) = .false.
 
-         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus) 
+         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus.and.lopt(52)) 
      *                                  call laggit (phct,gcind,ids,bad)
 
       else 
@@ -17373,7 +17373,7 @@ c                                 use the coordinates to compute the composition
 c                                 of the solution
          call csol (phct,ids,bad)
 
-         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus) 
+         if (.not.bad.and.phct-ophct.ge.iopt(52).and.mus.and.lopt(52)) 
      *                                  call laggit (phct,gcind,ids,bad)
 
       end if

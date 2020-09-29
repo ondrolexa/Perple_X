@@ -1785,8 +1785,6 @@ c                                initialize grid vars
       jtic = 0
       ltic = 0 
 
-      write (*,'(/,a,/)') 'Starting optimization loop...'
-
       do while (j.le.loopy) 
 
          if (igrd(i,j).eq.0) then
@@ -1797,7 +1795,7 @@ c                                at end of loop), april 5, 2006. JADC
             jtic = jtic + 1
 c                                progress information
             ltic = ltic + 1
-            if (ltic.eq.100) then 
+            if (ltic.eq.20) then 
                write (*,'(i5,a)') jtic,' optimizations done...'
                ltic = 0
             end if

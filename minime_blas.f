@@ -1053,7 +1053,7 @@ c-----------------------------------------------------------------------
 c optimize solution gibbs energy or configurational entropy at constant 
 c composition subject to site fraction constraints.
 
-c     number of independent endmember fractions -> <j3)
+c     number of independent endmember fractions -> <j3
 c     number of constraints -> < j3*j5 * 2
 c     requires that pp has been loaded in cxt7
 
