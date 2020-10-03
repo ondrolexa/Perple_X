@@ -510,6 +510,114 @@ c     write (*,1000) gval, (pa(i),i=1,nstot(jds))
 
       end
 
+      subroutine gsol4 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
+c-----------------------------------------------------------------------
+c gsol4 - a shell to call gsol1 from minfxc, ingsol must be called
+c         prior to minfxc to initialize solution specific paramters. only
+c         called for equimolar explicit o/d models. non-equimolar o/d models
+c         (currently melt(G,HGP)) involve non-linear constraints that are not
+c         currently implemented in minfxc/nlpsol.
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical error 
+
+      integer i, ids, jd, k, nvar, istart, mode, istuff(*)
+
+      double precision ppp(*), dp, gval, psum, dgdp(*), stuff(*)
+
+      double precision gsol1, omega0
+
+      external gsol1, omega
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save / cst59 /
+c-----------------------------------------------------------------------
+      ids = istuff(1)
+c                                   on input ppp(1:nord) contains the 
+c                                   proportions of the ordered species
+c                                   pa(lstot+1:nstot).
+c                                   -----------------------------------
+c                                   initialize the proportions
+      call ppp2pa (ppp,ids)
+
+      pa(1:nstot(ids)) = p0a(1:nstot(ids))
+c                                   update pa for the change in the 
+c                                   proportions of the ordered species
+      do k = 1, nvar
+
+         if (.not.pin(k)) cycle
+
+         jd = lstot(ids) + k
+
+         dp = ppp(k) - p0a(jd)
+
+         call dpinc (dp,k,ids,jd)
+
+      end do
+c                                   get g and dgdp
+      call gderiv (ids,gval,dgdp,.true.,error)
+
+      istuff(4) = istuff(4) + 1
+
+1000  format (g12.6,1x,12(f8.5,1x))
+1010  format (2(g14.7,2x))
+
+      end
+
+      subroutine ppp2pa (ppp,ids)
+c-----------------------------------------------------------------------
+c set pa from p0a given current proportions of the ordered species in
+c ppp
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ids, jd, k
+
+      double precision ppp(*)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c-----------------------------------------------------------------------
+      pa(1:nstot(ids)) = p0a(1:nstot(ids))
+c                                   update pa for the change in the 
+c                                   proportions of the ordered species
+      do k = 1, nord(ids)
+
+         if (.not.pin(k)) cycle
+
+         jd = lstot(ids) + k
+
+         call dpinc (ppp(k)-p0a(jd),k,ids,jd)
+
+      end do
+
+      end
+
+
       subroutine p2yx (id,bad)
 c-----------------------------------------------------------------------
 c converts the independent endmember fractions to 0-1 bounded barycentric 
@@ -1074,7 +1182,7 @@ c-----------------------------------------------------------------------
       double precision sum, ggrd(m19), b(k5),
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
-     *                 lapz(m20,m19),gsol1
+     *                 lapz(m20,m19),gord,gsol1
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
       character*14 cdint, ctol
@@ -1108,7 +1216,7 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision wmach
       common/ cstmch /wmach(9)
 
-      external gsol3, gsol1, dummy
+      external gsol4, gsol1, gord, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
@@ -1120,11 +1228,14 @@ c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
       call pinc0 (ids,lord)
-c                                 if no ordering is possible compute
-c                                 g and return
+
+      if (lord.ne.nord(ids)) then 
+         pin = .true.
+         lord = nord(ids)
+      end if
+c                                 if no ordering is possible return
       if (lord.eq.0) then
-         if (maxs) return
-         gfinal = gsol1 (ids,.false.)
+         gfinal = gord(ids)
          return
       end if
 
@@ -1153,8 +1264,8 @@ c                                for each constraint
 
             nclin = nclin + 1
 c                                bounds
-            bl(nvar+nclin) = -tsum(i,k)
-            bu(nvar+nclin) = -tsum(i,k) - l0c(2,i,k,ids)
+            bu(nvar+nclin) = -tsum(i,k)
+            bl(nvar+nclin) = -tsum(i,k) - l0c(2,i,k,ids)
 c                                coefficients
             lapz(nclin,1:nvar) = 0d0
 
@@ -1210,19 +1321,23 @@ c                                 obj call counter
 
       else
 
-         iprint = 0 
+c        iprint = 0 
+         
          CALL E04UEF ('nolist')
-         write (ctol,'(g14.7)') (wmach(1)*1d3)
+         write (ctol,'(g14.7)') (wmach(1)*1d1)
          CALL E04UEF ('function precision = '//ctol)
-         write (ctol,'(g14.7)') (wmach(1)*1d3)**(0.8)
+         write (ctol,'(g14.7)') (wmach(1)*1d1)**(0.8)
          CALL E04UEF ('optimality tolerance = '//ctol)
          write (ctol,'(g14.7)') zero
          CALL E04UEF ('feasibility tolerance = '//ctol)
 c step limit < nopt(5) leads to bad results, coincidence?
-         write (ctol,'(g14.7)') nopt(5)/1d-1
+         ftol = 0.2
+         write (ctol,'(g14.7)') ftol
          CALL E04UEF ('step limit = '//ctol)
 c low values -> more accurate search -> more function calls
-         CALL E04UEF ('linesearch tolerance = 0.1')
+         ftol = 0.2
+         write (ctol,'(g14.7)') ftol
+         CALL E04UEF ('linesearch tolerance = '//ctol)
          write (ctol,'(i4)') iprint
          CALL E04UEF ('print level = '//ctol)
 
@@ -1231,7 +1346,7 @@ c low values -> more accurate search -> more function calls
       if (deriv(ids)) then
 
 c        CALL E04UEF ('difference interval = -1')
-         if (ids.eq.4) CALL E04UEF ('verify level 1')
+         if (iprint.ne.0) CALL E04UEF ('verify level 1')
          CALL E04UEF ('derivative level = 3')
 
       else
@@ -1242,34 +1357,35 @@ c        CALL E04UEF ('difference interval = -1')
 
       end if
 
-      call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol3,iter,
+      call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
+c                                   set pa to correspond to the final 
+c                                   values in ppp.
+      call ppp2pa (ppp,ids)
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'
 c        call errpau
+      else if (idead.eq.7.or.iter.eq.0) then
+         write (*,*) 'bad derivatives'
+c        call getder (gfinal,ggrd,ids)
+         gfinal = 1d9
+      else if (idead.ne.0) then 
+         write (*,*) 'sommat elese bad',idead
       end if
-
-      sum = 0d0
 
       do i = 1, nvar
-         pa(i) = ppp(i)
-         if (dabs(pa(i)).lt.1d2*zero) then 
-            pa(i) = 0d0
-         else 
-            sum = sum + ppp(i)
-         end if 
+         if (pin(i)) cycle
+         write (*,*) 'oink'
       end do
 
-      pa(i) = 1d0 - sum
-c                                 you toucha pa, makepp
-      call makepp (ids)
-
-      if (inp) then 
-         write (*,*) istuff(4),gfinal,istuff(1)
-         goto 10
+      g0 = gordp0 (id)
+      if (gfinal.gt.g0) then 
+         g = g0
+         pa = p0a
       end if
+
 
       end
 

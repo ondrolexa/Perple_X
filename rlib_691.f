@@ -5662,8 +5662,7 @@ c         (currently melt(G,HGP)) involve non-linear constraints that are not
 c         currently implemented in minfxc/nlpopt.
 
 c gord  - a function to compute the excess + enthalpic + entropic effects of 
-c         mixing for an explicit o/d solution model. called by gsol4 and 
-c         gall (via specis).
+c         mixing for an explicit o/d solution model. called by gall (via specis).
 c-----------------------------------------------------------------------
       implicit none
 
@@ -6181,7 +6180,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision z,zt,dlnw,dlnz,y(*),n(m11)
+      double precision z,zt,dlnw,dlnz,y(*),n(m11),lnz
 
       integer i,j,k,id
 c                                 configurational entropy variables:
@@ -6209,14 +6208,16 @@ c                                 for each term:
                   z = z + dcoef(k,j,i,id) * y(ksub(k,j,i,id))
                end do
 
+               call ckzlnz (z,dlnz,lnz)
+
                zt = zt + z
-               if (z.gt.0d0) dlnz = dlnz - z * dlog (z)
 
             end do
 
             z = 1d0 - zt
-            if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
-            dlnw = dlnw + zmult(id,i)*dlnz
+            call ckzlnz (z,dlnz,lnz)
+
+            dlnw = dlnw - zmult(id,i)*dlnz
 
          else if (zsp(id,i).gt.1) then
 c                                 variable site multiplicities
@@ -6239,13 +6240,13 @@ c                                 if site has non-zero multiplicity
                do j = 1, zsp(id,i)
 c                                 z is site fraction
                   z = n(j)/zt
-                  if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
+                  call ckzlnz (z,dlnz,lnz)
 
                end do
 
             end if
 
-            dlnw = dlnw + r*zt*dlnz
+            dlnw = dlnw - r*zt*dlnz
 
          end if
 
@@ -6269,7 +6270,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision z,zt,dlnw,dlnz,y(*),n(m11)
+      double precision z,zt,dlnw,dlnz,y(*),n(m11),lnz
 
       integer i,j,k,id
 c                                 configurational entropy variables:
@@ -6297,14 +6298,15 @@ c                                 for each term:
                   z = z + dcoef(k,j,i,id) * y(ksub(k,j,i,id))
                end do
 
+               call ckzlnz (z,dlnz,lnz)
                zt = zt + z
-               if (z.gt.0d0) dlnz = dlnz - z * dlog (z)
 
             end do
 
             z = 1d0 - zt
-            if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
-            dlnw = dlnw + zmult(id,i)*dlnz
+            call ckzlnz (z,dlnz,lnz)
+
+            dlnw = dlnw - zmult(id,i)*dlnz
 
          else if (zsp(id,i).gt.1) then
 c                                 variable site multiplicities
@@ -6327,13 +6329,14 @@ c                                 if site has non-zero multiplicity
                do j = 1, zsp(id,i)
 c                                 z is site fraction
                   z = n(j)/zt
-                  if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
+
+                  call ckzlnz (z,dlnz,lnz)
 
                end do
 
             end if
 
-            dlnw = dlnw + r*zt*dlnz
+            dlnw = dlnw - r*zt*dlnz
 
          end if
 
@@ -7727,8 +7730,8 @@ c                                 initialize limit expressions
 
       subroutine specis (g,id,minfx)
 c----------------------------------------------------------------------
-c subroutine to speciation of a solution with disordered composition p0a.
-c the speciated composition is returned in array pa.
+c subroutine to compute speciation of a solution with initial speciation
+c p0a. the speciated composition is returned in array pa.
 c    id identifies the solution.
 c    g is the change in G for the stable speciation relative to a mechanical
 c      mixture of the endmembers.
@@ -7737,26 +7740,18 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,id
+      integer id
 
       logical error, minfx
 
-      double precision g, gdord, omega, gex
-
-      external omega, gex
-
-      double precision enth
-      common/ cxt35 /enth(j3)
+      double precision g, g0
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
-
-      g = 0d0
+      g0 = gordp0 (id)
+      g = g0
 
       minfx = .false.
 
@@ -7773,7 +7768,7 @@ c                                 multiple speciation, use a special routine
 c                                 for single species models:
          if (nord(id).gt.1) then
 
-            call speci2 (g,id,error,minfx)
+            call speci2 (g,id,minfx)
 
          else
 
@@ -7782,22 +7777,47 @@ c                                 for single species models:
          end if
 
       end if
-
-      if (error.or.iopt(17).ne.0) then
-c                                 if speciation returns error, or order_check is on,
-c                                 i.e., iopt(17).ne.0, compute disordered g.
-         gdord =  gex(id,p0a) - t*omega(id,p0a)
-
-         do i = 1, nord(id)
-            gdord = gdord + p0a(lstot(id)+i)*enth(i)
-         end do
-
-         if (gdord.lt.g) then
-            g = gdord
-            pa(1:nstot(id)) = p0a(1:nstot(id))
-         end if
-
+c                                 compare g for initial and eq speciation
+c                                 return the lower
+      if (g.gt.g0) then 
+         g = g0
+         pa = p0a
       end if
+
+      end
+
+      double precision function gordp0 (id)
+c----------------------------------------------------------------------
+c check that the current proportions of an o/d model are more stable
+c than the initial (usually disordered) proportions, swap if not. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,id
+
+      double precision g, gdord, omega, gex
+
+      external omega, gex
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+      g =  gex(id,p0a) - t*omega(id,p0a)
+
+      do i = 1, nord(id)
+         g = g + p0a(lstot(id)+i)*enth(i)
+      end do
+
+      gordp0 = g
 
       end
 
@@ -7823,7 +7843,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine gderiv (id,g,dp,error)
+      subroutine gderiv (id,g,dp,minfx,error)
 c----------------------------------------------------------------------
 c subroutine to compute the g of a solution (id) and it's 1st and 2nd
 c derivatives with respect to the oncentrations of nord(id) ordered
@@ -7835,11 +7855,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical error
+      logical minfx, error
 
       integer i,k,l,i1,i2,id,norder,ipvt(j3)
 
-      double precision g,dp(j3),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
+      double precision g,dp(*),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -7950,6 +7970,11 @@ c     *        + 2d0*d2g(2,1)*d2g(3,2)*d2g(3,1)-d2g(2,1)**2*d2g(3,3)
 c      end if
 
       g = g - tk*s
+c                                 if minfx just return with the jacobian
+      if (minfx) then
+         dp(1:norder) = -dg(1:norder)
+         return
+      end if
 c                                 copy dg and d2g into dp and d2s
       do k = 1, norder
          if (pin(k)) then
@@ -7999,11 +8024,8 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      logical inf
-
-      double precision zt,dzdy,s,dsy(j3),dsyy(j3,j3),q,zl,
-     *                 z(m11,m10),s0,ztemp,zlnz, pat, p0t,
-     *                 dsinf(j3),d2sinf(j3,j3)
+      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,lnz,
+     *                 z(m11,m10),s0,ztemp,zlnz, pat, p0t
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8018,12 +8040,11 @@ c                                 configurational entropy variables:
       logical pin
       common/ cyt2 /pin(j3)
 
+      double precision wmach
+      common/ cstmch /wmach(9)
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-c DEBUG
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
       s = 0d0
 c                                 for each site
@@ -8040,27 +8061,27 @@ c                                 for each term:
                ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
             end do
 
+            call ckzlnz (ztemp,s0,lnz)
+
             zt = zt + ztemp
-            if (ztemp.gt.0d0) s0 = s0 - ztemp * dlog (ztemp)
+
             z(j,i) = ztemp
 
          end do
 
          ztemp = 1d0 - zt
-         if (ztemp.gt.0d0) s0 = s0 - ztemp * dlog (ztemp)
+
+         call ckzlnz (ztemp,s0,lnz)
+
          z(j,i) = ztemp
-         s = s + zmult(id,i) * s0
+         s = s - zmult(id,i) * s0
 
       end do
 c                                 initialize derivatives:
-      inf = .false.
-
       do k = 1, nord(id)
          dsy(k) = 0d0
-         dsinf(k) = 0d0
          do l = k, nord(id)
             dsyy(l,k) = 0d0
-            d2sinf(l,k) = 0d0
          end do
       end do
 c                                 evaluate derivatives:
@@ -8072,10 +8093,14 @@ c                                 evaluate derivatives:
 
             zl = z(j,i)
 
-            if (zl.gt.0d0) then
+            if (zl.eq.0d0) then
+
+               zlnz = 1d0 + dlog(wmach(1))
+
+            else 
+
                zlnz = 1d0 + dlog(zl)
-            else
-               zlnz = 1d0
+
             end if
 
             do k = 1, nord(id)
@@ -8085,77 +8110,21 @@ c                                 sdzdp is (dz(i,j)/dp(k))
                dzdy = sdzdp(k,j,i,id)
 
                if (dzdy.eq.0d0) cycle
-
-               if (zl.gt.0d0) then
 c                                 the first derivative is
-                  dsy(k) = dsy(k) - q * dzdy * zlnz
+               dsy(k) = dsy(k) - q * dzdy * zlnz
 c                                 and the jacobians are
-                  do l = k, nord(id)
+               do l = k, nord(id)
 
-                     if (.not.pin(l)) cycle
-                     dsyy(l,k) = dsyy(l,k)
+                  if (.not.pin(l)) cycle
+                  dsyy(l,k) = dsyy(l,k)
      *                         - q * dzdy * sdzdp(l,j,i,id) / zl
-                  end do
+               end do
 
-               else
-
-                   if (zl.lt.-nopt(5)) then
-
-                      pat = 0d0
-                      p0t = 0d0
-
-                      do l = 1, nstot(id)
-                         pat = pat + pa(l)
-                         p0t = p0t + p0a(l)
-                      end do
-
-c                     write (*,*) 'pat, p0t ',pat, p0t
-
-                      write (*,*) 'wacka boom',zl,j,i
-c                     write (*,*) (p0a(l),l=1,nstot(id))
-c                     write (*,*) (pa(l),l=1,nstot(id))
-c                     write (*,*) p, t
-c                     write (*,*) 'please report this error'
-c                     write (*,*)
-                      inf = .true.
-
-                   end if
-c                                 a species with a non-zero
-c                                 derivative is zero, the
-c                                 first will be sign(dzdy)*infinity
-                  dsinf(k) = dsinf(k) + dsign(q,dzdy)
-
-                  do l = k, nord(id)
-c                                 the 2nd will be -sign of
-c                                 cross term * infinity
-                     if (.not.pin(l)) cycle
-                     d2sinf(l,k) = dsinf(k) -
-     *                             dsign(q,dzdy * sdzdp(l,j,i,id))
-                  end do
-
-               end if
             end do
 
          end do
 
       end do
-
-      if (inf) then
-
-         do k = 1, nord(id)
-
-            if (.not.pin(k)) cycle
-            if (dabs(dsinf(k)).gt.zero) dsy(k) = 1d4*dsinf(k)
-
-            do l = k, nord(id)
-               if (.not.pin(l)) cycle
-               if (dabs(d2sinf(l,k)).gt.zero)
-     *                                  dsyy(l,k) = 1d5*d2sinf(l,k)
-            end do
-
-         end do
-
-      end if
 c                                 endmember corrections
       do i = 1, nstot(id)
 
@@ -8540,7 +8509,7 @@ c                                 anti-ordered
 
       end
 
-      subroutine speci2 (g,id,error,minfx)
+      subroutine speci2 (g,id,minfx)
 c----------------------------------------------------------------------
 c subroutine to multiple speciation of a solution with disordered composition
 c p0a. the speciated composition is returned in array pa.
@@ -8597,7 +8566,7 @@ c                                 species are necessary to describe the ordering
 
          do
 
-            call gderiv (id,g,dp,error)
+            call gderiv (id,g,dp,.false.,error)
 
             if (error) then
                badc(1) = badc(1) + 1d0
@@ -8640,7 +8609,7 @@ c                                 this happens at low T use pinc0 to set an orde
 c                                 composition and exit
                badc(1) = badc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
-               error = .false.
+
                call pinc0 (id,lord)
                exit
 
@@ -8650,11 +8619,9 @@ c                                 composition and exit
 
       else
 c                                 no speciation possible, but still need
-c                                 to calculate g (setting error will do this).
-c                                 set g to a large number to assure specis
-c                                 selects the disordered configuration.
+c                                 to calculate initial g. set g to a 
+c                                 large number to assure ordchk does it.
          g = 1d9
-         error = .true.
 
       end if
 
@@ -8699,7 +8666,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer k,id,jd
+      integer k, id, jd
 
       double precision dp,pmx,pmn
 
@@ -8725,8 +8692,7 @@ c                                 adjust the composition by the increment
 
       subroutine dpinc (dp,k,id,jd)
 c----------------------------------------------------------------------
-c subroutine to increment the k'th species of solution id, if the increment
-c violates a stoichiometric limit, it's set to half it's maximum value.
+c subroutine to increment the k'th species of solution id.
 c----------------------------------------------------------------------
       implicit none
 
@@ -12808,7 +12774,7 @@ c-----------------------------------------------------------------------
 
       logical bad, minfx
 
-      integer i, j, k, id
+      integer i, j, k, id, tic
 
       double precision gval, dg, g0(m14), g1, junk(m4)
 
@@ -12912,46 +12878,40 @@ c                                 initialize margules, enthalpy of
 c                                 ordering, internal dqfs (last for minfxc)
             call ingsol (i)
 
+            tic = 0 
+
             do j = 1, jend(i,2)
 
                call setxyp (i,id,bad)
 
-               if (noder(i).or.deriv(i)) then
+               if (deriv(i)) then
 
-10                pa(1) = 0.5d0
-                  pa(2) = 0.5d0
-                  pa(3) = 0d0
-                  p0a = pa
-c DEBUG691 GALL
-c                 if (i.eq.4) deriv(i) = .false.
                   y = p0a
 
-c                 call setpmx (i)
-
-                  call minfxc (g(id),i,.false.)
-
-                  g1 = g(id)
+10                call minfxc (g1,i,.false.)
 
                   junk = pa
-                  p0a = y
-                  pa = p0a
 
                   call specis (dg,i,minfx)
 
                   g(id) = gexces (id) + dg + gmech (i)
 
-                  if (dabs(g(id)-g1).gt.1d-1.and..not.minfx) then
-
+                  if (dabs(dg-g1).gt.1d-1) then
+                     tic = tic + 1
                      write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-                     write (*,5000) 'dg = ',g(id)-g1
+                     write (*,5000) 'dg = ',dg-g1
                      write (*,5000) 'pan  ',junk(1:nstot(i))
                      write (*,5000) 'pa   ',pa(1:nstot(i))
                      write (*,5000) 'pa0  ',p0a(1:nstot(i))
 
+                  else if (dg-g1.gt.1d0) then 
+
+                     write (*,*) 'wackwo wolly'
+
                   end if
 
 c                 if (i.eq.4) goto 10
-c                 if (j.eq.32) goto 10
+c                 if (j.eq.3613) goto 10
 
 
 5000   format (a,12(g10.4,1x))
@@ -12959,22 +12919,19 @@ c                 if (j.eq.32) goto 10
                else
 
                   call specis (dg,i,minfx)
-
-                  if (minfx.and.dnu(i).eq.0d0) then 
 c                                 degenerated
-                     call minfxc (g(id),i,.false.)
+                  if (minfx.and.deriv(i)) 
+     *               call minfxc (g(id),i,.false.)
 
-                  else
-
-                     g(id) = gexces (id) + dg + gmech (i)
-
-                  end if
+                  g(id) = gexces (id) + dg + gmech (i)
 
                end if
 
                id = id + 1
 
             end do
+
+            write (*,*) tic, jend(i,2)
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -19471,7 +19428,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision zt, z(m11), dsdp(*), dzlnz, s, zlnz
+      double precision zt, z(m11), dsdp(*), dzlnz, s, zlnz, lnz
 
       integer i, j, k, l, ids, nvar
 
@@ -19505,34 +19462,24 @@ c                                 for each term:
                   z(j) = z(j) + dcoef(k,j,i,ids) * pa(ksub(k,j,i,ids))
                end do
 
+               call ckzlnz (z(j),zlnz,lnz)
+
                zt = zt + z(j)
-               if (z(j).gt.0d0) zlnz = zlnz + z(j) * dlog(z(j))
 
                do l = 1, nvar
-                  if (z(j).gt.wmach(1)) then 
-                     dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
-     *                                            * (1d0 + dlog(z(j)))
-                  else 
-                     dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
-     *                                         * (1d0 + dlog(wmach(1)))
-                  end if 
+                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (1d0 + lnz)
                end do
 
             end do
 
             zt = 1d0 - zt
-c                                 site negentropy
-            if (zt.gt.0d0) zlnz = zlnz + zt * dlog(zt)
 
+            call ckzlnz (zt,zlnz,lnz)
+c                                 site negentropy
             zlnz = zmult(ids,i) * zlnz
 c                                 for non-temkin sites dzdp is already scaled by q*R
             do l = 1, nvar
-               if (zt.gt.wmach(1)) then 
-                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (1d0 + dlog(zt))
-               else 
-                  dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) 
-     *                                          * (1d0 + dlog(wmach(1)))
-               end if
+               dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * (1d0 + lnz)
             end do
 
          else 
@@ -19554,7 +19501,7 @@ c                                 convert molar amounts to fractions
             z(1:zsp(ids,i)) = z(1:zsp(ids,i)) / zt
 
             do j = 1, zsp(ids,i)
-               if (z(j).gt.0d0) zlnz = zlnz + z(j) * dlog(z(j))
+               call ckzlnz (z(j),zlnz,lnz)
             end do
 c                                 site negentropy
             zlnz = r * zlnz
@@ -19565,7 +19512,7 @@ c                                 derivatives
 c                                 for each species
                do j = 1, zsp(ids,i)
 
-                  if (z(j).gt.wmach(1)) then 
+                  if (z(j).gt.0d0) then 
                      dzlnz = dzlnz + dzdp(j,i,l,ids) 
      *                                    * (1d0 + dlog(z(j)))
                   else
@@ -19584,6 +19531,31 @@ c                                 for each species
          s = s + zlnz
 
       end do
+
+      end
+
+      subroutine ckzlnz (z,zlnz,lnz)
+c----------------------------------------------------------------------
+c subroutine to test/reset site fraction value z, accumulate z*ln(z)
+c and set the value of ln(z) if z = 0
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision z, zlnz, lnz
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+c----------------------------------------------------------------------
+      if (z.gt.1d0) then
+         z = 1d0
+         lnz = 0d0
+      else if (z.gt.0d0) then
+         lnz = dlog(z)
+         zlnz = zlnz + z * lnz
+      else
+         lnz = dlog(wmach(1))
+         z = 0d0 
+      end if
 
       end
 
@@ -20722,17 +20694,13 @@ c                                 iteration counter
       end if
 
       gfesi = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
-
-      if (iopt(17).ne.0) then
 c                                 order check, compare to the
 c                                 max order g
-         g0 = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
-         if (gfesi.gt.g0) gfesi = g0
+      g0 = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
+      if (gfesi.gt.g0) gfesi = g0
 c                                 min order g
-         g0 = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
-         if (gfesi.gt.g0) gfesi = g0
-
-      end if
+      g0 = gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
+      if (gfesi.gt.g0) gfesi = g0
 c                                 add magnetic component
       gfesi = gfesi + gmag(y)
 
@@ -20859,17 +20827,13 @@ c                                 iteration counter
       end if
 
       gfes = gfes0 (y,x,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
-
-      if (iopt(17).ne.0) then
-c                                 if order_check is on, compare to
+c                                 compare to
 c                                 max order g
-         g0 = gfes0 (y,xmax,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
-         if (gfes.gt.g0) gfes = g0
+      g0 = gfes0 (y,xmax,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
+      if (gfes.gt.g0) gfes = g0
 c                                 min order g
-         g0 = gfes0 (y,xmin,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
-         if (gfes.gt.g0) gfes = g0
-
-      end if
+      g0 = gfes0 (y,xmin,g1,g2,rt,g00,g01,g02,g04,g10,g20,g30)
+      if (gfes.gt.g0) gfes = g0
 
       end
 
