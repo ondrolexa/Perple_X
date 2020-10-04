@@ -557,28 +557,10 @@ c                                   pa(lstot+1:nstot).
 c                                   -----------------------------------
 c                                   initialize the proportions
       call ppp2pa (ppp,ids)
-
-      pa(1:nstot(ids)) = p0a(1:nstot(ids))
-c                                   update pa for the change in the 
-c                                   proportions of the ordered species
-      do k = 1, nvar
-
-         if (.not.pin(k)) cycle
-
-         jd = lstot(ids) + k
-
-         dp = ppp(k) - p0a(jd)
-
-         call dpinc (dp,k,ids,jd)
-
-      end do
 c                                   get g and dgdp
       call gderiv (ids,gval,dgdp,.true.,error)
 
       istuff(4) = istuff(4) + 1
-
-1000  format (g12.6,1x,12(f8.5,1x))
-1010  format (2(g14.7,2x))
 
       end
 
@@ -1179,7 +1161,7 @@ c-----------------------------------------------------------------------
 
      *       ,lord
 
-      double precision sum, ggrd(m19), b(k5),
+      double precision sum, ggrd(m19), b(k5), gordp0,g0,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19),gord,gsol1
@@ -1216,14 +1198,16 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision wmach
       common/ cstmch /wmach(9)
 
-      external gsol4, gsol1, gord, dummy
+      external gsol4, gsol1, gordp0, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
       save iprint,inp
 c-----------------------------------------------------------------------
-c                                 initialize limit expressions
+c                                 initialize limit expressions from p0
       call p0limt (ids)
+c                                 pinc0 increments from pa, so initialize
+      pa = p0a
 c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
@@ -1357,6 +1341,8 @@ c        CALL E04UEF ('difference interval = -1')
 
       end if
 
+      gfinal = 1d9
+
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
@@ -1366,11 +1352,10 @@ c                                   values in ppp.
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'
-c        call errpau
-      else if (idead.eq.7.or.iter.eq.0) then
+      else if (idead.eq.7) then
+         write (*,*) 'weak solution'
+      else if (idead.eq.7) then
          write (*,*) 'bad derivatives'
-c        call getder (gfinal,ggrd,ids)
-         gfinal = 1d9
       else if (idead.ne.0) then 
          write (*,*) 'sommat elese bad',idead
       end if
@@ -1380,9 +1365,10 @@ c        call getder (gfinal,ggrd,ids)
          write (*,*) 'oink'
       end do
 
-      g0 = gordp0 (id)
+      g0 = gordp0 (ids)
+
       if (gfinal.gt.g0) then 
-         g = g0
+         gfinal = g0
          pa = p0a
       end if
 

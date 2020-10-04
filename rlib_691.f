@@ -7744,7 +7744,9 @@ c----------------------------------------------------------------------
 
       logical error, minfx
 
-      double precision g, g0
+      double precision g, g0, gordp0
+
+      external gordp0
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -7797,7 +7799,7 @@ c----------------------------------------------------------------------
 
       integer i,id
 
-      double precision g, gdord, omega, gex
+      double precision g, omega, gex
 
       external omega, gex
 
@@ -8025,7 +8027,7 @@ c----------------------------------------------------------------------
       integer i,j,k,l,id
 
       double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,lnz,
-     *                 z(m11,m10),s0,ztemp,zlnz, pat, p0t
+     *                 z(m11,m10),s0,ztemp,zlnz
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8093,15 +8095,7 @@ c                                 evaluate derivatives:
 
             zl = z(j,i)
 
-            if (zl.eq.0d0) then
-
-               zlnz = 1d0 + dlog(wmach(1))
-
-            else 
-
-               zlnz = 1d0 + dlog(zl)
-
-            end if
+            zlnz = 1d0 + dlog(zl)
 
             do k = 1, nord(id)
 c                                 skip species not in the model
@@ -8617,12 +8611,6 @@ c                                 composition and exit
 
          end do
 
-      else
-c                                 no speciation possible, but still need
-c                                 to calculate initial g. set g to a 
-c                                 large number to assure ordchk does it.
-         g = 1d9
-
       end if
 
       end
@@ -8750,7 +8738,7 @@ c----------------------------------------------------------------------
 
       if (icase(id).eq.1) then
 c                                 case 1: fully correlated
-         dinc = 0.9d0/dfloat(nord(id))
+         dinc = 0.5d0/dfloat(nord(id))
          tinc = dinc
 
          do k = 1, nord(id)
@@ -8822,7 +8810,7 @@ c                                 back off from maximum for final assignements
             jd = lstot(id) + k
             pa(jd) = p0a(jd)
 
-            dp = dpp(k)*0.9d0
+            dp = dpp(k)*0.5d0
 c                                 adjust the composition by the first increment
             call dpinc (dp,k,id,jd)
 
@@ -12896,7 +12884,7 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                   g(id) = gexces (id) + dg + gmech (i)
 
-                  if (dabs(dg-g1).gt.1d-1) then
+                  if (dg-g1.lt.-1d-1) then
                      tic = tic + 1
                      write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
                      write (*,5000) 'dg = ',dg-g1
@@ -12904,14 +12892,19 @@ c                                 ordering, internal dqfs (last for minfxc)
                      write (*,5000) 'pa   ',pa(1:nstot(i))
                      write (*,5000) 'pa0  ',p0a(1:nstot(i))
 
-                  else if (dg-g1.gt.1d0) then 
-
-                     write (*,*) 'wackwo wolly'
+                  else if (dg-g1.gt.1d0.and..not.minfx) then 
+                     tic = tic + 1
+                     write (*,*) 'wackwo wolly minfx =', minfx
+                     write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
+                     write (*,5000) 'dg = ',dg-g1
+                     write (*,5000) 'pan  ',junk(1:nstot(i))
+                     write (*,5000) 'pa   ',pa(1:nstot(i))
+                     write (*,5000) 'pa0  ',p0a(1:nstot(i))
 
                   end if
 
 c                 if (i.eq.4) goto 10
-c                 if (j.eq.3613) goto 10
+                  if (tic.eq.-1) goto 10
 
 
 5000   format (a,12(g10.4,1x))
@@ -19548,14 +19541,12 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       if (z.gt.1d0) then
          z = 1d0
-         lnz = 0d0
-      else if (z.gt.0d0) then
-         lnz = dlog(z)
-         zlnz = zlnz + z * lnz
-      else
-         lnz = dlog(wmach(1))
-         z = 0d0 
+      else if (z.lt.wmach(1)) then
+         z = wmach(1)
       end if
+
+      lnz = dlog(z)
+      zlnz = zlnz + z * lnz
 
       end
 
