@@ -5867,7 +5867,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision z,zt,dlnw,dlnz,y(*),n(m11)
+      double precision z,zt,dlnw,dlnz,y(*),n(m11),lnz
 
       integer i,j,k,id
 c                                 configurational entropy variables:
@@ -5895,14 +5895,16 @@ c                                 for each term:
                   z = z + dcoef(k,j,i,id) * y(ksub(k,j,i,id))
                end do
 
+               call ckzlnz (z,dlnz)
+
                zt = zt + z
-               if (z.gt.0d0) dlnz = dlnz - z * dlog (z)
 
             end do
 
             z = 1d0 - zt
-            if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
-            dlnw = dlnw + zmult(id,i)*dlnz
+            call ckzlnz (z,dlnz)
+
+            dlnw = dlnw - zmult(id,i)*dlnz
 
          else if (zsp(id,i).gt.1) then
 c                                 variable site multiplicities
@@ -5925,13 +5927,13 @@ c                                 if site has non-zero multiplicity
                do j = 1, zsp(id,i)
 c                                 z is site fraction
                   z = n(j)/zt
-                  if (z.gt.0d0) dlnz = dlnz - z * dlog(z)
+                  call ckzlnz (z,dlnz)
 
                end do
 
             end if
 
-            dlnw = dlnw + r*zt*dlnz
+            dlnw = dlnw - r*zt*dlnz
 
          end if
 
@@ -5944,7 +5946,6 @@ c                                 endmember corrections
       omega = dlnw
 
       end
-
 
 
       subroutine snorm0 (id,tname)
@@ -7608,13 +7609,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,l,id
-
       logical inf
 
-      double precision zt,dzdy,s,dsy(j3),dsyy(j3,j3),q,zl,
-     *                 z(m11,m10),s0,ztemp,zlnz, pat, p0t,
-     *                 dsinf(j3),d2sinf(j3,j3)
+      integer i,j,k,l,id
+
+      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,
+     *                 z(m11,m10),s0,ztemp,zlnz,dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -7629,12 +7629,11 @@ c                                 configurational entropy variables:
       logical pin
       common/ cyt2 /pin(j3)
 
+      double precision wmach
+      common/ cstmch /wmach(9)
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-c DEBUG
-      double precision r,tr,pr,ps,p,t,xco2,u1,u2
-      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
       s = 0d0
 c                                 for each site
@@ -7651,16 +7650,20 @@ c                                 for each term:
                ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
             end do
 
+            call ckzlnz (ztemp,s0)
+
             zt = zt + ztemp
-            if (ztemp.gt.0d0) s0 = s0 - ztemp * dlog (ztemp)
+
             z(j,i) = ztemp
 
          end do
 
          ztemp = 1d0 - zt
-         if (ztemp.gt.0d0) s0 = s0 - ztemp * dlog (ztemp)
+
+         call ckzlnz (ztemp,s0)
+
          z(j,i) = ztemp
-         s = s + zmult(id,i) * s0
+         s = s - zmult(id,i) * s0
 
       end do
 c                                 initialize derivatives:
@@ -7668,10 +7671,8 @@ c                                 initialize derivatives:
 
       do k = 1, nord(id)
          dsy(k) = 0d0
-         dsinf(k) = 0d0
          do l = k, nord(id)
             dsyy(l,k) = 0d0
-            d2sinf(l,k) = 0d0
          end do
       end do
 c                                 evaluate derivatives:
@@ -7683,11 +7684,7 @@ c                                 evaluate derivatives:
 
             zl = z(j,i)
 
-            if (zl.gt.0d0) then
-               zlnz = 1d0 + dlog(zl)
-            else
-               zlnz = 1d0
-            end if
+            if (zl.gt.0d0) zlnz = 1d0 + dlog(zl)
 
             do k = 1, nord(id)
 c                                 skip species not in the model
@@ -7705,32 +7702,16 @@ c                                 and the jacobians are
 
                      if (.not.pin(l)) cycle
                      dsyy(l,k) = dsyy(l,k)
-     *                         - q * dzdy * sdzdp(l,j,i,id) / zl
+     *                            - q * dzdy * sdzdp(l,j,i,id) / zl
                   end do
 
                else
-
-                   if (zl.lt.-nopt(5)) then
-
-                      pat = 0d0
-                      p0t = 0d0
-
-                      do l = 1, nstot(id)
-                         pat = pat + pa(l)
-                         p0t = p0t + p0a(l)
-                      end do
-
-                      write (*,*) 'pat, p0t ',pat, p0t
-
-                      write (*,*) 'wacka boom',zl,j,i
-                      write (*,*) (p0a(l),l=1,nstot(id))
-                      write (*,*) (pa(l),l=1,nstot(id))
-                      write (*,*) p, t
-                      write (*,*) 'please report this error'
-                      write (*,*)
-                      inf = .true.
-
-                   end if
+c                                 jacobians may be non-zero at z=0,
+c                                 since there use is for computing 
+c                                 step size, they are computed as 
+c                                 multiples of infinity which is then
+c                                 assigned a finite value to give a
+                  inf = .true.
 c                                 a species with a non-zero
 c                                 derivative is zero, the
 c                                 first will be sign(dzdy)*infinity
@@ -7745,6 +7726,7 @@ c                                 cross term * infinity
                   end do
 
                end if
+
             end do
 
          end do
@@ -7756,12 +7738,12 @@ c                                 cross term * infinity
          do k = 1, nord(id)
 
             if (.not.pin(k)) cycle
-            if (dabs(dsinf(k)).gt.zero) dsy(k) = 1d4*dsinf(k)
+            if (dabs(dsinf(k)).gt.zero) dsy(k) = 1d0*dsinf(k)
 
             do l = k, nord(id)
                if (.not.pin(l)) cycle
                if (dabs(d2sinf(l,k)).gt.zero)
-     *                                  dsyy(l,k) = 1d5*d2sinf(l,k)
+     *         dsyy(l,k) = dsign(1d0,d2sinf(l,k))*dabs(dsinf(k))/0.01d0
             end do
 
          end do
@@ -7779,6 +7761,7 @@ c                                 endmember corrections
       end do
 
       end
+
 
       subroutine factr2 (a,m,n,ipvt,error)
 c-----------------------------------------------------------------------
@@ -8760,7 +8743,7 @@ c----------------------------------------------------------------------
 
       logical inf
 
-      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf
+      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf,junk
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8774,7 +8757,6 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
 
       inf = .false.
@@ -8797,20 +8779,17 @@ c                                 for each term:
                zl = zl + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
             end do
 
-            if (zl.gt.0d0) then
-               zt = zt + zl
-               zlnz = 1d0 + dlog(zl)
-            else
-               zlnz = 1d0
-            end if
+            call ckzlnz (zl,junk)
 c                                 sdzdp is (dz(i,j)/dp(l))
             dzdy = sdzdp(l,j,i,id)
 
             if (dzdy.eq.0d0) cycle
 
             if (zl.gt.0d0) then
+
+               zt = zt + zl
 c                                 the first derivative is
-               dzy = dzy - dzdy * zlnz
+               dzy = dzy - dzdy * (1d0 + dlog(zl))
 c                                 and the jacobians are
 
                dzyy = dzyy  - dzdy**2 / zl
@@ -8828,18 +8807,15 @@ c                                 add the contibution from the zsp(id,i)+1th
 c                                 species:
          zl = 1d0 - zt
 
-         if (zl.gt.0d0) then
-            zlnz = 1d0 + dlog(zl)
-         else
-            zlnz = 1d0
-         end if
+         call ckzlnz (zl,junk)
 
          dzdy = sdzdp(l,j,i,id)
 
          if (dzdy.ne.0d0) then
+
             if (zl.gt.0d0) then
 c                                 the first derivative is
-               dzy = dzy - dzdy * zlnz
+               dzy = dzy - dzdy * (1d0 + dlog(zl))
 c                                 and the second is
                dzyy = dzyy  - dzdy**2 / zl
 
@@ -8859,8 +8835,8 @@ c                                 derivative may be +/-infinite
             d2s = d2s + zmult(id,i)*dzyy
          else
             inf = .true.
-            ds = ds + zmult(id,i)*dsinf*1d4
-            d2s = d2s - zmult(id,i)*dabs(dsinf)*1d5
+            ds = ds + zmult(id,i)*dsinf
+            d2s = d2s - zmult(id,i)*dsinf/0.01d0
          end if
 
       end do
@@ -8870,6 +8846,27 @@ c                                 change in endmember configurational entropy
       do i = 1, nstot(id)
          ds = ds - dydy(i,l,id)*scoef(i,id)
       end do
+
+      end
+
+      subroutine ckzlnz (z,zlnz)
+c----------------------------------------------------------------------
+c subroutine to test/reset site fraction value z and accumulate z*ln(z)
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision z, zlnz
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+      if (z.gt.1d0) then
+         z = 1d0
+      else if (z.lt.zero) then
+         z = 0d0
+      else
+         zlnz = zlnz + z * dlog(z)
+      end if
 
       end
 
