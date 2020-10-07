@@ -1305,7 +1305,7 @@ c                                 obj call counter
 
       else
 
-         iprint = 10 
+         iprint = 0 
          
          CALL E04UEF ('nolist')
          write (ctol,'(g14.7)') (wmach(1)*1d1)

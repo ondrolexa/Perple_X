@@ -8014,10 +8014,150 @@ c                                 newton-raphson increments for the ordered spec
 c                                 compositions.
       end
 
+      subroutine xsderiv (id,s,dsy,dsyy)
+c----------------------------------------------------------------------
+c subroutine to the derivative of the configurational entropy of a
+c solution with respect to the proportion of a dependent species. OLD
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,k,l,id
+
+      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,lnz,
+     *                 z(m11,m10),s0,ztemp,zlnz
+c                                 working arrays
+      double precision zz, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c                                 configurational entropy variables:
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+      s = 0d0
+c                                 for each site
+      do i = 1, msite(id)
+
+         zt = 0d0
+         s0 = zt
+c                                 get site fractions
+         do j = 1, zsp(id,i)
+
+            ztemp = dcoef(0,j,i,id)
+c                                 for each term:
+            do k = 1, lterm(j,i,id)
+               ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
+            end do
+
+            call xckzlnz (ztemp,s0,lnz)
+
+            zt = zt + ztemp
+
+            z(j,i) = ztemp
+
+         end do
+
+         ztemp = 1d0 - zt
+
+         call xckzlnz (ztemp,s0,lnz)
+
+         z(j,i) = ztemp
+         s = s - zmult(id,i) * s0
+
+      end do
+c                                 initialize derivatives:
+      do k = 1, nord(id)
+         dsy(k) = 0d0
+         do l = k, nord(id)
+            dsyy(l,k) = 0d0
+         end do
+      end do
+c                                 evaluate derivatives:
+      do i = 1, msite(id)
+
+         q = zmult(id,i)
+
+         do j = 1, zsp(id,i) + 1
+
+            zl = z(j,i)
+
+            zlnz = 1d0 + dlog(zl)
+
+            do k = 1, nord(id)
+c                                 skip species not in the model
+               if (.not.pin(k)) cycle
+c                                 sdzdp is (dz(i,j)/dp(k))
+               dzdy = sdzdp(k,j,i,id)
+
+               if (dzdy.eq.0d0) cycle
+c                                 the first derivative is
+               dsy(k) = dsy(k) - q * dzdy * zlnz
+c                                 and the jacobians are
+               do l = k, nord(id)
+
+                  if (.not.pin(l)) cycle
+                  dsyy(l,k) = dsyy(l,k)
+     *                         - q * dzdy * sdzdp(l,j,i,id) / zl
+               end do
+
+            end do
+
+         end do
+
+      end do
+c                                 endmember corrections
+      do i = 1, nstot(id)
+
+         s = s - pa(i) * scoef(i,id)
+
+         do k = 1, nord(id)
+           dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
+         end do
+
+      end do
+
+      end
+
+      subroutine xckzlnz (z,zlnz,lnz)
+c----------------------------------------------------------------------
+c subroutine to test/reset site fraction value z, accumulate z*ln(z)
+c and set the value of ln(z) if z = 0
+c----------------------------------------------------------------------
+      implicit none
+
+      double precision z, zlnz, lnz
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+c----------------------------------------------------------------------
+      if (z.gt.1d0) then
+         z = 1d0
+      else if (z.lt.wmach(1)) then
+         z = wmach(1)
+      end if
+
+      lnz = dlog(z)
+      zlnz = zlnz + z * lnz
+
+      end
+
       subroutine sderiv (id,s,dsy,dsyy)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a
-c solution with respect to the proportion of a dependent species.
+c solution with respect to the proportion of a dependent species. NEW
 c----------------------------------------------------------------------
       implicit none
 
@@ -8027,7 +8167,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,
+      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,zinf,
      *                 z(m11,m10),s0,ztemp,zlnz,dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
@@ -8050,6 +8190,7 @@ c                                 configurational entropy variables:
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       s = 0d0
+      zinf = 1d0 + dlog(wmach(1))
 c                                 for each site
       do i = 1, msite(id)
 
@@ -8098,68 +8239,61 @@ c                                 evaluate derivatives:
 
             zl = z(j,i)
 
-            if (zl.gt.0d0) zlnz = 1d0 + dlog(zl)
+            if (zl.gt.0d0) then 
+               zlnz = 1d0 + dlog(zl)
+            else
+               zl = wmach(1)
+               zlnz = zinf
+            end if
 
             do k = 1, nord(id)
 c                                 skip species not in the model
                if (.not.pin(k)) cycle
 c                                 sdzdp is (dz(i,j)/dp(k))
-               dzdy = sdzdp(k,j,i,id)
+               dzdy = q * sdzdp(k,j,i,id)
 
                if (dzdy.eq.0d0) cycle
 
-               if (zl.gt.0d0) then
-c                                 the first derivative is
-                  dsy(k) = dsy(k) - q * dzdy * zlnz
-c                                 and the jacobians are
-                  do l = k, nord(id)
-
-                     if (.not.pin(l)) cycle
-                     dsyy(l,k) = dsyy(l,k)
-     *                            - q * dzdy * sdzdp(l,j,i,id) / zl
-                  end do
-
-               else
-c                                 jacobians may be non-zero at z=0,
-c                                 since there use is for computing 
-c                                 step size, they are computed as 
-c                                 multiples of infinity which is then
-c                                 assigned a finite value to give a
+               if (z(j,i).eq.0d0) then 
+                  dsinf(k) = dsinf(k) - q*dzdy
                   inf = .true.
-c                                 a species with a non-zero
-c                                 derivative is zero, the
-c                                 first will be sign(dzdy)*infinity
-                  dsinf(k) = dsinf(k) + q * dzdy
-
-                  do l = k, nord(id)
-c                                 the 2nd will be -sign of
-c                                 cross term * infinity
-                     if (.not.pin(l)) cycle
-                     d2sinf(l,k) = dsinf(k) 
-     *                           - q * dzdy * sdzdp(l,j,i,id)
-                  end do
-
                end if
+c                                 the first derivative is
+               dsy(k) = dsy(k) - q * dzdy * zlnz
+c                                 and the jacobians are
+               do l = k, nord(id)
+
+                  if (.not.pin(l)) cycle
+
+                  dsyy(l,k) = dsyy(l,k)
+     *                      - q * dzdy * sdzdp(l,j,i,id) / zl
+
+                  if (z(j,i).eq.0d0) then 
+                     d2sinf(l,k) = d2sinf(l,k) - q*dzdy*sdzdp(l,j,i,id)
+                  end if
+
+               end do
 
             end do
 
          end do
 
       end do
-
+c!!!!!|BUG 
       if (inf) then
 
          do k = 1, nord(id)
 
             if (.not.pin(k)) cycle
-            if (dabs(dsinf(k)).gt.zero) dsy(k) = dsinf(k)
 
             do l = k, nord(id)
+
                if (.not.pin(l)) cycle
 c                                  set the second derivative so the
 c                                  step size ~ dsy/dsyy ~ 0.01
                if (dabs(d2sinf(l,k)).gt.zero) dsyy(l,k) =
      *             dsign(1d0,d2sinf(l,k))*dabs(dsinf(k))/0.01d0
+
             end do
 
          end do
@@ -9092,7 +9226,7 @@ c----------------------------------------------------------------------
 
       logical inf
 
-      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,dsinf,junk
+      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,dsinf,junk,zinf
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9106,11 +9240,15 @@ c                                 configurational entropy variables:
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision wmach
+      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
 
       inf = .false.
       ds = 0d0
       d2s = 0d0
+      zinf = 1d0 + dlog(wmach(1))
 
       do i = 1, msite(id)
 
@@ -9145,7 +9283,7 @@ c                                 and the jacobians are
 c                                 a species with a non-zero
 c                                 derivative is zero, the s
 c                                 derivative may be +/-infinite
-               dsinf = dsinf + dzdy
+               dsinf = dsinf - dzdy * zinf
 
             end if
 
@@ -9171,7 +9309,7 @@ c
 c                                 a species with a non-zero
 c                                 derivative is zero, the s
 c                                 derivative may be +/-infinite
-               dsinf = dsinf + dzdy
+               dsinf = dsinf - dzdy * zinf
 
             end if
 
@@ -12945,7 +13083,7 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                   end if
 
-c                 if (j.eq.5) goto 10
+c                 if (j.eq.6) goto 10
                   if (tic.eq.-1) goto 10
 
 
