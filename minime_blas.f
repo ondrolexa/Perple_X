@@ -276,6 +276,10 @@ c-----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -376,7 +380,7 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         call savrpc (g)
+         call savrpc (g,jphct)
 
       end if
 
@@ -386,13 +390,15 @@ c                                 increment the counter
 
       end
 
-      subroutine savrpc (g)
+      subroutine savrpc (g,phct)
 c-----------------------------------------------------------------------
 c save a dynamic composition for the lp solver
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      integer phct
 
       double precision g
 
@@ -408,25 +414,25 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 c-----------------------------------------------------------------------
 c                                 increment the counter
-      jphct = jphct + 1
+      phct = phct + 1
 c                                 the solution model pointer
-      jkp(jphct) = rids
+      jkp(phct) = rids
 c                                 the refinement point pointer
-      hkp(jphct) = rkds
+      hkp(phct) = rkds
 c                                 save the normalized g
-      g2(jphct) = g/rsum
+      g2(phct) = g/rsum
 c                                 save the normalized bulk
       cp2(1:icomp,jphct) = rcp(1:icomp)/rsum
 c                                 sum scp(1:icp)
       if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then 
-         c2tot(jphct) = rsum/rsmo
+         c2tot(phct) = rsum/rsmo
       else
-         c2tot(jphct) = rsum
+         c2tot(phct) = rsum
       end if
 
-      quack(jphct) = rkwak
+      quack(phct) = rkwak
 c                                 save the endmember fractions
-      icoz(jphct) = zcoct
+      icoz(phct) = zcoct
 
       zco(zcoct+1:zcoct+nstot(rids)) = pa(1:nstot(rids))
 
@@ -457,17 +463,12 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 c-----------------------------------------------------------------------
       jds = istuff(1)
 
@@ -500,14 +501,6 @@ c                                 entropy maximization
 
       end if
 
-c     write (*,1000) 0, (pa(i),i=1,nstot(jds))
-
-c     write (*,1000) 0, (cp2(i,tphct),i=1,icp)
-c     write (*,1000) gval, (pa(i),i=1,nstot(jds))
-
-1000  format (g12.6,1x,12(f8.5,1x))
-1010  format (2(g14.7,2x))
-
       end
 
       subroutine gsol4 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
@@ -524,31 +517,9 @@ c-----------------------------------------------------------------------
 
       logical error 
 
-      integer i, ids, jd, k, nvar, istart, mode, istuff(*)
+      integer i, ids, nvar, istart, mode, istuff(*)
 
-      double precision ppp(*), dp, gval, psum, dgdp(*), stuff(*)
-
-      double precision gsol1, omega0
-
-      external gsol1, omega
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      logical pin
-      common/ cyt2 /pin(j3)
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
+      double precision ppp(*), gval, dgdp(*), stuff(*), d2s(j3,j3)
 c-----------------------------------------------------------------------
       ids = istuff(1)
 c                                   on input ppp(1:nord) contains the 
@@ -557,8 +528,17 @@ c                                   pa(lstot+1:nstot).
 c                                   -----------------------------------
 c                                   initialize the proportions
       call ppp2pa (ppp,ids)
+
+      if (istuff(3).eq.0) then 
+c                                   free energy minimization
 c                                   get g and dgdp
-      call gderiv (ids,gval,dgdp,.true.,error)
+         call gderiv (ids,gval,dgdp,.true.,error)
+
+      else 
+c                                   negentropy minimization
+         call sderiv (ids,gval,dgdp,d2s,.true.)
+
+      end if
 
       istuff(4) = istuff(4) + 1
 
@@ -1157,16 +1137,14 @@ c-----------------------------------------------------------------------
       logical maxs, inp
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
-     *        istuff(10),istate(m21), idead, nclin, ntot
+     *        istuff(10),istate(m21), idead, nclin, ntot, lord
 
-     *       ,lord
-
-      double precision sum, ggrd(m19), b(k5), gordp0,g0,
+      double precision ggrd(m19), gordp0,g0,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19),gord,gsol1
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint,dp(j3)
+     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
       character*14 cdint, ctol
 
       double precision z, pa, p0a, x, w, y, wl, pp
@@ -1395,7 +1373,6 @@ c                                   values in ppp.
          gfinal = g0
          pa = p0a
       end if
-
 
       end
 

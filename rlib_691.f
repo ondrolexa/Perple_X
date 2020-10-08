@@ -7945,7 +7945,7 @@ c                                 and the full excess energy
 
       end if
 c                                 get the delta configurational entropy and derivatives
-      call sderiv (id,s,ds,d2s)
+      call sderiv (id,s,ds,d2s,.false.)
 
       do k = 1, norder
 
@@ -8154,16 +8154,19 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine sderiv (id,s,dsy,dsyy)
+      subroutine sderiv (id,s,dsy,dsyy,maxs)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a
-c solution with respect to the proportion of a dependent species. NEW
+c solution with respect to the proportion of a dependent species.
+c if maxs, then sderiv is being called by gsol4/minfxc for negentropy
+c minimization/p2yx inversion the jacobian is unnecessary and no corrections
+c are made for endmember configurational entropy.
 c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      logical inf
+      logical inf, maxs
 
       integer i,j,k,l,id
 
@@ -8278,6 +8281,14 @@ c                                 and the jacobians are
          end do
 
       end do
+
+      if (maxs) then
+
+         s = -s
+         dsy(1:nord(id)) = -dsy(1:nord(id))
+         return
+
+      end if
 
       if (inf.and.k.eq.99) then
 
@@ -8913,7 +8924,7 @@ c----------------------------------------------------------------------
 
       if (icase(id).eq.1) then
 c                                 case 1: fully correlated
-         dinc = 0.5d0/dfloat(nord(id))
+         dinc = 0.9d0/dfloat(nord(id))
          tinc = dinc
 
          do k = 1, nord(id)
@@ -9240,7 +9251,7 @@ c----------------------------------------------------------------------
       inf = .false.
       ds = 0d0
       d2s = 0d0
-      zinf = 1d0 + dlog(wmach(1))
+      zinf = 1d0 + dlog(zero)
 
       do i = 1, msite(id)
 
@@ -13044,65 +13055,70 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,bad)
 
-               if (deriv(i)) then
+c              if (deriv(i)) then
 
-                  y = p0a
+c                 y = p0a
 
-                 if (j.lt.16) then
-                    id = id + 1 
-                    cycle
-                 end if 
+c                if (j.lt.16) then
+c                   id = id + 1 
+c                   cycle
+c                end if 
 
-10                call minfxc (g1,i,.false.)
+c10                call minfxc (g1,i,.false.)
 
-                  junk = pa
-                  pa = p0a
+c                  junk = pa
+c                  pa = p0a
 
                   call specis (dg,i,minfx)
 
-                  g(id) = gexces (id) + dg + gmech (i)
-
-                  if (dg-g1.lt.-1d-1) then
-                     tic = tic + 1
-                     write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-                     write (*,5000) 'dg = ',dg-g1
-                     write (*,5000) 'pan  ',junk(1:nstot(i))
-                     write (*,5000) 'pa   ',pa(1:nstot(i))
-                     write (*,5000) 'pa0  ',p0a(1:nstot(i))
-
-                  else if (dg-g1.gt.1d0.and..not.minfx) then 
-                     tic = tic + 1
-                     write (*,*) 'wackwo wolly minfx =', minfx
-                     write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-                     write (*,5000) 'dg = ',dg-g1
-                     write (*,5000) 'pan  ',junk(1:nstot(i))
-                     write (*,5000) 'pa   ',pa(1:nstot(i))
-                     write (*,5000) 'pa0  ',p0a(1:nstot(i))
-
+                  if (minfx.and.deriv(i)) then
+                     pa = p0a
+                     call minfxc (dg,i,.false.)
                   end if
 
+                  g(id) = gexces (id) + dg + gmech (i)
+
+c                 if (dg-g1.lt.-1d-1) then
+c                    tic = tic + 1
+c                    write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
+c                    write (*,5000) 'dg = ',dg-g1
+c                    write (*,5000) 'pan  ',junk(1:nstot(i))
+c                    write (*,5000) 'pa   ',pa(1:nstot(i))
+c                    write (*,5000) 'pa0  ',p0a(1:nstot(i))
+
+c                 else if (dg-g1.gt.1d0.and..not.minfx) then 
+c                    tic = tic + 1
+c                    write (*,*) 'wackwo wolly minfx =', minfx
+c                    write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
+c                    write (*,5000) 'dg = ',dg-g1
+c                    write (*,5000) 'pan  ',junk(1:nstot(i))
+c                    write (*,5000) 'pa   ',pa(1:nstot(i))
+c                    write (*,5000) 'pa0  ',p0a(1:nstot(i))c
+
+c                 end if
+
 c                 if (j.eq.11) goto 10
-                  if (tic.eq.-1) goto 10
+c                 if (tic.eq.-1) goto 10
 
 
 5000   format (a,12(g10.4,1x))
 
-               else
+c              else
 
-                  call specis (dg,i,minfx)
+c                 call specis (dg,i,minfx)
 c                                 degenerated
-                  if (minfx.and.deriv(i)) 
-     *               call minfxc (g(id),i,.false.)
+c                 if (minfx.and.deriv(i)) 
+c    *               call minfxc (g(id),i,.false.)
 
-                  g(id) = gexces (id) + dg + gmech (i)
+c                 g(id) = gexces (id) + dg + gmech (i)
 
-               end if
+c              end if
 
                id = id + 1
 
             end do
 
-            write (*,*) tic, jend(i,2)
+c           write (*,*) tic, jend(i,2)
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -19620,7 +19636,7 @@ c----------------------------------------------------------------------
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c----------------------------------------------------------------------
-      zinf = 1d0 + dlog(wmach(1))
+      zinf = 1d0 + dlog(zero)
 c                                 for each site
       do i = 1, msite(ids)
 

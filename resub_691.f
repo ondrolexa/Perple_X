@@ -565,7 +565,7 @@ c                                  lagged speciation pure solvent
 
                rkwak = .true.
 c                                 save the composition
-               call savrpc (g)
+               call savrpc (g,jphct)
 
             end if
 
@@ -1182,9 +1182,12 @@ c                                 and solvent mass.
 c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          call sollim (ids,i)
-c                                 sollim loads the composition into pa, so no 
-c                                 phase pointer needed here.
-         if (.not.refine) call savdyn (ids)
+
+         if (.not.refine) then
+c                                 sollim loads but may corrupt pa, so reload here.
+            pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+            call savdyn (ids)
+         end if
 
       end do
 
