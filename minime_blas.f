@@ -1154,7 +1154,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical maxs, inp, error
+      logical maxs, inp
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
      *        istuff(10),istate(m21), idead, nclin, ntot
@@ -1185,6 +1185,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision tsum
       common/ cxt31 /tsum(j5,j3)
 
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
@@ -1211,14 +1214,42 @@ c                                 the number of non-frustrated od
 c                                 variables.
       call pinc0 (ids,lord)
 
-      if (lord.ne.nord(ids)) then 
+      if (icase(ids).eq.0) then 
+c                                 o/d reactions are independent and
+c                                 pin settings from pinc0 are valid
+c                                 regardless if whether p0 is fully 
+c                                 disorderd
+         if (lord.eq.0) then 
+            gfinal = gord(ids)
+            return
+         end if
+
+      else if (maxs) then
+c                                 if maxs then p0 could be partially 
+c                                 ordered, the pin settings from pinc0
+c                                 can't be relied upon, a routine could 
+c                                 be added to check, but given that the 
+c                                 maxs inversion is mostly likely to be
+c                                 called for a general composition, the
+c                                 lazy solution here is to keep everything
+c                                 in:
          pin = .true.
          lord = nord(ids)
-      end if
-c                                 if no ordering is possible return
-      if (lord.eq.0) then
-         gfinal = gord(ids)
-         return
+
+      else if (icase(ids).eq.1) then 
+c                                 p0 for ~maxs will always correspond to
+c                                 the disordered limit, in this case 
+c                                 pin for uncorrelated o/d reactions can 
+c                                 be relied up. currently the only partly
+c                                 correlated case (Omph(GHP)) can also be
+c                                 relied upon, but this may change. a special
+c                                 test for this and fully correlated cases 
+c                                 could be made, but since ~maxs calls are
+c                                 only for backup from specis the lazy solution
+c                                 is adopted here for the fully correlated case.
+         pin = .true.
+         lord = nord(ids)
+
       end if
 
       nvar = nord(ids)
@@ -1230,8 +1261,8 @@ c                                 initialization
             bu(k) = 1d0
             bl(k) = -1d0
          else
-            bu(k) = 1d0
-            bl(k) = -1d0
+            bu(k) = pa(lstot(ids)+k)
+            bl(k) = pa(lstot(ids)+k)
          end if
 
          ppp(k) = pa(lstot(ids)+k)
@@ -1355,13 +1386,8 @@ c                                   values in ppp.
       else if (idead.eq.7) then
          write (*,*) 'bad derivatives'
       else if (idead.ne.0) then 
-         write (*,*) 'sommat elese bad',idead
+         write (*,*) 'sommat else bad',idead
       end if
-
-      do i = 1, nvar
-         if (pin(i)) cycle
-         write (*,*) 'oink'
-      end do
 
       g0 = gordp0 (ids)
 

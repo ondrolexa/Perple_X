@@ -7741,7 +7741,7 @@ c----------------------------------------------------------------------
 
       integer id
 
-      logical error, minfx
+      logical minfx, error
 
       double precision g, g0, gordp0
 
@@ -7773,7 +7773,7 @@ c                                 for single species models:
 
          else
 
-            call speci1 (g,id,1,error)
+            call speci1 (g,id,1)
 
          end if
 
@@ -7971,7 +7971,7 @@ c     *        + 2d0*d2g(2,1)*d2g(3,2)*d2g(3,1)-d2g(2,1)**2*d2g(3,3)
 c      end if
 
       g = g - tk*s
-c                                 if minfx just return with the jacobian
+c                                 if minfx just return with the gradient
       if (minfx) then
          dp(1:norder) = -dg(1:norder)
          return
@@ -8190,7 +8190,7 @@ c                                 configurational entropy variables:
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       s = 0d0
-      zinf = 1d0 + dlog(wmach(1))
+      zinf = 1d0 + dlog(zero)
 c                                 for each site
       do i = 1, msite(id)
 
@@ -8520,7 +8520,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine speci1 (g,id,k,error)
+      subroutine speci1 (g,id,k)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
 c composition is returned in array pa.
@@ -8577,48 +8577,39 @@ c                                 starting point
       call plimit (pmin,pmax,k,id)
 c                                 necessary?
       pin(k) = .true.
-
-      if (pmax-pmin.lt.nopt(5)) then
 c                                 a composition for which no O/D 
-c                                 is possible, setting error will
-c                                 generate min(maxord,maxdis). in 
-c                                 this case maxord should always be
-c                                 stable
-         error = .true.
-
-      else
+c                                 is possible
+      if (pmax-pmin.lt.nopt(5)) return
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-         pmax = pmax - nopt(5)
-         pmin = pmin + nopt(5)
-c                                 get starting end for the search
+      pmax = pmax - nopt(5)
+      pmin = pmin + nopt(5)
+c                                 get starting point for the search
 c                                 first try the maximum
-         dp = pmax - p0a(jd)
-         call pincs (dp,dy,ind,jd,nr)
+      dp = pmax - p0a(jd)
+      call pincs (dp,dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp)
+      call gderi1 (k,id,dp)
 
-         if (dp.ge.0d0) then
+      if (dp.ge.0d0) then
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the
 c                                 the disordered case:
-            call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
-            call gderi1 (k,id,dp)
+         call gderi1 (k,id,dp)
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
 c                                 the min/max order cases, specis
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-            if (dp.le.0d0) error = .true.
-
-         end if
+         if (dp.le.0d0) error = .true.
 
       end if
 
@@ -8731,10 +8722,9 @@ c                                 species are necessary to describe the ordering
       else if (lord.eq.1) then
 
          do i = 1, nord(id)
-            if (pin(i)) then
-               call speci1 (g,id,i,error)
-               exit
-            end if
+            if (.not.pin(i)) cycle
+            call speci1 (g,id,i)
+            exit
          end do
 
       else if (lord.gt.1) then
@@ -8995,7 +8985,7 @@ c                                 back off from maximum for final assignements
             jd = lstot(id) + k
             pa(jd) = p0a(jd)
 
-            dp = dpp(k)*0.5d0
+            dp = dpp(k)*0.9d0
 c                                 adjust the composition by the first increment
             call dpinc (dp,k,id,jd)
 
@@ -13058,11 +13048,10 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                   y = p0a
 
-c                if (j.lt.11) then
-c                   id = id + 1 
-c                   cycle
-c                end if 
- 
+                 if (j.lt.16) then
+                    id = id + 1 
+                    cycle
+                 end if 
 
 10                call minfxc (g1,i,.false.)
 
