@@ -8167,7 +8167,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,zinf,
+      double precision zt,qdzdy,s,dsy(*),dsyy(j3,*),q,zl,zinf,
      *                 z(m11,m10),s0,ztemp,zlnz,dsinf(j3),d2sinf(j3,j3)
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
@@ -8250,26 +8250,25 @@ c                                 evaluate derivatives:
 c                                 skip species not in the model
                if (.not.pin(k)) cycle
 c                                 sdzdp is (dz(i,j)/dp(k))
-               dzdy = q * sdzdp(k,j,i,id)
+               qdzdy = q * sdzdp(k,j,i,id)
 
-               if (dzdy.eq.0d0) cycle
+               if (qdzdy.eq.0d0) cycle
+c                                 the first derivative is
+               dsy(k) = dsy(k) - qdzdy * zlnz
 
                if (z(j,i).eq.0d0) then 
-                  dsinf(k) = dsinf(k) - q*dzdy
+                  dsinf(k) = dsinf(k) - qdzdy
                   inf = .true.
                end if
-c                                 the first derivative is
-               dsy(k) = dsy(k) - q * dzdy * zlnz
 c                                 and the jacobians are
                do l = k, nord(id)
 
                   if (.not.pin(l)) cycle
 
-                  dsyy(l,k) = dsyy(l,k)
-     *                      - q * dzdy * sdzdp(l,j,i,id) / zl
+                  dsyy(l,k) = dsyy(l,k) - qdzdy * sdzdp(l,j,i,id) / zl
 
                   if (z(j,i).eq.0d0) then 
-                     d2sinf(l,k) = d2sinf(l,k) - q*dzdy*sdzdp(l,j,i,id)
+                     d2sinf(l,k) = d2sinf(l,k) - qdzdy*sdzdp(l,j,i,id)
                   end if
 
                end do
@@ -8279,12 +8278,14 @@ c                                 and the jacobians are
          end do
 
       end do
-c!!!!!|BUG 
-      if (inf) then
+
+      if (inf.and.k.eq.99) then
 
          do k = 1, nord(id)
 
             if (.not.pin(k)) cycle
+
+            if (dsinf(k).gt.zero) dsy(k) = dsinf(k)*zinf
 
             do l = k, nord(id)
 
@@ -8292,7 +8293,7 @@ c!!!!!|BUG
 c                                  set the second derivative so the
 c                                  step size ~ dsy/dsyy ~ 0.01
                if (dabs(d2sinf(l,k)).gt.zero) dsyy(l,k) =
-     *             dsign(1d0,d2sinf(l,k))*dabs(dsinf(k))/0.01d0
+     *             dsign(1d0,d2sinf(l,k))*dabs(dsy(k))/0.01d0
 
             end do
 
@@ -8595,7 +8596,8 @@ c                                 the root must lie at p > pmax - nopt(5).
          pmin = pmin + nopt(5)
 c                                 get starting end for the search
 c                                 first try the maximum
-         call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+         dp = pmax - p0a(jd)
+         call pincs (dp,dy,ind,jd,nr)
 
          call gderi1 (k,id,dp)
 
@@ -9270,7 +9272,7 @@ c                                 for each term:
 c                                 sdzdp is (dz(i,j)/dp(l))
             dzdy = sdzdp(l,j,i,id)
 
-            if (zl.gt.0d0) then
+            if (zl.gt.zero) then
 
                zt = zt + zl
 c                                 the first derivative is
@@ -9298,7 +9300,7 @@ c                                 species:
 
          if (dzdy.ne.0d0) then
 
-            if (zl.gt.0d0) then
+            if (zl.gt.zero) then
 c                                 the first derivative is
                dzy = dzy - dzdy * (1d0 + dlog(zl))
 c                                 and the second is
@@ -13056,9 +13058,16 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                   y = p0a
 
+c                if (j.lt.11) then
+c                   id = id + 1 
+c                   cycle
+c                end if 
+ 
+
 10                call minfxc (g1,i,.false.)
 
                   junk = pa
+                  pa = p0a
 
                   call specis (dg,i,minfx)
 
@@ -13083,7 +13092,7 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                   end if
 
-c                 if (j.eq.6) goto 10
+c                 if (j.eq.11) goto 10
                   if (tic.eq.-1) goto 10
 
 

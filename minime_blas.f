@@ -1154,7 +1154,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical maxs, inp
+      logical maxs, inp, error
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
      *        istuff(10),istate(m21), idead, nclin, ntot
@@ -1166,7 +1166,7 @@ c-----------------------------------------------------------------------
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19),gord,gsol1
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
+     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint,dp(j3)
       character*14 cdint, ctol
 
       double precision z, pa, p0a, x, w, y, wl, pp
@@ -1206,8 +1206,6 @@ c DEBUG691 minfxc
 c-----------------------------------------------------------------------
 c                                 initialize limit expressions from p0
       call p0limt (ids)
-c                                 pinc0 increments from pa, so initialize
-      pa = p0a
 c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
