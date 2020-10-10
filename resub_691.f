@@ -1184,8 +1184,9 @@ c                                 check composition against solution model range
          call sollim (ids,i)
 
          if (.not.refine) then
-c                                 sollim loads but may corrupt pa, so reload here.
-            pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c                                 sollim loads but may corrupt pa although p0a
+c                                 isn't touched, so reload pa here.
+            pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
             call savdyn (ids)
          end if
 

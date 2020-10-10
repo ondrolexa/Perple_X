@@ -7700,33 +7700,6 @@ c                                 zero ordered pp's
 
       end
 
-      subroutine setpmx (id)
-c----------------------------------------------------------------------
-c subroutine to set ordered speciation to disordered limit as a starting
-c point for minfrc, there is no reason to favor this starting condition 
-c other than HP O/D models are often calibrated for the ordered rather 
-c than the antiordered speciation.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer id, lord
-c----------------------------------------------------------------------
-      if (dnu(id).ne.0d0) then
-c                                
-c nothing yet
-
-      else
-c                                 initialize limit expressions
-         call p0limt (id)
-
-         call pinc0 (id,lord)
-
-      end if
-
-      end
-
       subroutine specis (g,id,minfx)
 c----------------------------------------------------------------------
 c subroutine to compute speciation of a solution with initial speciation
@@ -7781,6 +7754,7 @@ c                                 for single species models:
 c                                 compare g for initial and eq speciation
 c                                 return the lower
       if (g.gt.g0) then 
+c DEBU DEBUG
 c        g = g0
 c        pa = p0a
       end if
@@ -8166,12 +8140,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical inf, maxs
+      logical maxs
 
       integer i,j,k,l,id
 
       double precision zt,qdzdy,s,dsy(*),dsyy(j3,*),q,zl,zinf,
-     *                 z(m11,m10),s0,ztemp,zlnz,dsinf(j3),d2sinf(j3,j3)
+     *                 z(m11,m10),s0,ztemp,zlnz
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8193,6 +8167,8 @@ c                                 configurational entropy variables:
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       s = 0d0
+      dsy(1:nord(id)) = 0d0
+      dsyy(1:nord(id),1:nord(id)) = 0d0
       zinf = 1d0 + dlog(zero)
 c                                 for each site
       do i = 1, msite(id)
@@ -8224,15 +8200,6 @@ c                                 for each term:
          s = s - zmult(id,i) * s0
 
       end do
-c                                 initialize derivatives:
-      inf = .false.
-
-      do k = 1, nord(id)
-         dsy(k) = 0d0
-         do l = k, nord(id)
-            dsyy(l,k) = 0d0
-         end do
-      end do
 c                                 evaluate derivatives:
       do i = 1, msite(id)
 
@@ -8245,7 +8212,7 @@ c                                 evaluate derivatives:
             if (zl.gt.0d0) then 
                zlnz = 1d0 + dlog(zl)
             else
-               zl = wmach(1)
+               zl = zero
                zlnz = zinf
             end if
 
@@ -8258,21 +8225,12 @@ c                                 sdzdp is (dz(i,j)/dp(k))
                if (qdzdy.eq.0d0) cycle
 c                                 the first derivative is
                dsy(k) = dsy(k) - qdzdy * zlnz
-
-               if (z(j,i).eq.0d0) then 
-                  dsinf(k) = dsinf(k) - qdzdy
-                  inf = .true.
-               end if
 c                                 and the jacobians are
                do l = k, nord(id)
 
                   if (.not.pin(l)) cycle
 
                   dsyy(l,k) = dsyy(l,k) - qdzdy * sdzdp(l,j,i,id) / zl
-
-                  if (z(j,i).eq.0d0) then 
-                     d2sinf(l,k) = d2sinf(l,k) - qdzdy*sdzdp(l,j,i,id)
-                  end if
 
                end do
 
@@ -8287,28 +8245,6 @@ c                                 and the jacobians are
          s = -s
          dsy(1:nord(id)) = -dsy(1:nord(id))
          return
-
-      end if
-
-      if (inf.and.k.eq.99) then
-
-         do k = 1, nord(id)
-
-            if (.not.pin(k)) cycle
-
-            if (dsinf(k).gt.zero) dsy(k) = dsinf(k)*zinf
-
-            do l = k, nord(id)
-
-               if (.not.pin(l)) cycle
-c                                  set the second derivative so the
-c                                  step size ~ dsy/dsyy ~ 0.01
-               if (dabs(d2sinf(l,k)).gt.zero) dsyy(l,k) =
-     *             dsign(1d0,d2sinf(l,k))*dabs(dsy(k))/0.01d0
-
-            end do
-
-         end do
 
       end if
 c                                 endmember corrections
@@ -8924,7 +8860,7 @@ c----------------------------------------------------------------------
 
       if (icase(id).eq.1) then
 c                                 case 1: fully correlated
-         dinc = 0.9d0/dfloat(nord(id))
+         dinc = 0.5d0/dfloat(nord(id))
          tinc = dinc
 
          do k = 1, nord(id)
@@ -9137,8 +9073,6 @@ c----------------------------------------------------------------------
 
       integer i,k,i1,i2,id
 
-      logical inf
-
       double precision g,dg,d2g,t,ds,d2s,dp
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
@@ -9202,21 +9136,16 @@ c                                 convert dg and d2g to the full derivative
 
       end if
 c                                 get the configurational entropy derivatives
-      call sderi1 (k,id,ds,d2s,inf)
+      call sderi1 (k,id,ds,d2s)
 
       dg  = dg + enth(k)  - v(2)*ds
       d2g = d2g - v(2)*d2s
 c                                 dg becomes the newton raphson increment
-      if (inf) then
-         dg = dsign(dp/2d0,-dg/d2g)
-      else
-         dg = -dg/d2g
-      end if
+      dg = -dg/d2g
 
       end
 
-
-      subroutine sderi1 (l,id,ds,d2s,inf)
+      subroutine sderi1 (l,id,ds,d2s)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a
 c solution with respect to the proportion of the lth ordered species.
@@ -9227,9 +9156,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      logical inf
-
-      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,dsinf,junk,zinf
+      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zinf,lnz
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9247,8 +9174,6 @@ c                                 configurational entropy variables:
       double precision wmach
       common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
-
-      inf = .false.
       ds = 0d0
       d2s = 0d0
       zinf = 1d0 + dlog(zero)
@@ -9259,7 +9184,6 @@ c----------------------------------------------------------------------
          dzyy = 0d0
 
          zt = 0d0
-         dsinf = 0d0
 
          do j = 1, zsp(id,i)
 
@@ -9268,64 +9192,41 @@ c                                 for each term:
             do k = 1, lterm(j,i,id)
                zl = zl + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
             end do
-
-            call ckzlnz (zl,junk)
 c                                 sdzdp is (dz(i,j)/dp(l))
             dzdy = sdzdp(l,j,i,id)
 
-            if (zl.gt.zero) then
-
-               zt = zt + zl
-c                                 the first derivative is
-               dzy = dzy - dzdy * (1d0 + dlog(zl))
-c                                 and the jacobians are
-
-               dzyy = dzyy  - dzdy**2 / zl
-
+            if (zl.lt.zero) then
+               zl = zero
+               lnz = zinf
             else
-c                                 a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-               dsinf = dsinf - dzdy * zinf
-
+               zt = zt + zl
+               lnz = (1d0 + dlog(zl))
             end if
+c                                 the first derivative
+            dzy = dzy - dzdy * lnz
+c                                 the second
+            dzyy = dzyy  - dzdy**2 / zl
 
          end do
 c                                 add the contibution from the zsp(id,i)+1th
 c                                 species:
          zl = 1d0 - zt
 
-         call ckzlnz (zl,junk)
-
          dzdy = sdzdp(l,j,i,id)
 
-         if (dzdy.ne.0d0) then
-
-            if (zl.gt.zero) then
-c                                 the first derivative is
-               dzy = dzy - dzdy * (1d0 + dlog(zl))
-c                                 and the second is
-               dzyy = dzyy  - dzdy**2 / zl
-
-            else
-c
-c                                 a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-               dsinf = dsinf - dzdy * zinf
-
-            end if
-
-         end if
-
-         if (dabs(dsinf).lt.zero) then
-            ds = ds + zmult(id,i)*dzy
-            d2s = d2s + zmult(id,i)*dzyy
+         if (zl.lt.zero) then
+            zl = zero
+            lnz = zinf
          else
-            inf = .true.
-            ds = ds + zmult(id,i)*dsinf
-            d2s = d2s - zmult(id,i)*dsinf/0.01d0
+            lnz = (1d0 + dlog(zl))
          end if
+c                                 the first derivative is
+         dzy = dzy - dzdy * lnz
+c                                 and the second is
+         dzyy = dzyy  - dzdy**2 / zl
+
+         ds = ds + zmult(id,i)*dzy
+         d2s = d2s + zmult(id,i)*dzyy
 
       end do
 c                                 for models with disordered
@@ -9336,7 +9237,6 @@ c                                 change in endmember configurational entropy
       end do
 
       end
-
 
       subroutine p0limt (id)
 c----------------------------------------------------------------------
@@ -10244,6 +10144,16 @@ c                                 compositions from the arf file
      *         call error (63,y(1),i,'GMODEL/sname')
             tpct = jend(i,2)*nstot(i)
             read (n10,*) txco(tcct+1:tcct+tpct)
+
+            if (i.eq.3) then 
+               do j = tcct+1,tcct+tpct
+                  if (txco(j).lt.0d0) then 
+                     write (*,*) 'wtf',
+     *                     txco(tcct+1:tcct+tpct)
+                  end if
+               end do 
+            end if 
+
             tcct = tcct + tpct
 
          end do
@@ -13064,10 +12974,10 @@ c                   id = id + 1
 c                   cycle
 c                end if 
 
-c10                call minfxc (g1,i,.false.)
+c10                   call minfxc (g1,i,.false.)
 
-c                  junk = pa
-c                  pa = p0a
+c                 junk = pa
+c                 pa = p0a
 
                   call specis (dg,i,minfx)
 
@@ -13078,24 +12988,24 @@ c                  pa = p0a
 
                   g(id) = gexces (id) + dg + gmech (i)
 
-c                 if (dg-g1.lt.-1d-1) then
-c                    tic = tic + 1
-c                    write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-c                    write (*,5000) 'dg = ',dg-g1
-c                    write (*,5000) 'pan  ',junk(1:nstot(i))
-c                    write (*,5000) 'pa   ',pa(1:nstot(i))
-c                    write (*,5000) 'pa0  ',p0a(1:nstot(i))
+c                if (dg-g1.lt.-1d-1) then
+c                   tic = tic + 1
+c                   write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
+c                   write (*,5000) 'dg = ',dg-g1
+c                   write (*,5000) 'pan  ',junk(1:nstot(i))
+c                   write (*,5000) 'pa   ',pa(1:nstot(i))
+c                   write (*,5000) 'pa0  ',p0a(1:nstot(i))
 
-c                 else if (dg-g1.gt.1d0.and..not.minfx) then 
-c                    tic = tic + 1
-c                    write (*,*) 'wackwo wolly minfx =', minfx
-c                    write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-c                    write (*,5000) 'dg = ',dg-g1
-c                    write (*,5000) 'pan  ',junk(1:nstot(i))
-c                    write (*,5000) 'pa   ',pa(1:nstot(i))
-c                    write (*,5000) 'pa0  ',p0a(1:nstot(i))c
+c                else if (dg-g1.gt.1d0.and..not.minfx) then 
+c                   tic = tic + 1
+c                   write (*,*) 'wackwo wolly minfx =', minfx
+c                   write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
+c                   write (*,5000) 'dg = ',dg-g1
+c                   write (*,5000) 'pan  ',junk(1:nstot(i))
+c                   write (*,5000) 'pa   ',pa(1:nstot(i))
+c                   write (*,5000) 'pa0  ',p0a(1:nstot(i))
 
-c                 end if
+c                end if
 
 c                 if (j.eq.11) goto 10
 c                 if (tic.eq.-1) goto 10
@@ -13118,7 +13028,7 @@ c              end if
 
             end do
 
-c           write (*,*) tic, jend(i,2)
+c           write (*,*) tic, jend(i,2), i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -15320,7 +15230,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, i1, i2, id
 
-      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2,
+      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, zinf,
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
      *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
      *                 z, n(m11), dn(m11), d2n(m11), dsinf, t, dt, d2t
@@ -15359,6 +15269,8 @@ c                                 initialize
       s = 0d0
       ds = 0d0
       d2s = 0d0
+
+      zinf = 1d0 + dlog(zero)
 
       gnorm  = 1d0 + dnu(id) * q
       dgnorm = dnu(id)
@@ -15484,22 +15396,19 @@ c                                 site has non-zero multiplicity
      *                  /nt**2
 
                   if (z.gt.zero) then
+ 
+                     lnz1 = dlog(z) + 1d0
+                     zlnz = zlnz + z * dlog(z)
 
-                     lnz = dlog(z)
-                     lnz1 = lnz + 1d0
+                  else
 
-                     zlnz = zlnz + z * lnz
-                     dzlnz = dzlnz + dz * lnz1
-                     d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
-
-                  else if (dabs(dn(j)/nt).gt.zero) then
-
-                     dz = dn(j)/nt
-                     d2z = (2d0*dnt*(-dn(j)) + nt*d2n(j) - n(j)*d2nt)
-     *                  /nt**2
-                     write (*,*) 'oink temkin dz ',z,dz,d2z,n(j)
+                     z = zero
+                     lnz1 = zinf
 
                   end if
+
+                  dzlnz = dzlnz + dz * lnz1
+                  d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
 
                end do
 c                                 entropy units
@@ -19760,7 +19669,6 @@ c----------------------------------------------------------------------
       else
          zlnz = zlnz + z * dlog(z)
       end if
-
 
       end
 

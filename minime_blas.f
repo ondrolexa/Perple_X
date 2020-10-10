@@ -532,7 +532,7 @@ c                                   initialize the proportions
       if (istuff(3).eq.0) then 
 c                                   free energy minimization
 c                                   get g and dgdp
-         call gderiv (ids,gval,dgdp,.true.,error)
+        call gderiv (ids,gval,dgdp,.true.,error)
 
       else 
 c                                   negentropy minimization

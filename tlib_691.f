@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 20, 2020.',
+     *     'Perple_X version 6.9.1, source updated October 9, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -1640,9 +1640,9 @@ c                                 thermo options for frendly
      *        4x,'console_messages       ',a3,8x,'[on] off',/,
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
-     *        4x,'optimization_precision ',/,g7.1E1,4x,
+     *        4x,'optimization_precision ',g7.1E1,3x,
      *           '[1e-1], absolute',/,
-     *        4x,'optimization_iterations',i2,9x,'>= 2 [10]',/,
+     *        4x,'optimization_iterations ',i2,8x,'>= 2 [10]',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
