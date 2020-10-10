@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical inp, tick
+      logical inp, tic
 
       integer nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
@@ -62,21 +62,11 @@ c DEBUG691                    dummies for NCNLN > 0
 
       save iprint,inp
 c-----------------------------------------------------------------------
-c     zp = 0d0
-c     ftol = 1d-1
+      yt = pa
 
-c     do i = 1, nstot(rids)
-c        if (pa(i).eq.0d0) then 
-c           pa(i) = ftol
-c        end if
-c        zp = zp + pa(i)
-c     end do
+      tic = .true.
 
-c     pa(1:nstot(ids)) = pa(1:nstot(ids)) / zp
-
-c     yt = pa
-
-10    nclin = nz(rids)
+      nclin = nz(rids)
       ntot = nstot(rids)
 
       if (dnu(rids).eq.0d0) then
@@ -88,20 +78,18 @@ c                                 finite difference increments
 c                                 will be estimated at this 
 c                                 coordinate, so choose a feasible 
 c                                 composition
-c DEBUGXXX
-c     pa(1:ntot) = 0.25d0
       ppp(1:nvar) = pa(1:nvar)
 c                                 initialize bounds
-      if (nclin.gt.0) then 
-c                                 the model has site fractions
-         bu(1:nvar) = 1d20
-         bl(1:nvar) = -1d20
-
-      else 
-c                                 a molecular model, the endmember fractions 
-c                                 are bounded
+      if (boundd(rids)) then 
+c                                 the endmember fractions are bounded
          bu(1:nvar) = 1d0
          bl(1:nvar) = 0d0
+         if (.not.lorder(rids)) nclin = 0
+
+      else 
+c                                 the model has site fractions
+         bu(1:nvar) = 1d0
+         bl(1:nvar) = -1d0
 
       end if 
 c                                 load the local constraints 
@@ -110,8 +98,6 @@ c                                 from the global arrays
 
       bl(nvar+1:nvar+nclin) = zl(rids,1:nclin)
       bu(nvar+1:nvar+nclin) = zu(rids,1:nclin)
-
-      tick = .false.
 
       if (nvar.eq.ntot) then
 c                                 closure for non-equimolar ordering
@@ -126,21 +112,16 @@ c                                 closure for molecular models
          bl(nvar+nclin) = 0d0
          bu(nvar+nclin) = 1d0
          lapz(nclin,1:nvar) = 1d0
-         tick = .false.
 
       end if
 
-      idead = -1
+10    idead = -1
 c                                 obj call counter
       istuff(3) = 0
 c                                 saved obj value counter
       istuff(4) = 0
 
       if (inp) then
-
-         ppp = 0
-
-         iprint = 10
 
          write (*,*) 'ftol,fdint'
          read (*,*) ftol, fdint
@@ -153,16 +134,13 @@ c                                 saved obj value counter
 
       else
 
-         iprint = 0
-         if (tick.or.deriv(rids)) iprint = 0
-
          CALL E04UEF ('nolist')
 c        CALL E04UEF ('optimality tolerance =  1d-4')
 c        CALL E04UEF ('difference interval = 1d-3')
 c        write (ctol,'(i4)') iprint
 c        CALL E04UEF ('print level = '//ctol)
 
-
+         CALL E04UEF ('verify level 0')
          write (ctol,'(g14.7)') (wmach(1)*1d1)
          CALL E04UEF ('function precision = '//ctol)
          write (ctol,'(g14.7)') (wmach(1)*1d1)**(0.8)
@@ -182,7 +160,7 @@ c                              0.05-.4 seem best
 
       if (deriv(rids)) then
 
-c        CALL E04UEF ('verify level 1')
+         if (.not.tic) CALL E04UEF ('verify level 1')
          CALL E04UEF ('derivative level = 3')
 
       else
@@ -192,55 +170,22 @@ c        CALL E04UEF ('verify level 1')
 
       end if
 
-c     call nlpopt (nvar,nclin,m20,m19,lapz,bl,bu,gsol2,
-c    *             iter,istate,clamda,gfinal,ggrd,r,ppp,iwork,
-c    *             m22,work,m23,istuff,stuff,idead,iprint)
-
-c     write (*,*) '*****with derivatives****',fname(ids)
-
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
 
-c     call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
-
-c     if (deriv(ids)) then 
-c        deriv(ids) = .false.
-c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
-c        deriv(ids) = .true.
-c     end if 
-
-
-c     if (deriv(ids)) then 
-c     write (*,*) '*****without derivatives*****',fname(ids)
-c     pa = yt
-c        deriv(ids) = .false.
-c        CALL E04UEF ('optimality tolerance =  1d-4')
-c        CALL E04UEF ('difference interval = 1d-3')
-c        CALL E04UEF ('verify level 0')
-c        CALL E04UEF ('derivative level = 0')
-c     call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
-c    *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
-c    *            m23,istuff,stuff,idead,iprint)
-c        deriv(ids) = .true.
-
-c     end if
-
-
-      if (inp) then 
-
-         deriv(rids) = .false.
+      if (iter.eq.0.and.idead.eq.0.and.tic.and.deriv(rids)) then
 
          pa = yt
-
-         write (*,*) istuff(3),gfinal,rkds
-
+         tic = .false.
          goto 10
+
+      else if (.not.tic.and.idead.ne.0) then 
+
+         write (*,*) 'woana woaba, wanka?'
 
       end if
 
-1000  format (a10,10(g14.7,1x))
-1010  format (i5,1x,10(g14.7,1x))
       end
 
       subroutine gsol2 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
@@ -1134,7 +1079,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical maxs, inp
+      logical maxs, inp, tic 
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
      *        istuff(10),istate(m21), idead, nclin, ntot, lord
@@ -1278,6 +1223,8 @@ c                                coefficients
 
       idead = -1
 
+      tic = .true.
+
       iprint = 0
 c                                 solution model index
       istuff(1) = ids
@@ -1337,7 +1284,7 @@ c low values -> more accurate search -> more function calls
       if (deriv(ids)) then
 
 c        CALL E04UEF ('difference interval = -1')
-         if (iprint.ne.0) CALL E04UEF ('verify level 1')
+         if (.not.tic) CALL E04UEF ('verify level 1')
          CALL E04UEF ('derivative level = 3')
 
       else
@@ -1348,14 +1295,24 @@ c        CALL E04UEF ('difference interval = -1')
 
       end if
 
-      gfinal = 1d9
-
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
 c                                   set pa to correspond to the final 
 c                                   values in ppp.
       call ppp2pa (ppp,ids)
+
+      if (iter.eq.0.and.idead.eq.0.and.tic.and.deriv(ids)) then 
+
+         pa = p0a
+         tic = .false.
+         goto 10
+
+      else if (.not.tic.and.iter.gt.0) then 
+
+         write (*,*) 'maialino josefino!'
+
+      end if 
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'

@@ -1101,11 +1101,11 @@ c                                count fraction of impure solvent
 
             jd = jdsol(i,j)
 
-c           if (.not.refine) then 
+            if (.not.refine) then 
 c                                load into pa and save for refinement
-c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
-c              call savdyn (ids)
-c           end if
+               pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+               call savdyn (ids)
+            end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 
                xx =  amt(jd)/bnew(i)
@@ -1187,7 +1187,7 @@ c                                 check composition against solution model range
 c                                 sollim loads but may corrupt pa although p0a
 c                                 isn't touched, so reload pa here.
             pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
-            call savdyn (ids)
+c           call savdyn (ids)
          end if
 
       end do
@@ -1220,12 +1220,18 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical rplica
+
       integer ids
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      external rplica
 c----------------------------------------------------------------------
+c     if (rplica(ids)) return
+
       tpct = tpct + 1
 
       if (tpct.gt.m24) call errdbg ('increase m24')
@@ -1240,6 +1246,110 @@ c                                 increment the counter
       tcct = tcct + nstot(ids)
 
       end 
+
+      logical function rplica (id)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id, ind, i, j, k, l
+
+      double precision diff, dinc, tp(m14)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c-----------------------------------------------------------------------
+      if (.not.lorder(id)) then
+c                                 simple model
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            diff = 0d0
+
+            do j = 1, nstot(id)
+               diff = diff + (pa(j) - txco(itxp(tpct)+j))**2
+            end do 
+
+            if (diff.lt.1d-8) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      else if (dnu(id).eq.0d0) then
+c                                 test on pp array
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            do j = 1, nstot(id)
+               tp(j) = pa(j) - txco(itxp(tpct)+j)
+            end do
+
+            do k = 1, nord(id)
+               do l = 1, nrct(k,id)
+                  ind = ideps(l,k,id)
+                  tp(ind) = tp(ind) - dydy(ind,k,id) * tp(lstot(id)+k)
+               end do
+            end do
+
+            diff = 0d0
+
+            do j = 1, lstot(id)
+               diff = diff + (tp(j))**2
+            end do 
+
+            if (diff.lt.1d-8) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      else 
+c                                 non-equimolar
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            tp(1:nstot(id)) = txco(itxp(tpct)+1:itxp(tpct)+nstot(id))
+
+            diff = 0d0
+
+            do l = 1, nrct(1,id)
+               ind = ideps(l,1,id)
+               dinc = - dydy(ind,1,id) * tp(lstot(id)+1)
+               diff = diff + dinc
+               tp(ind) = tp(ind) + dinc
+            end do
+c                                 renormalize
+            tp(1:lstot(id)) = tp(1:lstot(id)) / (1d0 + diff)
+c                                 compare
+            diff = 0d0
+
+            do j = 1, lstot(id)
+               diff = diff + (pp(j) - tp(j))**2
+            end do 
+
+            if (diff.lt.1d-8) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      end if
+
+      rplica = .false.
+
+      end
 
       subroutine sollim (ids,jd)
 c----------------------------------------------------------------------

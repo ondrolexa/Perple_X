@@ -326,11 +326,12 @@ c                                 model type
       common/ cxt27 /lorder(h9),lexces(h9),llaar(h9),lrecip(h9),
      *               specil(h9),simple(h9),deriv(h9)
 
-      logical stable, limit, noder, lorch
+      logical stable, limit, noder, lorch, boundd
       integer badinv
       double precision xlo, xhi
       common / cxt11 / xlo(m4, mst, h4, h9), xhi(m4, mst, h4, h9),
-     *       badinv(h9, 2), stable(h9), limit(h9), noder(h9), lorch(h9)
+     *       badinv(h9,2), stable(h9), limit(h9), noder(h9), lorch(h9),
+     *       boundd(h9)
 
       integer ncoor,mcoor,ndim
       common/ cxt24 /ncoor(h9),mcoor(h9),ndim(mst,h4,h9)

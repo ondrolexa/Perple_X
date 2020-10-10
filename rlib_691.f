@@ -7603,6 +7603,20 @@ c                                 BCC Fe-Cr Andersson and Sundman (32)
          end if
 
       end if
+c                                 for simplicial models set bounded for minfrc, in fact badly
+c                                 formulated (equipartion models) may be unbounded so could a
+c                                 solution model flag could be set to override this setting:
+      if ((lstot(im).eq.nstot(im).and.
+     *     lstot(im).eq.mstot(im)).or.
+     *    (lorder(im).and.dnu(im).ne.0d0)) then
+
+          boundd(im) = .true.
+
+      else 
+
+          boundd(im) = .false.
+
+      end if
 c                                 make transformation matrices, p' is 
 c                                 the nstot-1 independent p variables.
 c                                 y2x
@@ -7754,9 +7768,8 @@ c                                 for single species models:
 c                                 compare g for initial and eq speciation
 c                                 return the lower
       if (g.gt.g0) then 
-c DEBU DEBUG
-c        g = g0
-c        pa = p0a
+         g = g0
+         pa = p0a
       end if
 
       end
@@ -7986,146 +7999,6 @@ c                                 be re written.
 c                                 substitute replaces the values of dg with the
 c                                 newton-raphson increments for the ordered species
 c                                 compositions.
-      end
-
-      subroutine xsderiv (id,s,dsy,dsyy)
-c----------------------------------------------------------------------
-c subroutine to the derivative of the configurational entropy of a
-c solution with respect to the proportion of a dependent species. OLD
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,k,l,id
-
-      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,lnz,
-     *                 z(m11,m10),s0,ztemp,zlnz
-c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c                                 configurational entropy variables:
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      logical pin
-      common/ cyt2 /pin(j3)
-
-      double precision wmach
-      common/ cstmch /wmach(9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c----------------------------------------------------------------------
-      s = 0d0
-c                                 for each site
-      do i = 1, msite(id)
-
-         zt = 0d0
-         s0 = zt
-c                                 get site fractions
-         do j = 1, zsp(id,i)
-
-            ztemp = dcoef(0,j,i,id)
-c                                 for each term:
-            do k = 1, lterm(j,i,id)
-               ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-            end do
-
-            call xckzlnz (ztemp,s0,lnz)
-
-            zt = zt + ztemp
-
-            z(j,i) = ztemp
-
-         end do
-
-         ztemp = 1d0 - zt
-
-         call xckzlnz (ztemp,s0,lnz)
-
-         z(j,i) = ztemp
-         s = s - zmult(id,i) * s0
-
-      end do
-c                                 initialize derivatives:
-      do k = 1, nord(id)
-         dsy(k) = 0d0
-         do l = k, nord(id)
-            dsyy(l,k) = 0d0
-         end do
-      end do
-c                                 evaluate derivatives:
-      do i = 1, msite(id)
-
-         q = zmult(id,i)
-
-         do j = 1, zsp(id,i) + 1
-
-            zl = z(j,i)
-
-            zlnz = 1d0 + dlog(zl)
-
-            do k = 1, nord(id)
-c                                 skip species not in the model
-               if (.not.pin(k)) cycle
-c                                 sdzdp is (dz(i,j)/dp(k))
-               dzdy = sdzdp(k,j,i,id)
-
-               if (dzdy.eq.0d0) cycle
-c                                 the first derivative is
-               dsy(k) = dsy(k) - q * dzdy * zlnz
-c                                 and the jacobians are
-               do l = k, nord(id)
-
-                  if (.not.pin(l)) cycle
-                  dsyy(l,k) = dsyy(l,k)
-     *                         - q * dzdy * sdzdp(l,j,i,id) / zl
-               end do
-
-            end do
-
-         end do
-
-      end do
-c                                 endmember corrections
-      do i = 1, nstot(id)
-
-         s = s - pa(i) * scoef(i,id)
-
-         do k = 1, nord(id)
-           dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
-         end do
-
-      end do
-
-      end
-
-      subroutine xckzlnz (z,zlnz,lnz)
-c----------------------------------------------------------------------
-c subroutine to test/reset site fraction value z, accumulate z*ln(z)
-c and set the value of ln(z) if z = 0
-c----------------------------------------------------------------------
-      implicit none
-
-      double precision z, zlnz, lnz
-
-      double precision wmach
-      common/ cstmch /wmach(9)
-c----------------------------------------------------------------------
-      if (z.gt.1d0) then
-         z = 1d0
-      else if (z.lt.wmach(1)) then
-         z = wmach(1)
-      end if
-
-      lnz = dlog(z)
-      zlnz = zlnz + z * lnz
-
       end
 
       subroutine sderiv (id,s,dsy,dsyy,maxs)
@@ -8503,6 +8376,10 @@ c----------------------------------------------------------------------
       logical pin
       common/ cyt2 /pin(j3)
 
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
@@ -8534,29 +8411,37 @@ c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
       pmax = pmax - nopt(5)
       pmin = pmin + nopt(5)
+
+      if (refine) then
+
+         call gderi1 (k,id,dp)
+
+      else 
 c                                 get starting point for the search
 c                                 first try the maximum
-      dp = pmax - p0a(jd)
-      call pincs (dp,dy,ind,jd,nr)
+         dp = pmax - p0a(jd)
+         call pincs (dp,dy,ind,jd,nr)
 
-      call gderi1 (k,id,dp)
+         call gderi1 (k,id,dp)
 
-      if (dp.ge.0d0) then
+         if (dp.ge.0d0) then
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the
 c                                 the disordered case:
-         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+            call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp)
+            call gderi1 (k,id,dp)
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
 c                                 the min/max order cases, specis
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-         if (dp.le.0d0) error = .true.
+            if (dp.le.0d0) error = .true.
+
+         end if
 
       end if
 
@@ -8654,9 +8539,17 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
 c----------------------------------------------------------------------
 c                                 get initial p values
-      call pinc0 (id,lord)
+      if (refine) then 
+         call nopinc (id,lord)
+      else 
+         call pinc0 (id,lord)
+      end if 
 c                                 lord is the number of possible species
       if (lord.lt.nord(id).and.icase(id).eq.1) then
 c                                 most likely the model had degenerated
@@ -8995,6 +8888,40 @@ c                                 check for degenerate compositions
 
       end
 
+      subroutine nopinc (id,lord)
+c----------------------------------------------------------------------
+c subroutine to set lord during refinement
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,k,id,lord
+
+      double precision pmn,pmx
+
+      logical pin
+      common/ cyt2 /pin(j3)
+c----------------------------------------------------------------------
+
+      lord = 0
+
+         do k = 1, nord(id)
+
+            call plimit (pmn,pmx,k,id)
+
+            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(5)) then
+               pin(k) = .false.
+               cycle
+            else
+               pin(k) = .true.
+               lord = lord + 1
+            end if
+
+         end do
+
+      end
+
       subroutine pcheck (x,xmin,xmax,dx,quit)
 c-----------------------------------------------------------------------
 c subroutine to increment x for a 1-d root search between xmin and xmax.
@@ -9055,8 +8982,6 @@ c subroutine computes the newton raphson increment dg from the 1st and 2nd
 c derivatives of the g of solution (id) with respect to the concentration
 c of the kth ordered species.
 
-c on input dg is the last increment.
-
 c the formulation assumes:
 
 c  1) the speciation reaction is equimolar (see gpder1 for non-equimolar
@@ -9073,7 +8998,7 @@ c----------------------------------------------------------------------
 
       integer i,k,i1,i2,id
 
-      double precision g,dg,d2g,t,ds,d2s,dp
+      double precision g,dg,d2g,t,ds,d2s
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9098,7 +9023,6 @@ c----------------------------------------------------------------------
 c                                 initialize, d2gx has been set in setw
       g = 0d0
 
-      dp = dg
       dg = g
       d2g = d2gx(k,k)
 
@@ -10148,8 +10072,8 @@ c                                 compositions from the arf file
             if (i.eq.3) then 
                do j = tcct+1,tcct+tpct
                   if (txco(j).lt.0d0) then 
-                     write (*,*) 'wtf',
-     *                     txco(tcct+1:tcct+tpct)
+                     write (*,*) 'wtf',txco(j)
+c    *                     txco(tcct+1:tcct+tpct)
                   end if
                end do 
             end if 
@@ -15097,6 +15021,10 @@ c----------------------------------------------------------------------
       double precision enth
       common/ cxt35 /enth(j3)
 
+      character tname*10
+      logical refine, resub
+      common/ cxt26 /refine,resub,tname
+
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
@@ -15126,40 +15054,48 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-      if (rqmax.gt.nopt(5)) then
+      if (refine.or.rqmax.gt.nopt(5)) then
 
          pin(1) = .true.
          qmax = rqmax - nopt(5)
          qmin = nopt(5)
-c                                 the p's are computed in gpderi
-         call gpder1 (id,qmax,dq,g)
 
-         if (dq.lt.0d0) then
+         if (refine) then
+
+            dq = 0d0
+
+         else
+c                                 the p's are computed in gpderi
+            call gpder1 (id,qmax,dq,g)
+
+            if (dq.lt.0d0) then
 c                                 at the maximum concentration, the
 c                                 first derivative is positive, if
 c                                 the second is also > 0 then we're
 c                                 business
-            q = qmax
-
-         else
-c                                 try the min
-            call gpder1 (id,qmin,dq,g)
-
-            if (dq.gt.0d0) then
-c                                 ok
-               q = qmin
+               q = qmax
 
             else
+c                                 try the min
+               call gpder1 (id,qmin,dq,g)
+
+               if (dq.gt.0d0) then
+c                                 ok
+                  q = qmin
+
+               else
 c                                 no search from either limit possible
 c                                 set error .true. to compare g at the
 c                                 limits.
-               error = .true.
-               goto 90
+                  error = .true.
+                  goto 90
 
+               end if
             end if
-         end if
 c                                 increment and check p
-         call pcheck (q,qmin,qmax,dq,done)
+            call pcheck (q,qmin,qmax,dq,done)
+
+         end if
 c                                 iteration counter to escape
 c                                 infinite loops
          itic = 0
@@ -15233,7 +15169,7 @@ c----------------------------------------------------------------------
       double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, zinf,
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
      *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
-     *                 z, n(m11), dn(m11), d2n(m11), dsinf, t, dt, d2t
+     *                 z, n(m11), dn(m11), d2n(m11), t, dt, d2t
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -15362,8 +15298,6 @@ c                                 get the configurational entropy derivatives
          dzlnz = 0d0
          d2zlnz = 0d0
 
-         dsinf = 0d0
-
          if (zmult(id,i).eq.0d0) then
 c                                 temkin
             do j = 1, zsp(id,i)
@@ -15433,49 +15367,45 @@ c                                 for each term:
                   d2z = d2z + dcoef(k,j,i,id) * d2p(ksub(k,j,i,id))
                end do
 
-               if (z.gt.zero) then
+              if (z.gt.zero) then
+ 
+                     lnz1 = dlog(z) + 1d0
+                     zlnz = zlnz + z * dlog(z)
 
-                  lnz = dlog(z)
-                  lnz1 = 1d0 + lnz
-                  zlnz = zlnz + z*lnz
-                  dzlnz = dzlnz + dz * lnz1
-                  d2zlnz = d2zlnz + d2z * lnz1 + dz**2 / z
+              else
 
-                  nt = nt + z
-                  dnt = dnt + dz
-                  d2nt = d2nt + d2z
-
-               else if (dabs(dz).gt.zero) then
-c                                 a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-                  dsinf = dsinf + dsign(1d0,dz)
+                     z = zero
+                     lnz1 = zinf
 
                end if
+
+               dzlnz = dzlnz + dz * lnz1
+               d2zlnz = d2zlnz + d2z * lnz1 + dz**2 / z
+
+               nt = nt + z
+               dnt = dnt + dz
+               d2nt = d2nt + d2z
 
             end do
 c                                 add the contibution from the last species:
             z = 1d0 - nt
 
             if (z.gt.zero) then
+ 
+               lnz1 = dlog(z) + 1d0
+               zlnz = zlnz + z * dlog(z)
 
-               lnz = dlog(z)
-               lnz1 = 1d0 + lnz
+            else
 
-               s = s - zmult(id,i)*(zlnz + z*lnz)/r
-               ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
-               d2s = d2s - zmult(id,i)*
-     *                     (d2zlnz - d2nt * lnz1 + dnt**2 / z)/r
-
-            else if (dz.gt.zero) then
-c                                 if a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-               dsinf = dsinf + dsign(1d0,dz)
-               ds = ds - zmult(id,i)*dsinf*1d4
-               d2s = d2s + zmult(id,i)*dabs(dsinf)*1d8
+              z = zero
+              lnz1 = zinf
 
             end if
+
+            s = s - zmult(id,i)*(zlnz + z*lnz)/r
+            ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
+            d2s = d2s - zmult(id,i)*
+     *                     (d2zlnz - d2nt * lnz1 + dnt**2 / z)/r
 
          end if
 
@@ -15494,6 +15424,7 @@ c                                 and g the normalized g:
       g   = g * gnorm
 
       end
+
 
       subroutine zmake (z,i,l,ids)
 c----------------------------------------------------------------------

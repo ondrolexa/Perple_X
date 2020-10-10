@@ -5867,7 +5867,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision z,zt,dlnw,dlnz,y(*),n(m11),lnz
+      double precision z,zt,dlnw,dlnz,y(*),n(m11)
 
       integer i,j,k,id
 c                                 configurational entropy variables:
@@ -7358,7 +7358,6 @@ c----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
-
       g = 0d0
 
       if (dnu(id).ne.0d0) then
@@ -7434,334 +7433,6 @@ c----------------------------------------------------------------------
       end do
 
       end
-
-      subroutine gderiv (id,g,dp,error)
-c----------------------------------------------------------------------
-c subroutine to compute the g of a solution (id) and it's 1st and 2nd
-c derivatives with respect to the oncentrations of nord(id) ordered
-c species. the formulation assumes atomic site fractions are linear
-c functions of the ordered species concentrations (p's) and that the
-c excess function is second order.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical error
-
-      integer i,k,l,i1,i2,id,norder,ipvt(j3)
-
-      double precision g,dp(j3),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      double precision alpha,dt
-      common/ cyt0  /alpha(m4),dt(j3)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
-     *               jsub(m2,m1,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      double precision p,tk,xc,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,tk,xc,u1,u2,tr,pr,r,ps
-
-      double precision enth
-      common/ cxt35 /enth(j3)
-
-      logical pin
-      common/ cyt2 /pin(j3)
-c----------------------------------------------------------------------
-c                                 initialize, d2gx has been set in setw
-      g = 0d0
-
-      norder = nord(id)
-
-      do k = 1, norder
-         dg(k) = 0d0
-         do l = k, norder
-            d2g(l,k) = d2gx(l,k)
-         end do
-      end do
-
-      if (lexces(id)) then
-
-         do i = 1, jterm(id)
-c                                 assuming regular terms
-            i1 = jsub(1,i,id)
-            i2 = jsub(2,i,id)
-
-            g = g + w(i) * pa(i1) * pa(i2)
-
-            do k = 1, norder
-
-               if (.not.pin(k)) cycle
-
-               dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id)
-     *                               + pa(i2)*dydy(i1,k,id))
-            end do
-
-         end do
-c                                 get derivative of excess function
-         if (llaar(id)) then
-c                                 so far this is unessecary because
-c                                 t does not vary in h&p ordering models.
-            t = 0d0
-c                                 h&p van laar
-            do i = 1, nstot(id)
-               t = t + alpha(i)* pa(i)
-            end do
-c                                 coming out of this loop g, dg, and
-c                                 d2g  are not the complete functions
-c                                 because of the "tphi" term in the
-c                                 van laar.
-
-            do k = 1, norder
-
-               if (.not.pin(k)) cycle
-c                                 convert dg and d2g to the full derivative
-               dg(k) = (dg(k) - g*dt(k)/t)/t
-               do l = k, norder
-                  d2g(l,k) = (d2g(l,k) - 2d0*dt(k)*dg(k))/t
-               end do
-            end do
-c                                 and the full excess energy
-            g = g/t
-
-         end if
-
-      end if
-c                                 get the delta configurational entropy and derivatives
-      call sderiv (id,s,ds,d2s)
-
-      do k = 1, norder
-
-         g = g + enth(k) * pa(lstot(id)+k)
-
-         if (.not.pin(k)) cycle
-c                                 dg is the negative of the differential of g
-c                                 with respect to the kth species.
-         dg(k) = -(enth(k) + dg(k) - tk*ds(k))
-
-         do l = k, norder
-            d2g(l,k) = d2g(l,k) - tk*d2s(l,k)
-         end do
-
-      end do
-c                                 determininats, to check for a saddle point
-c      if (norder.eq.2) then
-c         detg = d2g(1,1)*d2g(2,2)-d2g(2,1)**2
-c      else
-c         detg = d2g(1,1)*(d2g(2,2)*d2g(3,3)-d2g(3,2)**2)
-c     *        - d2g(2,2)*d2g(1,3)**2
-c     *        + 2d0*d2g(2,1)*d2g(3,2)*d2g(3,1)-d2g(2,1)**2*d2g(3,3)
-c      end if
-
-      g = g - tk*s
-c                                 copy dg and d2g into dp and d2s
-      do k = 1, norder
-         if (pin(k)) then
-            dp(k) = dg(k)
-            d2s(k,k) = d2g(k,k)
-            do l = k+1, norder
-               if (pin(l)) then
-                  d2s(l,k) = d2g(l,k)
-                  d2s(k,l) = d2g(l,k)
-               end if
-            end do
-         end if
-      end do
-
-      do k = 1, norder
-         if (.not.pin(k)) then
-            dp(k) = 1d0
-            d2s(k,k) = 1d0
-            do l = 1, norder
-               if (l.eq.k) cycle
-               d2s(l,k) = 0d0
-               d2s(k,l) = 0d0
-            end do
-         end if
-      end do
-c                                 get the newton-raphson increments:
-c                                 this is a general factorization routine, should
-c                                 exploit that d2g is symmetric.
-      call factr2 (d2s,j3,norder,ipvt,error)
-c                                 solve for the increments by back-substitution,
-c                                 this routine is also not efficient and should
-c                                 be re written.
-      if (.not.error) call subst2 (d2s,ipvt,j3,norder,dp,error)
-c                                 substitute replaces the values of dg with the
-c                                 newton-raphson increments for the ordered species
-c                                 compositions.
-      end
-
-      subroutine sderiv (id,s,dsy,dsyy)
-c----------------------------------------------------------------------
-c subroutine to the derivative of the configurational entropy of a
-c solution with respect to the proportion of a dependent species.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical inf
-
-      integer i,j,k,l,id
-
-      double precision zt,dzdy,s,dsy(*),dsyy(j3,*),q,zl,
-     *                 z(m11,m10),s0,ztemp,zlnz,dsinf(j3),d2sinf(j3,j3)
-c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c                                 configurational entropy variables:
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      logical pin
-      common/ cyt2 /pin(j3)
-
-      double precision wmach
-      common/ cstmch /wmach(9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c----------------------------------------------------------------------
-      s = 0d0
-c                                 for each site
-      do i = 1, msite(id)
-
-         zt = 0d0
-         s0 = zt
-c                                 get site fractions
-         do j = 1, zsp(id,i)
-
-            ztemp = dcoef(0,j,i,id)
-c                                 for each term:
-            do k = 1, lterm(j,i,id)
-               ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-            end do
-
-            call ckzlnz (ztemp,s0)
-
-            zt = zt + ztemp
-
-            z(j,i) = ztemp
-
-         end do
-
-         ztemp = 1d0 - zt
-
-         call ckzlnz (ztemp,s0)
-
-         z(j,i) = ztemp
-         s = s - zmult(id,i) * s0
-
-      end do
-c                                 initialize derivatives:
-      inf = .false.
-
-      do k = 1, nord(id)
-         dsy(k) = 0d0
-         do l = k, nord(id)
-            dsyy(l,k) = 0d0
-         end do
-      end do
-c                                 evaluate derivatives:
-      do i = 1, msite(id)
-
-         q = zmult(id,i)
-
-         do j = 1, zsp(id,i) + 1
-
-            zl = z(j,i)
-
-            if (zl.gt.0d0) zlnz = 1d0 + dlog(zl)
-
-            do k = 1, nord(id)
-c                                 skip species not in the model
-               if (.not.pin(k)) cycle
-c                                 sdzdp is (dz(i,j)/dp(k))
-               dzdy = sdzdp(k,j,i,id)
-
-               if (dzdy.eq.0d0) cycle
-
-               if (zl.gt.0d0) then
-c                                 the first derivative is
-                  dsy(k) = dsy(k) - q * dzdy * zlnz
-c                                 and the jacobians are
-                  do l = k, nord(id)
-
-                     if (.not.pin(l)) cycle
-                     dsyy(l,k) = dsyy(l,k)
-     *                            - q * dzdy * sdzdp(l,j,i,id) / zl
-                  end do
-
-               else
-c                                 jacobians may be non-zero at z=0,
-c                                 since there use is for computing 
-c                                 step size, they are computed as 
-c                                 multiples of infinity which is then
-c                                 assigned a finite value to give a
-                  inf = .true.
-c                                 a species with a non-zero
-c                                 derivative is zero, the
-c                                 first will be sign(dzdy)*infinity
-                  dsinf(k) = dsinf(k) + dsign(q,dzdy)
-
-                  do l = k, nord(id)
-c                                 the 2nd will be -sign of
-c                                 cross term * infinity
-                     if (.not.pin(l)) cycle
-                     d2sinf(l,k) = dsinf(k) -
-     *                             dsign(q,dzdy * sdzdp(l,j,i,id))
-                  end do
-
-               end if
-
-            end do
-
-         end do
-
-      end do
-
-      if (inf) then
-
-         do k = 1, nord(id)
-
-            if (.not.pin(k)) cycle
-            if (dabs(dsinf(k)).gt.zero) dsy(k) = 1d0*dsinf(k)
-
-            do l = k, nord(id)
-               if (.not.pin(l)) cycle
-               if (dabs(d2sinf(l,k)).gt.zero)
-     *         dsyy(l,k) = dsign(1d0,d2sinf(l,k))*dabs(dsinf(k))/0.01d0
-            end do
-
-         end do
-
-      end if
-c                                 endmember corrections
-      do i = 1, nstot(id)
-
-         s = s - pa(i) * scoef(i,id)
-
-         do k = 1, nord(id)
-           dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
-         end do
-
-      end do
-
-      end
-
 
       subroutine factr2 (a,m,n,ipvt,error)
 c-----------------------------------------------------------------------
@@ -8255,7 +7926,7 @@ c                                 lord is the number of possible species
 
          do
 
-            call gderiv (id,g,dp,error)
+            call gderiv (id,g,dp,.false.,error)
 
             if (error) then
                badc(1) = badc(1) + 1d0
@@ -8441,7 +8112,7 @@ c----------------------------------------------------------------------
 
       if (icase(id).eq.1) then
 c                                 case 1: fully correlated
-         dinc = 0.9d0/dfloat(nord(id))
+         dinc = 0.5d0/dfloat(nord(id))
          tinc = dinc
 
          do k = 1, nord(id)
@@ -8629,225 +8300,6 @@ c                                 threshold for convergence
 
       end
 
-      subroutine gderi1 (k,id,dg)
-c----------------------------------------------------------------------
-c subroutine computes the newton raphson increment dg from the 1st and 2nd
-c derivatives of the g of solution (id) with respect to the concentration
-c of the kth ordered species.
-
-c on input dg is the last increment.
-
-c the formulation assumes:
-
-c  1) the speciation reaction is equimolar (see gpder1 for non-equimolar
-c     case.
-
-c  2) atomic site fractions are linear functions of the ordered species
-c     concentrations (p's).
-
-c  3) the excess function is second order.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,k,i1,i2,id
-
-      logical inf
-
-      double precision g,dg,d2g,t,ds,d2s,dp
-c                                 working arrays
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      double precision alpha,dt
-      common/ cyt0  /alpha(m4),dt(j3)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
-     *               jsub(m2,m1,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      double precision enth
-      common/ cxt35 /enth(j3)
-
-      double precision v,tr,pr,r,ps
-      common / cst5 /v(l2),tr,pr,r,ps
-c----------------------------------------------------------------------
-c                                 initialize, d2gx has been set in setw
-      g = 0d0
-      dg = g
-      dp = dg
-      d2g = d2gx(k,k)
-
-      if (lexces(id)) then
-
-         do i = 1, jterm(id)
-c                                 assuming regular terms
-           i1 = jsub(1,i,id)
-           i2 = jsub(2,i,id)
-
-           g = g + w(i) * pa(i1) * pa(i2)
-           dg = dg + w(i) * (pa(i1)*dydy(i2,k,id)
-     *                     + pa(i2)*dydy(i1,k,id))
-
-         end do
-c                                 get derivative of excess function
-         if (llaar(id)) then
-c                                 for h&p van laar, this is unnecessary because
-c                                 t is constant.
-            t = 0d0
-c                                 h&p van laar
-            do i = 1, nstot(id)
-               t = t + alpha(i)* pa(i)
-            end do
-c                                 coming out of this loop g, dg, and
-c                                 d2g  are not the complete functions
-c                                 because of the "tphi" term in the
-c                                 van laar.
-
-c                                 convert dg and d2g to the full derivative
-            dg = (dg - g*dt(k)/t)/t
-            d2g = (d2g - 2d0*dt(k)*dg)/t
-
-         end if
-
-      end if
-c                                 get the configurational entropy derivatives
-      call sderi1 (k,id,ds,d2s,inf)
-
-      dg  = dg + enth(k)  - v(2)*ds
-      d2g = d2g - v(2)*d2s
-c                                 dg becomes the newton raphson increment
-      if (inf) then
-         dg = dsign(dp/2d0,-dg/d2g)
-      else
-         dg = -dg/d2g
-      end if
-
-      end
-
-      subroutine sderi1 (l,id,ds,d2s,inf)
-c----------------------------------------------------------------------
-c subroutine to the derivative of the configurational entropy of a
-c solution with respect to the proportion of the lth ordered species.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,k,l,id
-
-      logical inf
-
-      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zlnz,dsinf,junk
-c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c                                 configurational entropy variables:
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c----------------------------------------------------------------------
-
-      inf = .false.
-      ds = 0d0
-      d2s = 0d0
-
-      do i = 1, msite(id)
-
-         dzy = 0d0
-         dzyy = 0d0
-
-         zt = 0d0
-         dsinf = 0d0
-
-         do j = 1, zsp(id,i)
-
-            zl = dcoef(0,j,i,id)
-c                                 for each term:
-            do k = 1, lterm(j,i,id)
-               zl = zl + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-            end do
-
-            call ckzlnz (zl,junk)
-c                                 sdzdp is (dz(i,j)/dp(l))
-            dzdy = sdzdp(l,j,i,id)
-
-            if (dzdy.eq.0d0) cycle
-
-            if (zl.gt.0d0) then
-
-               zt = zt + zl
-c                                 the first derivative is
-               dzy = dzy - dzdy * (1d0 + dlog(zl))
-c                                 and the jacobians are
-
-               dzyy = dzyy  - dzdy**2 / zl
-
-            else
-c                                 a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-               dsinf = dsinf + dsign(1d0,dzdy)
-
-            end if
-
-         end do
-c                                 add the contibution from the zsp(id,i)+1th
-c                                 species:
-         zl = 1d0 - zt
-
-         call ckzlnz (zl,junk)
-
-         dzdy = sdzdp(l,j,i,id)
-
-         if (dzdy.ne.0d0) then
-
-            if (zl.gt.0d0) then
-c                                 the first derivative is
-               dzy = dzy - dzdy * (1d0 + dlog(zl))
-c                                 and the second is
-               dzyy = dzyy  - dzdy**2 / zl
-
-            else
-c
-c                                 a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-               dsinf = dsinf + dsign(1d0,dzdy)
-
-            end if
-
-         end if
-
-         if (dabs(dsinf).lt.zero) then
-            ds = ds + zmult(id,i)*dzy
-            d2s = d2s + zmult(id,i)*dzyy
-         else
-            inf = .true.
-            ds = ds + zmult(id,i)*dsinf
-            d2s = d2s - zmult(id,i)*dsinf/0.01d0
-         end if
-
-      end do
-c                                 for models with disordered
-c                                 endmembers, correct first derivative for the
-c                                 change in endmember configurational entropy
-      do i = 1, nstot(id)
-         ds = ds - dydy(i,l,id)*scoef(i,id)
-      end do
-
-      end
 
       subroutine ckzlnz (z,zlnz)
 c----------------------------------------------------------------------
@@ -20348,5 +19800,769 @@ c                       write (*,*) ' '
          end do
 
       end do
+
+      end
+
+      subroutine sderiv (id,s,dsy,dsyy,maxs)
+c----------------------------------------------------------------------
+c subroutine to the derivative of the configurational entropy of a
+c solution with respect to the proportion of a dependent species.
+c if maxs, then sderiv is being called by gsol4/minfxc for negentropy
+c minimization/p2yx inversion the jacobian is unnecessary and no corrections
+c are made for endmember configurational entropy.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical maxs
+
+      integer i,j,k,l,id
+
+      double precision zt,qdzdy,s,dsy(*),dsyy(j3,*),q,zl,zinf,
+     *                 z(m11,m10),s0,ztemp,zlnz
+c                                 working arrays
+      double precision zz, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c                                 configurational entropy variables:
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+      s = 0d0
+      dsy(1:nord(id)) = 0d0
+      dsyy(1:nord(id),1:nord(id)) = 0d0
+      zinf = 1d0 + dlog(zero)
+c                                 for each site
+      do i = 1, msite(id)
+
+         zt = 0d0
+         s0 = zt
+c                                 get site fractions
+         do j = 1, zsp(id,i)
+
+            ztemp = dcoef(0,j,i,id)
+c                                 for each term:
+            do k = 1, lterm(j,i,id)
+               ztemp = ztemp + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
+            end do
+
+            call ckzlnz (ztemp,s0)
+
+            zt = zt + ztemp
+
+            z(j,i) = ztemp
+
+         end do
+
+         ztemp = 1d0 - zt
+
+         call ckzlnz (ztemp,s0)
+
+         z(j,i) = ztemp
+         s = s - zmult(id,i) * s0
+
+      end do
+c                                 evaluate derivatives:
+      do i = 1, msite(id)
+
+         q = zmult(id,i)
+
+         do j = 1, zsp(id,i) + 1
+
+            zl = z(j,i)
+
+            if (zl.gt.0d0) then 
+               zlnz = 1d0 + dlog(zl)
+            else
+               zl = zero
+               zlnz = zinf
+            end if
+
+            do k = 1, nord(id)
+c                                 skip species not in the model
+               if (.not.pin(k)) cycle
+c                                 sdzdp is (dz(i,j)/dp(k))
+               qdzdy = q * sdzdp(k,j,i,id)
+
+               if (qdzdy.eq.0d0) cycle
+c                                 the first derivative is
+               dsy(k) = dsy(k) - qdzdy * zlnz
+c                                 and the jacobians are
+               do l = k, nord(id)
+
+                  if (.not.pin(l)) cycle
+
+                  dsyy(l,k) = dsyy(l,k) - qdzdy * sdzdp(l,j,i,id) / zl
+
+               end do
+
+            end do
+
+         end do
+
+      end do
+
+      if (maxs) then
+
+         s = -s
+         dsy(1:nord(id)) = -dsy(1:nord(id))
+         return
+
+      end if
+c                                 endmember corrections
+      do i = 1, nstot(id)
+
+         s = s - pa(i) * scoef(i,id)
+
+         do k = 1, nord(id)
+           dsy(k) = dsy(k) - dydy(i,k,id) * scoef(i,id)
+         end do
+
+      end do
+
+      end
+
+      subroutine gderiv (id,g,dp,minfx,error)
+c----------------------------------------------------------------------
+c subroutine to compute the g of a solution (id) and it's 1st and 2nd
+c derivatives with respect to the oncentrations of nord(id) ordered
+c species. the formulation assumes atomic site fractions are linear
+c functions of the ordered species concentrations (p's) and that the
+c excess function is second order.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical minfx, error
+
+      integer i,k,l,i1,i2,id,norder,ipvt(j3)
+
+      double precision g,dp(*),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision alpha,dt
+      common/ cyt0  /alpha(m4),dt(j3)
+c                                 excess energy variables
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision p,tk,xc,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,tk,xc,u1,u2,tr,pr,r,ps
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+c----------------------------------------------------------------------
+c                                 initialize, d2gx has been set in setw
+      g = 0d0
+
+      norder = nord(id)
+
+      do k = 1, norder
+         dg(k) = 0d0
+         do l = k, norder
+            d2g(l,k) = d2gx(l,k)
+         end do
+      end do
+
+      if (lexces(id)) then
+
+         do i = 1, jterm(id)
+c                                 assuming regular terms
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
+
+            g = g + w(i) * pa(i1) * pa(i2)
+
+            do k = 1, norder
+
+               if (.not.pin(k)) cycle
+
+               dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id)
+     *                               + pa(i2)*dydy(i1,k,id))
+            end do
+
+         end do
+c                                 get derivative of excess function
+         if (llaar(id)) then
+c                                 so far this is unessecary because
+c                                 t does not vary in h&p ordering models.
+            t = 0d0
+c                                 h&p van laar
+            do i = 1, nstot(id)
+               t = t + alpha(i)* pa(i)
+            end do
+c                                 coming out of this loop g, dg, and
+c                                 d2g  are not the complete functions
+c                                 because of the "tphi" term in the
+c                                 van laar.
+
+            do k = 1, norder
+
+               if (.not.pin(k)) cycle
+c                                 convert dg and d2g to the full derivative
+               dg(k) = (dg(k) - g*dt(k)/t)/t
+               do l = k, norder
+                  d2g(l,k) = (d2g(l,k) - 2d0*dt(k)*dg(k))/t
+               end do
+            end do
+c                                 and the full excess energy
+            g = g/t
+
+         end if
+
+      end if
+c                                 get the delta configurational entropy and derivatives
+      call sderiv (id,s,ds,d2s,.false.)
+
+      do k = 1, norder
+
+         g = g + enth(k) * pa(lstot(id)+k)
+
+         if (.not.pin(k)) cycle
+c                                 dg is the negative of the differential of g
+c                                 with respect to the kth species.
+         dg(k) = -(enth(k) + dg(k) - tk*ds(k))
+
+         do l = k, norder
+            d2g(l,k) = d2g(l,k) - tk*d2s(l,k)
+         end do
+
+      end do
+c                                 determininats, to check for a saddle point
+c      if (norder.eq.2) then
+c         detg = d2g(1,1)*d2g(2,2)-d2g(2,1)**2
+c      else
+c         detg = d2g(1,1)*(d2g(2,2)*d2g(3,3)-d2g(3,2)**2)
+c     *        - d2g(2,2)*d2g(1,3)**2
+c     *        + 2d0*d2g(2,1)*d2g(3,2)*d2g(3,1)-d2g(2,1)**2*d2g(3,3)
+c      end if
+
+      g = g - tk*s
+c                                 if minfx just return with the gradient
+      if (minfx) then
+         dp(1:norder) = -dg(1:norder)
+         return
+      end if
+c                                 copy dg and d2g into dp and d2s
+      do k = 1, norder
+         if (pin(k)) then
+            dp(k) = dg(k)
+            d2s(k,k) = d2g(k,k)
+            do l = k+1, norder
+               if (pin(l)) then
+                  d2s(l,k) = d2g(l,k)
+                  d2s(k,l) = d2g(l,k)
+               end if
+            end do
+         end if
+      end do
+
+      do k = 1, norder
+         if (.not.pin(k)) then
+            dp(k) = 1d0
+            d2s(k,k) = 1d0
+            do l = 1, norder
+               if (l.eq.k) cycle
+               d2s(l,k) = 0d0
+               d2s(k,l) = 0d0
+            end do
+         end if
+      end do
+c                                 get the newton-raphson increments:
+c                                 this is a general factorization routine, should
+c                                 exploit that d2g is symmetric.
+      call factr2 (d2s,j3,norder,ipvt,error)
+c                                 solve for the increments by back-substitution,
+c                                 this routine is also not efficient and should
+c                                 be re written.
+      if (.not.error) call subst2 (d2s,ipvt,j3,norder,dp,error)
+c                                 substitute replaces the values of dg with the
+c                                 newton-raphson increments for the ordered species
+c                                 compositions.
+      end
+
+      subroutine gderi1 (k,id,dg)
+c----------------------------------------------------------------------
+c subroutine computes the newton raphson increment dg from the 1st and 2nd
+c derivatives of the g of solution (id) with respect to the concentration
+c of the kth ordered species.
+
+c on input dg is the last increment.
+
+c the formulation assumes:
+
+c  1) the speciation reaction is equimolar (see gpder1 for non-equimolar
+c     case.
+
+c  2) atomic site fractions are linear functions of the ordered species
+c     concentrations (p's).
+
+c  3) the excess function is second order.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,k,i1,i2,id
+
+      double precision g,dg,d2g,t,ds,d2s,dp
+c                                 working arrays
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision alpha,dt
+      common/ cyt0  /alpha(m4),dt(j3)
+c                                 excess energy variables
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision v,tr,pr,r,ps
+      common / cst5 /v(l2),tr,pr,r,ps
+c----------------------------------------------------------------------
+c                                 initialize, d2gx has been set in setw
+      g = 0d0
+
+      dp = dg
+      dg = g
+      d2g = d2gx(k,k)
+
+      if (lexces(id)) then
+
+         do i = 1, jterm(id)
+c                                 assuming regular terms
+           i1 = jsub(1,i,id)
+           i2 = jsub(2,i,id)
+
+           g = g + w(i) * pa(i1) * pa(i2)
+           dg = dg + w(i) * (pa(i1)*dydy(i2,k,id)
+     *                     + pa(i2)*dydy(i1,k,id))
+
+         end do
+c                                 get derivative of excess function
+         if (llaar(id)) then
+c                                 for h&p van laar, this is unnecessary because
+c                                 t is constant.
+            t = 0d0
+c                                 h&p van laar
+            do i = 1, nstot(id)
+               t = t + alpha(i)* pa(i)
+            end do
+c                                 coming out of this loop g, dg, and
+c                                 d2g  are not the complete functions
+c                                 because of the "tphi" term in the
+c                                 van laar.
+
+c                                 convert dg and d2g to the full derivative
+            dg = (dg - g*dt(k)/t)/t
+            d2g = (d2g - 2d0*dt(k)*dg)/t
+
+         end if
+
+      end if
+c                                 get the configurational entropy derivatives
+      call sderi1 (k,id,ds,d2s)
+
+      dg  = dg + enth(k)  - v(2)*ds
+      d2g = d2g - v(2)*d2s
+c                                 dg becomes the newton raphson increment
+      dg = -dg/d2g
+
+      end
+
+      subroutine sderi1 (l,id,ds,d2s)
+c----------------------------------------------------------------------
+c subroutine to the derivative of the configurational entropy of a
+c solution with respect to the proportion of the lth ordered species.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i,j,k,l,id
+
+      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zinf,lnz
+c                                 working arrays
+      double precision zz, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c                                 configurational entropy variables:
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision wmach
+      common/ cstmch /wmach(9)
+c----------------------------------------------------------------------
+      ds = 0d0
+      d2s = 0d0
+      zinf = 1d0 + dlog(zero)
+
+      do i = 1, msite(id)
+
+         dzy = 0d0
+         dzyy = 0d0
+
+         zt = 0d0
+
+         do j = 1, zsp(id,i)
+
+            zl = dcoef(0,j,i,id)
+c                                 for each term:
+            do k = 1, lterm(j,i,id)
+               zl = zl + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
+            end do
+c                                 sdzdp is (dz(i,j)/dp(l))
+            dzdy = sdzdp(l,j,i,id)
+
+            if (zl.lt.zero) then
+               zl = zero
+               lnz = zinf
+            else
+               zt = zt + zl
+               lnz = (1d0 + dlog(zl))
+            end if
+c                                 the first derivative
+            dzy = dzy - dzdy * lnz
+c                                 the second
+            dzyy = dzyy  - dzdy**2 / zl
+
+         end do
+c                                 add the contibution from the zsp(id,i)+1th
+c                                 species:
+         zl = 1d0 - zt
+
+         dzdy = sdzdp(l,j,i,id)
+
+         if (zl.lt.zero) then
+            zl = zero
+            lnz = zinf
+         else
+            lnz = (1d0 + dlog(zl))
+         end if
+c                                 the first derivative is
+         dzy = dzy - dzdy * lnz
+c                                 and the second is
+         dzyy = dzyy  - dzdy**2 / zl
+
+         ds = ds + zmult(id,i)*dzy
+         d2s = d2s + zmult(id,i)*dzyy
+
+      end do
+c                                 for models with disordered
+c                                 endmembers, correct first derivative for the
+c                                 change in endmember configurational entropy
+      do i = 1, nstot(id)
+         ds = ds - dydy(i,l,id)*scoef(i,id)
+      end do
+
+      end
+
+      subroutine gpder1 (id,q,dg,g)
+c----------------------------------------------------------------------
+c subroutine to compute the newton-raphson increment (dg) in the ordering
+c parameter from the 1st and 2nd derivatives of the g of a temkin model
+c with one ordering parameter. id is the index of the solution model.
+
+c temkin s evaluation assumes no disordered endmembers.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, j, k, i1, i2, id
+
+      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, zinf,
+     *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
+     *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
+     *                 z, n(m11), dn(m11), d2n(m11), t, dt, d2t
+c                                 working arrays
+      double precision zz, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c                                 excess energy variables
+      integer jterm, jord, extyp, rko, jsub
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+     *               jsub(m2,m1,h9)
+c                                 configurational entropy variables:
+      integer lterm, ksub
+      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
+
+      double precision dppp,d2gx,sdzdp
+      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      double precision alpha,dt0
+      common/ cyt0  /alpha(m4),dt0(j3)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      double precision v,tr,pr,r,ps
+      common / cst5 /v(l2),tr,pr,r,ps
+c----------------------------------------------------------------------
+c                                 initialize
+      g   = 0d0
+      dg  = 0d0
+      d2g = 0d0
+
+      s = 0d0
+      ds = 0d0
+      d2s = 0d0
+
+      zinf = 1d0 + dlog(zero)
+
+      gnorm  = 1d0 + dnu(id) * q
+      dgnorm = dnu(id)
+      pnorm  = 1d0/gnorm
+      pnorm2 = 2d0*pnorm
+c                                 the difficulty in this model is the
+c                                 non-equimolar speciation reaction, this
+c                                 causes the number of moles of the components
+c                                 in a mole of solution to change as a function
+c                                 of the order parameter even if composition is
+c                                 held constant.
+
+c                                 to keep the number of moles of the components
+c                                 in the solution constant the gibbs energy
+c                                 is multiplied by gnorm = 1 + q*sum(nu(i)), where
+c                                 the nu(i) are the stoichiometric coefficients of
+c                                 the endmembers in the ordering reaction (it being
+c                                 assumed that nu(jd) = 1 and p0(jd) = 0). this gives
+c                                 the solutions g when it has the same amounts of the
+c                                 components as in the disordered limit (p = p0). the
+c                                 amounts of the species (p) for a partially or completely
+c                                 disordered state are p(i) = (p0(i) + nu(i))*q/gnorm.
+c                                 q is the molar amount of the ordered species formed
+c                                 by the ordering reaction from the amounts of the
+c                                 reactant species in the disordered limit.
+
+c                                 for the green et al melt model sum(nu(i)) for the
+c                                 reaction wo + als = an is -1, therefore
+c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
+      do i = 1, nstot(id)
+c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
+         nu = dydy(i,1,id)
+         pa(i) = (p0a(i) + nu*q) * pnorm
+         dp(i) = (nu - pa(i)*dnu(id)) * pnorm
+         d2p(i) = dp(i) * pnorm2
+
+      end do
+
+      if (llaar(id)) then
+
+         t = 0d0
+         dt = 0d0
+         d2t = 0d0
+c                                 h&p van laar
+         do i = 1, nstot(id)
+            t = t + alpha(i)* pa(i)
+            dt = dt + alpha(i)* dp(i)
+            d2t = d2t + alpha(i)* d2p(i)
+         end do
+
+         do i = 1, jterm(id)
+
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
+
+            g = g + w(i) * pa(i1) * pa(i2)
+            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
+            d2g = d2g + w(i) * (pa(i1)*d2p(i2) + pa(i2)*d2p(i1) 
+     *                                         + 2d0*dp(i1)*dp(i2) )
+         end do
+
+         g = g/t
+         dg =  dg - g*dt
+         d2g = (d2g - 2d0*dt/t*dg - g*d2t)/t
+
+      else
+
+         do i = 1, jterm(id)
+c                                 excess g assuming regular terms
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
+
+            g = g + w(i) * pa(i1) * pa(i2)
+            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
+            d2g = d2g + w(i) * (      d2p(i1) * pa(i2)
+     *                           + 2d0*dp(i2) * dp(i1)
+     *                           +    d2p(i2) * pa(i1) )
+
+         end do
+
+      end if
+c                                 get the configurational entropy derivatives
+      do i = 1, msite(id)
+
+         nt = 0d0
+         dnt = 0d0
+         d2nt = 0d0
+         zlnz = 0d0
+         dzlnz = 0d0
+         d2zlnz = 0d0
+
+         if (zmult(id,i).eq.0d0) then
+c                                 temkin
+            do j = 1, zsp(id,i)
+
+               n(j) = dcoef(0,j,i,id)
+               dn(j) = 0d0
+               d2n(j) = 0d0
+
+               do k = 1, lterm(j,i,id)
+c                                 n(j) is molar site population
+                  n(j) = n(j) + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
+                  dn(j) = dn(j) + dcoef(k,j,i,id) * dp(ksub(k,j,i,id))
+                  d2n(j) = d2n(j) + dcoef(k,j,i,id) *d2p(ksub(k,j,i,id))
+
+               end do
+
+               nt = nt + n(j)
+               dnt = dnt + dn(j)
+               d2nt = d2nt + d2n(j)
+
+            end do
+
+            if (nt.gt.zero) then
+c                                 site has non-zero multiplicity
+               do j = 1, zsp(id,i)
+
+                  z = n(j)/nt
+                  dz = (dn(j) - z*dnt)/nt
+                  d2z = (2d0*dnt*(z*dnt-dn(j)) + nt*d2n(j) - n(j)*d2nt)
+     *                  /nt**2
+
+                  if (z.gt.zero) then
+ 
+                     lnz1 = dlog(z) + 1d0
+                     zlnz = zlnz + z * dlog(z)
+
+                  else
+
+                     z = zero
+                     lnz1 = zinf
+
+                  end if
+
+                  dzlnz = dzlnz + dz * lnz1
+                  d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
+
+               end do
+c                                 entropy units
+               s = s - nt * zlnz
+               ds = ds - nt * dzlnz - zlnz * dnt
+               d2s = d2s - d2nt * zlnz - 2d0*dnt*dzlnz - d2zlnz*nt
+
+            end if
+
+         else
+c                                 non-temkin
+c                                 here nt is zt, dnt is dz, d2nt is d2z
+            do j = 1, zsp(id,i)
+
+               z = dcoef(0,j,i,id)
+               dz = 0d0
+               d2z = 0d0
+c                                 for each term:
+               do k = 1, lterm(j,i,id)
+                  z = z + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
+                  dz = dz + dcoef(k,j,i,id) * dp(ksub(k,j,i,id))
+                  d2z = d2z + dcoef(k,j,i,id) * d2p(ksub(k,j,i,id))
+               end do
+
+              if (z.gt.zero) then
+ 
+                     lnz1 = dlog(z) + 1d0
+                     zlnz = zlnz + z * dlog(z)
+
+              else
+
+                     z = zero
+                     lnz1 = zinf
+
+               end if
+
+               dzlnz = dzlnz + dz * lnz1
+               d2zlnz = d2zlnz + d2z * lnz1 + dz**2 / z
+
+               nt = nt + z
+               dnt = dnt + dz
+               d2nt = d2nt + d2z
+
+            end do
+c                                 add the contibution from the last species:
+            z = 1d0 - nt
+
+            if (z.gt.zero) then
+ 
+               lnz1 = dlog(z) + 1d0
+               zlnz = zlnz + z * dlog(z)
+
+            else
+
+              z = zero
+              lnz1 = zinf
+
+            end if
+
+            s = s - zmult(id,i)*(zlnz + z*lnz)/r
+            ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
+            d2s = d2s - zmult(id,i)*
+     *                     (d2zlnz - d2nt * lnz1 + dnt**2 / z)/r
+
+         end if
+
+      end do
+
+      g   = g   + enth(1)*pa(nstot(id))  - r*v(2)*s
+      dg  = dg  + enth(1)*dp(nstot(id))  - r*v(2)*ds
+c                                 the normalized g derivative
+      dng  = g * dgnorm + gnorm * dg
+c                                 and second derivative
+      d2g = gnorm * (d2g + enth(1)*d2p(nstot(id)) - r*v(2)*d2s)
+     *       + 2d0 * dg * dgnorm
+c                                 dg becomes the newton-raphson increment:
+      dg = -dng/d2g
+c                                 and g the normalized g:
+      g   = g * gnorm
 
       end
