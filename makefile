@@ -57,15 +57,15 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+MYOBJ = vertex691 meemum691 pssect691 werami691 actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
 all: $(MYOBJ)
 
 clean: 
 	rm -f *.o $(MYOBJ)
 ###################### TARGETS FOR FORTRAN PROGRAMS #########################   
 # 
-actcor: actcor.o tlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
+actcor: actcor.o tlib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o  -o $@
 
 build: build.o tlib.o rlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o $@ 
@@ -87,6 +87,9 @@ frendly: frendly.o tlib.o rlib.o flib.o olib.o
 
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
+
+#gmee691a: meemum.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o
+#	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o -o gmee691a
 
 meemum: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
@@ -110,13 +113,25 @@ vertex: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o $@
 
 werami: werami.o rlib.o tlib.o flib.o olib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o  -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o  rlib.o tlib.o flib.o olib.o  -o $@
 
 unsplt: unsplt.o rlib.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o  -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
 convex: convex.o rlib.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o  -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
+
+meemum691: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
+
+vertex691: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
+	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o vertex691
+
+werami691: werami.o rlib_691.o tlib_691.o flib.o olib_691.o  minime_blas.o orinag.o
+	$(COMP77) $(FFLAGS) $(FLINK) werami.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o werami691
+
+pssect691: psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o pssect691
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o
@@ -172,6 +187,8 @@ pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f
 resub.o: resub.f
 	$(COMP77) $(FFLAGS) -c resub.f
+nlp.o: nlp.f
+	$(COMP77) $(FFLAGS) -c nlp.f
 meemum.o: meemum.f
 	$(COMP77) $(FFLAGS) -c meemum.f
 unsplt.o: unsplt.f
@@ -192,8 +209,29 @@ tlib.o: tlib.f
 	$(COMP77) $(FFLAGS) -c tlib.f
 olib.o: olib.f
 	$(COMP77) $(FFLAGS) -c olib.f
+
+vertex_691.o: vertex_691.f
+	$(COMP77) $(FFLAGS) -c vertex_691.f
+werami_691.o: werami_691.f
+	$(COMP77) $(FFLAGS) -c werami_691.f
+meemum_691.o: meemum_691.f
+	$(COMP77) $(FFLAGS) -c meemum_691.f
+resub_691.o: resub_691.f
+	$(COMP77) $(FFLAGS) -c resub_691.f
+tlib_691.o: tlib_691.f
+	$(COMP77) $(FFLAGS) -c tlib_691.f
+olib_691.o: olib_691.f
+	$(COMP77) $(FFLAGS) -c olib_691.f
+rlib_691.o: rlib_691.f
+	$(COMP77) $(FFLAGS) -c rlib_691.f
 BLASlib.o: BLASlib.f
 	$(COMP77) $(FFLAGS) -c BLASlib.f
+orinag.o: orinag.f
+	$(COMP77) $(FFLAGS) -c orinag.f
+edinag.o: edinag.f
+	$(COMP77) $(FFLAGS) -c edinag.f
+minime_blas.o: minime_blas.f
+	$(COMP77) $(FFLAGS) -c minime_blas.f
 
 # WFM 2007Sep05
 .c.o:

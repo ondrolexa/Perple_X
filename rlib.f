@@ -14317,288 +14317,6 @@ c                                 disordered g and take the lowest:
 
       end
 
-      subroutine gpder1 (id,q,dg,g)
-c----------------------------------------------------------------------
-c subroutine to compute the newton-raphson increment (dg) in the ordering
-c parameter from the 1st and 2nd derivatives of the g of a temkin model
-c with one ordering parameter. id is the index of the solution model.
-
-c temkin s evaluation assumes no disordered endmembers.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, j, k, i1, i2, id
-
-      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2,
-     *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
-     *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
-     *                 z, n(m11), dn(m11), d2n(m11), dsinf, t, dt, d2t
-c                                 working arrays
-      double precision zz, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
-     *               jsub(m2,m1,h9)
-c                                 configurational entropy variables:
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      double precision alpha,dt0
-      common/ cyt0  /alpha(m4),dt0(j3)
-
-      double precision enth
-      common/ cxt35 /enth(j3)
-
-      double precision v,tr,pr,r,ps
-      common / cst5 /v(l2),tr,pr,r,ps
-c----------------------------------------------------------------------
-c                                 initialize
-      g   = 0d0
-      dg  = 0d0
-      d2g = 0d0
-
-      s = 0d0
-      ds = 0d0
-      d2s = 0d0
-
-      gnorm  = 1d0 + dnu(id) * q
-      dgnorm = dnu(id)
-      pnorm  = 1d0/gnorm
-      pnorm2 = 2d0*pnorm
-c                                 the difficulty in this model is the
-c                                 non-equimolar speciation reaction, this
-c                                 causes the number of moles of the components
-c                                 in a mole of solution to change as a function
-c                                 of the order parameter even if composition is
-c                                 held constant.
-
-c                                 to keep the number of moles of the components
-c                                 in the solution constant the gibbs energy
-c                                 is multiplied by gnorm = 1 + q*sum(nu(i)), where
-c                                 the nu(i) are the stoichiometric coefficients of
-c                                 the endmembers in the ordering reaction (it being
-c                                 assumed that nu(jd) = 1 and p0(jd) = 0). this gives
-c                                 the solutions g when it has the same amounts of the
-c                                 components as in the disordered limit (p = p0). the
-c                                 amounts of the species (p) for a partially or completely
-c                                 disordered state are p(i) = (p0(i) + nu(i))*q/gnorm.
-c                                 q is the molar amount of the ordered species formed
-c                                 by the ordering reaction from the amounts of the
-c                                 reactant species in the disordered limit.
-
-c                                 for the green et al melt model sum(nu(i)) for the
-c                                 reaction wo + als = an is -1, therefore
-c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
-      do i = 1, nstot(id)
-c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
-         nu = dydy(i,1,id)
-         pa(i) = (p0a(i) + nu*q) * pnorm
-         dp(i) = (nu - pa(i)*dnu(id)) * pnorm
-         d2p(i) = dp(i) * pnorm2
-
-      end do
-
-      if (llaar(id)) then
-
-         t = 0d0
-         dt = 0d0
-         d2t = 0d0
-c                                 h&p van laar
-         do i = 1, nstot(id)
-            t = t + alpha(i)* pa(i)
-            dt = dt + alpha(i)* dp(i)
-            d2t = d2t + alpha(i)* d2p(i)
-         end do
-
-         do i = 1, jterm(id)
-
-            i1 = jsub(1,i,id)
-            i2 = jsub(2,i,id)
-
-            g = g + w(i) * pa(i1) * pa(i2)
-            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
-            d2g = d2g + w(i) * (pa(i1)*d2p(i2) + pa(i2)*d2p(i1) 
-     *                                         + 2d0*dp(i1)*dp(i2) )
-         end do
-
-c        d2g = (d2g + (2d0*g*dt**2/t - (2d0*dg*dt + g*d2t))/t)/t
-c        dg =  dg - g*dt/t
-         g = g/t
-         dg =  dg - g*dt
-         d2g = (d2g - 2d0*dt/t*dg - g*d2t)/t
-
-      else
-
-         do i = 1, jterm(id)
-c                                 excess g assuming regular terms
-            i1 = jsub(1,i,id)
-            i2 = jsub(2,i,id)
-
-            g = g + w(i) * pa(i1) * pa(i2)
-            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
-            d2g = d2g + w(i) * (      d2p(i1) * pa(i2)
-     *                           + 2d0*dp(i2) * dp(i1)
-     *                           +    d2p(i2) * pa(i1) )
-
-         end do
-
-      end if
-c                                 get the configurational entropy derivatives
-      do i = 1, msite(id)
-
-         nt = 0d0
-         dnt = 0d0
-         d2nt = 0d0
-         zlnz = 0d0
-         dzlnz = 0d0
-         d2zlnz = 0d0
-
-         dsinf = 0d0
-
-         if (zmult(id,i).eq.0d0) then
-c                                 temkin
-            do j = 1, zsp(id,i)
-
-               n(j) = dcoef(0,j,i,id)
-               dn(j) = 0d0
-               d2n(j) = 0d0
-
-               do k = 1, lterm(j,i,id)
-c                                 n(j) is molar site population
-                  n(j) = n(j) + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-                  dn(j) = dn(j) + dcoef(k,j,i,id) * dp(ksub(k,j,i,id))
-                  d2n(j) = d2n(j) + dcoef(k,j,i,id) *d2p(ksub(k,j,i,id))
-
-               end do
-
-               nt = nt + n(j)
-               dnt = dnt + dn(j)
-               d2nt = d2nt + d2n(j)
-
-            end do
-
-            if (nt.gt.zero) then
-c                                 site has non-zero multiplicity
-               do j = 1, zsp(id,i)
-
-                  z = n(j)/nt
-                  dz = (dn(j) - z*dnt)/nt
-                  d2z = (2d0*dnt*(z*dnt-dn(j)) + nt*d2n(j) - n(j)*d2nt)
-     *                  /nt**2
-
-                  if (z.gt.zero) then
-
-                     lnz = dlog(z)
-                     lnz1 = lnz + 1d0
-
-                     zlnz = zlnz + z * lnz
-                     dzlnz = dzlnz + dz * lnz1
-                     d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
-
-                  else if (dabs(dn(j)/nt).gt.zero) then
-
-                     dz = dn(j)/nt
-                     d2z = (2d0*dnt*(-dn(j)) + nt*d2n(j) - n(j)*d2nt)
-     *                  /nt**2
-                     write (*,*) 'oink temkin dz ',z,dz,d2z,n(j)
-
-                  end if
-
-               end do
-c                                 entropy units
-               s = s - nt * zlnz
-               ds = ds - nt * dzlnz - zlnz * dnt
-               d2s = d2s - d2nt * zlnz - 2d0*dnt*dzlnz - d2zlnz*nt
-
-            end if
-
-         else
-c                                 non-temkin
-c                                 here nt is zt, dnt is dz, d2nt is d2z
-            do j = 1, zsp(id,i)
-
-               z = dcoef(0,j,i,id)
-               dz = 0d0
-               d2z = 0d0
-c                                 for each term:
-               do k = 1, lterm(j,i,id)
-                  z = z + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-                  dz = dz + dcoef(k,j,i,id) * dp(ksub(k,j,i,id))
-                  d2z = d2z + dcoef(k,j,i,id) * d2p(ksub(k,j,i,id))
-               end do
-
-               if (z.gt.zero) then
-
-                  lnz = dlog(z)
-                  lnz1 = 1d0 + lnz
-                  zlnz = zlnz + z*lnz
-                  dzlnz = dzlnz + dz * lnz1
-                  d2zlnz = d2zlnz + d2z * lnz1 + dz**2 / z
-
-                  nt = nt + z
-                  dnt = dnt + dz
-                  d2nt = d2nt + d2z
-
-               else if (dabs(dz).gt.zero) then
-c                                 a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-                  dsinf = dsinf + dsign(1d0,dz)
-
-               end if
-
-            end do
-c                                 add the contibution from the last species:
-            z = 1d0 - nt
-
-            if (z.gt.zero) then
-
-               lnz = dlog(z)
-               lnz1 = 1d0 + lnz
-
-               s = s - zmult(id,i)*(zlnz + z*lnz)/r
-               ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
-               d2s = d2s - zmult(id,i)*
-     *                     (d2zlnz - d2nt * lnz1 + dnt**2 / z)/r
-
-            else if (dz.gt.zero) then
-c                                 if a species with a non-zero
-c                                 derivative is zero, the s
-c                                 derivative may be +/-infinite
-               dsinf = dsinf + dsign(1d0,dz)
-               ds = ds - zmult(id,i)*dsinf*1d4
-               d2s = d2s + zmult(id,i)*dabs(dsinf)*1d8
-
-            end if
-
-         end if
-
-      end do
-
-      g   = g   + enth(1)*pa(nstot(id))  - r*v(2)*s
-      dg  = dg  + enth(1)*dp(nstot(id))  - r*v(2)*ds
-c                                 the normalized g derivative
-      dng  = g * dgnorm + gnorm * dg
-c                                 and second derivative
-      d2g = gnorm * (d2g + enth(1)*d2p(nstot(id)) - r*v(2)*d2s)
-     *       + 2d0 * dg * dgnorm
-c                                 dg becomes the newton-raphson increment:
-      dg = -dng/d2g
-c                                 and g the normalized g:
-      g   = g * gnorm
-
-      end
-
       subroutine zmake (z,i,l,ids)
 c----------------------------------------------------------------------
 c subroutine to the site fraction of ksp+1 th species on site i of
@@ -15793,7 +15511,7 @@ c                                 indices:
 
       end
 
-      subroutine subdiv (ids,kds,gcind,phct,resub)
+      subroutine subdiv (ids,kds,gcind,phct,lresub)
 c---------------------------------------------------------------------
 c stattic/dynamic subdivision and data storage
 
@@ -15811,7 +15529,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical resub, simpl
+      logical lresub, simpl
 
       integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
      *        stind(h4), ipop1, phct
@@ -15829,7 +15547,7 @@ c---------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c---------------------------------------------------------------------
 
-      dynam = resub
+      dynam = lresub
       dead = .false.
 
       if (ksmod(ids).eq.20) then
@@ -16397,7 +16115,7 @@ c                                 skip 0-d simplices
 
          end do
 
-         call setxyp (ids,phct,resub,bad)
+         call setxyp (ids,phct,lresub,bad)
 
          if (bad) then
 
@@ -16445,7 +16163,7 @@ c                                 skip 0-d simplices
 
          end do
 
-         call setxyp (ids,phct,resub,bad)
+         call setxyp (ids,phct,lresub,bad)
 
          if (.not.bad) call soload (ids,phct,bad)
 
@@ -16960,7 +16678,7 @@ c-----------------------------------------------------------------------
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
-         if ((iam.eq.1.or.iam.eq.2).and.resub) then 
+         if ((iam.eq.1.or.iam.eq.2).and.lresub) then 
 c                                  meemum, vertex => during dynamic optimization
             i = jdv(jd)
 
