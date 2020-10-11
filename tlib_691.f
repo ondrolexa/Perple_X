@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated October 9, 2020.',
+     *     'Perple_X version 6.9.1, source updated October 11, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -2123,8 +2123,8 @@ c---------------------------------------------------------------------
       common/ cst4 /iam
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       if (refine) then
          tag = '2nd'
@@ -2316,19 +2316,10 @@ c---------------------------------------------------------------------
       else if (ier.eq.169) then
          write (*,169) int
       else if (ier.eq.180) then
-
-         if (resub) then
-c                                 dynamic 
-            write (*,180) k13,int,char,tag
-            write (*,1804)
-
-         else
 c                                 static
             write (*,180) k13,int,tname,tag
             write (*,1803)
             write (*,1804)
-
-         end if
 
          if (realv.gt.0d0) then 
 c                                 non-linear schemes are in use, instruct
@@ -6847,8 +6838,8 @@ c----------------------------------------------------------------------
       common/ cst228 /prject,tfname
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 c----------------------------------------------------------------------
       if (lun.ne.n4) then 
 c                                 write interim result file list
@@ -7946,8 +7937,8 @@ c                                 solution model names
       common/ cst57 /dcp(k5,k19),soltol
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer grid
       double precision rid 
@@ -8191,8 +8182,8 @@ c----------------------------------------------------------------------
       common/ cst82 /oned
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 c-----------------------------------------------------------------------
       if (isoct.eq.0) then 
      

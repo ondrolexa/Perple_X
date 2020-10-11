@@ -63,8 +63,8 @@ c-----------------------------------------------------------------------
       common / cst41 /io3,io4,io9
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn

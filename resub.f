@@ -1301,8 +1301,8 @@ c----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)

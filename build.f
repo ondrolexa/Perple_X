@@ -45,8 +45,8 @@ c-----------------------------------------------------------------------
       common/ cst228 /prject,tfname
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl

@@ -3576,8 +3576,8 @@ c---------------------------------------------------------------------
      *        k,im,idsp,ksp(mst)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -4268,8 +4268,8 @@ c---------------------------------------------------------------------
       integer i, jq, jn, js, lm
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -4376,8 +4376,8 @@ c---------------------------------------------------------------------
       integer imiss, im, idsol, i, j, h, ineg, ipos
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer eos
       common/ cst303 /eos(k10)
@@ -4727,8 +4727,8 @@ c---------------------------------------------------------------------
       integer ijk(mst),inds(k7),ict
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -5096,8 +5096,8 @@ c---------------------------------------------------------------------
       double precision rnums(10)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -6337,8 +6337,8 @@ c---------------------------------------------------------------------
       external gcpd, zbad, stinc, getstr
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -7989,7 +7989,6 @@ c                                 selects the disordered configuration.
 
       end
 
-
       subroutine pincs (dp,dy,ind,jd,nr)
 c----------------------------------------------------------------------
 c subroutine to increment the proportions of endmembers involved in a
@@ -8482,8 +8481,8 @@ c-----------------------------------------------------------------------
       common/ cst60 /ipoint,kphct,imyn
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8792,11 +8791,11 @@ c---------------------------------------------------------------------
 
       character tname*10, tag*(*)
 
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 c---------------------------------------------------------------------
 c                                 error diagnostic
-         if (resub) then
+         if (lresub) then
 c                                 this can't happen?!?
 c                                 adaptive minimization array
             call error (41,0d0,2,tag)
@@ -12278,8 +12277,8 @@ c                                 endmember pointers
       common/ cxt23 /jend(h9,m14+2)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -12662,8 +12661,8 @@ c                                 endmember pointers
       common/ cxt23 /jend(h9,m14+2)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -14660,8 +14659,8 @@ c---------------------------------------------------------------------
       integer ijk(mst),inds(k7),ict
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer nsub,nterm
       double precision acoef
@@ -15069,8 +15068,8 @@ c---------------------------------------------------------------------
      *        k, l, im, ii, jpoly, jsimp, jvct, ksimp(mst)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
@@ -16313,13 +16312,13 @@ c-----------------------------------------------------------------------
      *        ipop
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 c-----------------------------------------------------------------------
       phct = phct + 1
       ipop = pop1(ids)
 c                                 load simplicial compoisition indices
-      if (resub) then 
+      if (lresub) then 
 c                                 dynamic arrays:
          if (phct.gt.k21) then
 
@@ -16922,8 +16921,8 @@ c-----------------------------------------------------------------------
       common/ cst4 /iam
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -17905,8 +17904,8 @@ c-----------------------------------------------------------------------
       common/ cst228 /prject,tfname
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iam
       common/ cst4 /iam
@@ -19400,8 +19399,8 @@ c---------------------------------------------------------------------
       external zbad
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -20310,7 +20309,7 @@ c----------------------------------------------------------------------
 
       double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, zinf,
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
-     *                 d2z, lnz, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
+     *                 d2z, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
      *                 z, n(m11), dn(m11), d2n(m11), t, dt, d2t
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
@@ -20544,7 +20543,7 @@ c                                 add the contibution from the last species:
 
             end if
 
-            s = s - zmult(id,i)*(zlnz + z*lnz)/r
+            s = s - zmult(id,i)*zlnz/r
             ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
             d2s = d2s - zmult(id,i)*
      *                     (d2zlnz - d2nt * lnz1 + dnt**2 / z)/r

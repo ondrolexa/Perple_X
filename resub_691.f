@@ -477,6 +477,10 @@ c----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
+
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 c----------------------------------------------------------------------
@@ -507,6 +511,8 @@ c                                 special (pointless) iterations?
 c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call setxyp (ids,id,kterat)
+c                                 save the composition for autorefine
+               if (.not.refine) call savdyn (ids) 
             else
                if (nrf(ids)) cycle
                call endpa (kd,id,ids)
@@ -631,8 +637,8 @@ c DEBUG691
      *              wl(m17,m18),pp(m4)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -670,7 +676,7 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
 
-c        if (.not.refine) call savdyn (ids)
+         if (.not.refine) call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
@@ -869,8 +875,8 @@ c                                  x-coordinates for the final solution
       common/ cstabo /abort1
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 c-----------------------------------------------------------------------
       abort = .false.
 c                                first check if solution endmembers are
@@ -1103,8 +1109,8 @@ c                                count fraction of impure solvent
 
             if (.not.refine) then 
 c                                load into pa and save for refinement
-               pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
-               call savdyn (ids)
+c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c              call savdyn (ids)
             end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 
@@ -1230,7 +1236,7 @@ c----------------------------------------------------------------------
 
       external rplica
 c----------------------------------------------------------------------
-c     if (rplica(ids)) return
+      if (rplica(ids)) return
 
       tpct = tpct + 1
 
@@ -1273,7 +1279,7 @@ c                                 simple model
             diff = 0d0
 
             do j = 1, nstot(id)
-               diff = diff + (pa(j) - txco(itxp(tpct)+j))**2
+               diff = diff + (pa(j) - txco(itxp(i)+j))**2
             end do 
 
             if (diff.lt.1d-8) then
@@ -1290,7 +1296,7 @@ c                                 test on pp array
             if (dkp(i).ne.id) cycle
 
             do j = 1, nstot(id)
-               tp(j) = pa(j) - txco(itxp(tpct)+j)
+               tp(j) = pa(j) - txco(itxp(i)+j)
             end do
 
             do k = 1, nord(id)
@@ -1319,7 +1325,7 @@ c                                 non-equimolar
 
             if (dkp(i).ne.id) cycle
 
-            tp(1:nstot(id)) = txco(itxp(tpct)+1:itxp(tpct)+nstot(id))
+            tp(1:nstot(id)) = txco(itxp(i)+1:itxp(i)+nstot(id))
 
             diff = 0d0
 
@@ -1378,8 +1384,8 @@ c----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -3302,8 +3308,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       logical first, err 
 c-----------------------------------------------------------------------

@@ -76,8 +76,8 @@ c-----------------------------------------------------------------------
       common/ cst307 /jfct,jmct,jprct,jmuct
 
       character tname*10
-      logical refine, resub
-      common/ cxt26 /refine,resub,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       save err,first,pots
       data err,first/.false.,.true./
