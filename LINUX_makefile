@@ -91,8 +91,8 @@ frendly: frendly.o tlib.o rlib.o flib.o olib.o
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
-#gmee691a: meemum.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o
-#	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o -o gmee691a
+#gmee691a: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o
+#	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o -o gmee691a
 
 meemum: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
@@ -125,7 +125,7 @@ convex: convex.o rlib.o tlib.o flib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
 meemum691: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
+	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
 
 vertex691: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o vertex691

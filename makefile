@@ -122,7 +122,7 @@ convex: convex.o rlib.o tlib.o flib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
 meemum691: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
+	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
 
 vertex691: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o vertex691
