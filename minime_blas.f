@@ -367,7 +367,7 @@ c                                 the refinement point pointer
 c                                 save the normalized g
       g2(phct) = g/rsum
 c                                 save the normalized bulk
-      cp2(1:icomp,jphct) = rcp(1:icomp)/rsum
+      cp2(1:icomp,phct) = rcp(1:icomp)/rsum
 c                                 sum scp(1:icp)
       if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then 
          c2tot(phct) = rsum/rsmo

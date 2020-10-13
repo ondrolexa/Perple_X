@@ -10159,7 +10159,8 @@ c                                 reset iphct and reload static
 
       end do
 c                                 reset istart to cold start
-      istart = 0 
+      istart = 0
+      jkp = 0
 
       write (*,1110) id
 

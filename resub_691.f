@@ -2322,10 +2322,10 @@ c----------------------------------------------------------------------
          if (is(i).eq.1.or.x(i).lt.nopt(9)) cycle  
 c                                 acceptable cases 0 active, between bounds
 c                                                  2 active, upper bound 
-            npt = npt + 1
-            jdv(npt) = i
-            amt(npt) = x(i)
-            jkp(i) = ikp(i)
+         npt = npt + 1
+         jdv(npt) = i
+         amt(npt) = x(i)
+         jkp(i) = ikp(i+jiinc)
  
       end do
 
