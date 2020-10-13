@@ -2183,111 +2183,6 @@ c                            solve ux = y for x:
 
       end
 
-      subroutine initlp 
-c--------------------------------------------------------------------
-c initialize arrays and constants for lp minimization of static
-c compositions.
-c---------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i,j,id
-
-      double precision cp
-      common/ cst12 /cp(k5,k10)
-
-      integer is
-      double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
-
-      double precision bl,bu
-      common/ cstbup /bl(k1+k5),bu(k1+k5)
-
-      double precision vmax,vmin,dv
-      common/ cst9 /vmax(l2),vmin(l2),dv(l2)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jphct,istart
-      common/ cst111 /jphct,istart
-
-      integer lennam,ldt,ncolt,ldq
-      common/ be04nb /lennam,ldt,ncolt,ldq
-
-      integer npt,jdv
-      double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
-
-      integer ipoint,kphct,imyn
-      common/ cst60  /ipoint,kphct,imyn
-
-      integer tphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
-c-----------------------------------------------------------------------
-c                                 load arrays for lp solution
-
-c                                 locate last point in dynamic/static lp arrays
-      jpoint = ipoint - jiinc
-      jphct = iphct - jiinc
-c                                 pressure and temperature are allowed 
-c                                 EoS variables
-      ctotal = 0d0
-
-      do i = 1, icp
-         ctotal = ctotal + cblk(i)
-      end do 
-c                                 composition constraint
-      do i = 1, icp
-         b(i) = cblk(i)/ctotal
-      end do 
-c                                 static/dynamic composition arrays for solutions
-c                                 are loaded in soload/loadgx. stoichiometric
-c                                 compounds/endmembers loaded here:
-      do i = 1, jpoint
-         id = i + jiinc
-
-         jkp(i) = -id
-         hkp(i) = 0
-
-         do j = 1, icp
-            a(j,i) = cp(j,id)/ctot(id)
-            cp2(j,i) = a(j,i)
-         end do
-
-      end do
-c                                 load all compounds into the 
-c                                 the dynamic composition array
-      do id = istct, ipoint
-
-         i = id - jiinc 
-c                                 jkp indicates which phase a point is associated with
-
-
-         do j = 1, icp
-            cp2(j,i) = a(j,i)
-         end do
-
-      end do
-c                                 locate last point in dynamic arrays and set increment
-c                                 to static array
-      jpoint = ipoint - jiinc
-
-      ldt = icp + 1
-      ldq = icp + 1
-c                                 cold start istart = 0
-      istart = 0
-
-      bl(1:jphct) = 0d0
-      bu(1:jphct) = 1d0
-
-      bl(jphct+1:jphct+icp) = b(1:icp)
-      bu(jphct+1:jphct+icp) = b(1:icp)
-
-      end 
-
       subroutine yclos0 (x,is,jphct)
 c----------------------------------------------------------------------
 c subroutine to save optimization results for non-iterative refinement
@@ -2314,8 +2209,9 @@ c                                 coordinates (and solution ids).
       integer ikp
       common/ cst61 /ikp(k1)
 c----------------------------------------------------------------------
-
       npt = 0
+
+      if (jphct.gt.jpoint) call errdbg ('jphct>jpoint, yclos0')
 
       do i = 1, jphct
 
@@ -2325,14 +2221,14 @@ c                                                  2 active, upper bound
          npt = npt + 1
          jdv(npt) = i
          amt(npt) = x(i)
-         jkp(i) = ikp(i+jiinc)
+c                                 this will be wrong if jphct > jpoint
+         jkp(jdv(npt)) = -i - jiinc
  
       end do
 
       call getmus (1,0,solvnt,.false.)
 
       end
-
 
       double precision function ginc0 (dt,dp,id)
 c-----------------------------------------------------------------------
