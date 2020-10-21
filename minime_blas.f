@@ -845,7 +845,7 @@ c                                 convert the y's to x's
      *     /,'does not span all possible model compositions.',/)
 1030  format ('y(',i2,') will be zeroed for computing compositional ',
      *       'ranges.',/)
-1040  format ('The composition will not be will not be used to compute',
+1040  format ('The composition will not be used to compute',
      *       ' compositional ranges.',/)
 
       end

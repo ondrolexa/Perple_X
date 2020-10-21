@@ -66,8 +66,8 @@ SiO
 0 0 0 0 0 0 0 0 0 0 0 0 0                   | endmember flags.  
 
 0.0 1    0.1 0                      | range and resolution of X(MgO)
-1e-3 1d-2 0.1 1              | range and resolution of X(MgO)
-1e-3 1d-2 0.1 1                  | range and resolution of X(MgO)
+0.0 0.1  0.1 0 1e-3 1d-2 0.1 1              | range and resolution of X(MgO)
+0.0 0.1  0.1 0 1e-3 1d-2 0.1 1                  | range and resolution of X(MgO)
 0.0 1    0.1 0                      | range and resolution of X(MgO)
 0.0 1    0.1 0                      | range and resolution of X(MgO)
 0.0 1    0.1 0                      | range and resolution of X(MgO)

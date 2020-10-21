@@ -8111,7 +8111,7 @@ c----------------------------------------------------------------------
 
       if (icase(id).eq.1) then
 c                                 case 1: fully correlated
-         dinc = 0.5d0/dfloat(nord(id))
+         dinc = 0.9d0/dfloat(nord(id))
          tinc = dinc
 
          do k = 1, nord(id)

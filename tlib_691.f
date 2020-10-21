@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated October 13, 2020.',
+     *     'Perple_X version 6.9.1, source updated October 21, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -8055,6 +8055,21 @@ c                                 open and kill the irf file
             open (n8, file = n11nam, iostat=ier, status = 'unknown')
             close (n8,status = 'delete')
 
+         else
+c                                 werami/pssect open and read tof file
+            open (n8, file = n8nam, iostat=ier, status = 'old')
+
+            if (ier.eq.0) then 
+c                                 read flag that indicates if auto-refine
+c                                 or exploratory stage parameters.
+               read (n8,*,iostat=ier) refine
+
+            else 
+
+               call errdbg ('missing *.tof file')
+
+            end if 
+
          end if
 c                                 only want *_auto_refine.txt for the exploratory
 c                                 stage. VERTEX or CONVEX:
@@ -8081,32 +8096,6 @@ c                                 write blurb
       close (n8)
 c                                 just to be sure
       if (iopt(6).eq.0) refine = .false.
-
-      if (refine) then 
-c                                 reject solution models that were 
-c                                 not found to be stable and set parameters 
-c                                 that depend on refinement
-         ibad2 = 0 
-
-         do 50 i = 1, isoct
-
-            do j = 1, ibad1
-               if (fname(i).eq.badnam(j)) then
-                  if (iam.eq.1.or.iam.eq.15) write (*,1070) fname(i)
-                  goto 50
-               end if 
-            end do 
-
-            ibad2 = ibad2 + 1
-            fname(ibad2) = fname(i)
-
-50       continue 
-
-         isoct = ibad2 
-
-         write (*,'(/)')
-
-      end if
 
       if (iopt(6).eq.2.and..not.refine) then
 c                                 this means it must be in the exploratory
