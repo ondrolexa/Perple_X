@@ -10095,9 +10095,7 @@ c                                 automatic, read the data from memory
 
             jend(i,2) = 0
             ntot = nstot(i)
-
-            if (.not.stable(i)) cycle
-c                                 for each stable solution cycle 
+c                                 for each solution cycle 
 c                                 through the unsorted compositions
             do j = 1, tpct
 

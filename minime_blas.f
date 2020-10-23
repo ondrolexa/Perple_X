@@ -64,6 +64,8 @@ c DEBUG691                    dummies for NCNLN > 0
 c-----------------------------------------------------------------------
       yt = pa
 
+      istuff(5) = 0
+
       tic = .true.
 
       nclin = nz(rids)
@@ -184,7 +186,14 @@ c                              0.05-.4 seem best
 
          write (*,*) 'woana woaba, wanka?'
 
+      else
+
+c        istuff(5) = 1
+c                                 save final result
+c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
+
       end if
+
 
       end
 
@@ -198,7 +207,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, qwak
+      logical bad, qwak, toc
 
       integer i, j, nvar, mode, istuff(*), istart, iwarn
 
@@ -228,9 +237,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      save iwarn
+      save iwarn, toc
 
-      data iwarn/0/
+      data iwarn, toc/0,.false./
 c-----------------------------------------------------------------------
       sum1 = 0d0
 
@@ -267,7 +276,7 @@ c-----------------------------------------------------------------------
       if (deriv(rids)) then
 
          call getder (g,dgdp,rids)
-c                                 get the bulk composition from pp
+c                                 get the bulk composition from pa
          call getscp (rcp,rsum,rids,rids,.false.)
 c                                 convert dgdp to dg'dp
          do i = 1, nvar
@@ -325,7 +334,10 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         call savrpc (g,jphct)
+         call savrpc (g,jphct,toc)
+
+         if (toc) write (*,2000) gval,jphct
+2000  format (g14.6,1x,i6)
 
       end if
 
@@ -335,13 +347,15 @@ c                                 increment the counter
 
       end
 
-      subroutine savrpc (g,phct)
+      subroutine savrpc (g,phct,toc)
 c-----------------------------------------------------------------------
 c save a dynamic composition for the lp solver
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      logical toc
 
       integer phct
 
@@ -374,6 +388,14 @@ c                                 sum scp(1:icp)
       else
          c2tot(phct) = rsum
       end if
+
+      if (toc) then
+         write (*,1000) phct,g2(phct),pa(1:nstot(rids))
+         write (*,1010) cp2(1:icomp,phct)
+1000  format (i5,1x,g12.6,12(1x,f7.4))
+1010  format (18x,12(1x,f7.4))
+
+      end if 
 
       quack(phct) = rkwak
 c                                 save the endmember fractions
@@ -1148,7 +1170,7 @@ c                                 disorderd
          end if
 
       else if (maxs) then
-c                                 if maxs then p0 could be partially 
+c                                 if maxs then p0 is likely partially 
 c                                 ordered, the pin settings from pinc0
 c                                 can't be relied upon, a routine could 
 c                                 be added to check, but given that the 
@@ -1324,12 +1346,16 @@ c                                   values in ppp.
          write (*,*) 'sommat else bad',idead
       end if
 
-      g0 = gordp0 (ids)
+      if (.not.maxs) then
 
-      if (gfinal.gt.g0) then 
-         gfinal = g0
-         pa = p0a
-      end if
+         g0 = gordp0 (ids)
+
+         if (gfinal.gt.g0) then 
+            gfinal = g0
+            pa = p0a
+         end if
+
+      end if 
 
       end
 

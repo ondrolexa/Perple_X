@@ -641,8 +641,8 @@ c                                  extent for label.
 c                                 george had ii = max(1,nint(x/i)) for 
 c                                 grid spacing 1, changed 10/13/2018
 c                                 for grid spacing jinc. JADC
-               ii = 1 + nint(x/i)*jinc
-               jj = 1 + nint(y/i)*jinc
+               ii = max(1,nint(x/i)*jinc)
+               jj = max(1,nint(y/i)*jinc)
 
                if (igrd(ii,jj).eq.0) then
                   write (*,*) 'can this be?',ii,jj

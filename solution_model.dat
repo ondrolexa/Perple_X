@@ -3108,10 +3108,10 @@ jdjL ctjL fojL fajL dijL hmjL ekjL qjL
 0 0 0 0 0 0 0 0
 
 0  .6  .1 0   | jd
-0  .3  .1 0   | ct
+0  .45 .1 0   | ct
 0  .8  .1 0   | fo
 0  .4  .1 0   | fa
-0  .4  .1 0   | di
+0  .45 .1 0   | di
 0  .1  .1 0   | hm
 0  .1  .1 0   | ek
 
@@ -3413,12 +3413,12 @@ odicr = 1 odi    + 1 cren - 1 en
 0 0 0 0 0 0 0 0 0 0 0 0    | endmember flags, indicate if endmember is part of the solution (i.e. iend = 0).
 
                            | subdivision model for (ternary) site 1 (M1):
-0  .2 .1   0
-0  1  .1   0
+0   1  .1   0
+0   1  .1   0
                            | subdivision model for (quaternary) site 2 (M2):
-0  1  .1   0
-0  1  .1   0
-0  1  .1   0
+0  .1  .1   0
+0  .1  .1   0
+0  .2  .1   0
 
 begin_excess_function
 W(en fs)        5.2d3
