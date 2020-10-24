@@ -334,9 +334,9 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         call savrpc (g,jphct,toc)
+         call savrpc (g,jphct)
 
-         if (toc) write (*,2000) gval,jphct
+c        if (toc) write (*,2000) gval,jphct
 2000  format (g14.6,1x,i6)
 
       end if
@@ -347,7 +347,7 @@ c                                 increment the counter
 
       end
 
-      subroutine savrpc (g,phct,toc)
+      subroutine savrpc (g,phct)
 c-----------------------------------------------------------------------
 c save a dynamic composition for the lp solver
 c-----------------------------------------------------------------------
@@ -389,13 +389,13 @@ c                                 sum scp(1:icp)
          c2tot(phct) = rsum
       end if
 
-      if (toc) then
-         write (*,1000) phct,g2(phct),pa(1:nstot(rids))
-         write (*,1010) cp2(1:icomp,phct)
+c     if (toc) then
+c        write (*,1000) phct,g2(phct),pa(1:nstot(rids))
+c        write (*,1010) cp2(1:icomp,phct)
 1000  format (i5,1x,g12.6,12(1x,f7.4))
 1010  format (18x,12(1x,f7.4))
 
-      end if 
+c     end if 
 
       quack(phct) = rkwak
 c                                 save the endmember fractions

@@ -489,8 +489,8 @@ c                                 reset refinement point flags
          hkp(i) = 0
       end do
 
-c     jphct = jpoint
-c     zcoct = 0
+      jphct = jpoint
+      zcoct = 0
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
@@ -512,7 +512,8 @@ c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call setxyp (ids,id,kterat)
 c                                 save the composition for autorefine
-               if (.not.refine) call savdyn (ids) 
+c              if (.not.refine) 
+               call savdyn (ids) 
             else
                if (nrf(ids)) cycle
                call endpa (kd,id,ids)
@@ -676,7 +677,8 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
 
-         if (.not.refine) call savdyn (ids)
+c        if (.not.refine) 
+c        call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
@@ -1109,8 +1111,8 @@ c                                count fraction of impure solvent
 
             if (.not.refine) then 
 c                                load into pa and save for refinement
-c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
-c              call savdyn (ids)
+               pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+               call savdyn (ids)
             end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 
