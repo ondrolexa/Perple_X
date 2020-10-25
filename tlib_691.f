@@ -8038,8 +8038,9 @@ c                                 set cycle dependent parameters
                i = 1
 
             end if
-c                                 solvus tolerance 
-            if (lopt(9)) nopt(8) = 1.5d0*rid(3,i)
+c                                 solvus tolerance, in 691 the
+c                                 only fixed resolution is nopt(13)
+            if (lopt(9)) nopt(8) = 1.5d0*rid(3,1)
 
          else if (iam.eq.13) then
 c                                 the global level of unsplt, which should generate 

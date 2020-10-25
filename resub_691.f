@@ -745,6 +745,9 @@ c                                 for final adaptive solution
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -753,7 +756,7 @@ c-----------------------------------------------------------------------
 
       do i = 1, icp
 
-         if (dcp(i,ids).eq.0d0) cycle 
+         if (dcp(i,ids).lt.zero) cycle 
 
          if (dabs(cp3(i,id1)/cptot(id1) - cp3(i,id2)/cptot(id2))
      *                                    / dcp(i,ids).gt.soltol) then
@@ -1107,11 +1110,11 @@ c                                count fraction of impure solvent
 
             jd = jdsol(i,j)
 
-            if (.not.refine) then 
+c           if (.not.refine) then 
 c                                load into pa and save for refinement
-               pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
-               call savdyn (ids)
-            end if
+c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c              call savdyn (ids)
+c           end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 
                xx =  amt(jd)/bnew(i)
@@ -1189,12 +1192,12 @@ c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          call sollim (ids,i)
 
-         if (.not.refine) then
+c        if (.not.refine) then
 c                                 sollim loads but may corrupt pa although p0a
 c                                 isn't touched, so reload pa here.
 c           pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
 c           call savdyn (ids)
-         end if
+c        end if
 
       end do
 

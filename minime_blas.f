@@ -396,13 +396,13 @@ c                                 sum scp(1:icp)
          c2tot(phct) = rsum
       end if
 
-      if (toc) then
-         write (*,1000) phct,g2(phct),pa(1:nstot(rids))
-         write (*,1010) cp2(1:icomp,phct)
+c     if (toc) then
+c        write (*,1000) phct,g2(phct),pa(1:nstot(rids))
+c        write (*,1010) cp2(1:icomp,phct)
 1000  format (i5,1x,g12.6,12(1x,f7.4))
 1010  format (18x,12(1x,f7.4))
 
-      end if 
+c     end if 
 
       quack(phct) = rkwak
 c                                 save the endmember fractions
