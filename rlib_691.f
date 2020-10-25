@@ -13447,8 +13447,8 @@ c----------------------------------------------------------------------
 
       end do
 
-      if (iam.eq.1) then
-c     if (.not.refine.and.iam.eq.1) then
+c     if (iam.eq.1) then
+      if (.not.refine.and.iam.eq.1) then
 c                                 load the former dynamic compositions
 c                                 into the static arrays
          call reload (.false.)

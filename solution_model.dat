@@ -2546,7 +2546,7 @@ woL      q8L      h2oL
 0    .2   .1  0                     | range and resolution of X(sil), 1 => asymmetric subdivision
 0    .2   .1  0                     | range and resolution of X(ksp), 1 => asymmetric subdivision
 0    .2   .1  0                     | range and resolution of X(wo),  1 => asymmetric subdivision
-0    .4   .1  0                     | range and resolution of X(q), 0 => cartesian subdivision
+0    .45  .1  0                     | range and resolution of X(q), 0 => cartesian subdivision
 
 
 begin_ordered_endmembers

@@ -489,8 +489,8 @@ c                                 reset refinement point flags
          hkp(i) = 0
       end do
 
-      jphct = jpoint
-      zcoct = 0
+c     jphct = jpoint
+c     zcoct = 0
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0

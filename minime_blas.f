@@ -1153,6 +1153,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision wmach
       common/ cstmch /wmach(9)
 
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
       external gsol4, gsol1, gordp0, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
@@ -1339,7 +1342,7 @@ c                                   values in ppp.
 
       else if (.not.tic.and.iter.gt.0) then 
 
-         write (*,*) 'maialino josefino!'
+         write (*,*) 'maialino josefino!',fname(ids),idead,iter
 
       end if 
 
