@@ -512,8 +512,7 @@ c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call setxyp (ids,id,kterat)
 c                                 save the composition for autorefine
-c              if (.not.refine) 
-               call savdyn (ids) 
+               if (.not.refine) call savdyn (ids) 
             else
                if (nrf(ids)) cycle
                call endpa (kd,id,ids)
@@ -677,8 +676,7 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
 
-c        if (.not.refine) 
-c        call savdyn (ids)
+         if (.not.refine) call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
@@ -1194,7 +1192,7 @@ c                                 check composition against solution model range
          if (.not.refine) then
 c                                 sollim loads but may corrupt pa although p0a
 c                                 isn't touched, so reload pa here.
-            pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
+c           pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
 c           call savdyn (ids)
          end if
 
@@ -2464,6 +2462,7 @@ c                                 make a list of the solutions
                cycle
 
             else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
+c           else if (t.lt.nopt(20).and.
      *               lname(jkp(jmin(i))).eq.'liquid') then
 c                                 contrary to what you might expect, the 1st condition
 c                                 improves quality, because it stops the list 
@@ -2474,7 +2473,7 @@ c                                 from being clogged up with one phase
 
                bad = .false.
 
-               do j = 1, npt + kpt 
+               do j = 1, npt + kpt
 
                   if (jkp(jdv(j)).ne.jkp(jmin(i))) cycle
 c                                 metastable point matches a refinement point, 

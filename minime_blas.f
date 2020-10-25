@@ -64,8 +64,6 @@ c DEBUG691                    dummies for NCNLN > 0
 c-----------------------------------------------------------------------
       yt = pa
 
-      istuff(5) = 0
-
       tic = .true.
 
       nclin = nz(rids)
@@ -81,6 +79,15 @@ c                                 will be estimated at this
 c                                 coordinate, so choose a feasible 
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
+
+c        istuff(5) = 1
+c                                 save the original point result
+c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
+
+      istuff(5) = 0
+
+
+
 c                                 initialize bounds
       if (boundd(rids)) then 
 c                                 the endmember fractions are bounded
@@ -188,9 +195,9 @@ c                              0.05-.4 seem best
 
       else
 
-c        istuff(5) = 1
+         istuff(5) = 1
 c                                 save final result
-c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
+         call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
 
       end if
 
@@ -389,13 +396,13 @@ c                                 sum scp(1:icp)
          c2tot(phct) = rsum
       end if
 
-c     if (toc) then
-c        write (*,1000) phct,g2(phct),pa(1:nstot(rids))
-c        write (*,1010) cp2(1:icomp,phct)
+      if (toc) then
+         write (*,1000) phct,g2(phct),pa(1:nstot(rids))
+         write (*,1010) cp2(1:icomp,phct)
 1000  format (i5,1x,g12.6,12(1x,f7.4))
 1010  format (18x,12(1x,f7.4))
 
-c     end if 
+      end if 
 
       quack(phct) = rkwak
 c                                 save the endmember fractions

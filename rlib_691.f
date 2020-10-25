@@ -5715,15 +5715,23 @@ c                                 macroscopic formulation for normal solutions.
 
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
-         if (.not.noder(id)) call specis (gg,id,minfx)
+         if (deriv(id)) then
 
-         if (minfx.or.noder(id)) then 
+            call specis (gg,id,minfx)
+
+            if (minfx) then 
 c                                 degenerated, minfx only set for equimolar speciation.
-            call minfxc (gg,id,.false.)
+               call minfxc (gg,id,.false.)
+
+            else
+
+               gg = gg + gdqf(id) + gmech(id)
+
+            end if
 
          else
 
-            gg = gdqf(id) + gmech(id)
+            call minfxc (gg,id,.false.)
 
          end if
 
@@ -5902,6 +5910,23 @@ c----------------------------------------------------------------------
 
       end
 
+      subroutine ingmfx (id) 
+c-----------------------------------------------------------------------
+c initialize endmember g's for minfxc if it is to be called as a bail-
+c out routine for specis without prior call to gall
+c-----------------------------------------------------------------------
+      integer id
+c-----------------------------------------------------------------------
+c                                 projected endmember g's at p-t
+      call geeend (id)
+c                                 endmember dqfs at p-t
+      call setdqf (id)
+c                                 load into the endmember array
+      call ingend (id)
+
+      end 
+
+
       subroutine geeend (id)
 c-----------------------------------------------------------------------
 c geeend updates the projected free energies of solution id, it is 
@@ -6011,13 +6036,7 @@ c                                 evaluate dqf coefficients
 c                                 load enthalpies of ordering
 c                                 and load gend on the off-chance
 c                                 that minfxc is used
-      if (lorder(id)) then
-
-         call oenth (id)
-
-         call ingend (id)
-
-      end if
+      if (lorder(id)) call oenth (id)
 
       end
 
@@ -12496,7 +12515,7 @@ c-----------------------------------------------------------------------
       integer id, ids
 
       double precision gzero, dg, gerk, gph, gproj, gcpd, gfesi, gex,
-     *                 gfecr1, gfesic, gfes, gexces, gmchpr, gmech0
+     *                gfecr1, gfesic, gfes, gexces, gmchpr, gmech0, gsum
 
       external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic, gfes, 
      *         gex, gexces, gmchpr, gmech0
@@ -12537,18 +12556,30 @@ c                                 compute margules coefficients
          call setw (ids)
 c                                 evaluate enthalpies of ordering
          call oenth (ids)
-c                                 get the speciation energy effect
-         call specis (dg,ids,minfx)
 
-         if (minfx) then
-c                                 minfxc requires the dqfs
-            call setdqf (id)
-c                                 degenerated
-            call minfxc (gph,ids,.false.)
+         if (deriv(ids)) then
+
+            call specis (dg,ids,minfx)
+
+            if (minfx) then 
+c                                 bailout from specis
+c                                 load endmember g's for minfxc
+               call ingmfx (ids)
+c                                 degenerated, minfx only set for equimolar speciation.
+               call minfxc (gph,ids,.false.)
+
+            else
+c                                 add dqf corrections and mech
+               gph = gsum + gexces (id) + dg
+
+            end if
 
          else
-c                                 add dqf corrections and mech
-            gph = gexces (id) + gmchpr (ids) + dg
+c                                 no derivatives
+c                                 load endmember g's for minfxc
+               call ingmfx (ids)
+
+               call minfxc (gph,ids,.false.)
 
          end if
 
@@ -12955,6 +12986,8 @@ c                                 a liquid below T_melt option threshold
 c                                 initialize margules, enthalpy of
 c                                 ordering, internal dqfs (last for minfxc)
             call ingsol (i)
+c                                 only for minfxc
+            call ingend (i)
 
             tic = 0 
 
@@ -12962,7 +12995,7 @@ c                                 ordering, internal dqfs (last for minfxc)
 
                call setxyp (i,id,bad)
 
-c              if (deriv(i)) then
+               if (deriv(i)) then
 
 c                 y = p0a
 
@@ -12978,13 +13011,12 @@ c                 pa = p0a
 
                   call specis (dg,i,minfx)
 
-                  if (minfx.and.deriv(i)) then
+                  if (minfx) then
                      pa = p0a
-                     call minfxc (dg,i,.false.)
+                     call minfxc (g(id),i,.false.)
+                  else
+                     g(id) = gexces (id) + dg + gmech (i)
                   end if
-
-                  g(id) = gexces (id) + dg + gmech (i)
-
 c                if (dg-g1.lt.-1d-1) then
 c                   tic = tic + 1
 c                   write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
@@ -13007,19 +13039,13 @@ c                end if
 c                 if (j.eq.11) goto 10
 c                 if (tic.eq.-1) goto 10
 
-
 5000   format (a,12(g10.4,1x))
 
-c              else
+               else
 
-c                 call specis (dg,i,minfx)
-c                                 degenerated
-c                 if (minfx.and.deriv(i)) 
-c    *               call minfxc (g(id),i,.false.)
+                  call minfxc (g(id),i,.false.)
 
-c                 g(id) = gexces (id) + dg + gmech (i)
-
-c              end if
+               end if
 
                id = id + 1
 
@@ -14803,18 +14829,28 @@ c                                 as gsol may be called many times for the same
 c                                 bulk composition, the pa array will change, reset
 c                                 to the p0a values
             pa(1:nstot(id)) = p0a(1:nstot(id))
-c                                 get the speciation, excess and entropy effects.
-            call specis (g,id,minfx)
 
-            if (minfx) then
+            if (deriv(id)) then 
+c                                 get the speciation, excess and entropy effects.
+               call specis (g,id,minfx)
+
+               if (minfx) then
 c                                 dumbass call to get endmember g's
-               g = gmchpt (id)
+                  call ingmfx (id)
 c                                 degenerated speciation
-               call minfxc (g,id,.false.)
+                  call minfxc (g,id,.false.)
+
+               else 
+
+                  g = g + gmchpt (id) + gdqf (id)
+
+               end if
 
             else 
 
-               g = g + gmchpt (id) + gdqf (id)
+               call ingmfx (id)
+c                                 degenerated speciation
+               call minfxc (g,id,.false.)
 
             end if
 
@@ -19626,7 +19662,7 @@ c                                 convert molar amounts to fractions
                call ckzlnz (z(j),zlnz)
             end do
 c                                 site negentropy
-            zlnz = r * zlnz
+            zlnz = r * zt * zlnz
 c                                 derivatives
             do l = 1, nvar
 
