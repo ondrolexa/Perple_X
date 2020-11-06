@@ -22,12 +22,12 @@ c-----------------------------------------------------------------------
 
       logical inp, tic
 
-      integer nvar, iter, iwork(m22),
+      integer i, nvar, iter, iwork(m22),
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
      *        ,iprint,mode
 
-      double precision ggrd(m19), lapz(m20,m19),
+      double precision ggrd(m19), lapz(m20,m19),gsol1,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
@@ -35,7 +35,7 @@ c DEBUG691                    dummies for NCNLN > 0
 
       character ctol*20,cdint*20
 
-      external gsol2, dummy
+      external gsol2, gsol1, dummy
 
       integer nz
       double precision apz, zl, zu
@@ -57,6 +57,10 @@ c DEBUG691                    dummies for NCNLN > 0
 
       double precision wmach
       common/ cstmch /wmach(9)
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
       data iprint,inp/0,.false./
 
@@ -195,9 +199,22 @@ c                              0.05-.4 seem best
 
       else
 
-         istuff(5) = 1
-c                                 save final result
-         call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
+         yt = pa
+c                                 make a bunch of points scattered around the refinement 
+c                                 point for lp stability
+         do i = 1, ntot
+
+            pa = yt/(1d0+1d-3)
+            pa(i) = pa(i) + 1d0/(1d0 + 1d-3)
+            call makepp (rids)
+c                                 if logical arg = T use implicit ordering
+            gfinal = gsol1 (rids,.true.)
+c                                 get the bulk composition from pp
+            call getscp (rcp,rsum,rids,rids,.false.)
+c                                 increment the counter
+            call savrpc (gfinal,jphct)
+
+         end do
 
       end if
 

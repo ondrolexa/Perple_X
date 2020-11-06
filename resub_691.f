@@ -2464,8 +2464,8 @@ c                                 make a list of the solutions
 
                cycle
 
-            else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
-c           else if (t.lt.nopt(20).and.
+c           else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
+            else if (t.lt.nopt(20).and.
      *               lname(jkp(jmin(i))).eq.'liquid') then
 c                                 contrary to what you might expect, the 1st condition
 c                                 improves quality, because it stops the list 
@@ -2481,7 +2481,7 @@ c                                 from being clogged up with one phase
                   if (jkp(jdv(j)).ne.jkp(jmin(i))) cycle
 c                                 metastable point matches a refinement point, 
 c                                 check composition if refinement_switch is on
-                  if (lopt(49)) then
+c                 if (lopt(49)) then
 
                      good = .false.
 c                                 only accept if more distant than soltol
@@ -2493,7 +2493,7 @@ c                                 check composition
                         if (dcp(k,jkp(jdv(j))).eq.0d0) cycle
 c                                 accept if it differs by some tolerance
                         if (dabs( (cp2(k,jdv(j))-cp2(k,jmin(i)))
-     *                     / dcp(k,jkp(jdv(j))) ).gt. soltol) then
+     *                     / dcp(k,jkp(jdv(j))) ).gt. 1d-2) then
 
                            good = .true.
 
@@ -2505,7 +2505,7 @@ c                                 accept if it differs by some tolerance
 
                      if (good) cycle
 
-                  end if
+c                 end if
 
                   bad = .true.
 
