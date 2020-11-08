@@ -214,7 +214,7 @@ c                                 convex
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
 c                                 solvus_tolerance_II
-      nopt(25) = nopt(13)
+      nopt(25) = 1d0/16d0
 c                                 compositional resolution for conformal
 c                                 subdivision
       nopt(14) = 2d-3
@@ -678,7 +678,7 @@ c                                 bad number key
 
             read (strg,*) nopt(21)
 
-         else if (key.eq.'optimization_iterations') then 
+         else if (key.eq.'optimization_iteration') then 
 
             read (strg,*) iopt(20)
 

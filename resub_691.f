@@ -332,7 +332,7 @@ c                                 do the optimization
 
          call e04mhf ('nolist')
          call e04mhf ('iteration limit = '//cit)
-         call e04mhf ('feasibility tolerance = '//ctol)
+c        call e04mhf ('feasibility tolerance = '//ctol)
          call e04mhf ('cold start')
          call e04mhf ('problem type = lp')
          write (ctol,'(i4)') iprint
@@ -559,7 +559,7 @@ c                                 refinement point was the same solution.
 
 c           if (lopt(28)) call begtim (9)
 c                                  normal solution
-            call minfrc
+            call minfrc (iter)
 
 c           if (lopt(28)) call endtim (9,.true.,'minfrc')
 
@@ -679,7 +679,7 @@ c DEBUG691
          if (.not.refine) call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
-            write (*,*) 'low sum, savpa, suspect zs, ids:',ids,sum
+            write (*,*) 'low sum, savpa, zs, ids, id:',ids,sum, id
 c           call errpau
             call p2zall (pa,zt,m10,ids)
          end if 
@@ -2464,8 +2464,8 @@ c                                 make a list of the solutions
 
                cycle
 
-c           else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
-            else if (t.lt.nopt(20).and.
+            else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
+c           else if (t.lt.nopt(20).and.
      *               lname(jkp(jmin(i))).eq.'liquid') then
 c                                 contrary to what you might expect, the 1st condition
 c                                 improves quality, because it stops the list 
@@ -2493,7 +2493,7 @@ c                                 check composition
                         if (dcp(k,jkp(jdv(j))).eq.0d0) cycle
 c                                 accept if it differs by some tolerance
                         if (dabs( (cp2(k,jdv(j))-cp2(k,jmin(i)))
-     *                     / dcp(k,jkp(jdv(j))) ).gt. 1d-2) then
+     *                     / dcp(k,jkp(jdv(j))) ).gt. 1d-4) then
 
                            good = .true.
 

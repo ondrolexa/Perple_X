@@ -1,7 +1,7 @@
       subroutine dummy
       end 
 
-      subroutine minfrc
+      subroutine minfrc (jter)
 c-----------------------------------------------------------------------
 c minimize the omega function for the independent endmember fractions
 c of solution ids subject to site fraction constraints
@@ -22,13 +22,13 @@ c-----------------------------------------------------------------------
 
       logical inp, tic
 
-      integer i, nvar, iter, iwork(m22),
+      integer i, nvar, iter, iwork(m22), jter,
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
      *        ,iprint,mode
 
-      double precision ggrd(m19), lapz(m20,m19),gsol1,
-     *                 bl(m21), bu(m21), gfinal, ppp(m19), 
+      double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
+     *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),yt(m4),fdint,ftol
@@ -62,9 +62,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      data iprint,inp/0,.false./
+      data fac,pinc,iprint,inp/1d1,1.01d0,0,.false./
 
-      save iprint,inp
+      save fac,pinc,iprint,inp
 c-----------------------------------------------------------------------
       yt = pa
 
@@ -154,9 +154,9 @@ c        write (ctol,'(i4)') iprint
 c        CALL E04UEF ('print level = '//ctol)
 
          CALL E04UEF ('verify level 0')
-         write (ctol,'(g14.7)') (wmach(1)*1d1)
+         write (ctol,'(g14.7)') (wmach(1)*fac)
          CALL E04UEF ('function precision = '//ctol)
-         write (ctol,'(g14.7)') (wmach(1)*1d1)**(0.8)
+         write (ctol,'(g14.7)') (wmach(1)*fac)**(0.8)
          CALL E04UEF ('optimality tolerance = '//ctol)
          write (ctol,'(g14.7)') zero
          CALL E04UEF ('feasibility tolerance = '//ctol)
@@ -197,15 +197,15 @@ c                              0.05-.4 seem best
 
          write (*,*) 'woana woaba, wanka?'
 
-      else
+      else if (jter.lt.4) then 
 
          yt = pa
 c                                 make a bunch of points scattered around the refinement 
 c                                 point for lp stability
          do i = 1, ntot
 
-            pa = yt/(1d0+1d-3)
-            pa(i) = pa(i) + 1d0/(1d0 + 1d-3)
+            pa = yt/pinc
+            pa(i) = pa(i) + (1d0 - 1d0/pinc)
             call makepp (rids)
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
