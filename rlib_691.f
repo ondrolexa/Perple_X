@@ -6127,32 +6127,31 @@ c DEBUG691
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
      *                       ' in '//text//' is invalid.')
 
-                  else 
-c DEBUG691
-                     call warn (72,
-     *                       zt,i,'the expression for z('//
-     *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
-     *                       ' in '//text//' is incorrect.')
-
                   end if 
 
+                  bad = .true.
+
+                  exit
+
                end if
+
+               if (bad) exit
 
                zt = zt + z(i,j)
 
             end do
 
+            if (bad) exit
+
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
                if (dabs(zt-1d0).gt.zero) then
 
-                  write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
+c                 write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
                   if (endtst) write (*,1000) text1,zt,text
-c DEBUG691
-                  call warn (72,zt,i,
-     *                       'site fractions on '//znames(ids,i,0)// 
-     *                       ' in '//text//' do not sum to 1.')
+
+                  bad = .true.
 
                end if
 

@@ -20,18 +20,20 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical inp, tic
+      logical inp, tic, zbad, toc
 
-      integer i, nvar, iter, iwork(m22), jter,
+      integer i, nvar, iter, iwork(m22), jter, itic,
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
-     *        ,iprint,mode
+     *        ,iprint,mode,j,k,ind(m14)
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),yt(m4),fdint,ftol
+     *                 ,c(1),cjac(1,1),yt(m4),fdint,ftol,
+     *                 zsite(m10,m11), pinc0,sum
+
 
       character ctol*20,cdint*20
 
@@ -62,9 +64,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      data fac,pinc,iprint,inp/1d1,1.01d0,0,.false./
+      data fac,pinc0,iprint,inp,toc/1d-4,1d-2,0,.false.,.false./
 
-      save fac,pinc,iprint,inp
+      save fac,pinc0,iprint,inp,toc
 c-----------------------------------------------------------------------
       yt = pa
 
@@ -90,7 +92,7 @@ c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
 
       istuff(5) = 0
 
-
+      istuff(6) = 0
 
 c                                 initialize bounds
       if (boundd(rids)) then 
@@ -128,6 +130,9 @@ c                                 closure for molecular models
 
       end if
 
+
+      itic = 0
+
 10    idead = -1
 c                                 obj call counter
       istuff(3) = 0
@@ -153,12 +158,20 @@ c        CALL E04UEF ('difference interval = 1d-3')
 c        write (ctol,'(i4)') iprint
 c        CALL E04UEF ('print level = '//ctol)
 
+c                                 in NLPSOL:
+c                                 EPSRF is function precision
+c                                 CTOL  is feasibility tolerance
+c                                 FTOL  is optimality tolerance
+c                                 none of these are allowed to go below epsmch, if so they are 
+c                                 reset to their defaults in terms of epsmch, this leads to 
+c                                 the possibility that decreasing fac increases the result...
+c                                 to stop this behavior modify
          CALL E04UEF ('verify level 0')
          write (ctol,'(g14.7)') (wmach(1)*fac)
          CALL E04UEF ('function precision = '//ctol)
          write (ctol,'(g14.7)') (wmach(1)*fac)**(0.8)
          CALL E04UEF ('optimality tolerance = '//ctol)
-         write (ctol,'(g14.7)') zero
+         write (ctol,'(g14.7)')  (wmach(1)*fac)**(0.5)
          CALL E04UEF ('feasibility tolerance = '//ctol)
 c step limit < nopt(5) leads to bad results, coincidence?
          write (ctol,'(g14.7)') 0.5
@@ -173,8 +186,17 @@ c                              0.05-.4 seem best
 
       if (deriv(rids)) then
 
-         if (.not.tic) CALL E04UEF ('verify level 1')
-         CALL E04UEF ('derivative level = 3')
+         if (itic.le.1) CALL E04UEF ('derivative level = 3')
+
+         if (itic.eq.1) then
+            CALL E04UEF ('verify level 1')
+c           CALL E04UEF ('print level = 10')
+         else if (itic.eq.2) then
+            CALL E04UEF ('verify level 0')
+            CALL E04UEF ('derivative level = 0')
+c           CALL E04UEF ('print level = 10')
+         end if 
+
 
       else
 
@@ -187,25 +209,76 @@ c                              0.05-.4 seem best
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
 
-      if (iter.eq.0.and.idead.eq.0.and.tic.and.deriv(rids)) then
+      if (iter.eq.0.and.idead.eq.0.and.itic.le.1.and.deriv(rids)) then
 
          pa = yt
-         tic = .false.
+         itic = itic + 1
+         if (itic.eq.2) istuff(6) = 1
          goto 10
 
-      else if (.not.tic.and.idead.ne.0) then 
+      else if (idead.ne.0) then 
 
          write (*,*) 'woana woaba, wanka?'
 
-      else if (jter.lt.4) then 
+      else if (jter.lt.400) then 
+
+         if (iter.eq.0) then 
+
+            write (*,*) 'zapra',itic
+
+         end if 
+
+
+         if (toc) then 
 
          yt = pa
-c                                 make a bunch of points scattered around the refinement 
-c                                 point for lp stability
-         do i = 1, ntot
 
-            pa = yt/pinc
-            pa(i) = pa(i) + (1d0 - 1d0/pinc)
+         do j = 1, 2
+
+            pinc = pinc0/4**(j-1)
+
+         ind = 0
+
+
+         do i = 1, 2**ntot
+
+c           pa = yt/pinc
+
+            call binind (ind,ntot)
+
+            sum = 0d0
+
+            pa = yt
+
+            do k = 1, ntot
+               pa(k) = pa(k)*(1d0 + ind(k)*pinc)
+               sum = sum + pa(k)
+            end do
+
+            pa = pa/sum
+
+c           write (*,'(10(1x,i1))') ind(1:ntot)
+
+c           pa(i) = pa(i) + (1d0 - 1d0/pinc)
+
+c           write (*,*) rids
+c           write (*,1000) pa(1:ntot)
+c           write (*,1000) yt(1:ntot)
+c           write (*,1000) (pa(k)-yt(k),k=1,ntot)
+
+1001  format (i5,1x,g12.6,12(1x,f7.4))
+1000  format (18x,12(1x,f7.4))
+
+
+            if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
+     *         then
+
+c                write (*,*) 'oik0'
+
+               cycle 
+
+            end if
+
             call makepp (rids)
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
@@ -216,8 +289,77 @@ c                                 increment the counter
 
          end do
 
+         end do
+
+         else
+
+            yt = pa
+
+            do j = 1, 2
+
+            pinc = 1d0 + pinc0/2**(j-1)
+
+            do i = 1, ntot
+
+               pa = yt/pinc
+ 
+               pa(i) = pa(i) + (1d0 - 1d0/pinc)
+
+            if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
+     *         then
+
+c                write (*,*) 'oik0'
+
+               cycle 
+
+            end if
+
+            call makepp (rids)
+c                                 if logical arg = T use implicit ordering
+            gfinal = gsol1 (rids,.true.)
+c                                 get the bulk composition from pp
+            call getscp (rcp,rsum,rids,rids,.false.)
+c                                 increment the counter
+            call savrpc (gfinal,jphct)
+
+         end do
+
+         end do
+
+         end if
+
       end if
 
+
+      end
+
+      subroutine binind (ind,ntot)
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      implicit none
+
+      integer ind(*), i, j, ntot
+c                                 find the highest non-zero index
+      do j = ntot, 1, -1
+         if (ind(j).eq.1) exit
+      end do
+c                                 find the first zero index
+      do i = 1, j + 1
+
+         if (ind(i).eq.0) then
+
+            if (i.gt.j) then
+               ind(1:j) = 0
+               ind(i) = 1
+            else
+               ind(i) = 1
+            end if
+
+            return
+
+         end if
+
+      end do
 
       end
 
@@ -297,7 +439,7 @@ c-----------------------------------------------------------------------
 
       call makepp (rids)
 
-      if (deriv(rids)) then
+      if (deriv(rids).and.istuff(6).eq.0) then
 
          call getder (g,dgdp,rids)
 c                                 get the bulk composition from pa
@@ -379,11 +521,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical toc
+      logical ok
 
-      integer phct
+      integer phct, i, j
 
-      double precision g
+      double precision g, diff
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -395,17 +537,52 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
+
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 c-----------------------------------------------------------------------
 c                                 increment the counter
       phct = phct + 1
+c                                 normalize and save the composition
+      cp2(1:icomp,phct) = rcp(1:icomp)/rsum
+c                                 check if duplicate
+      do i = 1, phct - 1
+
+         if (jkp(i).eq.rids) then
+
+            ok = .false.
+
+            do j = 1, icp
+
+               if (dcp(j,rids).eq.0d0) cycle
+
+               if (dabs((cp2(j,phct) - cp2(j,i)) / dcp(j,rids)).gt.1d-4)
+     *            then
+
+                  ok = .true.
+                  exit
+
+               end if
+
+            end do
+
+            if (.not.ok) then
+
+               phct = phct - 1
+
+               return
+
+            end if
+
+         end if
+
+      end do
 c                                 the solution model pointer
       jkp(phct) = rids
 c                                 the refinement point pointer
       hkp(phct) = rkds
 c                                 save the normalized g
       g2(phct) = g/rsum
-c                                 save the normalized bulk
-      cp2(1:icomp,phct) = rcp(1:icomp)/rsum
 c                                 sum scp(1:icp)
       if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then 
          c2tot(phct) = rsum/rsmo
@@ -413,13 +590,8 @@ c                                 sum scp(1:icp)
          c2tot(phct) = rsum
       end if
 
-c     if (toc) then
-c        write (*,1000) phct,g2(phct),pa(1:nstot(rids))
-c        write (*,1010) cp2(1:icomp,phct)
 1000  format (i5,1x,g12.6,12(1x,f7.4))
 1010  format (18x,12(1x,f7.4))
-
-c     end if 
 
       quack(phct) = rkwak
 c                                 save the endmember fractions
@@ -585,7 +757,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, site, comp, clos, inv
+      logical bad, site, comp, clos, inv, zbad
 
       integer liw, lw, mvar, mcon, nvar, i, jter, iprint, iwarn,
      *        iwarn1, iwarn2
@@ -630,6 +802,8 @@ c-----------------------------------------------------------------------
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      external zbad
 
       save iwarn, iwarn1, iwarn2
 
@@ -1359,7 +1533,7 @@ c                                   values in ppp.
 
       else if (.not.tic.and.iter.gt.0) then 
 
-         write (*,*) 'maialino josefino!',fname(ids),idead,iter
+c        write (*,*) 'maialino josefino!',fname(ids),idead,iter
 
       end if 
 
