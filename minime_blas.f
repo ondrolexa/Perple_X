@@ -64,7 +64,7 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      data fac,pinc0,iprint,inp,toc/1d-4,1d-2,0,.false.,.false./
+      data fac,pinc0,iprint,inp,toc/1d0,1d-2,0,.false.,.false./
 
       save fac,pinc0,iprint,inp,toc
 c-----------------------------------------------------------------------
@@ -167,11 +167,13 @@ c                                 reset to their defaults in terms of epsmch, th
 c                                 the possibility that decreasing fac increases the result...
 c                                 to stop this behavior modify
          CALL E04UEF ('verify level 0')
-         write (ctol,'(g14.7)') (wmach(1)*fac)
+         write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
          CALL E04UEF ('function precision = '//ctol)
-         write (ctol,'(g14.7)') (wmach(1)*fac)**(0.8)
+c                                 really should be powers of function precision, not epsmch
+         write (ctol,'(g14.7)') (wmach(3)*fac)**(0.8)
          CALL E04UEF ('optimality tolerance = '//ctol)
-         write (ctol,'(g14.7)')  (wmach(1)*fac)**(0.5)
+c        write (ctol,'(g14.7)')  (wmach(3)*fac)**(0.5)
+         write (ctol,'(g14.7)')  zero
          CALL E04UEF ('feasibility tolerance = '//ctol)
 c step limit < nopt(5) leads to bad results, coincidence?
          write (ctol,'(g14.7)') 0.5

@@ -8400,6 +8400,9 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
@@ -8421,20 +8424,14 @@ c                                 necessary?
       pin(k) = .true.
 c                                 a composition for which no O/D 
 c                                 is possible
-      if (pmax-pmin.lt.nopt(5)) return
+      if (pmax-pmin.lt.zero) return
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-      pmax = pmax - nopt(5)
-      pmin = pmin + nopt(5)
-
-      if (refine) then
-
-         call gderi1 (k,id,dp)
-
-      else 
+         pmax = pmax - zero
+         pmin = pmin + zero
 c                                 get starting point for the search
 c                                 first try the maximum
          dp = pmax - p0a(jd)
@@ -8460,8 +8457,6 @@ c                                 the case is set to max order here:
             if (dp.le.0d0) error = .true.
 
          end if
-
-      end if
 
       if (.not.error) then
 c                                 increment and check p
@@ -8952,6 +8947,9 @@ c-----------------------------------------------------------------------
       logical quit
 
       double precision x, xmin, xmax, dx, xt
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
       quit = .false.
 
@@ -8990,7 +8988,7 @@ c                                 revise the increment
       x = x + dx
 c                                 check if dx has dropped below
 c                                 threshold for convergence
-      if (dabs(dx).lt.nopt(5)) quit = .true.
+      if (dabs(dx).lt.zero) quit = .true.
 
       end
 
@@ -12994,7 +12992,7 @@ c                                 only for minfxc
 
                call setxyp (i,id,bad)
 
-               if (deriv(i)) then
+               if (.not.noder(i)) then
 
 c                 y = p0a
 
@@ -15109,7 +15107,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, qmax, qmin, q, dq, rqmax
+      double precision g, qmax, qmin, q, q0, dq, rqmax
 
       double precision omega, gex
       external omega, gex
@@ -15136,6 +15134,9 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       error = .false.
 c                                 rqmax the maximum amount of the
@@ -15158,24 +15159,21 @@ c                                 related to a site fraction
      *              rqmax = -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
 
       end do
+
+      q0 = p0a(nstot(id))
+      rqmax = q0 + rqmax
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-      if (refine.or.rqmax.gt.nopt(5)) then
+      if (rqmax.gt.zero) then
 
          pin(1) = .true.
-         qmax = rqmax - nopt(5)
-         qmin = nopt(5)
-
-         if (refine) then
-
-            q = 0d0
-
-         else
+         qmax = rqmax - zero
+         qmin = zero
 c                                 the p's are computed in gpderi
-            call gpder1 (id,qmax,dq,g)
+            call gpder1 (id,qmax-q0,dq,g)
 
             if (dq.lt.0d0) then
 c                                 at the maximum concentration, the
@@ -15186,7 +15184,7 @@ c                                 business
 
             else
 c                                 try the min
-               call gpder1 (id,qmin,dq,g)
+               call gpder1 (id,qmin-q0,dq,g)
 
                if (dq.gt.0d0) then
 c                                 ok
@@ -15203,15 +15201,13 @@ c                                 limits.
             end if
 c                                 increment and check p
             call pcheck (q,qmin,qmax,dq,done)
-
-         end if
 c                                 iteration counter to escape
 c                                 infinite loops
          itic = 0
 c                                 newton raphson iteration
          do
 
-            call gpder1 (id,q,dq,g)
+            call gpder1 (id,q-q0,dq,g)
 
             call pcheck (q,qmin,qmax,dq,done)
 c                                 done is just a flag to quit

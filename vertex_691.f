@@ -2193,7 +2193,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 c----------------------------------------------------------------------- 
 c                                 fractionation effects:
       do i = 1, jbulk
