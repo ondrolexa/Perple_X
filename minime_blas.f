@@ -297,7 +297,7 @@ c                                 increment the counter
 
             yt = pa
 
-            do j = 1, 2
+            do j = 1, 1
 
             pinc = 1d0 + pinc0/2**(j-1)
 
