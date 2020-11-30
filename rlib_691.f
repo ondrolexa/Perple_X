@@ -10030,7 +10030,7 @@ c-----------------------------------------------------------------------
 
       logical bad, file
 
-      integer id, i, j, ntot
+      integer id, i, j, ntot, ids
 
       character sname(h9)*10
 
@@ -10104,6 +10104,33 @@ c                                 compositions from the arf file
 
       else
 c                                 automatic, read the data from memory
+         if (.not.refine) then
+c                                 load stable static compositions to 
+c                                 the list of dynamic compositions
+            do i = ipoint + jiinc + 1, iphct
+               if (ststbl(i)) then
+                  ids = ikp(i)
+                  call setxyp (ids,i,ststbl(i))
+                  call savdyn (ids)
+               end if
+            end do
+
+         else if (lopt(29)) then
+c                                 load the whole damn thing
+            zcoct = 0
+
+            do i = 1, isoct
+               ntot = nstot(i)
+               do j = 1, jend(i,2)
+                  pa(1:ntot) = txco(zcoct+1:zcoct+ntot)
+                  call savdyn (i)
+                  zcoct = zcoct + ntot
+                  if (tcct+ntot.gt.m25) call errdbg ('increase m25')
+               end do
+            end do
+
+         end if
+
          id = 0
          zcoct = 0
 
@@ -10256,6 +10283,8 @@ c                                 arrays
          cp2(1:icp,i) = a(1:icp,i)
 
       end do
+c                                 stability flag for static compositions
+      ststbl = .false.
 
       ldt = icp + 1
       ldq = icp + 1
@@ -13445,7 +13474,7 @@ c----------------------------------------------------------------------
       end do
 
 c     if (iam.eq.1) then
-      if (.not.refine.and.iam.eq.1) then
+      if (.not.refine.and.iam.eq.1.or.lopt(29)) then
 c                                 load the former dynamic compositions
 c                                 into the static arrays
          call reload (.false.)
@@ -21058,5 +21087,149 @@ c                                 George's Hillert & Jarl magnetic transition mo
             call errpau
 
          end if
+
+      end
+
+
+      subroutine savdyn (ids)
+c----------------------------------------------------------------------
+c subroutine to save exploratory stage dynamic compositions for use
+c as static compositions during auto-refine, pa loaded by sollim
+c  ids - pointer to solution model
+c----------------------------------------------------------------------
+      implicit none 
+
+      include 'perplex_parameters.h'
+
+      logical rplica
+
+      integer ids
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      external rplica
+c----------------------------------------------------------------------
+      if (rplica(ids)) return
+
+      tpct = tpct + 1
+
+      if (tpct.gt.m24) call errdbg ('increase m24')
+      if (tcct+nstot(ids).gt.m25) call errdbg ('increase m25')
+c                                 solution pointer
+      dkp(tpct) = ids
+c                                 save the composition
+      txco(tcct+1:tcct+nstot(ids)) = pa(1:nstot(ids))
+c                                 save the starting position - 1
+      itxp(tpct) = tcct
+c                                 increment the counter
+      tcct = tcct + nstot(ids)
+
+      end 
+
+      logical function rplica (id)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id, ind, i, j, k, l
+
+      double precision diff, dinc, tp(m14), tol
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c-----------------------------------------------------------------------
+      tol = 1d-6
+
+      if (.not.lorder(id)) then
+c                                 simple model
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            diff = 0d0
+
+            do j = 1, nstot(id)
+               diff = diff + (pa(j) - txco(itxp(i)+j))**2
+            end do 
+
+            if (diff.lt.tol) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      else if (dnu(id).eq.0d0) then
+c                                 test on pp array
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            do j = 1, nstot(id)
+               tp(j) = pa(j) - txco(itxp(i)+j)
+            end do
+
+            do k = 1, nord(id)
+               do l = 1, nrct(k,id)
+                  ind = ideps(l,k,id)
+                  tp(ind) = tp(ind) - dydy(ind,k,id) * tp(lstot(id)+k)
+               end do
+            end do
+
+            diff = 0d0
+
+            do j = 1, lstot(id)
+               diff = diff + (tp(j))**2
+            end do 
+
+            if (diff.lt.tol) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      else 
+c                                 non-equimolar
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            tp(1:nstot(id)) = txco(itxp(i)+1:itxp(i)+nstot(id))
+
+            diff = 0d0
+
+            do l = 1, nrct(1,id)
+               ind = ideps(l,1,id)
+               dinc = - dydy(ind,1,id) * tp(lstot(id)+1)
+               diff = diff + dinc
+               tp(ind) = tp(ind) + dinc
+            end do
+c                                 renormalize
+            tp(1:lstot(id)) = tp(1:lstot(id)) / (1d0 + diff)
+c                                 compare
+            diff = 0d0
+
+            do j = 1, lstot(id)
+               diff = diff + (pp(j) - tp(j))**2
+            end do 
+
+            if (diff.lt.tol) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      end if
+
+      rplica = .false.
 
       end

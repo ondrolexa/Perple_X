@@ -3871,7 +3871,11 @@ c                                 choose property
          icx = 0
          lflu = .false.
 
-         write (*,1050)
+         if (iprop.eq.0) then 
+            write (*,1050)
+         else 
+            write (*,1051)
+         end if
 
          do i = 1, kprop
 
@@ -4224,7 +4228,8 @@ c                                 it in array dname
 1030  format (/,'Retain the compositional criteria you defined ',
      *          'earlier (y/n)?',/,'Answer yes only if you intend ',
      *          'to extract properties for the same phase.',/)
-1050  format (/,'Select a property [enter 0 to finish]:')
+1050  format (/,'Select a property:')
+1051  format (/,'Select an additional property or enter 0 to finish:')
 1060  format (3x,i2,' - ',a60)
 1070  format (/,'Output cumulative modes (y/n)?',/
      *         ,'(see www.perplex.ethz.ch/perplex_options.html'

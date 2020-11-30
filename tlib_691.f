@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated November 14, 2020.',
+     *     'Perple_X version 6.9.1, source updated November 25, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -9605,19 +9605,11 @@ c                                  phemgp file
       else
 c                                  tab file
          if (lopt(15).or.nvar.eq.1) then
-
-            if (.not.lopt(29)) then
 c                                  with pseudo-dependent variables
-               write (n,*) ivar + iprop
-               write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
-     *                                   (dname(i), i = 1,iprop)
-            else
-               write (n,*) ivar + iprop + 5
+            write (n,*) ivar + iprop
+            write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
+     *                                (dname(i), i = 1,iprop)
 
-               write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
-     *                                   (dname(i), i = 1,iprop),
-     *         'y_SiO2','y_SiO','y_O','y_O2','y_Si'
-            end if
 
          else
 c                                  terse format

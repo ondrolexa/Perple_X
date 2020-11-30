@@ -463,3 +463,6 @@ c                                 derivative of the bulk composition (component,
       integer rids, rkds, rnpt
       double precision rcp, rsum, rsmo
       common/ cxt12a /rcp(k5),rsum,rsmo,rids,rkds,rnpt,rkwak
+c                                 flag for near stable static compositions 
+      logical ststbl
+      common/ cststb /ststbl(k1)

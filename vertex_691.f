@@ -102,6 +102,11 @@ c                                 initialization
       call iniprp
 
       if (.not.refine) then
+c DEBUG
+         call mertxt (tfname,prject,'.tim',0)
+         open (993,file=tfname)
+         write (993,*) 'touch'
+         close (993)
 c                                 two-stage calculation,
 c                                 inform user of 1st stage
          write (*,1000) 'exploratory'
@@ -156,6 +161,9 @@ c                                 into the static arrays if manual
          write (*,1000) 'auto-refine'
 c                                 repeat the calculation
          call docalc
+c                                 output compositions for auto-re-refine,
+c                                 these can also be used by MEEMUM
+         if (lopt(29)) call outlim
 c                                 clean up intermediate results
          call interm (outprt,err)
 

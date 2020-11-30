@@ -137,6 +137,11 @@ c                                 -------------------------------------
             tag = 'auto_refine'
          else 
             tag = 'exploratory'
+c DEBUG
+            call mertxt (tfname,prject,'.tim',0)
+            open (993,file=tfname)
+            write (993,*) 'touch'
+            close (993)
          end if
 c                                 inform user of 1st stage
          if (iopt(6).ne.0) write (*,1000) tag

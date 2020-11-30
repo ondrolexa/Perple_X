@@ -512,7 +512,7 @@ c                                 get the refinement point composition
             if (id.gt.ipoint) then 
                call setxyp (ids,id,kterat)
 c                                 save the composition for autorefine
-               if (.not.refine) call savdyn (ids) 
+               ststbl(id) = .true.
             else
                if (nrf(ids)) cycle
                call endpa (kd,id,ids)
@@ -676,7 +676,7 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
 
-         if (.not.refine) call savdyn (ids)
+         if (.not.refine.or.lopt(29)) call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, zs, ids, id:',ids,sum, id
@@ -1110,7 +1110,7 @@ c                                count fraction of impure solvent
 
             jd = jdsol(i,j)
 
-c           if (.not.refine) then 
+c           if (.not.refine.or.lopt(29)) then 
 c                                load into pa and save for refinement
 c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
 c              call savdyn (ids)
@@ -1192,7 +1192,7 @@ c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          call sollim (ids,i)
 
-c        if (.not.refine) then
+c        if (.not.refine.or.lopt(29)) then
 c                                 sollim loads but may corrupt pa although p0a
 c                                 isn't touched, so reload pa here.
 c           pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
@@ -1218,147 +1218,6 @@ c                                 compound composition into cp3 array
       ntot = np + ncpd
 
 99    end 
-
-      subroutine savdyn (ids)
-c----------------------------------------------------------------------
-c subroutine to save exploratory stage dynamic compositions for use
-c as static compositions during auto-refine, pa loaded by sollim
-c  ids - pointer to solution model
-c----------------------------------------------------------------------
-      implicit none 
-
-      include 'perplex_parameters.h'
-
-      logical rplica
-
-      integer ids
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      external rplica
-c----------------------------------------------------------------------
-      if (rplica(ids)) return
-
-      tpct = tpct + 1
-
-      if (tpct.gt.m24) call errdbg ('increase m24')
-      if (tcct+nstot(ids).gt.m25) call errdbg ('increase m25')
-c                                 solution pointer
-      dkp(tpct) = ids
-c                                 save the composition
-      txco(tcct+1:tcct+nstot(ids)) = pa(1:nstot(ids))
-c                                 save the starting position - 1
-      itxp(tpct) = tcct
-c                                 increment the counter
-      tcct = tcct + nstot(ids)
-
-      end 
-
-      logical function rplica (id)
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer id, ind, i, j, k, l
-
-      double precision diff, dinc, tp(m14)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c-----------------------------------------------------------------------
-      if (.not.lorder(id)) then
-c                                 simple model
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            diff = 0d0
-
-            do j = 1, nstot(id)
-               diff = diff + (pa(j) - txco(itxp(i)+j))**2
-            end do 
-
-            if (diff.lt.1d-8) then
-               rplica = .true.
-               return
-            end if
-
-         end do
-
-      else if (dnu(id).eq.0d0) then
-c                                 test on pp array
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            do j = 1, nstot(id)
-               tp(j) = pa(j) - txco(itxp(i)+j)
-            end do
-
-            do k = 1, nord(id)
-               do l = 1, nrct(k,id)
-                  ind = ideps(l,k,id)
-                  tp(ind) = tp(ind) - dydy(ind,k,id) * tp(lstot(id)+k)
-               end do
-            end do
-
-            diff = 0d0
-
-            do j = 1, lstot(id)
-               diff = diff + (tp(j))**2
-            end do 
-
-            if (diff.lt.1d-8) then
-               rplica = .true.
-               return
-            end if
-
-         end do
-
-      else 
-c                                 non-equimolar
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            tp(1:nstot(id)) = txco(itxp(i)+1:itxp(i)+nstot(id))
-
-            diff = 0d0
-
-            do l = 1, nrct(1,id)
-               ind = ideps(l,1,id)
-               dinc = - dydy(ind,1,id) * tp(lstot(id)+1)
-               diff = diff + dinc
-               tp(ind) = tp(ind) + dinc
-            end do
-c                                 renormalize
-            tp(1:lstot(id)) = tp(1:lstot(id)) / (1d0 + diff)
-c                                 compare
-            diff = 0d0
-
-            do j = 1, lstot(id)
-               diff = diff + (pp(j) - tp(j))**2
-            end do 
-
-            if (diff.lt.1d-8) then
-               rplica = .true.
-               return
-            end if
-
-         end do
-
-      end if
-
-      rplica = .false.
-
-      end
 
       subroutine sollim (ids,jd)
 c----------------------------------------------------------------------
@@ -2676,6 +2535,10 @@ c                                 a compound
             end if
 
          else
+
+            if (jds.le.0) then 
+               write (*,*) 'wtf?'
+            end if
 c                                 save the solution model pointer
             kkp(i) = jds
 c                                 get and save endmember fractions
