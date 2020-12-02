@@ -1394,9 +1394,11 @@ begin_model
                       crdih = cats + kos - jd
                         DQF = -4900
                       mcbuf = cats + 1/2 per + 1/2 ru -1/2 cor
-                        DQF = 1750 - 1.2 * T - 0.005 * P | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
+                        | DQF = 1750 - 1.2 * T - 0.005 * P  | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
+                        DQF = -16.2d3 - 1.2 * T - 0.005 * P | changed by DB to match the ECRG 10/20 revision.
                       kjdh = jd + san - abh
-                        DQF = -3750 + 1.189 * P
+                        | DQF = -3750 + 1.189 * P
+                        DQF = 11.7d3 + 0.6 * P              | changed by DB to match the ECRG 10/20 revision.
                       ---------------------------------------------------------   
 
                                            M1     M2     T
@@ -1690,9 +1692,11 @@ begin_model
                       crdih = cats + kos - jd
                         DQF = -4900
                       mcbuf = cats + 1/2 per + 1/2 ru -1/2 cor
-                        DQF = 1750 - 1.2 * T - 0.005 * P | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
+                        | DQF = 1750 - 1.2 * T - 0.005 * P  | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
+                        DQF = -16.2d3 - 1.2 * T - 0.005 * P | changed by DB to match the ECRG 10/20 revision.
                       kjdh = jd + san - abh
-                        DQF = -3750 + 1.189 * P
+                        | DQF = -3750 + 1.189 * P
+                        DQF = 11.7d3 + 0.6 * P              | changed by DB to match the ECRG 10/20 revision.
                       ---------------------------------------------------------   
 
                                            M1     M2     T
@@ -1836,31 +1840,36 @@ hed_d     =  1 di    + 1 cfsg  - 1 cfm
 end_dependent_endmembers
 
 begin_excess_function
-W(di cfsg)     25.8d3 - 0.03 * p
+W(di cfsg)     25.8d3   | changed from W(di cfsg) = 25.8d3 - 0.03 * p by DB to match the ECRG 10/20 revision.
+
 W(di cats)       13d3 - 0.06 * p
 W(di crdih)       8d3
 W(di cessh)       8d3
+W(di mcbuf)       8d3   | added by DB to match the ECRG 10/20 revision.
 W(di jd)         26d3
-W(di cenjh)    29.8d3 - 0.03 * p
-W(di cfm)      20.6d3 - 0.03 * p
+W(di cenjh)    29.8d3   | changed from W(di cenjh) 29.8d3 - 0.03 * p by DB to match the ECRG 10/20 revision.
+W(di cfm)      20.6d3   | changed from W(di cfm) 20.6d3 - 0.03 * p by DB to match the ECRG 10/20 revision.
 W(di kjdh)       26d3
 
 W(cfsg cats)     25d3 -  .1 * p
 W(cfsg crdih)  38.3d3
 W(cfsg cessh)  43.3d3
 W(cfsg jd)       24d3
+W(cfsg mcbuf)    24d3    | added by DB to match the ECRG 10/20 revision.
 W(cfsg cenjh)   2.3d3
 W(cfsg cfm)     3.5d3
 W(cfsg kjdh)     24d3
 
 W(cats crdih)     2d3
 W(cats cessh)     2d3
+W(cats mcbuf)     6d3    | added by DB to match the ECRG 10/20 revision.
 W(cats jd)        6d3
 W(cats cenjh)    45.2d3 - 0.35 * p
 W(cats cfm)      27d3 -  .1 * p
 W(cats kjdh)      6d3
 
 W(crdih cessh)    2d3
+W(crdih mcbuf)    6d3    | added by DB to match the ECRG 10/20 revision.
 W(crdih jd)       3d3
 W(crdih cenjh) 52.3d3
 W(crdih cfm)   40.3d3
@@ -1868,12 +1877,18 @@ W(crdih kjdh)     3d3
 
 W(cessh jd)       3d3
 W(cessh cenjh) 57.3d3
+W(cessh mcbuf)    6d3    | added by DB to match the ECRG 10/20 revision.
 W(cessh cfm)   45.3d3
 W(cessh kjdh)     3d3
 
+W(mcbuf jd)      16d3    | added by DB to match the ECRG 10/20 revision.
+W(mcbuf cenjh)   24d3    | added by DB to match the ECRG 10/20 revision.
+W(mcbuf cfm)     22d3    | added by DB to match the ECRG 10/20 revision.
+W(mcbuf kjdh)    16d3    | added by DB to match the ECRG 10/20 revision.
+
 W(jd cenjh)      40d3
 W(jd cfm)        40d3
-W(jd kjdh)       10d3
+W(jd kjdh)       28d3    |changed from W(jd kjdh) 10d3 by DB to match the ECRG 10/20 revision.
 
 W(cenjh cfm)      4d3
 W(cenjh kjdh)    40d3
@@ -14541,7 +14556,11 @@ site_check_override
 end_of_model
                       --------------------------------------------------------
 begin_model
-                           | CHLORITE: extended from holland et al. 1998, EJM.
+                           | CHL(HP) - CHLORITE: extended from holland et al. 1998, EJM.
+
+                           | This model is a relict equipartition model and has been superceded 
+                           | by the non-equipartition model Chl(W), which should be used in 
+                           | preference to Chl(HP). JADC, 12/20.
 
                              NOTES:
 
@@ -14665,7 +14684,12 @@ z(al,T2)= 1 ames + 1/2 clin + 1/2 daph + 1/2 mnchl
 
 site_check_override
 
-reject_bad_compositions
+| reject_bad_compositions
+
+| see the May 15, 2020 Perple_X update for explanation of the
+| reject_bad_compositions option. The option was turned off
+| by commenting Dec 2, 2020. JADC.
+
 
 end_of_model
                               --------------------------------------------------------
@@ -15016,33 +15040,46 @@ W(en fs)                 7d3
 W(en fm)                 4d3
                                       | W(en odi) revised from 32.2d3 + 0.12 * p 
                                       | by ECRG, 13/7/20
-W(en odi)                29d3      + 0.15 * p
-W(en mgts)               12.5d3    - 0.04 * p
+W(en odi)             29.4d3          | changed from W(en odi) 29d3 + 0.15 * p by DB to match the ECRG 10/20 revision.
 W(en crenh)              8d3
+W(en obuf)               6d3          | added by DB  to match the ECRG 10/20 revision.
 W(en macm)               8d3
 W(en ojd)                35d3
+
 W(fs fm)                 4d3
-W(fs odi)                25.54d3   + 0.084 * p
-W(fs mgts)               11d3      - 0.15 * p
+W(fs odi)             21.5d3   + 0.08 * p |changed from W(fs odi) 25.54d3 + 0.084 * p by DB to match the ECRG 10/20 revision.
+W(fs mgts)               11d3  - 0.15 * p
 W(fs crenh)              10d3
+W(fs obuf)               7d3          | added by DB  to match the ECRG 10/20 revision.
 W(fs macm)               10d3
 W(fs ojd)                35d3
-W(fm odi)                22.54d3   + 0.084 * p
-W(fm mgts)               15d3      - 0.15 * p
+
+W(fm odi)                18d3  + 0.08 * p |changed from W(fm odi) 22.54d3 + 0.084 * p by DB to match the ECRG 10/20 revision.
+W(fm mgts)               15d3  - 0.15 * p
 W(fm crenh)              12d3
+W(fm obuf)                8d3         | added by DB to match the ECRG 10/20 revision.
 W(fm macm)               12d3
 W(fm ojd)                35d3
-W(odi mgts)              75.5d3    - 0.84 * p
+
+W(odi mgts)            75.5d3  - 0.84 * p
 W(odi crenh)             20d3
+W(odi obuf)              40d3         | added by DB to match the ECRG 10/20 revision.
 W(odi macm)              20d3
 W(odi ojd)               35d3
-W(mgts crenh)            2d3
+
+W(mgts crenh)             2d3
+W(mgts obuf)             10d3         | added by DB to match the ECRG 10/20 revision.
 W(mgts macm)             2d3
 W(mgts ojd)              7d3
+
+W(crenh obuf)            6d3          | added by DB to match the ECRG 10/20 revision.
 W(crenh macm)            2d3
-W(crenh ojd)            -11d3
-W(obuf ojd)              4d3
-W(macm ojd)             -11d3
+W(crenh ojd)           -11d3
+
+W(obuf macm)             6d3          | added by DB  to match the ECRG 10/20 revision.
+W(obuf ojd)             20d3          | changed from W(obuf ojd) 4d3 by DB to match the ECRG 10/20 revision.
+
+W(macm ojd)            -11d3
 end_excess_function
 
 3                                   | number of sites in entropy model (M1, M2, T)
@@ -15123,6 +15160,11 @@ begin_model
                       3) the qnd endmember DQF is added in the dqf_correction section
                          at the end of this model.
 
+                      4) if both TiO2 nor O2 are absent from the Sp(HGP), Perple_X 
+                         reformulate this model as the sp-picr binary, rather than
+                         the sp-herc-picr-fpcr quadrilateral. To prevent this specify
+                         TiO2 or O2 as components present with zero amount. JADC, 12/20
+
                                                       M     T
                                                      _________
                                       Multiplicity    1     2  -> fake T-site multiplicity of 1
@@ -15155,7 +15197,6 @@ full_name    spinel
                             | fold prism (Al - Fe3+ - Cr - Ti) + binary simplices (Mg Fe on T)
 
                             | endmembers on the prism vertices
-
 picr  fpcr
 qnd   fqnd
 imgmt imt
@@ -15170,7 +15211,7 @@ Z_Fe3+  0  1   .1  0        | subdivision scheme for X(Fe3+)
 Z_MAl   by difference
 
 begin_ordered_endmembers
-nmt   =    1 imt           enthalpy_of_ordering  =    0     + 5.76303 * T
+nmt   =    1 imt           enthalpy_of_ordering  = -0.3d3   + 5.76303 * T   |changed from 5.76303 * T by DB to match the ECRG 10/20 revision.
 nsp   =    1 isp           enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
 nherc =    1 iherc         enthalpy_of_ordering  = -23.6d3  + 5.76303 * T
 end_ordered_endmembers 

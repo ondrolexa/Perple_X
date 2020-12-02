@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated October 21, 2020.',
+     *     'Perple_X version 6.9.0, source updated December 2, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3039,7 +3039,7 @@ c                                 generic warning, also 99
      *          'components are in use this rejection criterion may be '
      *         ,'incorrect. When this is',/,'the case redefine the ',
      *          'data base components so that the total amount of the'/,
-     *          'thermodynamic components in ',a,' is > 0.')
+     *          'thermodynamic components in ',a,' is > 0.',/)
 14    format (/,'**warning ver014** You can not redefine the ',
      *          'saturated phase component:',a,/,'To circumvent this ',
      *          'restriction use CTRANSF to make a data base with the',/

@@ -292,7 +292,10 @@ oen   = 1 mgts + 1 acm - 1 jd
 |odi   = 1 di
 |       DQF(J/mol) = -100 + 0.211 * T + 0.005 * P | dqf_T corrected from 2.11, ECRG 9/18
 odi  = 1 di
-       DQF(J/mol) = 1900 + 0.005 * P              | updated by ECRG, 13/7/20
+                                  | prior to 13/7/20: -100 + 0.211 * T + 0.005 * P
+                                  | updated by ECRG, 13/7/20
+        DQF = 2800 + 0.005 * P    | changed from DQF = 1900 + 0.005 * P by DB to match ECRG 10/20 revision
+
                                   | Make definitions for Jennings and Holland, J Pet, 56:869-892, 2015 melt
 qjL = 2 qL
        DQF(J/mol) = 4d3     - 0.43 * p_bar 
@@ -357,22 +360,24 @@ isp   = 1 nsp
        DQF(J/mol) = 23.6d3  - 5.76303 * T
 iherc = 1 nherc
        DQF(J/mol) = 23.6d3  - 5.76303 * T
-imt   = 1 mt 
-       DQF(J/mol) = 30d3                | corrected from 300, 8/11/2020, Ben Klein, Boston College. 
+imt   = 1 mt                      | changed to 30000 Aug 11, 2020, reverted to 
+                                  | original value, DB, Dec 2, 2020.
+       DQF(J/mol) = 300
       |---------------------------  Cpx
 cessh = 1 cats + 1 acm - 1 jd
        DQF = -3450 
 crdih = 1 cats + 1 kos - 1 jd
        DQF = -4900
 mcbuf = 1 cats + 1/2 per + 1/2 ru -1/2 cor
-       DQF = 1750 - 1.2 * T - 0.005 * P | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz.
+                                           | corrected from -1750 ... 10/22/2019, Lisa Rummel, Mainz
+       DQF = -16.2d3 - 1.2 * T - 0.005 * P | changed from DQF = 1750 - 1.2 * T - 0.005 * P by DB to match 10/20 ECRG revision
 kjdh  = 1 jd + 1 san - 1 abh
-       DQF = -3750 + 1.189 * P
+       DQF = 11.7d3 + 0.6 * P              | changed from DQF = -3750 + 1.189 * P by DB to match 10/20 ECRG revision
       |---------------------------  Opx, odi as in JH
 crenh = 1 mgts + 1 kos - 1 jd
       DQF = -25900 + 15.5 * T + 0.05 * P
 obuf = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
-      DQF = 3350 - 5.1 * T - 0.0061 * P    
+       DQF = -5000 - 5.1 * T - 0.0061 * P  |changed from DQF = 3350 - 5.1 * T - 0.0061 * Pby DB to match 10/20 ECRG revision
 macm = 1 mgts + 1 acm - 1 jd
       DQF = 4800 - 0.089 * P
 ojd  = 1 jd

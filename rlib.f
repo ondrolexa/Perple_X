@@ -6715,7 +6715,7 @@ c                                 hard_limit test
          end do
 c                                 initialize high/low ranges
          do i = 1, istg(im,ii)
-            do j = 1, ispg(im,ii,1)
+            do j = 1, ispg(im,ii,i)
 
                xlo(j,i,ii,im) = 1d0
                xhi(j,i,ii,im) = 0d0
@@ -18326,13 +18326,13 @@ c                                 for each saturation constraint
 
       if (isat.gt.0.and.first.and.(iam.lt.4.or.iam.eq.15)) then
 
-         write (*,'(/,80(''-'')/,a,/)') 
+         write (*,'(/,80(''-'')/,a)') 
      *         'Summary of saturated-component entities:'
 
          do i = 1, isat
 
-            write (*,1040) (cname(icp+j),j=1, i)
             write (*,*) ' '
+            write (*,1040) (cname(icp+j),j=1, i)
 
             do k = 1, isct(i), 6
                l = k + 5

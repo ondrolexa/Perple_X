@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated November 25, 2020.',
+     *     'Perple_X version 6.9.1, source updated December 2, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -2927,7 +2927,7 @@ c                                 generic warning, also 99
      *          'components are in use this rejection criterion may be '
      *         ,'incorrect. When this is',/,'the case redefine the ',
      *          'data base components so that the total amount of the'/,
-     *          'thermodynamic components in ',a,' is > 0.')
+     *          'thermodynamic components in ',a,' is > 0.',/)
 14    format (/,'**warning ver014** You can not redefine the ',
      *          'saturated phase component:',a,/,'To circumvent this ',
      *          'restriction use CTRANSF to make a data base with the',/
@@ -8097,6 +8097,36 @@ c                                 write blurb
       close (n8)
 c                                 just to be sure
       if (iopt(6).eq.0) refine = .false.
+
+      if (refine.and.iam.eq.15) then 
+c                                 CONVEX: reject solution models that were 
+c                                 not found to be stable and set parameters 
+c                                 that depend on refinement
+         ibad2 = 0 
+
+         do 50 i = 1, isoct
+
+            do j = 1, ibad1
+               if (fname(i).eq.badnam(j)) then
+                  if (iam.eq.1.or.iam.eq.15) write (*,1070) fname(i)
+                  goto 50
+               end if 
+            end do 
+
+            ibad2 = ibad2 + 1
+            fname(ibad2) = fname(i)
+
+50       continue 
+
+         isoct = ibad2 
+
+         write (*,'(/)')
+
+      end if
+
+
+
+
 
       if (iopt(6).eq.2.and..not.refine) then
 c                                 this means it must be in the exploratory

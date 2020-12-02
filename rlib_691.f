@@ -7096,7 +7096,7 @@ c                                 hard_limit test
          end do
 c                                 initialize high/low ranges
          do i = 1, istg(im,ii)
-            do j = 1, ispg(im,ii,1)
+            do j = 1, ispg(im,ii,i)
 
                xlo(j,i,ii,im) = 1d0
                xhi(j,i,ii,im) = 0d0
@@ -17198,7 +17198,7 @@ c-----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 c-----------------------------------------------------------------------
-      if (refine) then
+      if (refine.and.iam.ne.15) then
 c                                 auto-refine in vertex
          pa(1:nstot(ids)) = txco(itxp(id) + 1:itxp(id) + nstot(ids))
          call makepp (ids)
@@ -17916,13 +17916,13 @@ c                                 for each saturation constraint
 
       if (isat.gt.0.and.first.and.(iam.lt.4.or.iam.eq.15)) then
 
-         write (*,'(/,80(''-'')/,a,/)') 
+         write (*,'(/,80(''-'')/,a)') 
      *         'Summary of saturated-component entities:'
 
          do i = 1, isat
 
-            write (*,1040) (cname(icp+j),j=1, i)
             write (*,*) ' '
+            write (*,1040) (cname(icp+j),j=1, i)
 
             do k = 1, isct(i), 6
                l = k + 5
@@ -21145,7 +21145,7 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
-      tol = 1d-6
+      tol = -1d-8
 
       if (.not.lorder(id)) then
 c                                 simple model
