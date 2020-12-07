@@ -21111,7 +21111,9 @@ c----------------------------------------------------------------------
 
       external rplica
 c----------------------------------------------------------------------
-      if (rplica(ids)) return
+      if (nopt(35).gt.0d0) then
+         if (rplica(ids)) return
+      end if
 
       tpct = tpct + 1
 
@@ -21136,7 +21138,7 @@ c-----------------------------------------------------------------------
 
       integer id, ind, i, j, k, l
 
-      double precision diff, dinc, tp(m14), tol
+      double precision diff, dinc, tp(m14)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -21145,8 +21147,6 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
-      tol = -1d-8
-
       if (.not.lorder(id)) then
 c                                 simple model
          do i = 1, tpct
@@ -21159,7 +21159,7 @@ c                                 simple model
                diff = diff + (pa(j) - txco(itxp(i)+j))**2
             end do 
 
-            if (diff.lt.tol) then
+            if (diff.lt.nopt(35)) then
                rplica = .true.
                return
             end if
@@ -21189,7 +21189,7 @@ c                                 test on pp array
                diff = diff + (tp(j))**2
             end do 
 
-            if (diff.lt.tol) then
+            if (diff.lt.nopt(35)) then
                rplica = .true.
                return
             end if
@@ -21221,7 +21221,7 @@ c                                 compare
                diff = diff + (pp(j) - tp(j))**2
             end do 
 
-            if (diff.lt.tol) then
+            if (diff.lt.nopt(35)) then
                rplica = .true.
                return
             end if

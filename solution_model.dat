@@ -15038,37 +15038,38 @@ end_dependent_endmembers
 begin_excess_function
 W(en fs)                 7d3
 W(en fm)                 4d3
+W(en mgts)            12.5d3  - 0.04 * p
                                       | W(en odi) revised from 32.2d3 + 0.12 * p 
                                       | by ECRG, 13/7/20
 W(en odi)             29.4d3          | changed from W(en odi) 29d3 + 0.15 * p by DB to match the ECRG 10/20 revision.
 W(en crenh)              8d3
 W(en obuf)               6d3          | added by DB  to match the ECRG 10/20 revision.
 W(en macm)               8d3
-W(en ojd)                35d3
+W(en ojd)               35d3
 
 W(fs fm)                 4d3
 W(fs odi)             21.5d3   + 0.08 * p |changed from W(fs odi) 25.54d3 + 0.084 * p by DB to match the ECRG 10/20 revision.
-W(fs mgts)               11d3  - 0.15 * p
-W(fs crenh)              10d3
+W(fs mgts)              11d3  - 0.15 * p
+W(fs crenh)             10d3
 W(fs obuf)               7d3          | added by DB  to match the ECRG 10/20 revision.
-W(fs macm)               10d3
-W(fs ojd)                35d3
+W(fs macm)              10d3
+W(fs ojd)               35d3
 
-W(fm odi)                18d3  + 0.08 * p |changed from W(fm odi) 22.54d3 + 0.084 * p by DB to match the ECRG 10/20 revision.
-W(fm mgts)               15d3  - 0.15 * p
-W(fm crenh)              12d3
-W(fm obuf)                8d3         | added by DB to match the ECRG 10/20 revision.
-W(fm macm)               12d3
-W(fm ojd)                35d3
+W(fm odi)               18d3  + 0.08 * p |changed from W(fm odi) 22.54d3 + 0.084 * p by DB to match the ECRG 10/20 revision.
+W(fm mgts)              15d3  - 0.15 * p
+W(fm crenh)             12d3
+W(fm obuf)               8d3         | added by DB to match the ECRG 10/20 revision.
+W(fm macm)              12d3
+W(fm ojd)               35d3
 
-W(odi mgts)            75.5d3  - 0.84 * p
-W(odi crenh)             20d3
-W(odi obuf)              40d3         | added by DB to match the ECRG 10/20 revision.
-W(odi macm)              20d3
-W(odi ojd)               35d3
+W(odi mgts)           75.5d3  - 0.84 * p
+W(odi crenh)            20d3
+W(odi obuf)             40d3         | added by DB to match the ECRG 10/20 revision.
+W(odi macm)             20d3
+W(odi ojd)              35d3
 
-W(mgts crenh)             2d3
-W(mgts obuf)             10d3         | added by DB to match the ECRG 10/20 revision.
+W(mgts crenh)            2d3
+W(mgts obuf)            10d3         | added by DB to match the ECRG 10/20 revision.
 W(mgts macm)             2d3
 W(mgts ojd)              7d3
 
@@ -15155,7 +15156,7 @@ begin_model
                          iherc = 1 nherc
                                 DQF(J/mol) = 23.6d3  - 5.76303 * T
                          imt   = 1 mt
-                                DQF(J/mol) = 30d3
+                                DQF(J/mol) = 300
 
                       3) the qnd endmember DQF is added in the dqf_correction section
                          at the end of this model.
