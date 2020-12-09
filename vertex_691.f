@@ -163,7 +163,7 @@ c                                 repeat the calculation
          call docalc
 c                                 output compositions for auto-re-refine,
 c                                 these can also be used by MEEMUM
-         if (lopt(29)) call outlim
+         if (lopt(55)) call outlim
 c                                 clean up intermediate results
          call interm (outprt,err)
 

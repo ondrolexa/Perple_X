@@ -222,7 +222,7 @@ c           CALL E04UEF ('print level = 10')
 
          write (*,*) 'woana woaba, wanka?'
 
-      else if (jter.lt.400) then 
+      else
 
          if (iter.eq.0) then 
 
@@ -231,8 +231,8 @@ c           CALL E04UEF ('print level = 10')
          end if 
 
 
-         if (toc) then 
-
+         if (toc.and.lopt(54)) then 
+c                              scatter all permutations
          yt = pa
 
          do j = 1, 2
@@ -293,8 +293,8 @@ c                                 increment the counter
 
          end do
 
-         else
-
+         else if (lopt(54)) then
+c                                 scatter in only for nstot-1 gradients
             yt = pa
 
             do j = 1, 1

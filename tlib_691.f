@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated December 7, 2020.',
+     *     'Perple_X version 6.9.1, source updated December 10, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -209,7 +209,7 @@ c                                 refinement
 c                                 convex
          nopt(13) = 1d0/16d0
       else 
-         nopt(13) = 1d0/5d0
+         nopt(13) = 0.25d0
       end if
 c                                 solvus_tolerance
       nopt(8) = 1.5*nopt(13)
@@ -233,7 +233,7 @@ c                                 increase in resolution for Schreinemakers diag
 c                                 T_melt cutoff 
       nopt(20) = 873d0
 c                                 optimization_precision, absolute
-      nopt(21) = 1d-1
+      nopt(21) = 1d-4
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -248,7 +248,7 @@ c                                 fractionation_upper_threshold
 c                                 aq_vapor_epsilon
       nopt(34) = 1d0
 c                                 replicate_threshold
-      nopt(35) = 1d-10
+      nopt(35) = 1d-6
 c                                 -------------------------------------
 c                                 composition_phase
       iopt(2) = 0 
@@ -285,8 +285,8 @@ c                                 assume linear boundaries within a cell during 
 c                                 seismic data output for WERAMI/MEEMUM, 0 - none, 1 - some, 2 - all
       iopt(14) = 1
       valu(14) = 'som'
-c                                 optimization_iterations, max number of iterations
-      iopt(20) = 10
+c                                 optimization_max_it, max number of iterations
+      iopt(20) = 40
 c                                 speciation_max_it - for speciation calculations
       iopt(21) = 100
 c                                 aq_bad_results 
@@ -429,15 +429,19 @@ c                                 structural formula options
       lopt(51) = .true.
 c                                 keep_auto
       lopt(52) = .true.
+c                                 scatter-points
+      lopt(54) = .true.
+c                                 re-refine
+      lopt(55) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
 c                                 for gridded minimization:
 c                                 # nodes in i direction
-      grid(1,1) = 40 
+      grid(1,1) = 10 
       grid(1,2) = 40
 c                                 # nodes in j direction
-      grid(2,1) = 40 
+      grid(2,1) = 10 
       grid(2,2) = 40
 c                                 # of levels
       grid(3,1) = 1
@@ -693,7 +697,7 @@ c                                 bad number key
 
             read (strg,*) nopt(21)
 
-         else if (key.eq.'optimization_iteration') then 
+         else if (key.eq.'optimization_max_it') then 
 
             read (strg,*) iopt(20)
 
@@ -728,7 +732,16 @@ c                                  output interim results (VERTEX/PSSECT/WERAMI)
                iopt(34) = 2
             end if
 
-            valu(34) = val 
+            valu(34) = val
+
+         else if (key.eq.'scatter-points') then
+c                                  generate points scattered about refinement
+c                                  point compositions
+            if (val.eq.'F') lopt(54) = .false.
+
+         else if (key.eq.'re-refine') then
+c                                  allow re-refinement in VERTEX
+            if (val.eq.'T') lopt(55) = .true.
 
          else if (key.eq.'sample_on_grid') then
 c                                  sample on computational grid (WERAMI)
@@ -1456,7 +1469,9 @@ c                                 solvus tolerance text
 
          end if 
 
-         if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6), nopt(35)
+         if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6), nopt(35),
+c                                 only vertex:
+     *                                             lopt(55)
 c                                 context specific parameters:
          if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 non-adaptive calculations
@@ -1465,8 +1480,8 @@ c                                 reaction format and lists
      *                    rid(1,2),isec,valu(7),valu(9),valu(8),valu(10)
          else 
 c                                 adaptive optimization
-            write (n,1180) nopt(21),iopt(20),
-     *                     iopt(31),k5,lopt(49),lopt(52),nopt(9)
+            write (n,1180) nopt(21),iopt(20),iopt(31),k5,lopt(49),
+     *                     nval2,nopt(9),lopt(54)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1580,8 +1595,8 @@ c                                 info file options
 
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:    ',f6.4,5x,
-     * '0->1 [1/5 => VERTEX/MEEMUM, 1/16 => CONVEX], 0 => off',/,
-     *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
+     * '[1/4 => VERTEX/MEEMUM, 1/16 => CONVEX] 0->1, 0 => off',/,
+     *        4x,'stretch_factor         ',f6.4,5x,'[2d-3], >0 ',/,
      *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
      *        4x,'subdivision_override   ',a3,8x,
      * '[lin => VERTEX/MEEMUM, off => CONVEX] off lin str',/,
@@ -1592,15 +1607,15 @@ c                                 generic thermo options
      *        4x,'solvus_tolerance       ',a7,4x,          
      *           '[aut] or 0->1; aut = automatic, 0 => ',
      *           'p=c pseudocompounds, 1 => homogenize',/,
-     *        4x,'T_stop (K)             ',f6.1,5x,'[0]',/,
-     *        4x,'T_melt (K)             ',f6.1,5x,'[873]',/,
+     *        4x,'T_stop (K)            ',f6.1,6x,'[0]',/,
+     *        4x,'T_melt (K)            ',f6.1,6x,'[873]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *   4x,'speciation_precision   ',g7.1E1,4x,'[1d-5] <1, absolute',/,
-     *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
-     *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
-     *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
-     *        4x,'hybrid_EoS_CH4         ',i4,7x,'[0] 0-1, 7',/,
+     *   4x,'speciation_precision  ',g7.1E1,5x,'[1d-5] <1, absolute',/,
+     *        4x,'speciation_max_it     ',i4,8x,'[100]',/,
+     *        4x,'hybrid_EoS_H2O         ',i1,10x,'[4] 0-2, 4-7',/,
+     *        4x,'hybrid_EoS_CO2         ',i1,10x,'[4] 0-4, 7',/,
+     *        4x,'hybrid_EoS_CH4         ',i1,10x,'[0] 0-1, 7',/,
      *        4x,'aq_bad_results         ',a3,8x,'[err] 101, 102, 103,',
      *                                           ' ignore',/,
      *        4x,'aq_lagged_speciation   ',l1,10x,'[F] T',/,
@@ -1615,9 +1630,10 @@ c                                 generic thermo options
      *        4x,'interim_results        ',a3,8x,'[auto] off manual')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine            ',1x,a3,7x,
-     *       '[off => VERTEX] manual [auto => CONVEX/MEEMUM]',/,
+     *       '[auto] manual off',/,
      *        4x,'replicate_threshold    ',g7.1E1,4x,
-     *           '[1e-10], < 0 no replicate testing')
+     *           '[1e-6], < 0 no replicate testing',/,
+     *        4x,'re-refine               ',l1,9x,'[F] T')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
@@ -1625,8 +1641,8 @@ c                                 thermo options for frendly
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[0] 0-1, 7')
-1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'>0 [2]',/,
-     *        4x,'finite_difference_p    ',d7.1,4x,'>0 [1d4]; ',
+1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'[2], >0 ',/,
+     *        4x,'finite_difference_p    ',d7.1,4x,'[1d4], >0 ; ',
      *           'fraction = ',d7.1,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
@@ -1640,7 +1656,7 @@ c                                 thermo options for frendly
      *        4x,'increment           ',f5.3,'/',f5.3,3x,
      *           '[0.1/0.025], ',
      *           'default search/trace variable increment',/,
-     *        4x,'efficiency               ',i1,8x,'[3] >0 < 6',/,      
+     *        4x,'efficiency               ',i1,8x,'[3], > 0m < 6',/,
      *        4x,'reaction_format        ',a3,8x,'[min] ',
      *           'full stoichiometry S+V everything',/,
      *        4x,'reaction_list          ',a3,8x,'[off] on',/,
@@ -1648,35 +1664,36 @@ c                                 thermo options for frendly
      *        4x,'short_print_file       ',a3,8x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'optimization_precision ',g7.1E1,4x,
-     *           '[1e-1], absolute',/,
-     *        4x,'optimization_iterations ',i2,8x,'>= 2 [10]',/,
-     *        4x,'refinement_points       ',i2,8x,'[aut] or 1->',i2,
+     *           '[1e-4], absolute',/,
+     *        4x,'optimization_max_it     ',i2,8x,'[40], > 1',/,
+     *        4x,'refinement_points       ',i2,8x,'[aut] 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
-     *        4x,'solvus_tolerance_II     ',a7,3x,'0->1 [0.2]',/,
-     *        4x,'zero_mode               ',e7.1E2,3x,
-     *           '0->1 [1e-6]; < 0 => off')
+     *        4x,'solvus_tolerance_II     ',a7,3x,'[0.2] 0->1 ',/,
+     *        4x,'zero_mode              ',e7.1E1,4x,
+     *           '[1e-6], 0->1; < 0 => off',/,
+     *        4x,'scatter-points          ',l1,9x,'[T] F')
 1190  format (/,2x,'1D grid options:',//,
-     *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40], >0, '
+     *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40] >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
      *           ' nodes',/
-     *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4], >0, '
+     *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4] >0, '
      *          ,'<',i2,/)
 1200  format (/,2x,'2D grid options:',//,
-     *        4x,'x_nodes               ',i3,' /',i3,4x,'[40/40], >0, '
+     *        4x,'x_nodes                ',i3,' /',i3,3x,'[10/40] >0, '
      *          ,'<',i4,'; effective x-resolution ',i4,' /',i4
      *          ,' nodes',/
-     *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40], >0, '
+     *        4x,'y_nodes                ',i3,' /',i3,3x,'[10/40], >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
      *           ' nodes',/
-     *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4], >0, '
+     *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4] >0, '
      *          ,'<',i2,/,
-     *        4x,'linear_model             ',a3,6x,'off [on]')
+     *        4x,'linear_model            ',a3,7x,'[on] off')
 1210  format (/,2x,'Fractionation path options:',//,
      *        4x,'1d_path               ',i3,' /',i3,4x,
-     *           '[20/150], >0, <',i4)
+     *           '[20/150] >0, <',i4)
 1220  format (/,2x,'Composition options:',//,
-     *        4x,'closed_c_space         ',l1,10x,'F [T]')
+     *        4x,'closed_c_space         ',l1,10x,'[T] F')
 1230  format (/,2x,'Input/Output options:',//,
      *        4x,'aqueous_output         ',l1,10x,'[F] T',/
      *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,

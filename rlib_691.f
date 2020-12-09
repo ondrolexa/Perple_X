@@ -10115,7 +10115,7 @@ c                                 the list of dynamic compositions
                end if
             end do
 
-         else if (lopt(29)) then
+         else if (lopt(55)) then
 c                                 load the whole damn thing
             zcoct = 0
 
@@ -13474,7 +13474,7 @@ c----------------------------------------------------------------------
       end do
 
 c     if (iam.eq.1) then
-      if (.not.refine.and.iam.eq.1.or.lopt(29)) then
+      if (.not.refine.and.iam.eq.1.or.lopt(55)) then
 c                                 load the former dynamic compositions
 c                                 into the static arrays
          call reload (.false.)

@@ -676,7 +676,7 @@ c DEBUG691
             pa(j) = zco(icoz(id)+j)
          end do
 
-         if (.not.refine.or.lopt(29)) call savdyn (ids)
+         if (.not.refine.or.lopt(55)) call savdyn (ids)
 
          if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
             write (*,*) 'low sum, savpa, zs, ids, id:',ids,sum, id
@@ -1110,7 +1110,7 @@ c                                count fraction of impure solvent
 
             jd = jdsol(i,j)
 
-c           if (.not.refine.or.lopt(29)) then 
+c           if (.not.refine.or.lopt(55)) then 
 c                                load into pa and save for refinement
 c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
 c              call savdyn (ids)
@@ -1192,7 +1192,7 @@ c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          call sollim (ids,i)
 
-c        if (.not.refine.or.lopt(29)) then
+c        if (.not.refine.or.lopt(55)) then
 c                                 sollim loads but may corrupt pa although p0a
 c                                 isn't touched, so reload pa here.
 c           pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
