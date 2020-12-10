@@ -1510,10 +1510,13 @@ c                                 closed or open composition space
 
          end if 
 c                                 generic subdivision parameters:
-         write (n,1010) nopt(13),nopt(14),
-     *                  lopt(38),valu(13),lopt(39)
-
-         if (iam.eq.15)  write (n,1011) nopt(15)
+         if (iam.eq.15) then 
+            write (n,1011) nopt(13),nopt(13)/nopt(17),numb,nopt(14),
+     *                  lopt(38),valu(13),valu(16),lopt(39),nopt(15)
+         else 
+            write (n,1010) nopt(13),nopt(14),
+     *                     lopt(38),valu(13),lopt(39)
+         end if 
 c                                 generic thermo parameters:
          write (n,1012) nval1,nopt(12),nopt(20),
      *                  lopt(8),lopt(4),nopt(5),iopt(21),
@@ -1595,13 +1598,25 @@ c                                 info file options
 
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:    ',f6.4,5x,
-     * '[1/4 => VERTEX/MEEMUM, 1/16 => CONVEX] 0->1, 0 => off',/,
-     *        4x,'stretch_factor         ',f6.4,5x,'[2d-3], >0 ',/,
+     *                                   '[1/4] 0->1; 0 => off',/,
+     *        4x,'stretch_factor         ',f6.4,5x,'[2d-3] >0 ',/,
      *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
-     *        4x,'subdivision_override   ',a3,8x,
-     * '[lin => VERTEX/MEEMUM, off => CONVEX] off lin str',/,
+     *        4x,'subdivision_override   ',a3,8x,'[lin] off str',/,
      *        4x,'refine_endmembers      ',l1,10x,'[F] T')
-1011  format (4x,'pc_perturbation        ',f6.4,5x,'[5d-3]')
+
+1011  format (/,2x,'Solution subdivision options:',//,
+     *        4x,'initial_resolution:    ',/,
+     *        4x,'  exploratory stage    ',f6.4,5x,
+     *           '0->1 [1/16], 0 => off',/,
+     *        4x,'  auto-refine stage    ',f6.4,5x,
+     *           '0->1 [',a,'], 0 => off',/,
+     *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
+     *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
+     *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
+     *        4x,'hard_limits            ',a3,8x,'[off] on',/,
+     *        4x,'refine_endmembers      ',l1,10x,'[F] T',/,
+     *        4x,'pc_perturbation        ',f6.4,5x,'[5d-3]')
+
 c                                 generic thermo options
 1012  format (/,2x,'Thermodynamic options:',//,
      *        4x,'solvus_tolerance       ',a7,4x,          
@@ -1611,12 +1626,12 @@ c                                 generic thermo options
      *        4x,'T_melt (K)            ',f6.1,6x,'[873]',/,
      *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
      *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *   4x,'speciation_precision  ',g7.1E1,5x,'[1d-5] <1, absolute',/,
+     *   4x,'speciation_precision  ',g7.1E1,5x,'[1d-5] <1; absolute',/,
      *        4x,'speciation_max_it     ',i4,8x,'[100]',/,
      *        4x,'hybrid_EoS_H2O         ',i1,10x,'[4] 0-2, 4-7',/,
      *        4x,'hybrid_EoS_CO2         ',i1,10x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4         ',i1,10x,'[0] 0-1, 7',/,
-     *        4x,'aq_bad_results         ',a3,8x,'[err] 101, 102, 103,',
+     *        4x,'aq_bad_results         ',a3,8x,'[err] 101 102 103',
      *                                           ' ignore',/,
      *        4x,'aq_lagged_speciation   ',l1,10x,'[F] T',/,
      *        4x,'aq_ion_H+              ',l1,10x,'[T] F => use OH-',/,
@@ -1632,7 +1647,7 @@ c                                 generic thermo options
      *        4x,'auto_refine            ',1x,a3,7x,
      *       '[auto] manual off',/,
      *        4x,'replicate_threshold    ',g7.1E1,4x,
-     *           '[1e-6], < 0 no replicate testing',/,
+     *           '[1e-6]; <0 => no replicate testing',/,
      *        4x,'re-refine               ',l1,9x,'[F] T')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
@@ -1641,8 +1656,8 @@ c                                 thermo options for frendly
      *        4x,'hybrid_EoS_H2O         ',i4,7x,'[4] 0-2, 4-7',/,
      *        4x,'hybrid_EoS_CO2         ',i4,7x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4         ',i4,7x,'[0] 0-1, 7')
-1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'[2], >0 ',/,
-     *        4x,'finite_difference_p    ',d7.1,4x,'[1d4], >0 ; ',
+1017  format (4x,'fd_expansion_factor    ',f3.1,8x,'[2] >0',/,
+     *        4x,'finite_difference_p    ',d7.1,4x,'[1d4] >0; ',
      *           'fraction = ',d7.1,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
@@ -1652,11 +1667,11 @@ c                                 thermo options for frendly
 1160  format (/,2x,'Schreinemakers and Mixed-variable diagram ',
      *           'options:',//,
      *        4x,'variance               ',i2,' /',i2,5x,
-     *           '[1/99], >0, maximum true variance',/,
+     *           '[1/99], >0; maximum true variance',/,
      *        4x,'increment           ',f5.3,'/',f5.3,3x,
      *           '[0.1/0.025], ',
      *           'default search/trace variable increment',/,
-     *        4x,'efficiency               ',i1,8x,'[3], > 0m < 6',/,
+     *        4x,'efficiency               ',i1,8x,'[3] >0, <6',/,
      *        4x,'reaction_format        ',a3,8x,'[min] ',
      *           'full stoichiometry S+V everything',/,
      *        4x,'reaction_list          ',a3,8x,'[off] on',/,
@@ -1665,13 +1680,13 @@ c                                 thermo options for frendly
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'optimization_precision ',g7.1E1,4x,
      *           '[1e-4], absolute',/,
-     *        4x,'optimization_max_it     ',i2,8x,'[40], > 1',/,
+     *        4x,'optimization_max_it     ',i2,8x,'[40] >1',/,
      *        4x,'refinement_points       ',i2,8x,'[aut] 1->',i2,
      *           '; aut = automatic',/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
      *        4x,'solvus_tolerance_II     ',a7,3x,'[0.2] 0->1 ',/,
      *        4x,'zero_mode              ',e7.1E1,4x,
-     *           '[1e-6], 0->1; < 0 => off',/,
+     *           '[1e-6] 0->1; < 0 => off',/,
      *        4x,'scatter-points          ',l1,9x,'[T] F')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40] >0, '
@@ -1683,7 +1698,7 @@ c                                 thermo options for frendly
      *        4x,'x_nodes                ',i3,' /',i3,3x,'[10/40] >0, '
      *          ,'<',i4,'; effective x-resolution ',i4,' /',i4
      *          ,' nodes',/
-     *        4x,'y_nodes                ',i3,' /',i3,3x,'[10/40], >0, '
+     *        4x,'y_nodes                ',i3,' /',i3,3x,'[10/40] >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,
      *           ' nodes',/
      *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4] >0, '

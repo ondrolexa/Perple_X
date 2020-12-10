@@ -9723,8 +9723,9 @@ c--------------------------------------------------------------------------
 
       integer im, h, i, j, l, index, i228, oim
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -9841,17 +9842,17 @@ c use mname array to flag retained absent endmembers
 
       if (istg(im,1).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(iphct),1020) fname(im), znm(1,1),znm(2,1)
+         write (names(iphct),1020) tname, znm(1,1),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.3)
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(iphct),1060) fname(im), znm(1,1),znm(1,2),znm(2,1)
+         write (names(iphct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.2)
      *        then
 c                                special case 3, bin-tern reciprocal solution
-         write (names(iphct),1060) fname(im), znm(1,1),znm(2,1),znm(2,2)
+         write (names(iphct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
@@ -9879,14 +9880,14 @@ c                                ternary solutions
      *                             pnm(j), j = 1, 2)
       else if (mstot(im).eq.4) then
 c                                quaternary solutions
-         write (names(iphct),1060) fname(im), (pnm(j), j = 1, 3)
+         write (names(iphct),1060) tname, (pnm(j), j = 1, 3)
 
       else
 c                                all the rest:
          if (iphct.lt.1000000) then
-            write (names(iphct),1080) fname(im), iphct
+            write (names(iphct),1080) tname, iphct
          else if (iphct.lt.10000000) then
-            write (names(iphct),1100) fname(im), iphct
+            write (names(iphct),1100) tname, iphct
          else
             write (names(iphct),'(i8)') iphct
          end if
@@ -9919,7 +9920,7 @@ c                                 bulk composition stuff
             scp(l) = 0d0
          else if (scp(l).lt.0d0.and.im.ne.i228) then
             i228 = im
-            call warn (228,scp(l),l,fname(im))
+            call warn (228,scp(l),l,tname)
          end if
 
       end do
@@ -9927,7 +9928,7 @@ c                                 check if the phase consists
 c                                 entirely of saturated components:
       if (ctot(iphct).lt.zero) then
 
-         if (im.ne.oim) call warn (55,scp(1),l,fname(im))
+         if (im.ne.oim) call warn (55,scp(1),l,tname)
 
          bad = .true.
          oim = im
@@ -21101,7 +21102,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical rplica
+      logical rplica, xplica
 
       integer ids
 
@@ -21109,10 +21110,10 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      external rplica
+      external rplica, xplica
 c----------------------------------------------------------------------
       if (nopt(35).gt.0d0) then
-         if (rplica(ids)) return
+         if (xplica(ids)) return
       end if
 
       tpct = tpct + 1
@@ -21130,7 +21131,7 @@ c                                 increment the counter
 
       end 
 
-      logical function rplica (id)
+      logical function xplica (id)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -21160,13 +21161,119 @@ c                                 simple model
             end do 
 
             if (diff.lt.nopt(35)) then
-               rplica = .true.
+               xplica = .true.
                return
             end if
 
          end do
 
       else if (dnu(id).eq.0d0) then
+c                                 test on pp array
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            do j = 1, nstot(id)
+               tp(j) = pa(j) - txco(itxp(i)+j)
+            end do
+
+            do k = 1, nord(id)
+               do l = 1, nrct(k,id)
+                  ind = ideps(l,k,id)
+                  tp(ind) = tp(ind) - dydy(ind,k,id) * tp(lstot(id)+k)
+               end do
+            end do
+
+            diff = 0d0
+
+            do j = 1, lstot(id)
+               diff = diff + (tp(j))**2
+            end do 
+
+            if (diff.lt.nopt(35)) then
+               xplica = .true.
+               return
+            end if
+
+         end do
+
+      else 
+c                                 non-equimolar
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            tp(1:nstot(id)) = txco(itxp(i)+1:itxp(i)+nstot(id))
+
+            diff = 0d0
+
+            do l = 1, nrct(1,id)
+               ind = ideps(l,1,id)
+               dinc = - dydy(ind,1,id) * tp(lstot(id)+1)
+               diff = diff + dinc
+               tp(ind) = tp(ind) + dinc
+            end do
+c                                 renormalize
+            tp(1:lstot(id)) = tp(1:lstot(id)) / (1d0 + diff)
+c                                 compare
+            diff = 0d0
+
+            do j = 1, lstot(id)
+               diff = diff + (pp(j) - tp(j))**2
+            end do 
+
+            if (diff.lt.nopt(35)) then
+               xplica = .true.
+               return
+            end if
+
+         end do
+
+      end if
+
+      xplica = .false.
+
+      end
+
+      logical function rplica (id)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical ok
+
+      integer id, ind, i, j, k, l
+
+      double precision diff, dinc, tp(m14)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c-----------------------------------------------------------------------
+      if (id.eq.99.and.(.not.lorder(id).or.lorder(id))) then
+c                                 simple model
+         do i = 1, tpct
+
+            if (dkp(i).ne.id) cycle
+
+            diff = 0d0
+
+            do j = 1, nstot(id)
+               diff = diff + (pa(j) - txco(itxp(i)+j))**2
+            end do 
+
+            if (diff.lt.nopt(35)) then
+               rplica = .true.
+               return
+            end if
+
+         end do
+
+      else if (dnu(id).eq.0d0.or.dnu(id).ne.0d0) then
 c                                 test on pp array
          do i = 1, tpct
 

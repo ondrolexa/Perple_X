@@ -545,6 +545,9 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 increment the counter
       phct = phct + 1
+
+      diff = dsqrt(nopt(35)*1d-2)
+      diff = 1d-4
 c                                 normalize and save the composition
       cp2(1:icomp,phct) = rcp(1:icomp)/rsum
 c                                 check if duplicate
@@ -558,7 +561,7 @@ c                                 check if duplicate
 
                if (dcp(j,rids).eq.0d0) cycle
 
-               if (dabs((cp2(j,phct) - cp2(j,i)) / dcp(j,rids)).gt.1d-4)
+               if (dabs((cp2(j,phct) - cp2(j,i)) / dcp(j,rids)).gt.diff)
      *            then
 
                   ok = .true.
