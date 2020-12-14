@@ -226,14 +226,34 @@ c           CALL E04UEF ('print level = 10')
 
          if (iter.eq.0) then 
 
-            write (*,*) 'zapra',itic
+            write (*,*) 'zapra',itic,rids
+            ppp(1:nvar) = yt(1:nvar)
 
-         end if 
+         end if
+
+c--------------------------
+      sum = 0d0
+      do i = 1, nvar
+         sum = sum + ppp(i)
+         pa(i) = ppp(i)
+      end do
+
+      if (nvar.lt.ntot) pa(ntot) = 1d0 - sum
+
+         yt = pa
 
 
+c                              save the final point
+            call makepp (rids)
+c                                 if logical arg = T use implicit ordering
+            gfinal = gsol1 (rids,.false.)
+c                                 get the bulk composition from pp
+            call getscp (rcp,rsum,rids,rids,.false.)
+c                                 increment the counter
+            call savrpc (gfinal,jphct)
+c---------------
          if (toc.and.lopt(54)) then 
 c                              scatter all permutations
-         yt = pa
 
          do j = 1, 2
 
@@ -295,8 +315,6 @@ c                                 increment the counter
 
          else if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
-            yt = pa
-
             do j = 1, 1
 
             pinc = 1d0 + pinc0/2**(j-1)
@@ -502,7 +520,7 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         call savrpc (g,jphct)
+c        call savrpc (g,jphct)
 
 c        if (toc) write (*,2000) gval,jphct
 2000  format (g14.6,1x,i6)
@@ -525,7 +543,7 @@ c-----------------------------------------------------------------------
 
       logical ok
 
-      integer phct, i, j
+      integer phct, i, j, ntot
 
       double precision g, diff
 
@@ -542,46 +560,36 @@ c-----------------------------------------------------------------------
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol
-c-----------------------------------------------------------------------
-c                                 increment the counter
-      phct = phct + 1
 
-      diff = dsqrt(nopt(35)*1d-2)
-      diff = 1d-4
-c                                 normalize and save the composition
-      cp2(1:icomp,phct) = rcp(1:icomp)/rsum
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c-----------------------------------------------------------------------
+      ntot = nstot(rids)
 c                                 check if duplicate
-      do i = 1, phct - 1
+      do i = 1, phct
 
          if (jkp(i).eq.rids) then
 
             ok = .false.
 
-            do j = 1, icp
-
-               if (dcp(j,rids).eq.0d0) cycle
-
-               if (dabs((cp2(j,phct) - cp2(j,i)) / dcp(j,rids)).gt.diff)
-     *            then
-
+            do j = 1, ntot
+c was nopt(37) rep_dynamic_threshold
+               if (dabs((pa(j) - zco(icoz(i)+j))).gt.zero) then
                   ok = .true.
-                  exit
-
+                  exit 
                end if
 
             end do
 
-            if (.not.ok) then
-
-               phct = phct - 1
-
-               return
-
-            end if
+            if (.not.ok) return
 
          end if
 
       end do
+c                                 increment the counter
+      phct = phct + 1
+c                                 normalize and save the composition
+      cp2(1:icomp,phct) = rcp(1:icomp)/rsum
 c                                 the solution model pointer
       jkp(phct) = rids
 c                                 the refinement point pointer
@@ -602,9 +610,9 @@ c                                 sum scp(1:icp)
 c                                 save the endmember fractions
       icoz(phct) = zcoct
 
-      zco(zcoct+1:zcoct+nstot(rids)) = pa(1:nstot(rids))
+      zco(zcoct+1:zcoct+ntot) = pa(1:ntot)
 
-      zcoct = zcoct + nstot(rids)
+      zcoct = zcoct + ntot
 
       end 
 
@@ -818,7 +826,7 @@ c-----------------------------------------------------------------------
       inv = .false.
 
       tol = 1d2*zero
-c                                 primatic, need to invert to vertex fractions
+c                                 prismatic, need to invert to vertex fractions
       if (lstot(id).lt.mstot(id)) inv = .true.
 c                                 choose constraints:
       if (lorder(id)) then
@@ -1404,6 +1412,8 @@ c                                 is adopted here for the fully correlated case.
       end if
 
       nvar = nord(ids)
+
+      ppp(1:nstot(ids)) = pa(1:nstot(ids))
 c                                 variable bounds and local (ppp) variable
 c                                 initialization
       do k = 1, nord(ids)
@@ -1415,8 +1425,6 @@ c                                 initialization
             bu(k) = pa(lstot(ids)+k)
             bl(k) = pa(lstot(ids)+k)
          end if
-
-         ppp(k) = pa(lstot(ids)+k)
 
       end do
 c                                constraints
@@ -1472,7 +1480,7 @@ c                                 obj call counter
          istuff(4) = 0
 
          iprint = 10
-
+c NOT Initialized DEBUG
          ppp(1:nvar) = xp(1:nvar)
 
          write (*,*) 'ftol,fdint'
@@ -1540,6 +1548,10 @@ c                                   values in ppp.
 
 c        write (*,*) 'maialino josefino!',fname(ids),idead,iter
 
+      else if (iter.eq.0) then
+
+         pa = p0a
+
       end if 
 
       if (idead.eq.2) then 
@@ -1553,6 +1565,10 @@ c        write (*,*) 'maialino josefino!',fname(ids),idead,iter
       end if
 
       if (.not.maxs) then
+c                                 need to call gsol1 here to get 
+c                                 total g, gsol4 is not computing 
+c                                 the mechanical component?
+         gfinal = gsol1 (rids,.false.)
 
          g0 = gordp0 (ids)
 

@@ -2313,6 +2313,8 @@ c                                 last good dt0
             xdt = dt0
 
             dt0 = dabs(fac*s/gtt)
+c                                 something has gone horribly wrong!
+            if (dt0.gt.t) dt0 = xdt
 
          else 
 c                                 something has gone horribly wrong! 

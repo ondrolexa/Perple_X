@@ -121,9 +121,11 @@ c                                 title page for print file:
       end if
 c                                 do the calculation
       call docalc
-c                                 output compositions for autorefine,
-c                                 these could be used by MEEMUM
-      call outlim
+c                                 output ranges etc compositions if p2yx inversion
+      if (lopt(56)) call outlim
+c                                 output autorefine arf file and load
+c                                 rpcs into static array (routine reload)
+      call outarf
 
       if (iopt(6).ne.2) then
 c                                 quitting after exploratory stage:
@@ -161,9 +163,10 @@ c                                 into the static arrays if manual
          write (*,1000) 'auto-refine'
 c                                 repeat the calculation
          call docalc
-c                                 output compositions for auto-re-refine,
-c                                 these can also be used by MEEMUM
-         if (lopt(55)) call outlim
+c                                 output ranges etc compositions if p2yx inversion
+         if (lopt(56)) call outlim
+c                                 output arf file if auto-re-refine
+         if (lopt(55)) call outarf
 c                                 clean up intermediate results
          call interm (outprt,err)
 

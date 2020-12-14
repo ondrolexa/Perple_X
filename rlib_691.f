@@ -5715,7 +5715,7 @@ c                                 macroscopic formulation for normal solutions.
 
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
-         if (deriv(id)) then
+         if (.not.noder(id)) then
 
             call specis (gg,id,minfx)
 
@@ -13402,7 +13402,7 @@ c                                 interaction energy
       subroutine outlim
 c----------------------------------------------------------------------
 c subroutine to extract compositional range of endmembers in stable phases
-c for auto_refine option.
+c for auto_refine option. write arf file for convex
 c----------------------------------------------------------------------
       implicit none
 
@@ -13448,7 +13448,7 @@ c----------------------------------------------------------------------
       ibad2 = 0
       ibad3 = 0
       igood = 0
-      rewind (n10)
+
       if (lopt(11)) rewind (n11)
 
       if (isoct.eq.0) goto 99
@@ -13474,30 +13474,9 @@ c----------------------------------------------------------------------
 
       end do
 
-c     if (iam.eq.1) then
-      if (.not.refine.and.iam.eq.1.or.lopt(55)) then
-c                                 load the former dynamic compositions
-c                                 into the static arrays
-         call reload (.false.)
-c                                 output to arf
-         write (n10,*) isoct
-         write (n10,*) fname(1:isoct)
-         write (n10,*) jend(1:isoct,2)
-
-         tcct = 0
-
-         do i = 1, isoct
-
-            tpct = jend(i,2)*nstot(i)
-            write (n10,*) txco(tcct+1:tcct+tpct)
-            tcct = tcct + tpct
-
-         end do
-
-      else if (.not.refine) then
-
+      if (.not.refine.and.iam.eq.15) then 
+         rewind (n10)
          write (n10,*) ibad1,0,igood
-
       end if
 c                                 write solutions present that are
 c                                 not stable
@@ -13610,7 +13589,7 @@ c                                 special case (1 component solution).
 
       end if
 
-      close (n10)
+      if (iam.eq.15) close (n10)
       if (lopt(11)) close (n11)
 
 1000  format (/,'The following solutions were input,'
@@ -13637,6 +13616,77 @@ c                                 special case (1 component solution).
      *        ' calculations.',/)
 1140  format (/,'Average number of iterations per speciation ',
      *          'calculation:',f5.1,/)
+      end
+
+      subroutine outarf
+c----------------------------------------------------------------------
+c subroutine output arf file for vertex.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+c                                 -------------------------------------
+c                                 local variables:
+      integer ii, i, j, k, ibad1, ibad2, ibad3, igood, ipop
+
+      logical bad1, bad2, good
+
+      double precision num, mnsum, mxsum
+c                                 -------------------------------------
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
+
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+c                                 endmember pointers
+      integer jend
+      common/ cxt23 /jend(h9,m14+2)
+
+      integer iam
+      common/ cst4 /iam
+
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer jnd
+      double precision aqg,q2,rt
+      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+c----------------------------------------------------------------------
+      rewind (n10)
+
+      if (.not.refine.or.lopt(55)) then
+c                                 load the former dynamic compositions
+c                                 into the static arrays
+         call reload (.false.)
+c                                 output to arf
+         write (n10,*) isoct
+         write (n10,*) fname(1:isoct)
+         write (n10,*) jend(1:isoct,2)
+
+         tcct = 0
+
+         do i = 1, isoct
+
+            tpct = jend(i,2)*nstot(i)
+            write (n10,*) txco(tcct+1:tcct+tpct)
+            tcct = tcct + tpct
+
+         end do
+
+      end if
+
+      close (n10)
+
       end
 
 
@@ -21148,7 +21198,6 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
-      if (.not.lorder(id)) then
 c                                 simple model
          do i = 1, tpct
 
@@ -21157,7 +21206,7 @@ c                                 simple model
             diff = 0d0
 
             do j = 1, nstot(id)
-               diff = diff + (pa(j) - txco(itxp(i)+j))**2
+               diff = diff + dabs(pa(j) - txco(itxp(i)+j))
             end do 
 
             if (diff.lt.nopt(35)) then
@@ -21166,70 +21215,6 @@ c                                 simple model
             end if
 
          end do
-
-      else if (dnu(id).eq.0d0) then
-c                                 test on pp array
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            do j = 1, nstot(id)
-               tp(j) = pa(j) - txco(itxp(i)+j)
-            end do
-
-            do k = 1, nord(id)
-               do l = 1, nrct(k,id)
-                  ind = ideps(l,k,id)
-                  tp(ind) = tp(ind) - dydy(ind,k,id) * tp(lstot(id)+k)
-               end do
-            end do
-
-            diff = 0d0
-
-            do j = 1, lstot(id)
-               diff = diff + (tp(j))**2
-            end do 
-
-            if (diff.lt.nopt(35)) then
-               xplica = .true.
-               return
-            end if
-
-         end do
-
-      else 
-c                                 non-equimolar
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            tp(1:nstot(id)) = txco(itxp(i)+1:itxp(i)+nstot(id))
-
-            diff = 0d0
-
-            do l = 1, nrct(1,id)
-               ind = ideps(l,1,id)
-               dinc = - dydy(ind,1,id) * tp(lstot(id)+1)
-               diff = diff + dinc
-               tp(ind) = tp(ind) + dinc
-            end do
-c                                 renormalize
-            tp(1:lstot(id)) = tp(1:lstot(id)) / (1d0 + diff)
-c                                 compare
-            diff = 0d0
-
-            do j = 1, lstot(id)
-               diff = diff + (pp(j) - tp(j))**2
-            end do 
-
-            if (diff.lt.nopt(35)) then
-               xplica = .true.
-               return
-            end if
-
-         end do
-
-      end if
 
       xplica = .false.
 
@@ -21254,88 +21239,26 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
-      if (id.eq.99.and.(.not.lorder(id).or.lorder(id))) then
 c                                 simple model
          do i = 1, tpct
 
             if (dkp(i).ne.id) cycle
 
-            diff = 0d0
+            ok = .false.
 
             do j = 1, nstot(id)
-               diff = diff + (pa(j) - txco(itxp(i)+j))**2
+               if (dabs(pa(j) - txco(itxp(i)+j)).gt.nopt(35)) then
+                  ok = .true.
+                  exit
+               end if
             end do 
 
-            if (diff.lt.nopt(35)) then
-               rplica = .true.
+            if (.not.ok) then
+               rplica = ok
                return
             end if
 
          end do
-
-      else if (dnu(id).eq.0d0.or.dnu(id).ne.0d0) then
-c                                 test on pp array
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            do j = 1, nstot(id)
-               tp(j) = pa(j) - txco(itxp(i)+j)
-            end do
-
-            do k = 1, nord(id)
-               do l = 1, nrct(k,id)
-                  ind = ideps(l,k,id)
-                  tp(ind) = tp(ind) - dydy(ind,k,id) * tp(lstot(id)+k)
-               end do
-            end do
-
-            diff = 0d0
-
-            do j = 1, lstot(id)
-               diff = diff + (tp(j))**2
-            end do 
-
-            if (diff.lt.nopt(35)) then
-               rplica = .true.
-               return
-            end if
-
-         end do
-
-      else 
-c                                 non-equimolar
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            tp(1:nstot(id)) = txco(itxp(i)+1:itxp(i)+nstot(id))
-
-            diff = 0d0
-
-            do l = 1, nrct(1,id)
-               ind = ideps(l,1,id)
-               dinc = - dydy(ind,1,id) * tp(lstot(id)+1)
-               diff = diff + dinc
-               tp(ind) = tp(ind) + dinc
-            end do
-c                                 renormalize
-            tp(1:lstot(id)) = tp(1:lstot(id)) / (1d0 + diff)
-c                                 compare
-            diff = 0d0
-
-            do j = 1, lstot(id)
-               diff = diff + (pp(j) - tp(j))**2
-            end do 
-
-            if (diff.lt.nopt(35)) then
-               rplica = .true.
-               return
-            end if
-
-         end do
-
-      end if
 
       rplica = .false.
 

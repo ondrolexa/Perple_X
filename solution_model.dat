@@ -4157,11 +4157,11 @@ sdph_d   east
 ftbi_d   tbi
 ann      phl
                                    | First 2-simplex
-X_Mg   0   1.   .1  0              | X(1,1) is bulk Fe/M
+X_Mg   0   .6   .1  0              | X(1,1) is bulk Fe/M
 X_Fe   by difference
                                    | Second 4-simplex
-X_FeTs 0   .25  .1  0              | X(2,1) is Fe3/[T+M] on M1, M on M2
-X_AlTs 0   1.   .1  0              | X(2,2) is Al/[T+M]  on M1, M on M2
+X_FeTs 0   .1   .1  0              | X(2,1) is Fe3/[T+M] on M1, M on M2
+X_AlTs 0   .15  .1  0              | X(2,2) is Al/[T+M]  on M1, M on M2
 X_TiTs 0   .25  .1  0              | X(2,3) is Ti/[M+T] on M2, M on M1
 X_MBio by difference
 

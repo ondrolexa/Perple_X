@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated December 10, 2020.',
+     *     'Perple_X version 6.9.1, source updated December 13, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -247,8 +247,10 @@ c                                 fractionation_upper_threshold
       nopt(33) = 0d0
 c                                 aq_vapor_epsilon
       nopt(34) = 1d0
-c                                 replicate_threshold
-      nopt(35) = 1d-6
+c                                 rep_static_threshold (savdyn)
+      nopt(35) = 5d-3
+c                                 rep_dynamic_threshold (savrpc)
+      nopt(37) = 1d-4
 c                                 -------------------------------------
 c                                 composition_phase
       iopt(2) = 0 
@@ -433,6 +435,8 @@ c                                 scatter-points
       lopt(54) = .true.
 c                                 re-refine
       lopt(55) = .false.
+c                                 p2yx_inversion
+      lopt(56) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -685,9 +689,13 @@ c                                 bad number key
 
          else if (key.eq.'speciation_factor') then 
 
-         else if (key.eq.'replicate_threshold') then 
+         else if (key.eq.'rep_static_threshold') then 
 
             read (strg,*) nopt(35)
+
+         else if (key.eq.'rep_dynamic_threshold') then 
+
+            read (strg,*) nopt(37)
 
          else if (key.eq.'speciation_precision') then 
 
@@ -742,6 +750,10 @@ c                                  point compositions
          else if (key.eq.'re-refine') then
 c                                  allow re-refinement in VERTEX
             if (val.eq.'T') lopt(55) = .true.
+
+         else if (key.eq.'p2yx_inversion') then
+c                                  invert compositions to simplicial coordinates
+            if (val.eq.'T') lopt(56) = .true.
 
          else if (key.eq.'sample_on_grid') then
 c                                  sample on computational grid (WERAMI)
@@ -1470,8 +1482,8 @@ c                                 solvus tolerance text
          end if 
 
          if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6), nopt(35),
+     *                                             nopt(37), lopt(55)
 c                                 only vertex:
-     *                                             lopt(55)
 c                                 context specific parameters:
          if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
 c                                 non-adaptive calculations
@@ -1532,7 +1544,8 @@ c                                 pause_on_error
 c                                 auto_exclude
             write (n,1234) lopt(5)
 c                                 logarithmic_p, bad_number, interim_results
-            if (iam.eq.1) write (n,1014) lopt(14),nopt(7),valu(34)
+            if (iam.eq.1) write (n,1014) lopt(14),nopt(7),valu(34),
+     *                                   lopt(56)
 
          end if 
 
@@ -1642,12 +1655,14 @@ c                                 generic thermo options
      *        4x,'pause_on_error         ',l1,10x,'[T] F')
 1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
-     *        4x,'interim_results        ',a3,8x,'[auto] off manual')
+     *        4x,'interim_results        ',a3,8x,'[auto] off manual',/,
+     *        4x,'p2yx_inversion         ',l1,10x,'[F] T')
 1015  format (/,2x,'Auto-refine options:',//,
-     *        4x,'auto_refine            ',1x,a3,7x,
-     *       '[auto] manual off',/,
-     *        4x,'replicate_threshold    ',g7.1E1,4x,
-     *           '[1e-6]; <0 => no replicate testing',/,
+     *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
+     *        4x,'rep_static_threshold    ',g7.1E1,4x,
+     *           '[5e-3]; <0 => no replicate testing; static comp.',/,
+     *        4x,'rep_dynamic_threshold   ',g7.1E1,4x,
+     *           '[1e-4]; <0 => no replicate testing; dynamic comp.',/,
      *        4x,'re-refine               ',l1,9x,'[F] T')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
