@@ -245,13 +245,13 @@ c--------------------------
       yt = pa
 
 c                              save the final point
-c           call makepp (rids)
+            call makepp (rids)
 c                                 if logical arg = T use implicit ordering
-c           gfinal = gsol1 (rids,.false.)
+            gfinal = gsol1 (rids,.false.)
 c                                 get the bulk composition from pp
-c           call getscp (rcp,rsum,rids,rids,.false.)
+            call getscp (rcp,rsum,rids,rids,.false.)
 c                                 increment the counter
-c           call savrpc (gfinal,jphct)
+            call savrpc (gfinal,jphct)
 c---------------
          if (toc.and.lopt(54)) then 
 c                              scatter all permutations
@@ -265,8 +265,6 @@ c                              scatter all permutations
 
          do i = 1, 2**ntot
 
-c           pa = yt/pinc
-
             call binind (ind,ntot)
 
             sum = 0d0
@@ -279,15 +277,6 @@ c           pa = yt/pinc
             end do
 
             pa = pa/sum
-
-c           write (*,'(10(1x,i1))') ind(1:ntot)
-
-c           pa(i) = pa(i) + (1d0 - 1d0/pinc)
-
-c           write (*,*) rids
-c           write (*,1000) pa(1:ntot)
-c           write (*,1000) yt(1:ntot)
-c           write (*,1000) (pa(k)-yt(k),k=1,ntot)
 
 1001  format (i5,1x,g12.6,12(1x,f7.4))
 1000  format (18x,12(1x,f7.4))
@@ -521,7 +510,7 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         call savrpc (g,jphct)
+c        call savrpc (g,jphct)
 
 c        if (toc) write (*,2000) gval,jphct
 2000  format (g14.6,1x,i6)

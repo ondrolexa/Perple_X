@@ -10181,6 +10181,8 @@ c                                 reset iphct and reload static
       iphct = ipoint
       id = 0
 
+      write (*,'(80(''-''),/,''Exploratory stage generated:'',/)')
+
       do i = 1, isoct
 
          ntot = nstot(i)
@@ -10205,8 +10207,8 @@ c                                 reset counters, cold start, etc
 
       write (*,1110) id
 
-1100  format (i8,' pseudocompounds generated for: ',a)
-1110  format (/,'Total number of pseudocompounds:',i8)
+1100  format (i8,' compositions for: ',a)
+1110  format (/,'Total number of compositions:',i8)
 
       end
 
