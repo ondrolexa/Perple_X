@@ -192,6 +192,7 @@ c                              0.05-.4 seem best
 
          if (itic.eq.1) then
             CALL E04UEF ('verify level 1')
+            CALL E04UEF ('difference interval = 1d-3')
 c           CALL E04UEF ('print level = 10')
          else if (itic.eq.2) then
             CALL E04UEF ('verify level 0')
@@ -204,6 +205,7 @@ c           CALL E04UEF ('print level = 10')
 
          CALL E04UEF ('verify level 0')
          CALL E04UEF ('derivative level = 0')
+         CALL E04UEF ('difference interval = 1d-3')
 
       end if
 
@@ -240,17 +242,16 @@ c--------------------------
 
       if (nvar.lt.ntot) pa(ntot) = 1d0 - sum
 
-         yt = pa
-
+      yt = pa
 
 c                              save the final point
-            call makepp (rids)
+c           call makepp (rids)
 c                                 if logical arg = T use implicit ordering
-            gfinal = gsol1 (rids,.false.)
+c           gfinal = gsol1 (rids,.false.)
 c                                 get the bulk composition from pp
-            call getscp (rcp,rsum,rids,rids,.false.)
+c           call getscp (rcp,rsum,rids,rids,.false.)
 c                                 increment the counter
-            call savrpc (gfinal,jphct)
+c           call savrpc (gfinal,jphct)
 c---------------
          if (toc.and.lopt(54)) then 
 c                              scatter all permutations
@@ -520,7 +521,7 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-c        call savrpc (g,jphct)
+         call savrpc (g,jphct)
 
 c        if (toc) write (*,2000) gval,jphct
 2000  format (g14.6,1x,i6)
@@ -574,7 +575,7 @@ c                                 check if duplicate
 
             do j = 1, ntot
 c was nopt(37) rep_dynamic_threshold
-               if (dabs((pa(j) - zco(icoz(i)+j))).gt.zero) then
+               if (dabs((pa(j) - zco(icoz(i)+j))).gt.nopt(37)) then
                   ok = .true.
                   exit 
                end if
@@ -1568,7 +1569,7 @@ c        write (*,*) 'maialino josefino!',fname(ids),idead,iter
 c                                 need to call gsol1 here to get 
 c                                 total g, gsol4 is not computing 
 c                                 the mechanical component?
-         gfinal = gsol1 (rids,.false.)
+         gfinal = gsol1 (ids,.false.)
 
          g0 = gordp0 (ids)
 

@@ -156,11 +156,12 @@ c                                 plt output file
 c                                 blk output file
          call mertxt (tfname,prject,'.blk',0)
          call inqopn (n5,tfname)
+
+         write (*,'(80(''-''))')
+         write (*,1000) 'auto-refine'
 c                                 load the former dynamic compositions
 c                                 into the static arrays if manual
          if (iopt(6).eq.1) call reload (refine)
-
-         write (*,1000) 'auto-refine'
 c                                 repeat the calculation
          call docalc
 c                                 output ranges etc compositions if p2yx inversion

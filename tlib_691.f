@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated December 13, 2020.',
+     *     'Perple_X version 6.9.1, source updated December 16, 2020.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -1659,10 +1659,10 @@ c                                 generic thermo options
      *        4x,'p2yx_inversion         ',l1,10x,'[F] T')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
-     *        4x,'rep_static_threshold    ',g7.1E1,4x,
-     *           '[5e-3]; <0 => no replicate testing; static comp.',/,
-     *        4x,'rep_dynamic_threshold   ',g7.1E1,4x,
-     *           '[1e-4]; <0 => no replicate testing; dynamic comp.',/,
+     *        4x,'rep_static_threshold   ',g7.1E1,4x,
+     *           '[5e-3]; static opt; <0 => no replica test',/,
+     *        4x,'rep_dynamic_threshold  ',g7.1E1,4x,
+     *           '[1e-4]; dynamic opt; <0 => no replica test',/,
      *        4x,'re-refine               ',l1,9x,'[F] T')
 c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
