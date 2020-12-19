@@ -5715,8 +5715,8 @@ c                                 macroscopic formulation for normal solutions.
 
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
-         if (.not.noder(id)) then
-
+c        if (.not.noder(id)) then
+         if (deriv(id)) then
             call specis (gg,id,minfx)
 
             if (minfx) then 
@@ -7978,8 +7978,11 @@ c      end if
       g = g - tk*s
 c                                 if minfx just return with the gradient
       if (minfx) then
+
          dp(1:norder) = -dg(1:norder)
+
          return
+
       end if
 c                                 copy dg and d2g into dp and d2s
       do k = 1, norder
@@ -12586,7 +12589,7 @@ c                                 compute margules coefficients
 c                                 evaluate enthalpies of ordering
          call oenth (ids)
 
-         if (deriv(ids)) then
+         if (.not.noder(ids)) then
 
             call specis (dg,ids,minfx)
 
@@ -13024,8 +13027,8 @@ c                                 only for minfxc
 
                call setxyp (i,id,bad)
 
-               if (.not.noder(i)) then
-
+c              if (.not.noder(i)) then
+               if (deriv(i)) then 
 c                 y = p0a
 
 c                if (j.lt.16) then
@@ -14909,7 +14912,7 @@ c                                 bulk composition, the pa array will change, re
 c                                 to the p0a values
             pa(1:nstot(id)) = p0a(1:nstot(id))
 
-            if (deriv(id)) then 
+            if (.not.noder(id)) then 
 c                                 get the speciation, excess and entropy effects.
                call specis (g,id,minfx)
 
@@ -15339,7 +15342,7 @@ c                                 disordered g and take the lowest:
 
       end
 
-      subroutine gpder1 (id,q,dg,g)
+      subroutine gpder1 (id,q,dg,g,minfxc)
 c----------------------------------------------------------------------
 c subroutine to compute the newton-raphson increment (dg) in the ordering
 c parameter from the 1st and 2nd derivatives of the g of a temkin model

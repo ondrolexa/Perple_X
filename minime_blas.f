@@ -85,15 +85,10 @@ c                                 will be estimated at this
 c                                 coordinate, so choose a feasible 
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
-
-c        istuff(5) = 1
-c                                 save the original point result
-c        call gsol2 (mode,nvar,ppp,gfinal,ggrd,idead,istuff,stuff)
-
-      istuff(5) = 0
-
+c                                 flag (if ~0) to force numerical
+c                                 finite differences even when 
+c                                 derivatives are available
       istuff(6) = 0
-
 c                                 initialize bounds
       if (boundd(rids)) then 
 c                                 the endmember fractions are bounded
@@ -245,13 +240,13 @@ c--------------------------
       yt = pa
 
 c                              save the final point
-            call makepp (rids)
+c           call makepp (rids)
 c                                 if logical arg = T use implicit ordering
-            gfinal = gsol1 (rids,.false.)
+c           gfinal = gsol1 (rids,.false.)
 c                                 get the bulk composition from pp
-            call getscp (rcp,rsum,rids,rids,.false.)
+c           call getscp (rcp,rsum,rids,rids,.false.)
 c                                 increment the counter
-            call savrpc (gfinal,jphct)
+c           call savrpc (gfinal,jphct)
 c---------------
          if (toc.and.lopt(54)) then 
 c                              scatter all permutations
@@ -510,7 +505,7 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-c        call savrpc (g,jphct)
+         call savrpc (g,jphct)
 
 c        if (toc) write (*,2000) gval,jphct
 2000  format (g14.6,1x,i6)
@@ -606,69 +601,6 @@ c                                 save the endmember fractions
 
       end 
 
-      subroutine gsol3 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
-c-----------------------------------------------------------------------
-c gsol3 - a shell to call gsol1 from minfxc, ingsol must be called
-c         prior to minfxc to initialize solution specific paramters. only
-c         called for equimolar explicit o/d models. non-equimolar o/d models
-c         (currently melt(G,HGP)) involve non-linear constraints that are not
-c         currently implemented in minfxc/nlpsol.
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, jds, nvar, istart, mode, istuff(*)
-
-      double precision ppp(*), gval, psum, dgdp(*), stuff(*)
-
-      double precision gsol1, omega0
-
-      external gsol1, omega
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c-----------------------------------------------------------------------
-      jds = istuff(1)
-
-      istuff(4) = istuff(4) + 1
-
-      psum = 0d0
-
-      do i = 1, nvar
-         psum = psum + ppp(i)
-         pa(i) = ppp(i)
-      end do
-
-      pa(nstot(jds)) = 1d0 - psum
-
-      if (istuff(3).eq.0d0) then
-
-         if (deriv(jds)) then 
-
-            call getder (gval,dgdp,jds)
-
-         else 
-c                                 free energy minimization
-            gval = gsol1 (jds,.false.)
-
-         end if
-
-      else
-c                                 entropy maximization
-         gval = -omega0 (jds,pa)
-
-      end if
-
-      end
-
       subroutine gsol4 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
 c-----------------------------------------------------------------------
 c gsol4 - a shell to call gsol1 from minfxc, ingsol must be called
@@ -685,20 +617,31 @@ c-----------------------------------------------------------------------
 
       integer i, ids, nvar, istart, mode, istuff(*)
 
-      double precision ppp(*), gval, dgdp(*), stuff(*), d2s(j3,j3)
+      double precision ppp(*), gval, dgdp(*), stuff(*), d2s(j3,j3), 
+     *                 gsol1
+
+      external gsol1
 c-----------------------------------------------------------------------
       ids = istuff(1)
-c                                   on input ppp(1:nord) contains the 
+c                                   ppp(1:nord) contains the 
 c                                   proportions of the ordered species
 c                                   pa(lstot+1:nstot).
 c                                   -----------------------------------
-c                                   initialize the proportions
+c                                   set the remaining proportions
       call ppp2pa (ppp,ids)
 
-      if (istuff(3).eq.0) then 
+      if (istuff(3).eq.0) then
+
+        if (istuff(6).eq.1) then 
+c                                   numerical derivatives
+           gval = gsol1 (ids,.false.)
+
+        else
 c                                   free energy minimization
 c                                   get g and dgdp
-        call gderiv (ids,gval,dgdp,.true.,error)
+           call gderiv (ids,gval,dgdp,.true.,error)
+
+        end if
 
       else 
 c                                   negentropy minimization
@@ -742,6 +685,12 @@ c                                   proportions of the ordered species
          call dpinc (ppp(k)-p0a(jd),k,ids,jd)
 
       end do
+
+      if (dnu(ids).ne.0d0) then 
+c                                   currently dnu ~0 only for nord = 1
+         pa(1:nstot(ids)) = pa(1:nstot(ids)) / 
+     *                      (1d0 + dnu(ids)*(ppp(k)-p0a(jd)))
+      end if
 
       end
 
@@ -1073,218 +1022,6 @@ c                                 convert the y's to x's
 
       end
 
-      subroutine xmnfxc (gfinal,ids,maxs)
-c-----------------------------------------------------------------------
-c optimize solution gibbs energy or configurational entropy at constant 
-c composition subject to site fraction constraints.
-
-c     number of compositional constraints -> icomp (<k5)
-c     number of independent endmember fractions -> nstot-1 (<m19)
-c     number of site fractions -> nz (<m20)
-c     closure is forced in the objective function (gsol2) and
-c        by using the complete set of site fraction.
-c     requires that pp has been loaded in cxt7
-
-c ingsol MUST be called prior to minfxc to initialize solution/p-t
-c specific properties!
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical maxs, inp
-
-      integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
-     *        istuff(10),istate(m21), idead, nclin, ntot
-
-      double precision sum, ggrd(m19), b(k5),
-     *                 bl(m21), bu(m21), gfinal, ppp(m19), 
-     *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
-     *                 lapz(m20,m19)
-c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
-      character*14 cdint, ctol
-
-      integer nz
-      double precision apz, zl, zu
-      common/ cstp2z /apz(h9,m20,m19), zl(h9,m20), zu(h9,m20), nz(h9)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer lterm, ksub
-      common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      logical mus
-      double precision mu
-      common/ cst330 /mu(k8),mus
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      double precision wmach
-      common/ cstmch /wmach(9)
-
-      external gsol3, dummy
-c DEBUG691 minfxc
-      data iprint,inp/0,.false./
-
-      save iprint,inp
-c-----------------------------------------------------------------------
-c                                 create constraint matrix z
-c                                 --------------------------
-      ntot = nstot(ids)
-      nvar = ntot - 1
-c                                 initialize bounds
-      bu(1:nvar) = 1d20
-      bl(1:nvar) = -1d20
-
-      ppp(1:nvar) = pp(1:nvar)
-      xp(1:ntot) = pp(1:ntot)
-      inp = .false.
-c                                 load the local constraints 
-c                                 from the global arrays
-      nclin = nz(ids)
-c                                 first the site fraction constraints
-      lapz(1:nclin,1:nvar) = apz(ids,1:nclin,1:nvar)
-
-      do i = 1, nclin
-         bl(nvar+i) = zl(ids,i)
-         bu(nvar+i) = zu(ids,i)
-      end do
-c                                 get the normalized bulk composition of the solution
-c     call getxcp (b,stuff(1),ids)
-
-      nclin = nclin + icomp
-
-      call getscp (b,sum,ids,ids,.false.)
-c                                 --------------------------------
-c                                 the bulk composition constraints
-      do k = 1, icomp
-
-         i = nz(ids) + k
-
-         sum = 0d0
-         do j = 1, nvar
-            lapz(i,j) = apc(ids,k,j)
-            sum = sum + lapz(i,j) * xp(j)
-         end do
-
-         bl(nvar+i) = b(k) - apc(ids,k,ntot)
-c        if (dabs(bl(nvar+i)).lt.zero) bl(nvar+i) = 0d0
-         bu(nvar+i) = bl(nvar+i)
-
-c        write (*,*) 'sum, b ',bl(nvar+i),sum
-
-      end do
-
-      idead = -1
-
-      iprint = 0
-c                                 solution model index
-      istuff(1) = ids
-c                                 istuff(2) is set by NLP and is
-c                                 irrelevant.
-c                                 istuff(3) = 1 min g, 0 max entropy
-      if (maxs) then 
-         istuff(3) = 1
-      else 
-         istuff(3) = 0
-      end if
-c                                 obj call counter
-      istuff(4) = 0
-
-10    if (inp) then
-
-         istuff(4) = 0
-
-         iprint = 10
-
-         ppp(1:nvar) = xp(1:nvar)
-
-         write (*,*) 'ftol,fdint'
-         read (*,*) ftol, fdint
-         write (ctol,'(g14.7)') ftol
-         write (cdint,'(g14.7)') fdint
-
-         CALL E04UEF ('optimality tolerance = '//ctol)
-         CALL E04UEF ('difference interval = '//cdint)
-         write (ctol,'(i4)') iprint
-         CALL E04UEF ('print level = '//ctol)
-
-      else
-
-         iprint = 0 
-         CALL E04UEF ('nolist')
-         write (ctol,'(g14.7)') (wmach(1)*1d3)
-         CALL E04UEF ('function precision = '//ctol)
-         write (ctol,'(g14.7)') (wmach(1)*1d3)**(0.8)
-         CALL E04UEF ('optimality tolerance = '//ctol)
-         write (ctol,'(g14.7)') zero
-         CALL E04UEF ('feasibility tolerance = '//ctol)
-c step limit < nopt(5) leads to bad results, coincidence?
-         write (ctol,'(g14.7)') nopt(5)/1d-1
-         CALL E04UEF ('step limit = '//ctol)
-c low values -> more accurate search -> more function calls
-         CALL E04UEF ('linesearch tolerance = 0.1')
-         write (ctol,'(i4)') iprint
-         CALL E04UEF ('print level = '//ctol)
-
-      end if
-
-      if (deriv(ids)) then
-
-c        CALL E04UEF ('difference interval = -1')
-         if (ids.eq.4) CALL E04UEF ('verify level 1')
-         CALL E04UEF ('derivative level = 3')
-
-      else
-
-         CALL E04UEF ('difference interval = 1d-3')
-         CALL E04UEF ('verify level 0')
-         CALL E04UEF ('derivative level = 0')
-
-      end if
-
-      call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol3,iter,
-     *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
-     *            m23,istuff,stuff,idead,iprint)
-
-      if (idead.eq.2) then 
-         write (*,*) 'minfxc infeasible initial conditions'
-c        call errpau
-      end if
-
-      sum = 0d0
-
-      do i = 1, nvar
-         pa(i) = ppp(i)
-         if (dabs(pa(i)).lt.1d2*zero) then 
-            pa(i) = 0d0
-         else 
-            sum = sum + ppp(i)
-         end if 
-      end do
-
-      pa(i) = 1d0 - sum
-c                                 you toucha pa, makepp
-      call makepp (ids)
-
-      if (inp) then 
-         write (*,*) istuff(4),gfinal,istuff(1)
-         goto 10
-      end if
-
-      end
-
 
       subroutine minfxc (gfinal,ids,maxs)
 c-----------------------------------------------------------------------
@@ -1302,12 +1039,12 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical maxs, inp, tic 
+      logical maxs, inp
 
-      integer ids, i, j, k, nvar, iter, iwork(m22), iprint,
+      integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
      *        istuff(10),istate(m21), idead, nclin, ntot, lord
 
-      double precision ggrd(m19), gordp0,g0,
+      double precision ggrd(m19), gordp0, gmech, gdqf, g0,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19),gord,gsol1
@@ -1350,7 +1087,7 @@ c DEBUG691                    dummies for NCNLN > 0
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      external gsol4, gsol1, gordp0, dummy
+      external gsol4, gsol1, gordp0, gmech, gdqf, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
@@ -1358,6 +1095,8 @@ c DEBUG691 minfxc
 c-----------------------------------------------------------------------
 c                                 initialize limit expressions from p0
       call p0limt (ids)
+c                                 compute the disordered g for bailouts
+      g0 = gmech(ids) + gdqf(ids) +  gordp0 (ids)
 c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
@@ -1369,7 +1108,7 @@ c                                 pin settings from pinc0 are valid
 c                                 regardless if whether p0 is fully 
 c                                 disorderd
          if (lord.eq.0) then 
-            gfinal = gord(ids)
+            gfinal = g0
             return
          end if
 
@@ -1402,8 +1141,6 @@ c                                 is adopted here for the fully correlated case.
       end if
 
       nvar = nord(ids)
-
-      ppp(1:nstot(ids)) = pa(1:nstot(ids))
 c                                 variable bounds and local (ppp) variable
 c                                 initialization
       do k = 1, nord(ids)
@@ -1446,12 +1183,6 @@ c                                coefficients
          end do
 
       end do
-
-      idead = -1
-
-      tic = .true.
-
-      iprint = 0
 c                                 solution model index
       istuff(1) = ids
 c                                 istuff(2) is set by NLP and is
@@ -1464,13 +1195,26 @@ c                                 istuff(3) = 1 min g, 0 max entropy
       end if
 c                                 obj call counter
       istuff(4) = 0
+c                                 flag (if ~0) to force numerical
+c                                 finite differences even when 
+c                                 derivatives are available
+      istuff(6) = 0
 
-10    if (inp) then
+      itic = 0
+
+      iprint = 0
+c                                 initialize ppp
+      ppp(1:nvar) = pa(lstot(ids)+1:lstot(ids)+nvar)
+      xp(1:nvar) = ppp(1:nvar)
+
+10    idead = -1
+
+      if (inp) then
 
          istuff(4) = 0
 
          iprint = 10
-c NOT Initialized DEBUG
+
          ppp(1:nvar) = xp(1:nvar)
 
          write (*,*) 'ftol,fdint'
@@ -1509,11 +1253,21 @@ c low values -> more accurate search -> more function calls
 
       if (deriv(ids)) then
 
-c        CALL E04UEF ('difference interval = -1')
-         if (.not.tic) CALL E04UEF ('verify level 1')
-         CALL E04UEF ('derivative level = 3')
+         if (itic.le.1) CALL E04UEF ('derivative level = 3')
+
+         if (itic.eq.1) then
+            CALL E04UEF ('verify level 1')
+c           CALL E04UEF ('print level = 10')
+            CALL E04UEF ('difference interval = 1d-3')
+         else if (itic.eq.2) then
+            CALL E04UEF ('verify level 0')
+            CALL E04UEF ('derivative level = 0')
+c           CALL E04UEF ('print level = 10')
+         end if 
 
       else
+
+         istuff(6) = 1
 
          CALL E04UEF ('difference interval = 1d-3')
          CALL E04UEF ('verify level 0')
@@ -1524,19 +1278,24 @@ c        CALL E04UEF ('difference interval = -1')
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,istuff,stuff,idead,iprint)
-c                                   set pa to correspond to the final 
-c                                   values in ppp.
-      call ppp2pa (ppp,ids)
+c                                 if nlpsol returns iter = 0 and idead 
+c                                 = 0, it's likely failed, make 2 additional 
+c                                 attempts, 1st try numerical verification of 
+c                                 the derivatives, 2nd try use only numerical 
+c                                 derivatives.
+      if (iter.eq.0.and.idead.eq.0.and.itic.le.1.and.deriv(ids)) then 
 
-      if (iter.eq.0.and.idead.eq.0.and.tic.and.deriv(ids)) then 
+         ppp(1:nvar) = xp(1:nvar)
+         itic = itic + 1
 
-         pa = p0a
-         tic = .false.
+         if (itic.eq.2) istuff(6) = 1
+
          goto 10
 
-      else if (.not.tic.and.iter.gt.0) then 
-
-c        write (*,*) 'maialino josefino!',fname(ids),idead,iter
+      else if (iter.gt.0) then
+c                                   set pa to correspond to the final 
+c                                   values in ppp.
+         call ppp2pa (ppp,ids)
 
       else if (iter.eq.0) then
 
@@ -1559,8 +1318,6 @@ c                                 need to call gsol1 here to get
 c                                 total g, gsol4 is not computing 
 c                                 the mechanical component?
          gfinal = gsol1 (ids,.false.)
-
-         g0 = gordp0 (ids)
 
          if (gfinal.gt.g0) then 
             gfinal = g0
