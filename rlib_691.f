@@ -5666,7 +5666,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id
+      integer id, ntot
 
       logical minfx, order
 
@@ -5713,8 +5713,10 @@ c                                 macroscopic formulation for normal solutions.
 
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
-c        if (.not.noder(id)) then
-         if (deriv(id)) then 
+         if (.not.noder(id)) then
+         ntot = nstot(id)
+
+c        if (deriv(id)) then 
             call specis (gg,id,minfx)
 
             xg = gg 
@@ -5728,7 +5730,7 @@ c              write (*,*) gg - xg, gg, xg, id
 
             if (minfx) then 
 c                                 degenerated speciation
-               pa(1:nstot(id)) = p0a(1:nstot(id))
+               pa(1:ntot) = p0a(1:ntot)
                call minfxc (gg,id,.false.)
 
             end if
@@ -5738,8 +5740,15 @@ c                                 degenerated speciation
             call minfxc (gg,id,.false.)
 
          end if
-
+c                                 for non-equimolar o/d gexces and gmech
+c                                 are computed for the pp mass, this is 
+c                                 not ok, because the g will be normalized 
+c                                 by the molar mass computed from the pa
+c                                 array, therefore the g value is un-normalized
+c                                 here:
          gg = gg + gdqf(id) + gmech(id)
+
+         if (dnu(id).ne.0d0) gg = gg/(1d0+dnu(id)*(pa(ntot)-p0a(ntot)))
 
       else if (lorder(id)) then
 c                                 add entropic + enthalpic + excess o/d effect
@@ -13026,8 +13035,8 @@ c                                 only for minfxc
 
                call setxyp (i,id,bad)
 
-c              if (.not.noder(i)) then
-               if (deriv(i)) then 
+               if (.not.noder(i)) then
+c              if (deriv(i)) then 
                   call specis (dg,i,minfx)
 
                   if (minfx) then
@@ -13037,17 +13046,21 @@ c              if (.not.noder(i)) then
 
                else
 
-                  call minfxc (g(id),i,.false.)
+                  call minfxc (dg,i,.false.)
 
                end if
-
+c                                 for non-equimolar o/d gexces and gmech
+c                                 are computed for the pp mass, this is 
+c                                 ok, because the g will be normalized by 
+c                                 the static ctot value.
                g(id) = gexces(id) + dg + gmech(i)
+
+c              if (dnu(i).ne.0d0) g(id) = g(id)
+c    * /(1d0+dnu(i)*(pa(nstot(i))-p0a(nstot(i))))
 
                id = id + 1
 
             end do
-
-c           write (*,*) tic, jend(i,2), i
 
          else if (.not.llaar(i).and.simple(i)) then
 c                                 it's normal margules or ideal:
@@ -14874,7 +14887,9 @@ c                                 -------------------------------------
 c                                 as gsol may be called many times for the same 
 c                                 bulk composition, the pa array will change, reset
 c                                 to the p0a values
-            pa(1:nstot(id)) = p0a(1:nstot(id))
+            ntot = nstot(id)
+
+            pa(1:ntot) = p0a(1:ntot)
 
             if (.not.noder(id)) then 
 c                                 get the speciation, excess and entropy effects.
@@ -14882,7 +14897,7 @@ c                                 get the speciation, excess and entropy effects
 
                if (minfx) then
 c                                 degenerated speciation
-                  pa(1:nstot(id)) = p0a(1:nstot(id))
+                  pa(1:ntot) = p0a(1:ntot)
                   call minfxc (g,id,.false.)
 
                end if
@@ -14892,7 +14907,8 @@ c                                 derivative free speciation
                call minfxc (g,id,.false.)
 
             end if
-
+c                                 for dnu~0 this g is normalized to the 
+c                                 p0a mass.
             g = g + gmchpt(id) + gdqf(id)
 
          else if (lrecip(id).or.simple(id)) then
