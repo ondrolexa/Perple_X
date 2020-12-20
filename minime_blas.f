@@ -618,13 +618,9 @@ c-----------------------------------------------------------------------
       integer i, ids, nvar, istart, mode, istuff(*)
 
       double precision ppp(*), gval, dgdp(*), stuff(*), d2s(j3,j3), 
-     *                 gord
+     *                 gsol1
 
-      double precision zz, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      external gord
+      external gsol1
 c-----------------------------------------------------------------------
       ids = istuff(1)
 c                                   ppp(1:nord) contains the 
@@ -638,21 +634,17 @@ c                                   set the remaining proportions
 
         if (istuff(6).eq.1) then 
 c                                   numerical derivatives
-           gval = gord(ids) * (1d0 + dnu(ids) * ppp(1)-p0a(nstot(ids)))
+           gval = gsol1 (ids,.false.)
 
-        else if (dnu(ids).ne.0d0) then
-c                                   analytical derivatives dnu ~ 0
-           call gpder1 (ids,ppp(1)-p0a(nstot(ids)),dgdp(1),gval,.true.)
         else
-c                                   analytical derivatives dnu = 0
+c                                   free energy minimization
+c                                   get g and dgdp
            call gderiv (ids,gval,dgdp,.true.,error)
 
         end if
 
-      else
-c                                   negentropy minimization:
-c                                   will only be called for analytical
-c                                   dnu = 0 case.
+      else 
+c                                   negentropy minimization
          call sderiv (ids,gval,dgdp,d2s,.true.)
 
       end if
@@ -697,7 +689,7 @@ c                                   proportions of the ordered species
       if (dnu(ids).ne.0d0) then 
 c                                   currently dnu ~0 only for nord = 1
          pa(1:nstot(ids)) = pa(1:nstot(ids)) / 
-     *                      (1d0 + dnu(ids)*(ppp(1)-p0a(jd)))
+     *                      (1d0 + dnu(ids)*(ppp(k)-p0a(jd)))
       end if
 
       end
@@ -1042,10 +1034,6 @@ c     requires that pp has been loaded in cxt7
 
 c ingsol MUST be called prior to minfxc to initialize solution/p-t
 c specific properties!
-
-c this version uses only the ordered species proportions as variables.
-c the original version used numeric derivatives with all endmember proportions
-c as variables, it persisted as xmnfxc until 16/12/20.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -1056,10 +1044,10 @@ c-----------------------------------------------------------------------
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
      *        istuff(10),istate(m21), idead, nclin, ntot, lord
 
-      double precision ggrd(m19), gordp0, g0,
+      double precision ggrd(m19), gordp0, gmech, gdqf, g0,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
-     *                 lapz(m20,m19), gord
+     *                 lapz(m20,m19),gord,gsol1
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
       character*14 cdint, ctol
@@ -1099,7 +1087,7 @@ c DEBUG691                    dummies for NCNLN > 0
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      external gsol4, gordp0, dummy
+      external gsol4, gsol1, gordp0, gmech, gdqf, dummy
 c DEBUG691 minfxc
       data iprint,inp/0,.false./
 
@@ -1108,7 +1096,7 @@ c-----------------------------------------------------------------------
 c                                 initialize limit expressions from p0
       call p0limt (ids)
 c                                 compute the disordered g for bailouts
-      g0 = gordp0(ids)
+      g0 = gmech(ids) + gdqf(ids) +  gordp0 (ids)
 c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
@@ -1195,28 +1183,6 @@ c                                coefficients
          end do
 
       end do
-
-      if (dnu(ids).ne.0d0) then
-
-         nclin = 0
-         bl(1) = 0d0
-         bu(1) = 1d0
-
-         do i = 1, nrct(1,ids)
-c                                 this is probably ok for HP melt models
-c                                 as the endmember fractions are generally
-c                                 related to a site fraction
-            if (dydy(ideps(i,1,ids),1,ids).gt.0d0) cycle
-
-            ftol = -p0a(ideps(i,1,ids))/dydy(ideps(i,1,ids),1,ids)
-
-            if (ftol.lt.bu(1)) bu(1) = ftol
-
-         end do
-
-         bu(1) = bu(1) + p0a(nstot(ids))
-
-      end if
 c                                 solution model index
       istuff(1) = ids
 c                                 istuff(2) is set by NLP and is
@@ -1285,7 +1251,7 @@ c low values -> more accurate search -> more function calls
 
       end if
 
-c     if (deriv(ids)) then
+      if (deriv(ids)) then
 
          if (itic.le.1) CALL E04UEF ('derivative level = 3')
 
@@ -1299,15 +1265,15 @@ c           CALL E04UEF ('print level = 10')
 c           CALL E04UEF ('print level = 10')
          end if 
 
-c     else
+      else
 
-c        istuff(6) = 1
+         istuff(6) = 1
 
-c        CALL E04UEF ('difference interval = 1d-3')
-c        CALL E04UEF ('verify level 0')
-c        CALL E04UEF ('derivative level = 0')
+         CALL E04UEF ('difference interval = 1d-3')
+         CALL E04UEF ('verify level 0')
+         CALL E04UEF ('derivative level = 0')
 
-c     end if
+      end if
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
@@ -1351,6 +1317,8 @@ c                                   values in ppp.
 c                                 need to call gsol1 here to get 
 c                                 total g, gsol4 is not computing 
 c                                 the mechanical component?
+         gfinal = gsol1 (ids,.false.)
+
          if (gfinal.gt.g0) then 
             gfinal = g0
             pa = p0a
