@@ -14821,7 +14821,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, k, id
+      integer i, k, id, ntot
 
       logical minfx
 
