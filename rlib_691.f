@@ -5655,11 +5655,9 @@ c gsol2 - a shell to call gsol1 from minfrc, ingsol must be called
 c         prior to minfrc to initialize solution specific paramters. may be
 c         called for any type of solution model.
 
-c gsol3 - a shell to call gsol1 from minfxc, ingsol must be called
+c gsol4 - a shell to called from minfxc, ingsol must be called
 c         prior to minfxc to initialize solution specific paramters. only
-c         called for equimolar explicit o/d models. non-equimolar o/d models
-c         (currently melt(G,HGP)) involve non-linear constraints that are not
-c         currently implemented in minfxc/nlpopt.
+c         called for equimolar explicit o/d models. 
 
 c gord  - a function to compute the excess + enthalpic + entropic effects of 
 c         mixing for an explicit o/d solution model. called by gall (via specis).
@@ -5672,7 +5670,7 @@ c-----------------------------------------------------------------------
 
       logical minfx, order
 
-      double precision gg
+      double precision gg, xg
 
       double precision omega, gfluid, gzero, gmech, gord, gdqf, gmech0,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid, gfes
@@ -5716,16 +5714,22 @@ c                                 macroscopic formulation for normal solutions.
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
 c        if (.not.noder(id)) then
-         if (deriv(id)) then
+         if (deriv(id)) then 
             call specis (gg,id,minfx)
 
+            xg = gg 
+
+c              pa(1:nstot(id)) = p0a(1:nstot(id))
+c              call minfxc (gg,id,.false.)
+
+            if (dabs(gg-xg).gt.1d0) then 
+c              write (*,*) gg - xg, gg, xg, id
+            end if
+
             if (minfx) then 
-c                                 degenerated, minfx only set for equimolar speciation.
+c                                 degenerated speciation
+               pa(1:nstot(id)) = p0a(1:nstot(id))
                call minfxc (gg,id,.false.)
-
-            else
-
-               gg = gg + gdqf(id) + gmech(id)
 
             end if
 
@@ -5734,6 +5738,8 @@ c                                 degenerated, minfx only set for equimolar spec
             call minfxc (gg,id,.false.)
 
          end if
+
+         gg = gg + gdqf(id) + gmech(id)
 
       else if (lorder(id)) then
 c                                 add entropic + enthalpic + excess o/d effect
@@ -12546,8 +12552,8 @@ c-----------------------------------------------------------------------
 
       integer id, ids
 
-      double precision gzero, dg, gerk, gph, gproj, gcpd, gfesi, gex,
-     *                gfecr1, gfesic, gfes, gexces, gmchpr, gmech0, gsum
+      double precision gzero, gerk, gph, gproj, gcpd, gfesi, gex,
+     *                gfecr1, gfesic, gfes, gexces, gmchpr, gmech0
 
       external gzero, gerk, gproj, gcpd, gfesi, gfecr1, gfesic, gfes, 
      *         gex, gexces, gmchpr, gmech0
@@ -12591,29 +12597,22 @@ c                                 evaluate enthalpies of ordering
 
          if (.not.noder(ids)) then
 
-            call specis (dg,ids,minfx)
+            call specis (gph,ids,minfx)
 
-            if (minfx) then 
-c                                 bailout from specis
-c                                 load endmember g's for minfxc
-               call ingmfx (ids)
+            if (minfx) then
 c                                 degenerated, minfx only set for equimolar speciation.
+               pa(1:nstot(ids)) = p0a(1:nstot(ids))
                call minfxc (gph,ids,.false.)
-
-            else
-c                                 add dqf corrections and mech
-               gph = gsum + gexces (id) + dg
 
             end if
 
          else
 c                                 no derivatives
-c                                 load endmember g's for minfxc
-               call ingmfx (ids)
-
-               call minfxc (gph,ids,.false.)
+            call minfxc (gph,ids,.false.)
 
          end if
+c                                 add dqf corrections and mech
+         gph = gph + gmchpr(ids) + gexces (id)
 
       else if (ksmod(ids).eq.0) then
 
@@ -12683,7 +12682,7 @@ c                                 and/or dqf corrections:
 
          end if
 c                                 add gmech
-         gph = gph +  gmchpr (ids)
+         gph = gph + gmchpr(ids)
 c                                 for van laar get fancier excess function
          if (llaar(ids)) then
 
@@ -13029,55 +13028,20 @@ c                                 only for minfxc
 
 c              if (.not.noder(i)) then
                if (deriv(i)) then 
-c                 y = p0a
-
-c                if (j.lt.16) then
-c                   id = id + 1 
-c                   cycle
-c                end if 
-
-c10                   call minfxc (g1,i,.false.)
-
-c                 junk = pa
-c                 pa = p0a
-
                   call specis (dg,i,minfx)
 
                   if (minfx) then
-                     pa = p0a
-                     call minfxc (g(id),i,.false.)
-                  else
-                     g(id) = gexces (id) + dg + gmech (i)
+                     pa(1:nstot(i)) = p0a(1:nstot(i))
+                     call minfxc (dg,i,.false.)
                   end if
-c                if (dg-g1.lt.-1d-1) then
-c                   tic = tic + 1
-c                   write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-c                   write (*,5000) 'dg = ',dg-g1
-c                   write (*,5000) 'pan  ',junk(1:nstot(i))
-c                   write (*,5000) 'pa   ',pa(1:nstot(i))
-c                   write (*,5000) 'pa0  ',p0a(1:nstot(i))
-
-c                else if (dg-g1.gt.1d0.and..not.minfx) then 
-c                   tic = tic + 1
-c                   write (*,*) 'wackwo wolly minfx =', minfx
-c                   write (*,*) 'ids = ', i, fname(i),j, jend(i,2)
-c                   write (*,5000) 'dg = ',dg-g1
-c                   write (*,5000) 'pan  ',junk(1:nstot(i))
-c                   write (*,5000) 'pa   ',pa(1:nstot(i))
-c                   write (*,5000) 'pa0  ',p0a(1:nstot(i))
-
-c                end if
-
-c                 if (j.eq.11) goto 10
-c                 if (tic.eq.-1) goto 10
-
-5000   format (a,12(g10.4,1x))
 
                else
 
                   call minfxc (g(id),i,.false.)
 
                end if
+
+               g(id) = gexces(id) + dg + gmech(i)
 
                id = id + 1
 
@@ -14917,29 +14881,24 @@ c                                 get the speciation, excess and entropy effects
                call specis (g,id,minfx)
 
                if (minfx) then
-c                                 dumbass call to get endmember g's
-                  call ingmfx (id)
 c                                 degenerated speciation
+                  pa(1:nstot(id)) = p0a(1:nstot(id))
                   call minfxc (g,id,.false.)
-
-               else 
-
-                  g = g + gmchpt (id) + gdqf (id)
 
                end if
 
             else 
-
-               call ingmfx (id)
-c                                 degenerated speciation
+c                                 derivative free speciation
                call minfxc (g,id,.false.)
 
             end if
 
+            g = g + gmchpt(id) + gdqf(id)
+
          else if (lrecip(id).or.simple(id)) then
 c                                 -------------------------------------
 c                                 macroscopic reciprocal solution w/o order-disorder
-            g = gmchpt (id) + gdqf (id) - t*omega (id,pa) + gex (id,pa)
+            g = gmchpt(id) + gdqf(id) - t*omega(id,pa) + gex(id,pa)
 
          else if (ksmod(id).eq.20) then
 c                                 electrolytic solution
@@ -15258,7 +15217,7 @@ c                                 the root must lie at p > pmax - nopt(5).
          qmax = rqmax - zero
          qmin = zero
 c                                 the p's are computed in gpderi
-            call gpder1 (id,qmax-q0,dq,g)
+            call gpder1 (id,qmax-q0,dq,g,.false.)
 
             if (dq.lt.0d0) then
 c                                 at the maximum concentration, the
@@ -15269,7 +15228,7 @@ c                                 business
 
             else
 c                                 try the min
-               call gpder1 (id,qmin-q0,dq,g)
+               call gpder1 (id,qmin-q0,dq,g,.false.)
 
                if (dq.gt.0d0) then
 c                                 ok
@@ -15292,7 +15251,7 @@ c                                 infinite loops
 c                                 newton raphson iteration
          do
 
-            call gpder1 (id,q-q0,dq,g)
+            call gpder1 (id,q-q0,dq,g,.false.)
 
             call pcheck (q,qmin,qmax,dq,done)
 c                                 done is just a flag to quit
@@ -15342,7 +15301,7 @@ c                                 disordered g and take the lowest:
 
       end
 
-      subroutine gpder1 (id,q,dg,g)
+      subroutine gpder1 (id,q,dg,g,minfxc)
 c----------------------------------------------------------------------
 c subroutine to compute the newton-raphson increment (dg) in the ordering
 c parameter from the 1st and 2nd derivatives of the g of a temkin model
@@ -15355,6 +15314,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, k, i1, i2, id
+
+      logical minfxc
 
       double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, zinf,
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
@@ -15605,13 +15566,18 @@ c                                 add the contibution from the last species:
       dg  = dg  + enth(1)*dp(nstot(id))  - r*v(2)*ds
 c                                 the normalized g derivative
       dng  = g * dgnorm + gnorm * dg
+c                                 the normalized g:
+      g   = g * gnorm
+
+      if (minfxc) then
+         dg = dng
+         return
+      end if
 c                                 and second derivative
       d2g = gnorm * (d2g + enth(1)*d2p(nstot(id)) - r*v(2)*d2s)
      *       + 2d0 * dg * dgnorm
 c                                 dg becomes the newton-raphson increment:
       dg = -dng/d2g
-c                                 and g the normalized g:
-      g   = g * gnorm
 
       end
 
