@@ -17549,9 +17549,9 @@ c                                 solvent species
       else
 c                                 solutions with no dependent endmembers:
 c                                 pa coordinates used to compute the composition
-         do i = 1, nstot(ids)
+         do i = 1, lstot(ids)
             do j = 1, icomp
-               scp(j) = scp(j) + pa(i) * endc(ids,i,j)
+               scp(j) = scp(j) + pp(i) * endc(ids,i,j)
             end do
          end do
 

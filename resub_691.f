@@ -571,7 +571,7 @@ c                                  lagged speciation pure solvent
 
                rkwak = .true.
 c                                 save the composition
-               call savrpc (g,jphct)
+               call savrpc (g,nopt(37),jphct)
 
             end if
 
@@ -628,9 +628,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 c                                 -------------------------------------
 c                                 local variables
-      integer i, kcoct, id, ids, j
-c DEBUG691
-      double precision zt(m10,m11), sum
+      integer i, kcoct, id, ids
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -669,20 +667,8 @@ c                                 it's a solution:
      *                            zco(icoz(id)+1:icoz(id)+nstot(ids))
 
          kcoct = kcoct + nstot(ids)
-c DEBUG691
-         sum = 0d0
-         do j = 1, nstot(ids)
-            sum = sum + ycoor(lcoor(i)+j)
-            pa(j) = zco(icoz(id)+j)
-         end do
 
          if (.not.refine.or.lopt(55)) call savdyn (ids)
-
-         if (sum.lt.1d0-zero.or.sum.gt.1d0+zero) then
-            write (*,*) 'low sum, savpa, zs, ids, id:',ids,sum, id
-c           call errpau
-            call p2zall (pa,zt,m10,ids)
-         end if 
 
       end do 
 
@@ -696,9 +682,6 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-cDEBUG691
-      integer i
-      double precision sum
 
       integer id, ids, kcoor
 c                                 working arrays
@@ -709,15 +692,6 @@ c----------------------------------------------------------------------
       kcoor = lcoor(id)
 
       pa(1:nstot(ids)) = ycoor(kcoor+1:kcoor+nstot(ids))
-
-      sum = 0d0
-      do i = 1, nstot(ids) 
-         sum = sum + pa(i)
-      end do 
-
-      if (sum.gt.1.00001d0.or.sum.lt.0.99999d0) then 
-         write (*,*) 'wyf sum id',sum,ids
-      end if
 
       call makepp (ids)
 
@@ -1111,7 +1085,7 @@ c                                count fraction of impure solvent
             jd = jdsol(i,j)
 
 c           if (.not.refine.or.lopt(55)) then 
-c                                load into pa and save for refinement
+c                                 load into pa and save for refinement
 c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
 c              call savdyn (ids)
 c           end if

@@ -248,7 +248,7 @@ c                                 fractionation_upper_threshold
 c                                 aq_vapor_epsilon
       nopt(34) = 1d0
 c                                 rep_static_threshold (savdyn)
-      nopt(35) = 5d-3
+      nopt(35) = 1d-2
 c                                 rep_dynamic_threshold (savrpc)
       nopt(37) = 1d-4
 c                                 -------------------------------------
@@ -1660,7 +1660,7 @@ c                                 generic thermo options
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
      *        4x,'rep_static_threshold   ',g7.1E1,4x,
-     *           '[5e-3]; static opt; <0 => no replica test',/,
+     *           '[1e-2]; static opt; <0 => no replica test',/,
      *        4x,'rep_dynamic_threshold  ',g7.1E1,4x,
      *           '[1e-4]; dynamic opt; <0 => no replica test',/,
      *        4x,'re-refine               ',l1,9x,'[F] T')

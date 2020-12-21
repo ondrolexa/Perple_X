@@ -238,86 +238,34 @@ c--------------------------
       if (nvar.lt.ntot) pa(ntot) = 1d0 - sum
 
       yt = pa
-
-c                              save the final point
-c           call makepp (rids)
+c                                 save the final point, the point may have
+c                                 already been saved by gsol2 but because
+c                                 gsol2 uses a replicate threshold of nopt(37)
+c                                 a near solution rpc would prevent gsol2 from 
+c                                 saving the final composition. here the replicate
+c                                 threshold is reduced to zero (sqrt(eps)).
+      call makepp (rids)
 c                                 if logical arg = T use implicit ordering
-c           gfinal = gsol1 (rids,.false.)
+      gfinal = gsol1 (rids,.false.)
 c                                 get the bulk composition from pp
-c           call getscp (rcp,rsum,rids,rids,.false.)
+      call getscp (rcp,rsum,rids,rids,.false.)
 c                                 increment the counter
-c           call savrpc (gfinal,jphct)
+      call savrpc (gfinal,zero,jphct)
 c---------------
-         if (toc.and.lopt(54)) then 
-c                              scatter all permutations
-
-         do j = 1, 2
-
-            pinc = pinc0/4**(j-1)
-
-         ind = 0
-
-
-         do i = 1, 2**ntot
-
-            call binind (ind,ntot)
-
-            sum = 0d0
-
-            pa = yt
-
-            do k = 1, ntot
-               pa(k) = pa(k)*(1d0 + ind(k)*pinc)
-               sum = sum + pa(k)
-            end do
-
-            pa = pa/sum
-
-1001  format (i5,1x,g12.6,12(1x,f7.4))
-1000  format (18x,12(1x,f7.4))
-
-
-            if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
-     *         then
-
-c                write (*,*) 'oik0'
-
-               cycle 
-
-            end if
-
-            call makepp (rids)
-c                                 if logical arg = T use implicit ordering
-            gfinal = gsol1 (rids,.true.)
-c                                 get the bulk composition from pp
-            call getscp (rcp,rsum,rids,rids,.false.)
-c                                 increment the counter
-            call savrpc (gfinal,jphct)
-
-         end do
-
-         end do
-
-         else if (lopt(54)) then
+         if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
             do j = 1, 1
 
             pinc = 1d0 + pinc0/2**(j-1)
 
-            do i = 1, ntot
+            do i = 1, lstot(rids)
 
                pa = yt/pinc
  
                pa(i) = pa(i) + (1d0 - 1d0/pinc)
 
             if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
-     *         then
-
-c                write (*,*) 'oik0'
-
-               cycle 
-
-            end if
+     *                                                            cycle 
 
             call makepp (rids)
 c                                 if logical arg = T use implicit ordering
@@ -325,7 +273,7 @@ c                                 if logical arg = T use implicit ordering
 c                                 get the bulk composition from pp
             call getscp (rcp,rsum,rids,rids,.false.)
 c                                 increment the counter
-            call savrpc (gfinal,jphct)
+            call savrpc (gfinal,nopt(37),jphct)
 
          end do
 
@@ -334,37 +282,6 @@ c                                 increment the counter
          end if
 
       end if
-
-
-      end
-
-      subroutine binind (ind,ntot)
-c-----------------------------------------------------------------------
-c-----------------------------------------------------------------------
-      implicit none
-
-      integer ind(*), i, j, ntot
-c                                 find the highest non-zero index
-      do j = ntot, 1, -1
-         if (ind(j).eq.1) exit
-      end do
-c                                 find the first zero index
-      do i = 1, j + 1
-
-         if (ind(i).eq.0) then
-
-            if (i.gt.j) then
-               ind(1:j) = 0
-               ind(i) = 1
-            else
-               ind(i) = 1
-            end if
-
-            return
-
-         end if
-
-      end do
 
       end
 
@@ -505,7 +422,7 @@ c                                 get the bulk composition from pp
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
-         call savrpc (g,jphct)
+         call savrpc (g,nopt(37),jphct)
 
       end if
 
@@ -515,7 +432,7 @@ c                                 increment the counter
 
       end
 
-      subroutine savrpc (g,phct)
+      subroutine savrpc (g,tol,phct)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -527,7 +444,7 @@ c-----------------------------------------------------------------------
 
       integer phct, i, j, ntot
 
-      double precision g, diff
+      double precision g, diff, tol
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -555,8 +472,8 @@ c                                 check if duplicate
             ok = .false.
 
             do j = 1, ntot
-c was nopt(37) rep_dynamic_threshold
-               if (dabs((pa(j) - zco(icoz(i)+j))).gt.nopt(37)) then
+
+               if (dabs((pa(j) - zco(icoz(i)+j))).gt.tol) then
                   ok = .true.
                   exit 
                end if
