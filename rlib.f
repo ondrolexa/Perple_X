@@ -8872,8 +8872,9 @@ c--------------------------------------------------------------------------
 
       integer im, h, i, j, l, index, i228, oim, phct
 
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -8989,17 +8990,17 @@ c use mname array to flag retained absent endmembers
 
       if (istg(im,1).eq.2.and.mstot(im).eq.4) then
 c                                special case 1, bin-bin reciprocal solution
-         write (names(phct),1020) fname(im), znm(1,1),znm(2,1)
+         write (names(phct),1020) tname, znm(1,1),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.3)
      *        then
 c                                special case 2, tern-bin reciprocal solution
-         write (names(phct),1060) fname(im), znm(1,1),znm(1,2),znm(2,1)
+         write (names(phct),1060) tname, znm(1,1),znm(1,2),znm(2,1)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.6.and.ispg(im,1,1).eq.2)
      *        then
 c                                special case 3, bin-tern reciprocal solution
-         write (names(phct),1060) fname(im), znm(1,1),znm(2,1),znm(2,2)
+         write (names(phct),1060) tname, znm(1,1),znm(2,1),znm(2,2)
 
       else if (istg(im,1).eq.2.and.mstot(im).eq.9) then
 c                                special case 4, tern-tern reciprocal solution
@@ -9027,14 +9028,14 @@ c                                ternary solutions
      *                             pnm(j), j = 1, 2)
       else if (mstot(im).eq.4) then
 c                                quaternary solutions
-         write (names(phct),1060) fname(im), (pnm(j), j = 1, 3)
+         write (names(phct),1060) tname, (pnm(j), j = 1, 3)
 
       else
 c                                all the rest:
          if (phct.lt.1000000) then
-            write (names(phct),1080) fname(im), phct
+            write (names(phct),1080) tname, phct
          else if (phct.lt.10000000) then
-            write (names(phct),1100) fname(im), phct
+            write (names(phct),1100) tname, phct
          else
             write (names(phct),'(i8)') phct
          end if
@@ -9067,7 +9068,7 @@ c                                 bulk composition stuff
             scp(l) = 0d0
          else if (scp(l).lt.0d0.and.im.ne.i228) then
             i228 = im
-            call warn (228,scp(l),l,fname(im))
+            call warn (228,scp(l),l,tname)
          end if
 
       end do
@@ -9075,7 +9076,7 @@ c                                 check if the phase consists
 c                                 entirely of saturated components:
       if (ctot(phct).lt.zero) then
 
-         if (im.ne.oim) call warn (55,scp(1),l,fname(im))
+         if (im.ne.oim) call warn (55,scp(1),l,tname)
 
          bad = .true.
          oim = im
@@ -9152,7 +9153,7 @@ c                              model:
 c                              user has made a dqf to an ordered species
 c                              or a dependent endmember
          if (kdsol(knsp(index,im)).lt.0)
-     *                       call error (227,exces(1,1),index,fname(im))
+     *                       call error (227,exces(1,1),index,tname)
 
          if (depend) then
             do j = 1, m3

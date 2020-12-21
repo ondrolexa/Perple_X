@@ -5647,20 +5647,23 @@ c         only called by WERAMI/MEEMUM/FRENDLY via function ginc. may be
 c         called for any tybe of solution model.
 
 c gsol1 - identical to gsol but can only been called after gall and is
-c         only called by loadgx. ingsol must be called prior to
+c         only called by minfrc. ingsol must be called prior to
 c         gsol1 to initialize p-t dependent model parameters. may be
-c         called for any type of solution model.
+c         called for any type of solution model. if gsol1 is called 
+c         with order = .true. it returns the p0 normalized g, otherwise
+c         p0 = pa. minfrc sets order = F except for scatter points.
 
 c gsol2 - a shell to call gsol1 from minfrc, ingsol must be called
 c         prior to minfrc to initialize solution specific paramters. may be
-c         called for any type of solution model.
+c         called for any type of solution model. gsol2 sets order = F.
 
-c gsol4 - a shell to called from minfxc, ingsol must be called
+c gsol4 - a shell to call gsol1 from minfxc, ingsol must be called
 c         prior to minfxc to initialize solution specific paramters. only
-c         called for equimolar explicit o/d models. 
+c         called for implicit o/d models. p0 normalization
 
 c gord  - a function to compute the excess + enthalpic + entropic effects of 
-c         mixing for an explicit o/d solution model. called by gall (via specis).
+c         mixing for an implicit o/d solution model. called by gall (via specis), 
+c         gsol4. pa normalization.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -5740,18 +5743,22 @@ c                                 degenerated speciation
             call minfxc (gg,id,.false.)
 
          end if
-c                                 for non-equimolar o/d gexces and gmech
+c                                 for non-equimolar all the terms here
 c                                 are computed for the pp mass, this is 
-c                                 not ok, because the g will be normalized 
-c                                 by the molar mass computed from the pa
-c                                 array, therefore the g value is un-normalized
-c                                 here:
+c                                 ok because the g will be normalized 
+c                                 by the molar mass computed from the p0
+c                                 array.
          gg = gg + gdqf(id) + gmech(id)
-
-         if (dnu(id).ne.0d0) gg = gg/(1d0+dnu(id)*(pa(ntot)-p0a(ntot)))
 
       else if (lorder(id)) then
 c                                 add entropic + enthalpic + excess o/d effect
+c                                 gdqf and gmech are for the p0 mass, gord is for
+c                                 the pa mass, however this case is only called
+c                                 when p0 = pa
+          if (p0a(nstot(id)).ne.pa(nstot(id))) then
+             call errdbg ('p0~=pa gsol1 2')
+          end if
+
           gg = gdqf(id) + gmech(id) + gord(id)
 
       else if (ksmod(id).eq.0) then
@@ -7723,6 +7730,8 @@ c-----------------------------------------------------------------------
 
       integer id,k,l,ind
 
+      double precision sum
+
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
@@ -7731,9 +7740,10 @@ c-----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c----------------------------------------------------------------------
 c                                 order-disorder, need initial speciation
-c                                 usually fully disordered
+c                                 fully disordered for static compositions
+c                                 but may be partially ordered for dynamic
+c                                 compositions. 
       p0a(1:nstot(id)) = pa(1:nstot(id))
-
       pp(1:nstot(id)) = pa(1:nstot(id))
 
       do k = 1, nord(id)
@@ -12916,6 +12926,7 @@ c                               a solution transform the endmember G's:
       subroutine gall
 c-----------------------------------------------------------------------
 c subroutine gall computes molar free energies of all static compounds.
+c for non-equimolar o/d returns the p0 normalized g.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -13036,7 +13047,7 @@ c                                 only for minfxc
                call setxyp (i,id,bad)
 
                if (.not.noder(i)) then
-c              if (deriv(i)) then 
+
                   call specis (dg,i,minfx)
 
                   if (minfx) then
@@ -13050,13 +13061,10 @@ c              if (deriv(i)) then
 
                end if
 c                                 for non-equimolar o/d gexces and gmech
-c                                 are computed for the pp mass, this is 
+c                                 are computed for the p0 mass, this is 
 c                                 ok, because the g will be normalized by 
 c                                 the static ctot value.
                g(id) = gexces(id) + dg + gmech(i)
-
-c              if (dnu(i).ne.0d0) g(id) = g(id)
-c    * /(1d0+dnu(i)*(pa(nstot(i))-p0a(nstot(i))))
 
                id = id + 1
 
@@ -14810,12 +14818,13 @@ c                                 meemum/werami
 c-----------------------------------------------------------------------
 c gsol computes the total (excess+ideal) free energy of solution
 c for a solution identified by index ids and composition pa(m4) input
-c from cxt7.
+c from cxt7
 
 c gsol assumes the endmember g's have not been calculated by gall and is
-c      called by WERAMI and MEEMUM for output purposes.
+c      called by WERAMI and MEEMUM via ginc for output purposes.
+
 c gsol1 is identical to gsol but can only been called after gall and is
-c      called by VERTEX and MEEMUM.
+c      called by VERTEX and MEEMUM via minfrc.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -14907,7 +14916,7 @@ c                                 derivative free speciation
                call minfxc (g,id,.false.)
 
             end if
-c                                 for dnu~0 this g is normalized to the 
+c                                 for dnu ~=0 this g is normalized to the 
 c                                 p0a mass.
             g = g + gmchpt(id) + gdqf(id)
 
@@ -15307,11 +15316,11 @@ c                                 starting point compute the fully ordered
 c                                 g, specis will compare this to the
 c                                 disordered g and take the lowest:
          do i = 1, nstot(id)
-            pa(i) = (p0a(i) + dydy(i,1,id)*qmax) / (1d0 + dnu(id)*qmax)
+            pa(i) = (p0a(i) + dydy(i,1,id)*rqmax)/(1d0 + dnu(id)*rqmax)
          end do
 
          g = (pa(nstot(id))*enth(1) - t*omega(id,pa) + gex(id,pa)) *
-     *       (1d0 - qmax)
+     *       (1d0 + dnu(id)*rqmax)
 
       end if
 
@@ -20105,7 +20114,7 @@ c                                with respect to the ordered species
      *                                  - depnu(i,j)
             dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
          end do
-c                                dnu ~0 => speciation reaction is not equimolar
+c                                dnu =~ 0 => speciation reaction is not equimolar
          if (dabs(dnu(im)).gt.zero) then
             if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//

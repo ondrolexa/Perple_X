@@ -507,9 +507,6 @@ c                                 save the composition
 c                                 increment the counter
          call savrpc (g,jphct)
 
-c        if (toc) write (*,2000) gval,jphct
-2000  format (g14.6,1x,i6)
-
       end if
 
 1000  format (/,'**warning ver205** lagged speciation failed, ',
@@ -520,7 +517,7 @@ c        if (toc) write (*,2000) gval,jphct
 
       subroutine savrpc (g,phct)
 c-----------------------------------------------------------------------
-c save a dynamic composition for the lp solver
+c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
       implicit none
 
@@ -605,9 +602,9 @@ c                                 save the endmember fractions
 c-----------------------------------------------------------------------
 c gsol4 - a shell to call gsol1 from minfxc, ingsol must be called
 c         prior to minfxc to initialize solution specific paramters. only
-c         called for equimolar explicit o/d models. non-equimolar o/d models
-c         (currently melt(G,HGP)) involve non-linear constraints that are not
-c         currently implemented in minfxc/nlpsol.
+c         called for implicit o/d models. 
+
+c         returns the p0 normalized g for non-equimolar o/d.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -641,8 +638,9 @@ c                                   numerical derivatives
            gval = gord(ids) * (1d0 + dnu(ids) * ppp(1)-p0a(nstot(ids)))
 
         else if (dnu(ids).ne.0d0) then
-c                                   analytical derivatives dnu ~ 0
+c                                   analytical derivatives dnu ~= 0
            call gpder1 (ids,ppp(1)-p0a(nstot(ids)),dgdp(1),gval,.true.)
+
         else
 c                                   analytical derivatives dnu = 0
            call gderiv (ids,gval,dgdp,.true.,error)
@@ -695,7 +693,7 @@ c                                   proportions of the ordered species
       end do
 
       if (dnu(ids).ne.0d0) then 
-c                                   currently dnu ~0 only for nord = 1
+c                                   currently dnu ~= 0 only for nord = 1
          pa(1:nstot(ids)) = pa(1:nstot(ids)) / 
      *                      (1d0 + dnu(ids)*(ppp(1)-p0a(jd)))
       end if
@@ -1035,6 +1033,8 @@ c                                 convert the y's to x's
 c-----------------------------------------------------------------------
 c optimize solution gibbs energy or configurational entropy at constant 
 c composition subject to site fraction constraints.
+
+c returns the p0 normalized g for non-equimolar o/d.
 
 c     number of independent endmember fractions -> <j3
 c     number of constraints -> < j3*j5 * 2
