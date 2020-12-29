@@ -5705,9 +5705,9 @@ c----------------------------------------------------------------------
 c                                 special is reserved for special models 
 c                                 that set standard flags (lorder and/or lrecip)
 c                                 currently only Nastia's version of BCC/FCC Fe-Si-C Lacaze and Sundman
-            gg =  gfesic (pa(1),pa(3),pa(4),
-     *                    g(jend(id,3)),g(jend(id,4)),
-     *                    g(jend(id,5)),g(jend(id,6)),ksmod(id))
+         gg =  gfesic (pa(1),pa(3),pa(4),
+     *                 g(jend(id,3)),g(jend(id,4)),
+     *                 g(jend(id,5)),g(jend(id,6)),ksmod(id))
 
       else if (simple(id)) then
 c                                 -------------------------------------
@@ -5717,23 +5717,13 @@ c                                 macroscopic formulation for normal solutions.
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
          if (.not.noder(id)) then
-         ntot = nstot(id)
+c        if (deriv(id)) then
 
-c        if (deriv(id)) then 
             call specis (gg,id,minfx)
-
-            xg = gg 
-
-c              pa(1:nstot(id)) = p0a(1:nstot(id))
-c              call minfxc (gg,id,.false.)
-
-            if (dabs(gg-xg).gt.1d0) then 
-c              write (*,*) gg - xg, gg, xg, id
-            end if
 
             if (minfx) then 
 c                                 degenerated speciation
-               pa(1:ntot) = p0a(1:ntot)
+               pa(1:nstot(id)) = p0a(1:nstot(id))
                call minfxc (gg,id,.false.)
 
             end if
@@ -5755,11 +5745,7 @@ c                                 add entropic + enthalpic + excess o/d effect
 c                                 gdqf and gmech are for the p0 mass, gord is for
 c                                 the pa mass, however this case is only called
 c                                 when p0 = pa
-          if (p0a(nstot(id)).ne.pa(nstot(id))) then
-             call errdbg ('p0~=pa gsol1 2')
-          end if
-
-          gg = gdqf(id) + gmech(id) + gord(id)
+         gg = gdqf(id) + gmech(id) + gord(id)
 
       else if (ksmod(id).eq.0) then
 c                                 ------------------------------------
@@ -10214,8 +10200,10 @@ c                                 reset iphct and reload static
       do i = 1, isoct
 
          ntot = nstot(i)
+c                                 set tname for soload diagnostics
+         tname = fname(i)
 
-         write (*,1100) jend(i,2), fname(i)
+         write (*,1100) jend(i,2), tname
          id = id + jend(i,2)
 
          do j = 1, jend(i,2)
@@ -13047,7 +13035,7 @@ c                                 only for minfxc
                call setxyp (i,id,bad)
 
                if (.not.noder(i)) then
-
+c              if (deriv(i)) then
                   call specis (dg,i,minfx)
 
                   if (minfx) then

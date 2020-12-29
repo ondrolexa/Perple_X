@@ -13081,7 +13081,7 @@ C
             else 
 c DEBUG DEBUG
                if (jdel.gt.0.and.nfree.eq.ldq) then 
-                  write (*,*) 'bugwandita!'
+c                 write (*,*) 'bugwandita!'
                   msg = 'infeas'
                   goto 20
                end if

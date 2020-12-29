@@ -417,7 +417,7 @@ c                                 get the bulk composition from pp
 
       istuff(3) = istuff(3) + 1
 
-      if (istuff(2).ne.0.and.(nvar.lt.nstot(rids).or.
+      if (lopt(57).and.istuff(2).ne.0.and.(nvar.lt.nstot(rids).or.
      *    sum1.ge.one.and.sum1.le.1d0+zero).and.rsum.gt.zero) then
 c                                 save the composition
          istuff(4) = istuff(4) + 1
@@ -799,7 +799,7 @@ c                                 cold start
 
 c     if (lopt(28)) call begtim (9)
 
-      write (ctol,'(g14.7)') tol
+      write (ctol,'(d14.7)') tol
       write (cit,'(i4)') l6
 
       call e04mhf ('nolist')

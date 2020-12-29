@@ -327,14 +327,14 @@ c                                 overwriting warm start parameters
 
 c        if (lopt(28)) call begtim (8)
 c                                 do the optimization
-         write (ctol,'(g14.7)') zero
+         write (ctol,'(d14.7)') zero
          write (cit,'(i4)') l6
 
          call e04mhf ('nolist')
          call e04mhf ('iteration limit = '//cit)
-c        call e04mhf ('feasibility tolerance = '//ctol)
+         call e04mhf ('feasibility tolerance = '//ctol)
          call e04mhf ('cold start')
-         call e04mhf ('problem type = lp')
+c        call e04mhf ('problem type = lp')
          write (ctol,'(i4)') iprint
          call e04mhf ('print level = '//ctol)
 c        call e04mhf ('minimum sum of infeasibilities = yes')
@@ -659,7 +659,7 @@ c----------------------------------------------------------------------
          ids = jkp(id)
          lkp(i) = ids
 c                                 cycle on a compound
-         if (ids.lt.0) cycle
+         if (ids.lt.0.or.id.le.jpoint) cycle
 
          lcoor(i) = kcoct
 c                                 it's a solution:
@@ -668,7 +668,10 @@ c                                 it's a solution:
 
          kcoct = kcoct + nstot(ids)
 
-         if (.not.refine.or.lopt(55)) call savdyn (ids)
+         if (lopt(58).and.(.not.refine.or.lopt(55))) then
+            pa(1:nstot(ids)) = zco(icoz(id)+1:icoz(id)+nstot(ids))
+            call savdyn (ids)
+         end if
 
       end do 
 
@@ -1084,11 +1087,11 @@ c                                count fraction of impure solvent
 
             jd = jdsol(i,j)
 
-c           if (.not.refine.or.lopt(55)) then 
+            if (.not.lopt(58).and.(.not.refine.or.lopt(55))) then 
 c                                 load into pa and save for refinement
-c              pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
-c              call savdyn (ids)
-c           end if
+               pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+               call savdyn (ids)
+            end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 
                xx =  amt(jd)/bnew(i)
@@ -1145,7 +1148,7 @@ c         end if
             end do
 c DEBUG691
             if (sum.lt.one.or.sum.gt.1d0+zero) then
-               write (*,*) 'bad pa3 sum'
+               write (*,*) 'bad pa3 sum',ksol(i,1),sum
             end if
 
       end do
@@ -1164,7 +1167,7 @@ c                                 and solvent mass.
          if (lopt(32).and.ksmod(ids).eq.39) caq(i,1:nat) = ncaq(i,1:nat)
 c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
-         if (lopt(56)) call sollim (ids,i)
+         if (lopt(11)) call sollim (ids,i)
 
       end do
 

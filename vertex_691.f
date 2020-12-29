@@ -122,7 +122,7 @@ c                                 title page for print file:
 c                                 do the calculation
       call docalc
 c                                 output ranges etc compositions if p2yx inversion
-      if (lopt(56)) call outlim
+      if (lopt(11)) call outlim
 c                                 output autorefine arf file and load
 c                                 rpcs into static array (routine reload)
       call outarf
@@ -165,7 +165,7 @@ c                                 into the static arrays if manual
 c                                 repeat the calculation
          call docalc
 c                                 output ranges etc compositions if p2yx inversion
-         if (lopt(56)) call outlim
+         if (lopt(11)) call outlim
 c                                 output arf file if auto-re-refine
          if (lopt(55)) call outarf
 c                                 clean up intermediate results

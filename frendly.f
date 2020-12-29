@@ -2313,6 +2313,8 @@ c                                 initialize
 c                                 initialize system properites
       call insysp (ssick,ppois,bulkg,bsick)
 
+      rxn = .false.
+
       do i = 1, ntot
 c                                 check for reactions
          if (vnu(i).lt.0d0) rxn = .true.
