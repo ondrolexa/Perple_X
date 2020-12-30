@@ -6185,6 +6185,19 @@ c                                 negative site?
 
       end do
 
+      if (msite(ids).eq.0) then 
+c                                 molecular entropy, check fractions
+          do i = 1, nstot(ids)
+             if (y(i).lt.-zero) then
+                bad = .true.
+                exit
+             else if (y(i).lt.0d0) then
+                y(i) = 0d0
+             end if
+          end do
+
+      end if
+
       zbad = bad
 
 1000  format (/,'**error ver071** during testing of dependent endmember'

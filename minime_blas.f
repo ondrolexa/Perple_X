@@ -236,6 +236,8 @@ c--------------------------
       end do
 
       if (nvar.lt.ntot) pa(ntot) = 1d0 - sum
+c                                 reject bad site populations
+      if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 
       yt = pa
 c                                 save the final point, the point may have
@@ -248,7 +250,7 @@ c                                 threshold is reduced to zero (sqrt(eps)).
 c                                 if logical arg = T use implicit ordering
       gfinal = gsol1 (rids,.false.)
 c                                 get the bulk composition from pp
-      call getscp (rcp,rsum,rids,rids,.false.)
+      call getscp (rcp,rsum,rids,rids,.true.)
 c                                 increment the counter
       call savrpc (gfinal,zero,jphct)
 c---------------
@@ -271,7 +273,7 @@ c                                 scatter in only for nstot-1 gradients
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 get the bulk composition from pp
-            call getscp (rcp,rsum,rids,rids,.false.)
+            call getscp (rcp,rsum,rids,rids,.true.)
 c                                 increment the counter
             call savrpc (gfinal,nopt(37),jphct)
 
@@ -295,7 +297,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, qwak, toc
+      logical bad, toc
 
       integer i, j, nvar, mode, istuff(*), istart, iwarn
 
@@ -382,13 +384,13 @@ c                                 species molality it is necessary for
 c                                 renormalization.
          call gaqlgd (g,rcp,rsum,rsmo,i,bad,.false.)
 
-         qwak = .false.
+         rkwak = .false.
 
          if (bad) then 
 c                                 on failure revert to molecular fluid
             g = gsol1 (rids,.false.)
             call getscp (rcp,rsum,rids,rids,.false.)
-            qwak = .true.
+            rkwak = .true.
 
             if (iwarn.lt.11) then
                write (*,1000) fname(rids)
