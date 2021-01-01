@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated December 21, 2020.',
+     *     'Perple_X version 6.9.1, source updated January 1, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -232,8 +232,8 @@ c                                 increase in resolution for Schreinemakers diag
       nopt(19) = 3d0 
 c                                 T_melt cutoff 
       nopt(20) = 873d0
-c                                 optimization_precision, absolute
-      nopt(21) = 1d-4
+c                                 optimization_precision, relative
+      nopt(21) = 1d-9
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -1603,9 +1603,9 @@ c                                 FRENDLY thermo options
 c                                 info file options
          write (n,1240) lopt(12),lopt(10)
          if (iam.eq.1.or.iam.eq.15) write (n,1250) lopt(11)
-         if (iam.eq.1) write (n,'(4x,a,l1,10x,a)') 
-     *                     'seismic_data_file      ',lopt(50),'[F] T;'//
-     *                     ' echo seismic wavespeed options'
+         if (iam.eq.1) write (n,'(4x,a,l1,9x,a)') 
+     *                    'seismic_data_file       ',lopt(50),'[F] T;'//
+     *                    ' echo seismic wavespeed options'
       end if 
 
       write (n,1020) 
@@ -1615,12 +1615,12 @@ c                                 info file options
      *          '[default]:')
 
 1010  format (/,2x,'Solution subdivision options:',//,
-     *        4x,'initial_resolution:    ',f6.4,5x,
+     *        4x,'initial_resolution:     ',f6.4,4x,
      *                                   '[1/4] 0->1; 0 => off',/,
-     *        4x,'stretch_factor         ',f6.4,5x,'[2d-3] >0 ',/,
-     *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
-     *        4x,'subdivision_override   ',a3,8x,'[lin] off str',/,
-     *        4x,'refine_endmembers      ',l1,10x,'[F] T')
+     *        4x,'stretch_factor          ',f6.4,4x,'[2d-3] >0 ',/,
+     *        4x,'non_linear_switch       ',l1,9x,'[F] T',/,
+     *        4x,'subdivision_override    ',a3,7x,'[lin] off str',/,
+     *        4x,'refine_endmembers       ',l1,9x,'[F] T')
 
 1011  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:    ',/,
@@ -1629,38 +1629,38 @@ c                                 info file options
      *        4x,'  auto-refine stage    ',f6.4,5x,
      *           '0->1 [',a,'], 0 => off',/,
      *        4x,'stretch_factor         ',f6.4,5x,'>0 [2d-3]',/,
-     *        4x,'non_linear_switch      ',l1,10x,'[F] T',/,
-     *        4x,'subdivision_override   ',a3,8x,'[off] lin str',/,
-     *        4x,'hard_limits            ',a3,8x,'[off] on',/,
-     *        4x,'refine_endmembers      ',l1,10x,'[F] T',/,
+     *        4x,'non_linear_switch       ',l1,9x,'[F] T',/,
+     *        4x,'subdivision_override    ',a3,7x,'[off] lin str',/,
+     *        4x,'hard_limits             ',a3,7x,'[off] on',/,
+     *        4x,'refine_endmembers       ',l1,9x,'[F] T',/,
      *        4x,'pc_perturbation        ',f6.4,5x,'[5d-3]')
 
 c                                 generic thermo options
 1012  format (/,2x,'Thermodynamic options:',//,
-     *        4x,'solvus_tolerance       ',a7,4x,          
+     *        4x,'solvus_tolerance        ',a7,3x,          
      *           '[aut] or 0->1; aut = automatic, 0 => ',
      *           'p=c pseudocompounds, 1 => homogenize',/,
-     *        4x,'T_stop (K)            ',f6.1,6x,'[0]',/,
-     *        4x,'T_melt (K)            ',f6.1,6x,'[873]',/,
-     *        4x,'approx_alpha           ',l1,10x,'[T] F',/,
-     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *   4x,'speciation_precision  ',g7.1E1,5x,'[1d-5] <1; absolute',/,
-     *        4x,'speciation_max_it     ',i4,8x,'[100]',/,
-     *        4x,'hybrid_EoS_H2O         ',i1,10x,'[4] 0-2, 4-7',/,
-     *        4x,'hybrid_EoS_CO2         ',i1,10x,'[4] 0-4, 7',/,
-     *        4x,'hybrid_EoS_CH4         ',i1,10x,'[0] 0-1, 7',/,
-     *        4x,'aq_bad_results         ',a3,8x,'[err] 101 102 103',
+     *        4x,'T_stop (K)           ',f6.1,7x,'[0]',/,
+     *        4x,'T_melt (K)             ',f6.1,5x,'[873]',/,
+     *        4x,'approx_alpha            ',l1,9x,'[T] F',/,
+     *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
+     *   4x,'speciation_precision   ',g7.1E1,4x,'[1d-5] <1; absolute',/,
+     *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
+     *        4x,'hybrid_EoS_H2O          ',i1,9x,'[4] 0-2, 4-7',/,
+     *        4x,'hybrid_EoS_CO2          ',i1,9x,'[4] 0-4, 7',/,
+     *        4x,'hybrid_EoS_CH4          ',i1,9x,'[0] 0-1, 7',/,
+     *        4x,'aq_bad_results          ',a3,7x,'[err] 101 102 103',
      *                                           ' ignore',/,
-     *        4x,'aq_lagged_speciation   ',l1,10x,'[F] T',/,
-     *        4x,'aq_ion_H+              ',l1,10x,'[T] F => use OH-',/,
-     *        4x,'aq_oxide_components    ',l1,10x,'[F] T',/,
-     *        4x,'aq_solvent_solvus      ',l1,10x,'[T] F',/,
-     *        4x,'aq_vapor_epsilon       ',f3.1,8x,'[1.]')
+     *        4x,'aq_lagged_speciation    ',l1,9x,'[F] T',/,
+     *        4x,'aq_ion_H+               ',l1,9x,'[T] F => use OH-',/,
+     *        4x,'aq_oxide_components     ',l1,9x,'[F] T',/,
+     *        4x,'aq_solvent_solvus       ',l1,9x,'[T] F',/,
+     *        4x,'aq_vapor_epsilon        ',f3.1,7x,'[1.]')
 1013  format (/,2x,'Input/Output options:',//,
-     *        4x,'pause_on_error         ',l1,10x,'[T] F')
-1014  format (4x,'logarithmic_p          ',l1,10x,'[F] T',/,
+     *        4x,'pause_on_error          ',l1,9x,'[T] F')
+1014  format (4x,'logarithmic_p           ',l1,9x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
-     *        4x,'interim_results        ',a3,8x,'[auto] off manual')
+     *        4x,'interim_results         ',a3,7x,'[auto] off manual')
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
      *        4x,'rep_static_threshold   ',g7.1E1,4x,
@@ -1678,8 +1678,8 @@ c                                 thermo options for frendly
      *        4x,'hybrid_EoS_CO2          ',i4,6x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4          ',i4,6x,'[0] 0-1, 7')
 1017  format (4x,'fd_expansion_factor     ',f3.1,7x,'[2] >0',/,
-     *        4x,'finite_difference_p     ',d7.1,3x,'[1d4] >0; ',
-     *           'fraction = ',d7.1,3x,'[1d-2]')
+     *        4x,'finite_difference_p     ',g7.1E1,3x,'[1d4] >0; ',
+     *           'fraction = ',g7.0,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
 1100  format (/,2x,'Adapative minimization will be done with: ',
@@ -1693,17 +1693,16 @@ c                                 thermo options for frendly
      *           '[0.1/0.025], ',
      *           'default search/trace variable increment',/,
      *        4x,'efficiency               ',i1,8x,'[3] >0, <6',/,
-     *        4x,'reaction_format        ',a3,8x,'[min] ',
+     *        4x,'reaction_format         ',a3,7x,'[min] ',
      *           'full stoichiometry S+V everything',/,
-     *        4x,'reaction_list          ',a3,8x,'[off] on',/,
-     *        4x,'console_messages       ',a3,8x,'[on] off',/,
-     *        4x,'short_print_file       ',a3,8x,'[on] off')
+     *        4x,'reaction_list           ',a3,7x,'[off] on',/,
+     *        4x,'console_messages        ',a3,7x,'[on] off',/,
+     *        4x,'short_print_file        ',a3,7x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'optimization_precision ',g7.1E1,4x,
-     *           '[1e-4], absolute',/,
+     *           '[1e-9], relative',/,
      *        4x,'optimization_max_it     ',i2,8x,'[40] >1',/,
-     *        4x,'refinement_points       ',i2,8x,'[aut] 1->',i2,
-     *           '; aut = automatic',/,
+     *        4x,'refinement_points      ',i2,9x,'[auto] 1->',i2,/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
      *        4x,'solvus_tolerance_II     ',a7,3x,'[0.2] 0->1 ',/,
      *        4x,'zero_mode              ',e7.1E1,4x,
@@ -1729,84 +1728,84 @@ c                                 thermo options for frendly
      *        4x,'1d_path               ',i3,' /',i3,4x,
      *           '[20/150] >0, <',i4)
 1220  format (/,2x,'Composition options:',//,
-     *        4x,'closed_c_space         ',l1,10x,'[T] F')
+     *        4x,'closed_c_space          ',l1,9x,'[T] F')
 1230  format (/,2x,'Input/Output options:',//,
-     *        4x,'aqueous_output         ',l1,10x,'[F] T',/
+     *        4x,'aqueous_output          ',l1,9x,'[F] T',/
      *        4x,'aqeuous_species        ',i3,8x,'[20] 0-',i3,/,
-     *        4x,'aq_solvent_composition ',a3,8x,
+     *        4x,'aq_solvent_composition  ',a3,7x,
      *        '[y] m: y => mol fraction, m => molality',/,
-     *        4x,'aq_solute_composition  ',a3,8x,
+     *        4x,'aq_solute_composition   ',a3,7x,
      *        'y [m]: y => mol fraction, m => molality',/,
-     *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
-     *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
+     *        4x,'spreadsheet             ',l1,9x,'[F] T',/,
+     *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
-     *        4x,'composition_constant   ',l1,10x,'[F] T',/,
-     *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
-     *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
-     *        4x,'proportions            ',a3,8x,'[vol] wt mol',/,
-     *        4x,'absolute               ',l1,10x,'[F] T',/,
-     *        4x,'cumulative             ',l1,10x,'[F] T',/,
-     *        4x,'fancy_cumulative_modes ',l1,10x,'[F] T',/,
-     *        4x,'interpolation          ',a3,8x,'[on] off ',/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'solution_names         ',a3,8x,'[model] abbreviation',
-     *                                           ' full',/,
-     *        4x,'structural_formulae    ',l1,10x,'[T] F',/,
-     *        4x,'species_output         ',l1,10x,'[T] F',/,
-     *        4x,'species_Gibbs_energies ',l1,10x,'[F] T',/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T',/,
-     *        4x,'interim_results        ',a3,8x,'[auto] off manual',/,
-     *        4x,'sample_on_grid         ',l1,10x,'[T] F')
+     *        4x,'composition_constant    ',l1,9x,'[F] T',/,
+     *        4x,'composition_phase       ',a3,7x,'[mol] wt',/,
+     *        4x,'composition_system      ',a3,7x,'[wt] mol',/,
+     *        4x,'proportions             ',a3,7x,'[vol] wt mol',/,
+     *        4x,'absolute                ',l1,9x,'[F] T',/,
+     *        4x,'cumulative              ',l1,9x,'[F] T',/,
+     *        4x,'fancy_cumulative_modes  ',l1,9x,'[F] T',/,
+     *        4x,'interpolation           ',a3,7x,'[on] off ',/,
+     *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
+     *        4x,'solution_names          ',a3,7x,'[model] ',
+     *                                           'abbreviation full',/,
+     *        4x,'structural_formulae     ',l1,9x,'[T] F',/,
+     *        4x,'species_output          ',l1,9x,'[T] F',/,
+     *        4x,'species_Gibbs_energies  ',l1,9x,'[F] T',/,
+     *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
+     *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
+     *        4x,'poisson_test            ',l1,9x,'[F] T',/,
+     *        4x,'interim_results         ',a3,7x,'[auto] off manual',/,
+     *        4x,'sample_on_grid          ',l1,9x,'[T] F')
 1231  format (/,2x,'Input/Output options:',//,
-     *        4x,'aq_output              ',l1,10x,'[T] F',/
+     *        4x,'aq_output               ',l1,9x,'[T] F',/
      *        4x,'aq_species             ',i3,8x,'[20] 0-',i3,/,
-     *        4x,'aq_solvent_composition ',a3,8x,
+     *        4x,'aq_solvent_composition  ',a3,7x,
      *        '[y] m: y => mol fraction, m => molality',/,
-     *        4x,'aq_solute_composition  ',a3,8x,
+     *        4x,'aq_solute_composition   ',a3,7x,
      *        'y [m]: y => mol fraction, m => molality',/,
-     *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
+     *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
-     *        4x,'composition_constant   ',l1,10x,'[F] T',/,
-     *        4x,'composition_phase      ',a3,8x,'[mol] wt',/,
-     *        4x,'composition_system     ',a3,8x,'[wt] mol',/,
-     *        4x,'proportions            ',a3,8x,'[vol] wt mol',/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'solution_names         ',a3,8x,'[mod] abb ful',/,
-     *        4x,'structural_formulae    ',l1,10x,'[T] F',/,
-     *        4x,'species_output         ',l1,10x,'[T] F',/,
-     *        4x,'endmember_Gs           ',l1,10x,'[F] T',/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T')
+     *        4x,'composition_constant    ',l1,9x,'[F] T',/,
+     *        4x,'composition_phase       ',a3,7x,'[mol] wt',/,
+     *        4x,'composition_system      ',a3,7x,'[wt] mol',/,
+     *        4x,'proportions             ',a3,7x,'[vol] wt mol',/,
+     *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
+     *        4x,'solution_names          ',a3,7x,'[mod] abb ful',/,
+     *        4x,'structural_formulae     ',l1,9x,'[T] F',/,
+     *        4x,'species_output          ',l1,9x,'[T] F',/,
+     *        4x,'endmember_Gs            ',l1,9x,'[F] T',/,
+     *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
+     *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
+     *        4x,'poisson_test            ',l1,9x,'[F] T')
 1232  format (/,2x,'Input/Output options:',//,
-     *        4x,'spreadsheet            ',l1,10x,'[F] T',/,
-     *        4x,'logarithmic_p          ',l1,10x,'[F] T',/,
-     *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
-     *        4x,'melt_is_fluid          ',l1,10x,'[F] T',/,
-     *        4x,'pause_on_error         ',l1,10x,'[T] F',/,
-     *        4x,'Tisza_test             ',l1,10x,'[F] T')
+     *        4x,'spreadsheet             ',l1,9x,'[F] T',/,
+     *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
+     *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
+     *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
+     *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
+     *        4x,'Tisza_test              ',l1,9x,'[F] T')
 1233  format (/,2x,'Seismic wavespeed computational options:',//,
-     *        4x,'seismic_data_file      ',l1,10x,'[F] T',/,
-     *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
+     *        4x,'seismic_data_file       ',l1,9x,'[F] T',/,
+     *        4x,'bounds                  ',a3,7x,'[VRH] HS',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[T] F',/,
-     *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
+     *        4x,'explicit_bulk_modulus   ',l1,9x,'[T] F',/,
+     *        4x,'poisson_ratio           ',a3,7x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T',/,
-     *        4x,'Tisza_test             ',l1,10x,'[F] T')
-1234  format (4x,'auto_exclude           ',l1,10x,'[T] F')
+     *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
+     *        4x,'poisson_test            ',l1,9x,'[F] T',/,
+     *        4x,'Tisza_test              ',l1,9x,'[F] T')
+1234  format (4x,'auto_exclude            ',l1,9x,'[T] F')
 1240  format (/,2x,'Information file output options:',//,
-     *        4x,'option_list_files      ',l1,10x,'[F] T; ',
+     *        4x,'option_list_files       ',l1,9x,'[F] T; ',
      *           'echo computational options',/,
-     *        4x,'pseudocompound_file    ',l1,10x,'[F] T; ',
+     *        4x,'pseudocompound_file     ',l1,9x,'[F] T; ',
      *           'echo static pseudocompound compositions')
 1241  format (/,2x,'Information file output options:',//,
-     *        4x,'option_list_files      ',l1,10x,'[F] T; ',
+     *        4x,'option_list_files       ',l1,9x,'[F] T; ',
      *           'echo computational options')
-1250  format (4x,'auto_refine_file       ',l1,10x,'[T] F; ',
+1250  format (4x,'auto_refine_file        ',l1,9x,'[T] F; ',
      *           'echo auto-refine compositions')
 
       end
@@ -6848,15 +6847,15 @@ c-----------------------------------------------------------------------
      *       ,' in the corresponding make definition.',/)
 1050  format (6x,a10,6x,a8,4x,a9,4x,a)
 1233  format (/,'Seismic wavespeed computational options:',//,
-     *        4x,'bounds                 ',a3,8x,'[VRH] HS',/,
+     *        4x,'bounds                  ',a3,7x,'[VRH] HS',/,
      *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
-     *        4x,'explicit_bulk_modulus  ',l1,10x,'[T] F',/,
-     *        4x,'poisson_ratio          ',a3,8x,'[on] all off; ',
+     *        4x,'explicit_bulk_modulus   ',l1,9x,'[T] F',/,
+     *        4x,'poisson_ratio           ',a3,7x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
-     *        4x,'seismic_output         ',a3,8x,'[some] none all',/,
-     *        4x,'poisson_test           ',l1,10x,'[F] T',/,
-     *        4x,'Anderson-Gruneisen     ',l1,10x,'[F] T',/,
-     *        4x,'Tisza_test             ',l1,10x,'[F] T',/)
+     *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
+     *        4x,'poisson_test            ',l1,9x,'[F] T',/,
+     *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
+     *        4x,'Tisza_test              ',l1,9x,'[F] T',/)
 
       end
 

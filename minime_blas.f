@@ -221,9 +221,11 @@ c           CALL E04UEF ('print level = 10')
 
       else
 
-         if (iter.eq.0) then 
+         if (iter.eq.0) then
 
-            write (*,*) 'zapra',itic,rids
+c           return
+
+c           write (*,*) 'zapra',itic,rids
             ppp(1:nvar) = yt(1:nvar)
 
          end if
@@ -249,8 +251,6 @@ c                                 threshold is reduced to zero (sqrt(eps)).
       call makepp (rids)
 c                                 if logical arg = T use implicit ordering
       gfinal = gsol1 (rids,.false.)
-c                                 get the bulk composition from pp
-      call getscp (rcp,rsum,rids,rids,.true.)
 c                                 increment the counter
       call savrpc (gfinal,zero,jphct)
 c---------------
@@ -272,8 +272,6 @@ c                                 scatter in only for nstot-1 gradients
             call makepp (rids)
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
-c                                 get the bulk composition from pp
-            call getscp (rcp,rsum,rids,rids,.true.)
 c                                 increment the counter
             call savrpc (gfinal,nopt(37),jphct)
 
@@ -367,7 +365,7 @@ c-----------------------------------------------------------------------
 
          call getder (g,dgdp,rids)
 c                                 get the bulk composition from pa
-         call getscp (rcp,rsum,rids,rids,.false.)
+         call getscp (rcp,rsum,rids,rids)
 c                                 convert dgdp to dg'dp
          do i = 1, nvar
             do j = 1, icp
@@ -375,39 +373,9 @@ c                                 convert dgdp to dg'dp
             end do
          end do
 
-         rkwak = .true.
-
-      else if (ksmod(rids).eq.39.and.lopt(32)) then 
-c                                 the last argument cancels recalc, in
-c                                 which case i is a dummy. smo the total
-c                                 species molality it is necessary for 
-c                                 renormalization.
-         call gaqlgd (g,rcp,rsum,rsmo,i,bad,.false.)
-
-         rkwak = .false.
-
-         if (bad) then 
-c                                 on failure revert to molecular fluid
-            g = gsol1 (rids,.false.)
-            call getscp (rcp,rsum,rids,rids,.false.)
-            rkwak = .true.
-
-            if (iwarn.lt.11) then
-               write (*,1000) fname(rids)
-               call prtptx
-               if (iwarn.eq.10) call warn (49,0d0,205,'MINFRC')
-               iwarn = iwarn + 1
-            end if
-
-         end if
-
       else
 c                                 if logical arg = T use implicit ordering
          g = gsol1 (rids,.false.)
-c                                 get the bulk composition from pp
-         call getscp (rcp,rsum,rids,rids,.false.)
-
-         rkwak = .true.
 
       end if
 
@@ -427,10 +395,6 @@ c                                 increment the counter
          call savrpc (g,nopt(37),jphct)
 
       end if
-
-1000  format (/,'**warning ver205** lagged speciation failed, ',
-     *       'for ',a,'. The molecular',/,'speciation will be ',
-     *       'output.',/)
 
       end
 
@@ -489,6 +453,8 @@ c                                 check if duplicate
       end do
 c                                 increment the counter
       phct = phct + 1
+c                                 lagged speciation quack flag
+      quack(phct) = rkwak
 c                                 normalize and save the composition
       cp2(1:icomp,phct) = rcp(1:icomp)/rsum
 c                                 the solution model pointer
@@ -498,7 +464,10 @@ c                                 the refinement point pointer
 c                                 save the normalized g
       g2(phct) = g/rsum
 c                                 sum scp(1:icp)
-      if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then 
+      if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then
+c                                 this will renormalize the bulk to a 
+c                                 mole of solvent, it's no longer clear to 
+c                                 me why this is desireable.
          c2tot(phct) = rsum/rsmo
       else
          c2tot(phct) = rsum
@@ -778,7 +747,7 @@ c                                 load the ayz constraint matrix
 c                                 load the ayc constraint matrix
          a(ncon+1:ncon+icp,1:nvar) = ayc(id,1:icp,1:nvar)
 c                                 get the bulk 
-         call getscp (scp,sum,id,1,.true.)
+         call getscp (scp,sum,id,1)
 c
          bl(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)
          bu(nvar+ncon+1:nvar+ncon+icp) = scp(1:icp)

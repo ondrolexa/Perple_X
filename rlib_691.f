@@ -5669,11 +5669,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, ntot
+      integer id, iwarn
 
-      logical minfx, order
+      logical minfx, order, bad
 
-      double precision gg, xg
+      double precision gg
 
       double precision omega, gfluid, gzero, gmech, gord, gdqf, gmech0,
      *                 gex, gfesi, gfesic, gfecr1, gerk, ghybrid, gfes
@@ -5698,8 +5698,18 @@ c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      save iwarn
+
+      data iwarn/0/
 c----------------------------------------------------------------------
       gg = 0d0
+c                                 quack flag needed to distinguish phases
+c                                 computed by lagged speciation
+      rkwak = .true.
 
       if (specil(id)) then
 c                                 special is reserved for special models 
@@ -5778,9 +5788,36 @@ c                                 BCC Fe-Cr Andersson and Sundman
          gg =  gfecr1(pa(1),g(jend(id,3)),g(jend(id,4)))
 
       else if (ksmod(id).eq.39) then
+
+         bad = .true.
 c                                 -------------------------------------
 c                                 generic hybrid EoS
-         gg = ghybrid(pa) + gmech(id)
+         if (lopt(32)) then 
+c                                 lagged speciation
+c                                 the last argument cancels recalc, in
+c                                 which case id is a dummy. smo the total
+c                                 species molality it is necessary for 
+c                                 renormalization.
+            call gaqlgd (gg,rcp,rsum,rsmo,id,bad,.false.)
+
+            if (.not.bad) then 
+
+               rkwak = .false.
+            
+            else
+
+               if (iwarn.lt.11) then
+                  write (*,1000) fname(rids)
+                  call prtptx
+                  if (iwarn.eq.10) call warn (49,0d0,205,'MINFRC')
+                  iwarn = iwarn + 1
+               end if
+
+            end if
+
+         end if
+c                                 if bad OR molecular:
+         if (bad) gg = ghybrid(pa) + gmech(id)
 
       else if (ksmod(id).eq.41) then
 c                                 hybrid MRK ternary COH fluid
@@ -5803,8 +5840,15 @@ c                                 Fe-S fluid (Saxena & Eriksson 2015)
          call errpau
 
       end if
+c                                 set the bulk composition for non-lagged
+c                                 speciation:
+      if (rkwak) call getscp (rcp,rsum,rids,rids)
 
       gsol1 = gg
+
+1000  format (/,'**warning ver205** lagged speciation failed, ',
+     *       'for ',a,'. The molecular',/,'speciation will be ',
+     *       'output.',/)
 
       end
 
@@ -7729,8 +7773,6 @@ c-----------------------------------------------------------------------
 
       integer id,k,l,ind
 
-      double precision sum
-
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
@@ -8936,7 +8978,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,k,id,lord
+      integer k,id,lord
 
       double precision pmn,pmx
 
@@ -9939,7 +9981,9 @@ c                                 write composition name to pseudocompound list 
 
       end if
 c                                 bulk composition stuff
-      call getscp (scp,ctot(iphct),im,1,.true.)
+      rkwak = .true.
+
+      call getscp (scp,ctot(iphct),im,1)
 
       do l = 1, icomp
 
@@ -10096,7 +10140,7 @@ c-----------------------------------------------------------------------
 c                                 manual auto-refine, read the static 
 c                                 compositions from the arf file
          read (n10,*) i
-         read (n10,*) sname(1:i)
+         read (n10,'(7(a,1x))') sname(1:i)
          read (n10,*) jend(1:i,2)
          if (i.ne.isoct) call error (63,y(1),i,'GMODEL/isoct')
 
@@ -10251,7 +10295,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,id
+      integer i, id
 
       double precision cp
       common/ cst12 /cp(k5,k10)
@@ -12937,7 +12981,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, id, tic
 
-      double precision gval, dg, g0(m14), g1, junk(m4)
+      double precision gval, dg, g0(m14)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
      *                 gfecr1, gcpd, gfes, gmech, gexces
@@ -13616,42 +13660,18 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables:
-      integer ii, i, j, k, ibad1, ibad2, ibad3, igood, ipop
 
-      logical bad1, bad2, good
-
-      double precision num, mnsum, mxsum
-c                                 -------------------------------------
-      double precision goodc, badc
-      common/ cst20 /goodc(3),badc(3)
-
-      integer ipoint,kphct,imyn
-      common/ cst60 /ipoint,kphct,imyn
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
+      integer i
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-c                                 endmember pointers
-      integer jend
-      common/ cxt23 /jend(h9,m14+2)
-
-      integer iam
-      common/ cst4 /iam
 
       character tname*10
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
 
-      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      integer jnd
-      double precision aqg,q2,rt
-      common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
+      integer jend
+      common/ cxt23 /jend(h9,m14+2)
 c----------------------------------------------------------------------
       rewind (n10)
 
@@ -13661,7 +13681,7 @@ c                                 into the static arrays
          call reload (.false.)
 c                                 output to arf
          write (n10,*) isoct
-         write (n10,*) fname(1:isoct)
+         write (n10,'(7(a,1x))') fname(1:isoct)
          write (n10,*) jend(1:isoct,2)
 
          tcct = 0
@@ -14237,10 +14257,6 @@ c                                 molality first
       do i = 1, ns
 c                                 solvent molality:
          slvmo(i) = yf(ins(i))/msol
-c DEBUG DEBUG 
-         if (yf(ins(i)).lt.0d0) then 
-            yf(ins(i)) = 0d0
-         end if 
 c                                 total molality
          smo = smo + slvmo(i)
 c                                 moles/kg-solvent
@@ -17425,7 +17441,7 @@ c-----------------------------------------------------------------------
       end
 
 
-      subroutine getscp (scp,scptot,ids,jd,pure)
+      subroutine getscp (scp,scptot,ids,jd)
 c-----------------------------------------------------------------------
 c getscp gets the bulk chemical composition of solution ids from the composition
 c of its endmembers. the composition of the solution in terms of its endmembers
@@ -17438,8 +17454,6 @@ c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
-
-      logical pure
 
       integer i, j, k, jd, ids
 
@@ -17492,15 +17506,23 @@ c-----------------------------------------------------------------------
 
       if (lopt(32).and.ksmod(ids).eq.39) then
 
-         if ((iam.eq.1.or.iam.eq.2).and..not.pure) then 
+         if (rkwak) then
+c                                  called by soload or after gaqlgd failure
+            do i = 1, ns
+               do j = 1, icomp 
+                  scp(j) = scp(j) + pa(i) * cp(j,jnd(i))
+               end do 
+            end do
+
+         else if (iam.eq.1.or.iam.eq.2) then 
 c                                  meemum, vertex => during dynamic optimization
             do j = 1, icomp
                scp(j) = cp2(j,jd)*c2tot(jd)
             end do
 
          else
-
-            if (pure.or.caq(jd,na1).eq.0d0) then
+c                                  werami
+            if (rkwak.or.caq(jd,na1).eq.0d0) then
 c                                  pure solvent
                do i = 1, ns
                   do j = 1, icomp 
@@ -21184,12 +21206,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, ind, i, j, k, l
+      integer id, i, j
 
-      double precision diff, dinc, tp(m14)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+      double precision diff
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -21225,9 +21244,7 @@ c-----------------------------------------------------------------------
 
       logical ok
 
-      integer id, ind, i, j, k, l
-
-      double precision diff, dinc, tp(m14)
+      integer id, i, j
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)

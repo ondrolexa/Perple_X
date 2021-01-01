@@ -247,7 +247,7 @@ c-----------------------------------------------------------------------
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision ax(k5), clamda(k21+k5), w(lw), tot(k5), gtot,
-     *                 ogtot, bl(k21+k5), bu(k21+k5)
+     *                 ogtot, bl(k21+k5), bu(k21+k5), d2g(3), curve
 
       integer is(k21+k5), iw(liw)
 
@@ -283,6 +283,7 @@ c                                 are identified in jdv(1..npt)
       kitmax = 0
       kter = 0
       idead1 = 0
+      d2g(1) = ogtot
 
       jphct = jpoint
 c                                 global composition coordinate counter
@@ -305,7 +306,6 @@ c                                 likely failed aqlagd
       if (kterat) kitmax = iopt(33)
 
       iter = 2
-      ogtot = 1d99
 
       do
 c                                 iter is incremented before the operations,
@@ -410,11 +410,32 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
          kter = kter + 1
 
-         if (dabs(gtot-ogtot).lt.nopt(21)) then 
+         if (dabs((gtot-ogtot)/gtot).lt.nopt(21)) then 
             quit = .true.
-         end if 
+         else
+            ogtot = gtot
+         end if
 
-         ogtot = gtot
+c        if (iter.le.3) then 
+c           d2g(iter) = gtot
+c        else
+c           d2g(1) = d2g(2)
+c           d2g(2) = d2g(3)
+c           d2g(3) = gtot
+c        end if
+
+c        if (iter.ge.3) then 
+c           curve = d2g(3) + d2g(1) - 2d0*d2g(2)
+c           write (*,'(g12.6,1x,i2,1x,g12.6)') curve, iter,gtot-ogtot
+c           write (*,'(g12.6,1x,i2,1x,g12.6)') curve/dabs(gtot), iter,
+c    *                                         (gtot-ogtot)/dabs(gtot)
+
+c           if (dabs(curve/gtot).eq.0d0.or.
+c    *          dabs((gtot-ogtot)/gtot).eq.0d0) then
+c              quit = .true.
+c           end if
+
+c        end if
 
 c        if (lopt(28)) call begtim (7)
 c                                 analyze solution, get refinement points
@@ -2264,16 +2285,19 @@ c                                 get mu's for lagged speciation
 
          call getmus (iter,iter-1,solvnt,abort)
 
-         if (abort.or..not.mus) then 
+         if (abort) then 
 c                                 undersaturated solute component
-            if (.not.mus) call muwarn (quit,iter)
 c                                 don't set idead if iopt =1, this
 c                                 allows output of the result.
             if (lopt(32).and.iopt(22).ne.1.and.iopt(22).ne.99) then 
                idead = 101
             else 
                call lpwarn (101,'YCLOS2')
-            end if 
+            end if
+
+         else if (.not.mus) then 
+
+            call muwarn (quit,iter)
 
          end if
 
@@ -2294,7 +2318,6 @@ c                                 make a list of the solutions
                cycle
 
             else if (stabl(hkp(jmin(i))).or.t.lt.nopt(20).and.
-c           else if (t.lt.nopt(20).and.
      *               lname(jkp(jmin(i))).eq.'liquid') then
 c                                 contrary to what you might expect, the 1st condition
 c                                 improves quality, because it stops the list 
@@ -2518,7 +2541,9 @@ c                                 get and save endmember fractions
 c                                 get and save the composition
 c                                 getscp uses the jdv pointer
 c                                 only for lagged speciation
-            call getscp (scp,cptot(i),jds,jdv(i),.false.)
+            rkwak = .true.
+
+            call getscp (scp,cptot(i),jds,jdv(i))
 
             cp3(1:icomp,i) = scp(1:icomp)
 

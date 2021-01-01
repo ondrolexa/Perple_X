@@ -3201,8 +3201,10 @@ c                                 frendly
          end if
 
       else
+
+         rkwak = .true.
 c                                 solutions:
-         call getscp (scp,scptot,ids,jd,.false.)
+         call getscp (scp,scptot,ids,jd)
 
          do i = 1, icomp
             cp3(i,jd) = scp(i)
