@@ -13092,7 +13092,7 @@ c                                 only for minfxc
                call setxyp (i,id,bad)
 
                if (.not.noder(i)) then
-c              if (deriv(i)) then
+
                   call specis (dg,i,minfx)
 
                   if (minfx) then

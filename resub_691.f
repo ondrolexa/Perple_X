@@ -157,7 +157,7 @@ c                                 necessary?
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
-         call rebulk (abort)
+         call rebulk (abort,.true.)
 
       else
 c                                 save lphct to recover static solution if
@@ -174,7 +174,7 @@ c        if (lopt(28)) call endtim (3,.true.,'Static YCLOS1 ')
 c                                 returns quit if nothing to refine
          if (quit) then 
 c                                 final processing, .true. indicates static
-            call rebulk (abort)
+            call rebulk (abort,.true.)
 
          else
 c                                 initialize refinement point pointers
@@ -191,7 +191,7 @@ c            if (lopt(28)) call endtim (4,.true.,'Dynamic optimization ')
 c                                 final processing, .false. indicates dynamic
              if (idead.eq.0) then 
 
-               call rebulk (abort)
+               call rebulk (abort,.false.)
 
                if (abort) then
 c                                 bad solution (lagged speciation) identified
@@ -213,7 +213,7 @@ c                                 hail mary
                idead = 0
 
                call yclos0 (x,is,jphct) 
-               call rebulk (abort)
+               call rebulk (abort,.true.)
 
             end if 
 
@@ -396,14 +396,30 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
                   idead1 = 3
 
+               else if  (dabs(tot(i)).gt.dsqrt(zero)) then
+
+                  idead1 = 1
+
                   exit
 
                end if
 
             end do
 
-            if (idead1.ne.0) then
-               write (*,'(/,a,/)') 'bad result on idead = 3'
+            if (idead1.eq.1) then
+c                                 let's blow this joint
+               write (*,'(/,a,/)') 'bad result on idead = 3, let''s '//
+     *                             'blow this joint'
+               write (*,*) tot
+               idead = 3
+               exit
+
+            else if (idead.eq.3) then
+
+               write (*,'(/,a,/)') '**warning ver333** '//
+     *                   'You''ve got to ask yourself one '//
+     *                   'question: Do I feel lucky? Well, do ya, punk?'
+
             end if
 
          end if
@@ -510,8 +526,11 @@ c                                 reset refinement point flags
          hkp(i) = 0
       end do
 
-c     jphct = jpoint
-c     zcoct = 0
+      if (.not.lopt(59)) then
+c                                 if ~keep_all_rpcs, then reset counters
+         jphct = jpoint
+         zcoct = 0
+      end if
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
@@ -2432,7 +2451,7 @@ c                                 check zero modes the amounts
       end
 
 
-      subroutine rebulk (abort)
+      subroutine rebulk (abort,stic)
 c----------------------------------------------------------------------
 c upon successful completion of an optimization with either static or
 c dynamic pseudocompounds rebulk:
@@ -2446,9 +2465,9 @@ c----------------------------------------------------------------------
 
       integer i, j, k, id, jds, tictoc
 
-      logical abort
+      logical abort, stic, bad
 
-      double precision c(k5), scp(k5)
+      double precision c(k5), scp(k5), sum
  
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -2494,12 +2513,17 @@ c                                 hcp is different from icp only if usv
       data tictoc/0/
 c----------------------------------------------------------------------
       do i = 1, npt
+c                                 index for stoichiometric compounds, 
+c                                 endmembers, and static compositions
+         id = jdv(i) + jiinc
 
-         jds = jkp(jdv(i))
+         if (stic) then
+            jds = ikp(id)
+         else
+            jds = jkp(jdv(i))
+         end if
 
          if (jdv(i).le.jpoint) then
-c                                 stoichiometric compound or endmember
-            id = jdv(i) + jiinc
 c                                 load compositional data
             cptot(i) = ctot(id)
 
@@ -2528,15 +2552,20 @@ c                                 a compound
             end if
 
          else
-
-            if (jds.le.0) then 
-               write (*,*) 'wtf?'
-            end if
 c                                 save the solution model pointer
             kkp(i) = jds
-c                                 get and save endmember fractions
-            call getpa (jds,i)
-
+c                                 get endmember fractions
+            if (stic) then
+               call setxyp (jds,id,bad)
+            else
+c                                 use getpa until it's decided 
+c                                 whether to reset jphct after 
+c                                 each iteration:
+               call getpa (jds,i)
+c               pa(1:nstot(jds)) = zco(icoz(jdv(i))+1:
+c     *                                icoz(jdv(i))+nstot(jds))
+            end if
+c                                 save endmember fractions
             pa3(i,1:nstot(jds)) = pa(1:nstot(jds))
 c                                 get and save the composition
 c                                 getscp uses the jdv pointer
@@ -2613,7 +2642,7 @@ c                                  load the saturated phase composition
 c                                 test for solvi and average
 c                                 homogeneous phases.
       call avrger (abort)
-      
+
 1000  format (/,'**error ver901** solutions not allowed in saturated ',
      *   'component composition space',/,'in adaptive optimization ',
      *   'calculations, this limitation can be removed upon request.')

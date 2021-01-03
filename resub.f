@@ -2232,7 +2232,7 @@ c                                                  2 active, upper bound
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
-            jkp(i) = ikp(i)
+            jkp(i) = ikp(i+jiinc)
  
       end do
 
