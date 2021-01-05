@@ -406,8 +406,6 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ok
-
       integer phct, i, j, ntot
 
       double precision g, diff, tol
@@ -422,12 +420,6 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
 c                                 check if duplicate
@@ -435,18 +427,13 @@ c                                 check if duplicate
 
          if (jkp(i).eq.rids) then
 
-            ok = .false.
+            diff = 0d0
 
             do j = 1, ntot
+               diff = diff + dabs(pa(j) - zco(icoz(i)+j))
+            end do 
 
-               if (dabs((pa(j) - zco(icoz(i)+j))).gt.tol) then
-                  ok = .true.
-                  exit 
-               end if
-
-            end do
-
-            if (.not.ok) return
+            if (diff.lt.tol) return
 
          end if
 

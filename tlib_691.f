@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated January 1, 2021.',
+     *     'Perple_X version 6.9.1, source updated January 4, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -233,7 +233,7 @@ c                                 increase in resolution for Schreinemakers diag
 c                                 T_melt cutoff 
       nopt(20) = 873d0
 c                                 optimization_precision, relative
-      nopt(21) = 1d-9
+      nopt(21) = 1d-4
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -1707,7 +1707,7 @@ c                                 thermo options for frendly
      *        4x,'short_print_file        ',a3,7x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'optimization_precision ',g7.1E1,4x,
-     *           '[1e-9], relative',/,
+     *           '[1e-4], absolute energy units',/,
      *        4x,'optimization_max_it     ',i2,8x,'[40] >1',/,
      *        4x,'refinement_points       ',i2,8x,'[auto] 1->',i2,/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
