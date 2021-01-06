@@ -8449,7 +8449,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, ga, pmax, pmin, dp, gord, dy(m14), gold
+      double precision g, ga, pmax, pmin, dp, gord, dy(m14)
 
       external gord
 
@@ -8506,7 +8506,7 @@ c                                 first try the maximum
          dp = pmax - p0a(jd)
          call pincs (dp,dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp,g)
+         call gderi1 (k,id,dp)
 
          if (dp.ge.0d0) then
 c                                 at the maximum concentration
@@ -8516,7 +8516,7 @@ c                                 or a local minimum, try the
 c                                 the disordered case:
             call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
-            call gderi1 (k,id,dp,g)
+            call gderi1 (k,id,dp)
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
@@ -8534,17 +8534,15 @@ c                                 set speciation
          call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 c                                 iteration counter
          itic = 0
-
-         gold = g
 c                                 newton raphson iteration
          do
 
-            call gderi1 (k,id,dp,g)
+            call gderi1 (k,id,dp)
 
             call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 done means the search hit a limit
 c                                 or dp < tolerance.
-            if (done.or.dabs(gold-g).lt.nopt(21)) then
+            if (done) then
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8554,8 +8552,6 @@ c                                 use the last increment
                exit
 
             else
-
-               gold = g
 
                itic = itic + 1
 c                                 apply the increment
@@ -8590,6 +8586,8 @@ c                                 anti-ordered
 
       end if
 
+      g = gord(id)
+
       end
 
       subroutine speci2 (g,id,minfx)
@@ -8618,8 +8616,8 @@ c----------------------------------------------------------------------
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 
-      double precision wmach
-      common/ cstmch /wmach(9)
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -8679,34 +8677,37 @@ c                                 species are necessary to describe the ordering
             end do
 c                                 nov 23, 2016 added exit if diverging
 c                                 g > gold, itic > 2
-            if (tdp.lt.wmach(1).or.
-     *          dabs(gold-g).lt.nopt(21).or.tdp.eq.xtdp.or.
-     *          itic.gt.2.and.gold.le.g) then
+            if (tdp.lt.zero.or.dabs((gold-g)/g).lt.zero) then
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
                exit
 
-            end if
-c                                 before nov 23, 2016, xtdp was only set
-c                                 if g > gold (i.e., diverging).
-            xtdp = tdp
+            else if (itic.gt.5.and.gold.lt.g) then
 
-            gold = g
+c              write (*,*) 'div1 ',gold-g,id,itic,g,tdp
+               minfx = .true.
+               exit
 
-            itic = itic + 1
+            else if (itic.gt.iopt(21)) then 
 
-            if (itic.gt.iopt(21)) then
-c                                 not converging, under the assumption that
-c                                 this happens at low T use pinc0 to set an ordered
-c                                 composition and exit
-               badc(1) = badc(1) + 1d0
-               goodc(2) = goodc(2) + dfloat(itic)
+               write (*,*) 'div2 ',gold-g,id,itic,g,tdp
+               minfx = .true. 
+               exit
 
-               call pinc0 (id,lord)
+            else if (tdp.eq.xtdp) then 
+
+c              write (*,*) 'div3 ',gold-g,id,itic,g,tdp
+               minfx = .true. 
                exit
 
             end if
+
+            itic = itic + 1
+
+            xtdp = tdp
+
+            gold = g
 
          end do
 
@@ -8760,6 +8761,9 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 given dp check if it violates
 c                                 stoichiometric constraints
@@ -8767,10 +8771,10 @@ c                                 stoichiometric constraints
 
       call plimit (pmn,pmx,k,id)
 
-      if (pa(jd)+dp.gt.pmx-nopt(5)) then
-         dp = pmx - pa(jd) - nopt(5)
-      else if (pa(jd)+dp.lt.pmn+nopt(5)) then
-         dp = pmn - pa(jd) + nopt(5)
+      if (pa(jd)+dp.gt.pmx-zero) then
+         dp = pmx - pa(jd) - zero
+      else if (pa(jd)+dp.lt.pmn+zero) then
+         dp = pmn - pa(jd) + zero
       end if
 c                                 adjust the composition by the increment
       call dpinc (dp,k,id,jd)
@@ -8831,6 +8835,9 @@ c                                 working arrays
 
       logical pin
       common/ cyt2 /pin(j3)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 
       lord = 0
@@ -8844,7 +8851,7 @@ c                                 case 1: fully correlated
 
             call plimit (pmn,pmx,k,id)
 
-            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(5)) then
+            if (pmn.ge.pmx.or.pmx-pmn.lt.2d0*zero) then
                pin(k) = .false.
                cycle
             else
@@ -8881,7 +8888,7 @@ c                                 case 0: no correlation/iteration
 
                if (i.eq.1) then
 
-                  if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(5)) then
+                  if (pmn.ge.pmx.or.pmx-pmn.lt.2d0*zero) then
                      pin(k) = .false.
                      cycle
                   else
@@ -8986,6 +8993,9 @@ c----------------------------------------------------------------------
 
       logical pin
       common/ cyt2 /pin(j3)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 
       lord = 0
@@ -8994,7 +9004,7 @@ c----------------------------------------------------------------------
 
             call plimit (pmn,pmx,k,id)
 
-            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(5)) then
+            if (pmn.ge.pmx.or.pmx-pmn.lt.2d0*zero) then
                pin(k) = .false.
                cycle
             else
@@ -9019,8 +9029,8 @@ c-----------------------------------------------------------------------
 
       double precision x, xmin, xmax, dx, xt
 
-      double precision wmach
-      common/ cstmch /wmach(9)
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
       quit = .false.
 
@@ -9031,7 +9041,7 @@ c                                 hit the limit, don't set x to
 c                                 the limit to save revaluating x
 c                                 dependent variables.
 
-c       write (*,*) 'this should not happen!!',xt,xmin,xmax
+        write (*,*) 'this should not happen!!',xt,xmin,xmax
 
         x = xt
         quit = .true.
@@ -9058,12 +9068,12 @@ c                                 revise the increment
 
       x = x + dx
 c                                 check if dx has dropped below
-c                                 function precision
-      if (dabs(dx).lt.wmach(1)) quit = .true.
+c                                 threshold for convergence
+      if (dabs(dx).lt.2d0*zero) quit = .true.
 
       end
 
-      subroutine gderi1 (k,id,dg,g)
+      subroutine gderi1 (k,id,dg)
 c----------------------------------------------------------------------
 c subroutine computes the newton raphson increment dg from the 1st and 2nd
 c derivatives of the g of solution (id) with respect to the concentration
@@ -9085,7 +9095,7 @@ c----------------------------------------------------------------------
 
       integer i,k,i1,i2,id
 
-      double precision g,dg,d2g,t,s,ds,d2s
+      double precision g,dg,d2g,t,ds,d2s
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9140,17 +9150,15 @@ c                                 because of the "tphi" term in the
 c                                 van laar.
 
 c                                 convert dg and d2g to the full derivative
-            g = g/t
-            dg = (dg - g*dt(k))/t
+            dg = (dg - g*dt(k)/t)/t
             d2g = (d2g - 2d0*dt(k)*dg)/t
 
          end if
 
       end if
 c                                 get the configurational entropy derivatives
-      call sderi1 (k,id,s,ds,d2s)
+      call sderi1 (k,id,ds,d2s)
 
-      g = g + pa(lstot(id)+k)*enth(k) - v(2)*s
       dg  = dg + enth(k)  - v(2)*ds
       d2g = d2g - v(2)*d2s
 c                                 dg becomes the newton raphson increment
@@ -9158,7 +9166,7 @@ c                                 dg becomes the newton raphson increment
 
       end
 
-      subroutine sderi1 (l,id,s,ds,d2s)
+      subroutine sderi1 (l,id,ds,d2s)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a
 c solution with respect to the proportion of the lth ordered species.
@@ -9169,7 +9177,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zinf,lnz,s,sy
+      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zinf,lnz
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9187,14 +9195,12 @@ c                                 configurational entropy variables:
       double precision wmach
       common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
-      s = 0d0
       ds = 0d0
       d2s = 0d0
       zinf = 1d0 + dlog(zero)
 
       do i = 1, msite(id)
 
-         sy = 0d0
          dzy = 0d0
          dzyy = 0d0
 
@@ -9216,8 +9222,6 @@ c                                 sdzdp is (dz(i,j)/dp(l))
             else
                zt = zt + zl
                lnz = (1d0 + dlog(zl))
-c                                 the entropy
-               sy = sy + zl*dlog(zl)
             end if
 c                                 the first derivative
             dzy = dzy - dzdy * lnz
@@ -9236,15 +9240,12 @@ c                                 species:
             lnz = zinf
          else
             lnz = (1d0 + dlog(zl))
-c                                 the entropy
-            sy = sy + zl*dlog(zl)
          end if
 c                                 the first derivative is
          dzy = dzy - dzdy * lnz
 c                                 and the second is
          dzyy = dzyy  - dzdy**2 / zl
 
-         s = s + zmult(id,i)*sy
          ds = ds + zmult(id,i)*dzy
          d2s = d2s + zmult(id,i)*dzyy
 
@@ -9253,7 +9254,6 @@ c                                 for models with disordered
 c                                 endmembers, correct first derivative for the
 c                                 change in endmember configurational entropy
       do i = 1, nstot(id)
-         s = s - pa(i)*scoef(i,id)
          ds = ds - dydy(i,l,id)*scoef(i,id)
       end do
 
@@ -15205,7 +15205,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, qmax, qmin, q, q0, dq, rqmax, gold
+      double precision g, qmax, qmin, q, q0, dq, rqmax
 
       double precision omega, gex
       external omega, gex
@@ -15302,8 +15302,6 @@ c                                 increment and check p
 c                                 iteration counter to escape
 c                                 infinite loops
          itic = 0
-
-         gold = g
 c                                 newton raphson iteration
          do
 
@@ -15311,17 +15309,13 @@ c                                 newton raphson iteration
 
             call pcheck (q,qmin,qmax,dq,done)
 c                                 done is just a flag to quit
-            if (done.or.dabs(gold-g).lt.nopt(21)) then
+            if (done) then
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
 c                                 in principle the p's could be incremented
 c                                 here and g evaluated for the last update.
                return
-
-            else
-
-               gold = g
 
             end if
 

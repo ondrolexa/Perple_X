@@ -256,7 +256,7 @@ c                                 increment the counter
 c---------------
          if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
-            do j = 1, 1
+            do j = 1, 2
 
             pinc = 1d0 + pinc0/2**(j-1)
 
@@ -420,6 +420,9 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
+
+      double precision dcp,soltol
+      common/ cst57 /dcp(k5,k19),soltol
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
 c                                 check if duplicate
