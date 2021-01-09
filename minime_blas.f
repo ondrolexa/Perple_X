@@ -27,7 +27,7 @@ c-----------------------------------------------------------------------
 c DEBUG691
      *        ,iprint,mode,j,k,ind(m14)
 
-      double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
+      double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,fdif,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
@@ -66,7 +66,7 @@ c DEBUG691                    dummies for NCNLN > 0
 
       data fac,pinc0,iprint,inp,toc/1d0,1d-2,0,.false.,.false./
 
-      save fac,pinc0,iprint,inp,toc
+      save fac,pinc0,iprint,inp,toc,fdif
 c-----------------------------------------------------------------------
       yt = pa
 
@@ -125,6 +125,11 @@ c                                 closure for molecular models
 
       end if
 
+      if (.not.toc) then
+         write (*,*) 'fac fdif?'
+         read (*,*) fac,fdif
+         toc = .true.
+      end if
 
       itic = 0
 
@@ -148,11 +153,6 @@ c                                 saved obj value counter
       else
 
          CALL E04UEF ('nolist')
-c        CALL E04UEF ('optimality tolerance =  1d-4')
-c        CALL E04UEF ('difference interval = 1d-3')
-c        write (ctol,'(i4)') iprint
-c        CALL E04UEF ('print level = '//ctol)
-
 c                                 in NLPSOL:
 c                                 EPSRF is function precision
 c                                 CTOL  is feasibility tolerance
@@ -187,7 +187,8 @@ c                              0.05-.4 seem best
 
          if (itic.eq.1) then
             CALL E04UEF ('verify level 1')
-            CALL E04UEF ('difference interval = 1d-3')
+            write (ctol,'(g14.7)') fdif
+            CALL E04UEF ('difference interval ='//ctol)
 c           CALL E04UEF ('print level = 10')
          else if (itic.eq.2) then
             CALL E04UEF ('verify level 0')
@@ -200,7 +201,8 @@ c           CALL E04UEF ('print level = 10')
 
          CALL E04UEF ('verify level 0')
          CALL E04UEF ('derivative level = 0')
-         CALL E04UEF ('difference interval = 1d-3')
+         write (ctol,'(g14.7)') fdif
+         CALL E04UEF ('difference interval ='//ctol)
 
       end if
 
@@ -256,7 +258,7 @@ c                                 increment the counter
 c---------------
          if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
-            do j = 1, 2
+            do j = 1, 1
 
             pinc = 1d0 + pinc0/2**(j-1)
 
@@ -295,14 +297,14 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, toc
+      logical bad, toc, zbad
 
       integer i, j, nvar, mode, istuff(*), istart, iwarn
 
       double precision ppp(*), gval, dgdp(*), stuff(*),
-     *                 gsol1, g, sum1
+     *                 gsol1, g, sum1, zsite(m10,m11)
 
-      external gsol1
+      external gsol1, zbad
 
       logical mus
       double precision mu
@@ -389,6 +391,8 @@ c                                 if logical arg = T use implicit ordering
 
       if (lopt(57).and.istuff(2).ne.0.and.(nvar.lt.nstot(rids).or.
      *    sum1.ge.one.and.sum1.le.1d0+zero).and.rsum.gt.zero) then
+
+         if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
          istuff(4) = istuff(4) + 1
 c                                 increment the counter
@@ -420,9 +424,6 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      double precision dcp,soltol
-      common/ cst57 /dcp(k5,k19),soltol
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
 c                                 check if duplicate
