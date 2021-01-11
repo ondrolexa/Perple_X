@@ -384,6 +384,8 @@ c                                  just in case:
 
             end do
 
+            idead = 0
+
             do i = 1, icp
 
                if (dabs(tot(i)).gt.zero) then 
@@ -394,7 +396,7 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
                   idead1 = 3
 
-               else if (dabs(tot(i)).gt.dsqrt(zero)) then
+               else if  (dabs(tot(i)).gt.dsqrt(zero)) then
 
                   idead1 = 1
 
@@ -412,15 +414,13 @@ c                                 let's blow this joint
                idead = 3
                exit
 
-c           else if (idead.eq.3) then
+            else if (idead.eq.3) then
 
-c              write (*,'(/,a,/)') '**warning ver333** '//
-c    *                   'You''ve got to ask yourself one '//
-c    *                   'question: Do I feel lucky? Well, do ya, punk?'
+               write (*,'(/,a,/)') '**warning ver333** '//
+     *                   'You''ve got to ask yourself one '//
+     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
             end if
-
-            idead = 0
 
          end if
 
