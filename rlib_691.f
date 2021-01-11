@@ -8456,10 +8456,10 @@ c                                 a composition for which no O/D
 c                                 is possible
       if (pmax-pmin.lt.nopt(50)) return
 c                                 to avoid singularity set the initial
-c                                 composition to the max - nopt(5), at this
+c                                 composition to the max - nopt(50), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
-c                                 the root must lie at p > pmax - nopt(5).
+c                                 the root must lie at p > pmax - nopt(50).
       pmax = pmax - nopt(50)
       pmin = pmin + nopt(50)
 c                                 get starting point for the search
@@ -8494,7 +8494,7 @@ c                                 increment and check p
 
          if (done) then 
 
-             write (*,*) 'oink'
+             write (*,*) 'oink33'
          endif
 c                                 set speciation
          call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
@@ -8513,7 +8513,7 @@ c                                 or dp < tolerance.
 
             if (done.or.dabs((gold-g)).lt.nopt(53)) then
 
-               if (dabs(gold-g).gt.1d-5) write (*,*) 'oink1',gold-g
+               if (dabs(gold-g).gt.1d-1) write (*,*) 'oink1',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8650,7 +8650,7 @@ c                                 species are necessary to describe the ordering
 
             if (tdp.lt.nopt(50).and.itic.gt.1) then
 
-               if (dabs(gold-g).gt.1d-5) then 
+               if (dabs(gold-g).gt.1d-1) then 
                   write (*,*) 'oink2',gold-g
                end if
 
@@ -8993,9 +8993,6 @@ c-----------------------------------------------------------------------
 
       logical quit
 
-      double precision wmach
-      common/ cstmch /wmach(9)
-
       double precision x, xmin, xmax, dx, xt
 c-----------------------------------------------------------------------
       quit = .false.
@@ -9035,7 +9032,7 @@ c                                 revise the increment
       x = x + dx
 c                                 check if dx has dropped below
 c                                 function precision
-      if (dabs(dx).lt.wmach(2)) quit = .true.
+      if (dabs(dx).lt.nopt(50)) quit = .true.
 
       end
 
@@ -10719,7 +10716,7 @@ c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
          if (mode.eq.0) then
 c                                 cartesian
-            delt = nopt(50)
+            delt = nopt(5)
 
             do
 
@@ -10745,7 +10742,7 @@ c                                 x is the linear conformal coordinate.
             call setstc (ids,lpoly,lsite,k)
 
             delt = xmno(ids,1,lsite,k)
-            if (delt.gt.nopt(50)) delt = nopt(50)
+            if (delt.gt.nopt(5)) delt = nopt(5)
 
             x = unstch (pxmn(lpoly,lsite,k))
 
@@ -15216,10 +15213,10 @@ c                                 related to a site fraction
       q0 = p0a(nstot(id))
       rqmax = q0 + rqmax
 c                                 to avoid singularity set the initial
-c                                 composition to the max - nopt(5), at this
+c                                 composition to the max - nopt(50), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
-c                                 the root must lie at p > pmax - nopt(5).
+c                                 the root must lie at p > pmax - nopt(50).
       if (rqmax.gt.nopt(50)) then
 
          pin(1) = .true.
@@ -15266,9 +15263,9 @@ c                                 newton raphson iteration
 
             call pcheck (q,qmin,qmax,dq,done)
 c                                 done is just a flag to quit
-            if (done.or.dabs(gold-g).lt.nopt(53)) then
+            if (done) then
 
-               if (dabs(gold-g).gt.1d-5) write (*,*) 'oink3',gold-g
+               if (dabs(gold-g).gt.1d-1) write (*,*) 'oink3',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -20780,7 +20777,7 @@ c----------------------------------------------------------------------
 
 c      g1 = g1p - gmag(1d0)
 
-      if (y.le.nopt(50).or.y.ge.1d0-nopt(50)) then
+      if (y.le.nopt(50).or.y.ge.nopt(56)) then
 c                                 endmember compositions, no order possible
          gfesi = y*g1 + (1d0-y)*g2 + gmag(y)
          return

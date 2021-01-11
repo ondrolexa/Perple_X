@@ -1593,10 +1593,10 @@ c
       ek3 = dexp(eqk(1))
 c                                 get first guess:
       if (xo.lt.r13) then 
-         if (xo.gt.r13-nopt(5)) xo = r13 - nopt(5)
+         if (xo.gt.r13-nopt(50)) xo = r13 - nopt(50)
          xl = 2d0 *  xo/(1d0 - xo)
       else if (xo.ge.r13) then
-         if (xo.lt.r13+nopt(5)) xo = r13 + nopt(5)
+         if (xo.lt.r13+nopt(50)) xo = r13 + nopt(50)
          xl = 2d0 * (1d0 - xo)/(1d0 + xo)
       end if
 
@@ -1732,12 +1732,12 @@ c                                 compute hybrid pure fluid props
 c                                 this trap avoids singularity, a better approach
 c                                 would be to acknowledge that xh2 and xo2 are not
 c                                 independent at xo=1/3
-         if (xo.gt.r13-nopt(5)) xo = r13-nopt(5)
+         if (xo.gt.r13-nopt(50)) xo = r13-nopt(50)
          xl = 2d0 *  xo/(1d0 - xo)
 
       else if (xo.ge.r13) then
 
-         if (xo.lt.r13+nopt(5)) xo = r13+nopt(5)
+         if (xo.lt.r13+nopt(50)) xo = r13+nopt(50)
          xl = 2d0 * (1d0 - xo)/(1d0 + xo)
 
       end if 
@@ -2161,7 +2161,7 @@ c----------------------------------------------------------------------
      *         +p2)*vi+p3)*vi+p4)*vi+p5)*vi+p6)*vi+p7)*vi+p8)
          vi = vi + cor
 
-         if (dabs(cor/vi).lt.nopt(5)) then
+         if (dabs(cor).lt.nopt(50)) then
             exit
          else if (vi.lt.0d0) then 
             bad = .true.
@@ -4516,7 +4516,7 @@ c                                 dpdv/rt
 
          end if 
 
-         if (dabs(dv/v).lt.nopt(5)) then
+         if (dabs(dv).lt.nopt(50)) then
 c                                 converged, compute ln(fugacity)      
             f = c1/v+1d0/a1-1d0/c2-(e1-c7)/c8-(e2-c9)/c0
      *          + dlog(rt/v) + p*v/rt - 1d0
@@ -4861,17 +4861,17 @@ c                                 initial guess:
 c                                 SiO-SiO2 mix 
          y(14) = (1d0 - rat)/rat
          y(13) = 1d0 - y(14)
-         y(15) = nopt(5)
-         y(7)  = nopt(5)/4d0
-         y(12) = nopt(5)/2d0
+         y(15) = nopt(50)
+         y(7)  = nopt(50)/4d0
+         y(12) = nopt(50)/2d0
 
       else
 c                                 Si-SiO mix
-         y(14) = nopt(5)
+         y(14) = nopt(50)
          y(13) = 1d0/rat
          y(15) = 1d0 - 1/rat
-         y(7)  = nopt(5)
-         y(12) = nopt(5)
+         y(7)  = nopt(50)
+         y(12) = nopt(50)
 
       end if 
 
@@ -4898,7 +4898,7 @@ c                                 monatomic O
          else if (y(i3).eq.0d0) then 
 c                                 may not find the root if switch on 
 c                                 first iteration       
-            y(i3) = nopt(5)
+            y(i3) = nopt(50)
 
          else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(5)) then
 
@@ -4917,7 +4917,7 @@ c                                 at R = 1/2?
 c
          if (y(i2).le.0d0) then 
 
-            if (dabs(y(i2)).lt.nopt(5)) then 
+            if (dabs(y(i2)).lt.nopt(50)) then 
 
                y(i2) = 0d0
 
@@ -4958,7 +4958,7 @@ c                                 closure => sio2:
 
          if (y(i1).lt.0d0) then
 
-            if (dabs(y(i1)).lt.nopt(5)) then 
+            if (dabs(y(i1)).lt.nopt(50)) then 
                y(i1) = 0d0
             else 
                bad = .true.
@@ -5417,13 +5417,13 @@ c                                 at R = 1/2?
       y(i2)  = y(i3)*((2d0 - y(i3))*rat - 1d0 + y(i3) + y(i4)) / rat 
      *             / (y(i3) + 2d0*c3)
 
-      if (y(i2).lt.0d0) y(i2) = nopt(5)/10d0
+      if (y(i2).lt.0d0) y(i2) = nopt(50)
 c                                  K3 => Si
       y(i5) = c3/y(i3)*y(i2)
 c                                 closure => sio2: 
       y(i1) = 1d0 - y(i2) - y(i3) - y(i4) - y(i5)
 
-      if (y(i1).lt.0d0) y(i1) = nopt(5)/10d0
+      if (y(i1).lt.0d0) y(i1) = nopt(50)
 
 
       call mrkmix (ins, isp, iavg)    
@@ -5449,9 +5449,10 @@ c                                 monatomic O
          else if (y(i3).eq.0d0) then 
 c                                 may not find the root if switch on 
 c                                 first iteration       
-            y(i3) = nopt(5)
+            y(i3) = nopt(50)
 
-         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(5)) then
+         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(50)) 
+     *                                                             then
 
             bad = .true.
             exit 
@@ -5468,7 +5469,7 @@ c                                 at R = 1/2?
 c
          if (y(i2).le.0d0) then 
 
-            if (dabs(y(i2)).lt.nopt(5)) then 
+            if (dabs(y(i2)).lt.nopt(50)) then 
 
                y(i2) = 0d0
 
@@ -5509,7 +5510,7 @@ c                                 closure => sio2:
 
          if (y(i1).lt.0d0) then
 
-            if (dabs(y(i1)).lt.nopt(5)) then 
+            if (dabs(y(i1)).lt.nopt(50)) then 
                y(i1) = 0d0
             else 
                bad = .true.
@@ -5699,7 +5700,7 @@ c                                 c1 = exp(lnK_1)*p => 2 O = O2, HSC K
       lnk1 = (-0.9214495D6/t + 0.6234471D5)/t - 0.1631235D2
       c1 = dexp(lnk1) * p
 
-      if (xc.eq.0d0) xc = nopt(5) 
+      if (xc.eq.0d0) xc = nopt(50) 
 c                                 c2 = exp(lnK_2)/p => SiO2 = SiO + O, HSC K 
 c     c2 = dexp((-0.1133204D7/t - 0.5491882D5)/t + 0.1710990D2) / p
 c                                  k_2 from shornikov enthalpy
@@ -5713,9 +5714,9 @@ c                                 rat = nsi/no = xc/(1-xc)
       rat = xc/(1d0-xc)
 c                                 set singular compositions if within 
 c                                 speciation tolerance.
-      if (dabs(rat-0.5d0).lt.nopt(5)) then 
+      if (dabs(rat-0.5d0).lt.nopt(50)) then 
          rat = 0.5d0
-      else if (dabs(rat-1d0).lt.nopt(5)) then 
+      else if (dabs(rat-1d0).lt.nopt(50)) then 
          rat = 1d0
       end if 
 
@@ -5734,7 +5735,7 @@ c                                 for yo
 c                                 monatomic O     
          call newton (dquart,1d0,0d0,1d-12,y(i3),bad)
 
-         if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(5)) then
+         if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(50)) then
 
             bad = .true.
 
@@ -5754,7 +5755,7 @@ c                                 closure => sio2:
 
          if (y(i1).lt.0d0) then
 
-            if (dabs(y(i1)).lt.nopt(5)) then 
+            if (dabs(y(i1)).lt.nopt(50)) then 
                y(i1) = 0d0
             else 
                bad = .true.
@@ -6610,9 +6611,10 @@ c                                 first iteration
 
          else if (y(i4).eq.0d0) then 
        
-            y(i4) = nopt(5)
+            y(i4) = nopt(50)
 
-         else if (isnan(y(i4)).or.y(i4).le.0d0.or.y(i4).eq.nopt(5)) then
+         else if (isnan(y(i4)).or.y(i4).le.0d0.or.y(i4).eq.nopt(50)) 
+     *                                                             then
 
             bad = .true.
             exit 
@@ -6653,7 +6655,7 @@ c                                 convergence
             if (y(ins(i)).lt.nymin.and.
      *          y(ins(i)).gt.0d0) nymin = y(ins(i))
 
-            if (y(ins(i)).gt.1d0-nopt(5).and.y(ins(i)).le.1d0) then 
+            if (y(ins(i)).gt.1d0-nopt(50).and.y(ins(i)).le.1d0) then 
                ir = i
                henry = .true.
                exit 
@@ -6980,7 +6982,7 @@ c                                 initial guess, assume near binary
       x = 1d0 + xo 
       rat = xo/(1d0-xo) 
 
-      if (dabs(xo-r13).lt.nopt(5)) then 
+      if (dabs(xo-r13).lt.nopt(50)) then 
          y3 = 1d0/dsqrt(c4)
          y5 = y3 
       else if (xo.gt.r13) then
@@ -7326,9 +7328,9 @@ c----------------------------------------------------------------------
       yh2 = 1d0 - yo2 - yc
 
 20    if (yc.ge.1d0/3d0+yo2.or.bad
-     *                     .or.yh2.lt.nopt(5).or.yh2.ge.1d0-nopt(5)
-     *                     .or.yo2.lt.nopt(5).or.yo2.ge.1d0-nopt(5)
-     *                     .or.yc .lt.nopt(5).or.yc .ge.1d0-nopt(5)
+     *                     .or.yh2.lt.nopt(5).or.yh2.ge.1d0-nopt(50)
+     *                     .or.yo2.lt.nopt(5).or.yo2.ge.1d0-nopt(50)
+     *                     .or.yc .lt.nopt(5).or.yc .ge.1d0-nopt(50)
      *                            ) then
 c                                 above the ch4-co join
          deltag = 1d5
@@ -8054,7 +8056,7 @@ c                                 diff(veq,v)
 
          end if 
 
-         if (dabs(dv/vol).lt.nopt(5)) then
+         if (dabs(dv).lt.nopt(50)) then
 
             exit
           
@@ -8153,7 +8155,7 @@ c                                 diff(veq,v)
 
          end if 
 
-         if (dabs(dv/v).lt.nopt(5)) then
+         if (dabs(dv).lt.nopt(50)) then
 
             exit
           

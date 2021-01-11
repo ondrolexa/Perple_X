@@ -31,9 +31,9 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated December 30, 2020.',
+     *     'Perple_X version 6.9.0, source updated January 11, 2021.',
 
-     *     'Copyright (C) 1986-2020 James A D Connolly '//
+     *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
 
       end
@@ -248,6 +248,8 @@ c                                 fractionation_upper_threshold
       nopt(33) = 0d0
 c                                 aq_vapor_epsilon
       nopt(34) = 1d0
+
+      nopt(50) = zero
 c                                 -------------------------------------
 c                                 composition_phase
       iopt(2) = 0 

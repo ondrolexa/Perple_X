@@ -25,7 +25,7 @@ c-----------------------------------------------------------------------
       integer i, nvar, iter, iwork(m22), jter, itic,
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
-     *        ,iprint,mode,j,k,ind(m14)
+     *        ,iprint,mode,j
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,fdif,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
@@ -128,8 +128,8 @@ c                                 closure for molecular models
       if (.not.toc) then
 c        write (*,*) 'fac fdif?'
 c        read (*,*) fac,fdif
-         fac = 1d-2
-         fdif = 5d-8
+          fac = 1d-2
+          fdif = 1d-7
          toc = .true.
       end if
 
@@ -299,9 +299,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, toc, zbad
+      logical zbad
 
-      integer i, j, nvar, mode, istuff(*), istart, iwarn
+      integer i, j, nvar, mode, istuff(*), istart
 
       double precision ppp(*), gval, dgdp(*), stuff(*),
      *                 gsol1, g, sum1, zsite(m10,m11)
@@ -328,10 +328,6 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      save iwarn, toc
-
-      data iwarn, toc/0,.false./
 c-----------------------------------------------------------------------
       sum1 = 0d0
 
@@ -493,7 +489,7 @@ c-----------------------------------------------------------------------
 
       logical error 
 
-      integer i, ids, nvar, istart, mode, istuff(*)
+      integer ids, nvar, istart, mode, istuff(*)
 
       double precision ppp(*), gval, dgdp(*), stuff(*), d2s(j3,j3), 
      *                 gord
@@ -935,12 +931,12 @@ c-----------------------------------------------------------------------
       logical maxs, inp
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
-     *        istuff(10),istate(m21), idead, nclin, ntot, lord
+     *        istuff(10),istate(m21), idead, nclin, lord
 
       double precision ggrd(m19), gordp0, g0,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
-     *                 lapz(m20,m19), gord
+     *                 lapz(m20,m19)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
       character*14 cdint, ctol
