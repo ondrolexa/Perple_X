@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated January 6, 2021.',
+     *     'Perple_X version 6.9.1, source updated January 11, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -160,13 +160,26 @@ c                                 standard BLAS values, additionally
 c                                 BLAS routines may assume a dimension
 c                                 of 15 for wmach.
 c                                 as currently set wmach(1,2) are
-c                                 function precision and and optimality
-c                                 tolerance.
+c                                 function precision 
       wmach(1) = r2**0.9d0
+c                                 optimality tolerance.
       wmach(2) = r2**0.8d0
-c                                 relative precision (eps)
+
+      nopt(50) = wmach(2)*1d1
+      nopt(51) = wmach(2)
+c                                 precision (eps)
       wmach(3) = r2
+      nopt(52) = 2d0*wmach(3)
+c                                 feasibility tolerance (often used as numeric zero)
       wmach(4) = dsqrt(r2)
+      nopt(53) = wmach(1)
+
+c     nopt(50) = wmach(4)/1d4
+c                                 infinite log + 1, for conigurational entropy derivatives
+      nopt(54) = 1d0 + dlog(nopt(50))
+      nopt(55) = 1d0 + nopt(50)
+      nopt(56) = 1d0 - nopt(50)
+
       wmach(5) = 1d0 + r2
 c                                 largest number
       wmach(6) = dsqrt(1d0/huge(0d0))

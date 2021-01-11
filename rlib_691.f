@@ -583,15 +583,13 @@ c                                 mobile components
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision z
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
-      if (z.gt.-zero.and.z.le.r1) then
+      if (z.gt.-nopt(50).and.z.le.nopt(55)) then
          badz = .false.
-      else if (z.gt.-zero) then
+      else if (z.gt.-nopt(50)) then
          z = 0d0
          badz = .false.
       else
@@ -2721,7 +2719,6 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       save izap
       data izap /0/
 c----------------------------------------------------------------------
@@ -3147,7 +3144,6 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       save izap
       data izap /0/
 c----------------------------------------------------------------------
@@ -3256,7 +3252,7 @@ c-----------------------------------------------------------------------
      *           plg, c1, c2, c3, f1, aiikk, aiikk2, nr9t,
      *           root, aii, etas, a, ethv, gamma, da, nr9t0,
      *           fpoly, fpoly0, letht, letht0, z, aii2,
-     *           v23, tol, t1, t2, a2f
+     *           v23, t1, t2, a2f
 
       double precision nr9, d2f, tht, tht0, etht, etht0, df1,
      *                 dtht, dtht0, d2tht, d2tht0,
@@ -3265,12 +3261,11 @@ c-----------------------------------------------------------------------
       double precision smu
       common/ cst323 /smu
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       save izap
       data izap /0/
@@ -3318,9 +3313,6 @@ c                                 taylor(diff(FC,v),v=v0,3)
       end if
 
       itic = 0
-c                                 change to use relative tolerance
-c                                 JADC March 1, 2005. formerly 1d-1 bar.
-      tol = 1d-6*p
 
       do
 
@@ -3390,10 +3382,6 @@ c                                 thermal part derivatives:
 
          dv = f1/df1
 
-c         if (dabs(dv).gt.1d-2) dv = 1d-2*dv/dabs(dv)
-c                                 the above trap was probably to avoid negative
-c                                 volume, but causes problems at super-earth pressure
-c                                 replaced below nov 17, 2017.
          if (v - dv.lt.0d0) dv = v/2d0
 
          v = v - dv
@@ -3401,7 +3389,7 @@ c                                 replaced below nov 17, 2017.
          if (itic.gt.iopt(21).or.dabs(f1).gt.1d40) then
             bad = .true.
             exit
-         else if (dabs(f1).lt.tol) then
+         else if (dabs(dv).lt.nopt(50)) then
             bad = .false.
             exit
          end if
@@ -3467,9 +3455,6 @@ c-----------------------------------------------------------------------
       integer i
 
       double precision t, p1, p2, p3, p4, dinc
-
-      double precision wmach
-      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
 
       p1 = dexp(-t)
@@ -3484,7 +3469,7 @@ c-----------------------------------------------------------------------
          dinc = (p2 + (p3 + 2d0/p4)/p4)*p1**i/p4/p4
          plg = plg + dinc
 
-         if (dinc.lt.wmach(3)) exit
+         if (dinc.lt.nopt(50)) exit
 
       end do
 
@@ -3513,7 +3498,6 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       save jerk
       data jerk /0/
 c----------------------------------------------------------------------
@@ -3532,7 +3516,7 @@ c                                 initial guess for volume:
       v = vt * (1d0 - kprime*p/k)**(dv/kprime)
       itic = 0
 
-      do while (dabs(dv).gt.1d-5)
+      do while (dabs(dv/v).gt.nopt(50))
 
          itic = itic + 1
          rat = (vt/v)**r13
@@ -5031,10 +5015,6 @@ c---------------------------------------------------------------------
       character mname*8
       common/ cst18a /mname(m4)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-
       integer nsub,nterm
       double precision acoef
       common/ cst107 /acoef(m10,m11,0:m0),
@@ -5236,7 +5216,7 @@ c                               nreact is returned by readr
                idep(i,j) = inds(j+1)
             end do
 
-            if (dabs(sum-1d0).gt.zero) then
+            if (dabs(sum-1d0).gt.nopt(50)) then
 
                write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
 
@@ -6116,10 +6096,6 @@ c----------------------------------------------------------------------
 
       character text*(*), text1*(*)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c----------------------------------------------------------------------
@@ -6197,7 +6173,7 @@ c DEBUG691
 
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
-               if (dabs(zt-1d0).gt.zero) then
+               if (dabs(zt-1d0).gt.nopt(50)) then
 
 c                 write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 
@@ -6217,7 +6193,7 @@ c                                 temkin, if site exists, check fractions
 
                end do
 
-            else if (zt.lt.-zero) then
+            else if (zt.lt.-nopt(50)) then
 c                                 negative site?
                bad = .true.
 
@@ -6232,7 +6208,7 @@ c                                 negative site?
       if (msite(ids).eq.0) then 
 c                                 molecular entropy, check fractions
           do i = 1, nstot(ids)
-             if (y(i).lt.-zero) then
+             if (y(i).lt.-nopt(50)) then
                 bad = .true.
                 exit
              else if (y(i).lt.0d0) then
@@ -6887,9 +6863,6 @@ c                                 dqf parameters
       character mname*8
       common/ cst18a /mname(m4)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       integer iam
       common/ cst4 /iam
 
@@ -7289,9 +7262,9 @@ c                                 y's and dependent species y:
 
       do i = 1, msite(h0)
 c                                 eliminate sites with 1 species
-         if (zmult(h0,i).gt.zero) then
+         if (zmult(h0,i).gt.nopt(50)) then
 c                                 non-temkin
-            if (zsp(h0,i).lt.zero) then
+            if (zsp(h0,i).lt.nopt(50)) then
 c                                 pad zuffix with the remaining species
                if (tzmult(h0,i).eq.1d0) then 
                   znames(h0,i,2) = ' '
@@ -7556,7 +7529,7 @@ c                                 switched from molar to mole fraction in 688
 
                dx = dabs(cp(k,id)/ctot(id) - cp(k,jd)/ctot(jd))
 
-               if (dx.lt.zero) then
+               if (dx.lt.nopt(50)) then
                   cycle
                else if (dcp(k,im).lt.dx) then
                   dcp(k,im) = dx
@@ -7734,9 +7707,6 @@ c-----------------------------------------------------------------------
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -8104,7 +8074,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      double precision zt,qdzdy,s,dsy(*),dsyy(j3,*),q,zl,zinf,
+      double precision zt,qdzdy,s,dsy(*),dsyy(j3,*),q,zl,
      *                 z(m11,m10),s0,ztemp,zlnz
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
@@ -8119,17 +8089,10 @@ c                                 configurational entropy variables:
 
       logical pin
       common/ cyt2 /pin(j3)
-
-      double precision wmach
-      common/ cstmch /wmach(9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       s = 0d0
       dsy(1:nord(id)) = 0d0
       dsyy(1:nord(id),1:nord(id)) = 0d0
-      zinf = 1d0 + dlog(zero)
 c                                 for each site
       do i = 1, msite(id)
 
@@ -8172,8 +8135,8 @@ c                                 evaluate derivatives:
             if (zl.gt.0d0) then 
                zlnz = 1d0 + dlog(zl)
             else
-               zl = zero
-               zlnz = zinf
+               zl = nopt(50)
+               zlnz = nopt(54)
             end if
 
             do k = 1, nord(id)
@@ -8247,9 +8210,6 @@ c-----------------------------------------------------------------------
       integer m,ipvt(m),i,j,k,ip1,n,istr
 
       double precision a(m,m),d(m),rmax,tmax,temp,ratio
-
-      double precision wmach
-      common/ cstmch /wmach(9)
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d
@@ -8262,7 +8222,7 @@ c                            initialize ipvt,d
             rmax = dmax1(rmax,dabs(a(i,j)))
          end do
 c                            ax = b is singular if rmax = 0
-         if (dabs(rmax).lt.wmach(3)) then
+         if (dabs(rmax).lt.nopt(50)) then
             error = .true.
             return
          end if
@@ -8288,7 +8248,7 @@ c                            determine pivot row (istr).
 
          end do
 
-         if (dabs(rmax).lt.wmach(3)) then
+         if (dabs(rmax).lt.nopt(50)) then
             error = .true.
             return
          end if
@@ -8324,7 +8284,7 @@ c                            eliminate x(k) from rows k+1,...,n.
 
       end do
 
-      if (dabs(a(n,n)).lt.wmach(3)) error = .true.
+      if (dabs(a(n,n)).lt.nopt(50)) error = .true.
 
       end
 
@@ -8353,7 +8313,7 @@ c----------------------------------------------------------------------
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
 c                                 check ordered state
-      y = 1d0 - nopt(5)
+      y = 1d0 - nopt(50)
       rt = r*t*fac
 
       odg = dgdy(h,w,n,f,y,rt)
@@ -8371,7 +8331,7 @@ c                                 iteration loop:
          do
 
             y = y + dy
-            if (y.le.0d0) y = nopt(5)
+            if (y.le.0d0) y = nopt(50)
 
             ndg = dgdy(h,w,n,f,y,rt)
 
@@ -8382,11 +8342,11 @@ c                                 crossed the zero, flip the search
                odg = ndg
                dy = -dy/2d0
 
-            else if (dabs(dy).lt.nopt(5)) then
+            else if (dabs(dy).lt.nopt(50)) then
 c                                 refined to tolerance
                exit
 
-            else if (y.le.nopt(5)) then
+            else if (y.le.nopt(50)) then
 c                                 fully disordered, y=0, c1 = c2
                y = 0d0
                exit
@@ -8399,7 +8359,7 @@ c                                 fully disordered, y=0, c1 = c2
 
       c1 = (n+y)/c0
 
-      if (c1.lt.1d0-nopt(5).and.c1.gt.nopt(5)) then
+      if (c1.lt.1d0-nopt(50).and.c1.gt.nopt(50)) then
          g = rt*n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1))
       else
          g = 0d0
@@ -8407,7 +8367,7 @@ c                                 fully disordered, y=0, c1 = c2
 
       c2 = (1d0-y)*n/c0
 
-      if (c2.lt.1d0-nopt(5).and.c2.gt.nopt(5))
+      if (c2.lt.1d0-nopt(50).and.c2.gt.nopt(50))
      *   g = g + rt*(c2*dlog(c2) + (1d0-c2)*dlog(1d0-c2))
 
       g = g + (1d0-y)*( w*y + h)
@@ -8449,7 +8409,8 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, ga, pmax, pmin, dp, gord, dy(m14)
+      double precision g, ga, pmax, pmin, dp, gord, dy(m14), gold, xdp,
+     *                 s1,s2,s3,i1, i2, i3
 
       external gord
 
@@ -8470,8 +8431,8 @@ c----------------------------------------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      save s1,s2,s3,i1, i2, i3
+      data s1,s2,s3,i1, i2, i3/6*0d0/
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
@@ -8493,56 +8454,66 @@ c                                 necessary?
       pin(k) = .true.
 c                                 a composition for which no O/D 
 c                                 is possible
-      if (pmax-pmin.lt.zero) return
+      if (pmax-pmin.lt.nopt(50)) return
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-         pmax = pmax - zero
-         pmin = pmin + zero
+      pmax = pmax - nopt(50)
+      pmin = pmin + nopt(50)
 c                                 get starting point for the search
 c                                 first try the maximum
-         dp = pmax - p0a(jd)
-         call pincs (dp,dy,ind,jd,nr)
+      dp = pmax - p0a(jd)
+      call pincs (dp,dy,ind,jd,nr)
 
-         call gderi1 (k,id,dp)
+      call gderi1 (k,id,dp,g)
 
-         if (dp.ge.0d0) then
+      if (dp.ge.0d0) then
 c                                 at the maximum concentration
 c                                 and the increment is positive,
 c                                 the solution is fully ordered
 c                                 or a local minimum, try the
 c                                 the disordered case:
-            call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
-            call gderi1 (k,id,dp)
+         call gderi1 (k,id,dp,g)
 c                                 neither min nor max starting point
 c                                 is possible. setting error to
 c                                 true will cause specis to compare
 c                                 the min/max order cases, specis
 c                                 computes the min case g, therefore
 c                                 the case is set to max order here:
-            if (dp.le.0d0) error = .true.
+         if (dp.le.0d0) error = .true.
 
-         end if
+      end if
 
       if (.not.error) then
 c                                 increment and check p
          call pcheck (pa(jd),pmin,pmax,dp,done)
+
+         if (done) then 
+
+             write (*,*) 'oink'
+         endif
 c                                 set speciation
          call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 c                                 iteration counter
          itic = 0
+         gold = g
+         xdp = 0d0
 c                                 newton raphson iteration
          do
 
-            call gderi1 (k,id,dp)
+            call gderi1 (k,id,dp,g)
 
             call pcheck (pa(jd),pmin,pmax,dp,done)
 c                                 done means the search hit a limit
 c                                 or dp < tolerance.
-            if (done) then
+
+            if (done.or.dabs((gold-g)).lt.nopt(53)) then
+
+               if (dabs(gold-g).gt.1d-5) write (*,*) 'oink1',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8551,14 +8522,20 @@ c                                 use the last increment
 
                exit
 
-            else
+            else if (dp.eq.xdp) then 
 
-               itic = itic + 1
+               write (*,*) 'wroink!',g-gold
+
+            else
 c                                 apply the increment
                call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
+               xdp = dp
+               gold = g
+               itic = itic + 1
 
                if (itic.le.iopt(21)) cycle
 c                                 failed to converge. exit
+               write (*,*) 'wroink2!',g-gold
                error = .true.
                badc(1) = badc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8585,8 +8562,6 @@ c                                 anti-ordered
          if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       end if
-
-      g = gord(id)
 
       end
 
@@ -8615,9 +8590,6 @@ c----------------------------------------------------------------------
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
@@ -8675,9 +8647,12 @@ c                                 species are necessary to describe the ordering
                tdp = tdp + dabs(dp(k))
 
             end do
-c                                 nov 23, 2016 added exit if diverging
-c                                 g > gold, itic > 2
-            if (tdp.lt.zero.or.dabs((gold-g)/g).lt.zero) then
+
+            if (tdp.lt.nopt(50).and.itic.gt.1) then
+
+               if (dabs(gold-g).gt.1d-5) then 
+                  write (*,*) 'oink2',gold-g
+               end if
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8761,9 +8736,6 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 given dp check if it violates
 c                                 stoichiometric constraints
@@ -8771,10 +8743,10 @@ c                                 stoichiometric constraints
 
       call plimit (pmn,pmx,k,id)
 
-      if (pa(jd)+dp.gt.pmx-zero) then
-         dp = pmx - pa(jd) - zero
-      else if (pa(jd)+dp.lt.pmn+zero) then
-         dp = pmn - pa(jd) + zero
+      if (pa(jd)+dp.gt.pmx-nopt(50)) then
+         dp = pmx - pa(jd) - nopt(50)
+      else if (pa(jd)+dp.lt.pmn+nopt(50)) then
+         dp = pmn - pa(jd) + nopt(50)
       end if
 c                                 adjust the composition by the increment
       call dpinc (dp,k,id,jd)
@@ -8835,9 +8807,6 @@ c                                 working arrays
 
       logical pin
       common/ cyt2 /pin(j3)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 
       lord = 0
@@ -8851,7 +8820,7 @@ c                                 case 1: fully correlated
 
             call plimit (pmn,pmx,k,id)
 
-            if (pmn.ge.pmx.or.pmx-pmn.lt.2d0*zero) then
+            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)) then
                pin(k) = .false.
                cycle
             else
@@ -8888,7 +8857,7 @@ c                                 case 0: no correlation/iteration
 
                if (i.eq.1) then
 
-                  if (pmn.ge.pmx.or.pmx-pmn.lt.2d0*zero) then
+                  if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)) then
                      pin(k) = .false.
                      cycle
                   else
@@ -8993,9 +8962,6 @@ c----------------------------------------------------------------------
 
       logical pin
       common/ cyt2 /pin(j3)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 
       lord = 0
@@ -9004,7 +8970,7 @@ c----------------------------------------------------------------------
 
             call plimit (pmn,pmx,k,id)
 
-            if (pmn.ge.pmx.or.pmx-pmn.lt.2d0*zero) then
+            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)) then
                pin(k) = .false.
                cycle
             else
@@ -9027,10 +8993,10 @@ c-----------------------------------------------------------------------
 
       logical quit
 
-      double precision x, xmin, xmax, dx, xt
+      double precision wmach
+      common/ cstmch /wmach(9)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision x, xmin, xmax, dx, xt
 c-----------------------------------------------------------------------
       quit = .false.
 
@@ -9068,12 +9034,12 @@ c                                 revise the increment
 
       x = x + dx
 c                                 check if dx has dropped below
-c                                 threshold for convergence
-      if (dabs(dx).lt.2d0*zero) quit = .true.
+c                                 function precision
+      if (dabs(dx).lt.wmach(2)) quit = .true.
 
       end
 
-      subroutine gderi1 (k,id,dg)
+      subroutine gderi1 (k,id,dg,g)
 c----------------------------------------------------------------------
 c subroutine computes the newton raphson increment dg from the 1st and 2nd
 c derivatives of the g of solution (id) with respect to the concentration
@@ -9095,7 +9061,7 @@ c----------------------------------------------------------------------
 
       integer i,k,i1,i2,id
 
-      double precision g,dg,d2g,t,ds,d2s
+      double precision g,dg,d2g,t,s,ds,d2s
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9150,15 +9116,17 @@ c                                 because of the "tphi" term in the
 c                                 van laar.
 
 c                                 convert dg and d2g to the full derivative
-            dg = (dg - g*dt(k)/t)/t
+            g = g/t
+            dg = (dg - g*dt(k))/t
             d2g = (d2g - 2d0*dt(k)*dg)/t
 
          end if
 
       end if
 c                                 get the configurational entropy derivatives
-      call sderi1 (k,id,ds,d2s)
+      call sderi1 (k,id,s,ds,d2s)
 
+      g = g + pa(lstot(id)+k)*enth(k) - v(2)*s
       dg  = dg + enth(k)  - v(2)*ds
       d2g = d2g - v(2)*d2s
 c                                 dg becomes the newton raphson increment
@@ -9166,7 +9134,7 @@ c                                 dg becomes the newton raphson increment
 
       end
 
-      subroutine sderi1 (l,id,ds,d2s)
+      subroutine sderi1 (l,id,s,ds,d2s)
 c----------------------------------------------------------------------
 c subroutine to the derivative of the configurational entropy of a
 c solution with respect to the proportion of the lth ordered species.
@@ -9177,7 +9145,7 @@ c----------------------------------------------------------------------
 
       integer i,j,k,l,id
 
-      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,zinf,lnz
+      double precision zt,dzdy,dzy,dzyy,zl,ds,d2s,lnz,s,sy
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -9188,19 +9156,14 @@ c                                 configurational entropy variables:
 
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
-      double precision wmach
-      common/ cstmch /wmach(9)
 c----------------------------------------------------------------------
+      s = 0d0
       ds = 0d0
       d2s = 0d0
-      zinf = 1d0 + dlog(zero)
 
       do i = 1, msite(id)
 
+         sy = 0d0
          dzy = 0d0
          dzyy = 0d0
 
@@ -9216,12 +9179,14 @@ c                                 for each term:
 c                                 sdzdp is (dz(i,j)/dp(l))
             dzdy = sdzdp(l,j,i,id)
 
-            if (zl.lt.zero) then
-               zl = zero
-               lnz = zinf
+            if (zl.lt.nopt(50)) then
+               zl = nopt(50)
+               lnz = nopt(54)
             else
                zt = zt + zl
                lnz = (1d0 + dlog(zl))
+c                                 the entropy
+               sy = sy + zl*dlog(zl)
             end if
 c                                 the first derivative
             dzy = dzy - dzdy * lnz
@@ -9235,17 +9200,20 @@ c                                 species:
 
          dzdy = sdzdp(l,j,i,id)
 
-         if (zl.lt.zero) then
-            zl = zero
-            lnz = zinf
+         if (zl.lt.nopt(50)) then
+            zl = nopt(50)
+            lnz = nopt(54)
          else
             lnz = (1d0 + dlog(zl))
+c                                 the entropy
+            sy = sy + zl*dlog(zl)
          end if
 c                                 the first derivative is
          dzy = dzy - dzdy * lnz
 c                                 and the second is
          dzyy = dzyy  - dzdy**2 / zl
 
+         s = s - zmult(id,i)*sy
          ds = ds + zmult(id,i)*dzy
          d2s = d2s + zmult(id,i)*dzyy
 
@@ -9254,6 +9222,7 @@ c                                 for models with disordered
 c                                 endmembers, correct first derivative for the
 c                                 change in endmember configurational entropy
       do i = 1, nstot(id)
+         s = s - pa(i)*scoef(i,id)
          ds = ds - dydy(i,l,id)*scoef(i,id)
       end do
 
@@ -9855,15 +9824,15 @@ c--------------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       double precision exces
       common/ cst304 /exces(m3,k1)
 
       integer is
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer iam
       common/ cst4 /iam
@@ -9999,7 +9968,7 @@ c                                 bulk composition stuff
 
       do l = 1, icomp
 
-         if (scp(l).gt.-zero.and.scp(l).lt.zero) then
+         if (scp(l).gt.-nopt(50).and.scp(l).lt.nopt(50)) then
             scp(l) = 0d0
          else if (scp(l).lt.0d0.and.im.ne.i228) then
             i228 = im
@@ -10009,7 +9978,7 @@ c                                 bulk composition stuff
       end do
 c                                 check if the phase consists
 c                                 entirely of saturated components:
-      if (ctot(iphct).lt.zero) then
+      if (ctot(iphct).lt.nopt(50)) then
 
          if (im.ne.oim) call warn (55,scp(1),l,tname)
 
@@ -10691,10 +10660,6 @@ c---------------------------------------------------------------------
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
       if (.not.extra) then
 c                                 chopit always generates jsp coordinates
@@ -10729,7 +10694,7 @@ c                                 avoid impossible compositions 'cause a min > 0
 
             ycum = ycum + pxmn(lpoly,lsite,k-1)
 c                                 1-ycum is the smallest fraction possible
-            if (ycum.gt.r1) then
+            if (ycum.gt.nopt(55)) then
 c                                 inconsistent limits
                write (*,'(/,a,/)') '#########BOOM WACKA BOOM###########'
 c              write (*,*) ycum,ids,ksmod(ids),lsite,k,i,mode
@@ -10754,7 +10719,7 @@ c                                 two means of extracting y-range, cartesian
 c                                 imod = 0 and transformation imod = 1
          if (mode.eq.0) then
 c                                 cartesian
-            delt = nopt(5)
+            delt = nopt(50)
 
             do
 
@@ -10780,7 +10745,7 @@ c                                 x is the linear conformal coordinate.
             call setstc (ids,lpoly,lsite,k)
 
             delt = xmno(ids,1,lsite,k)
-            if (delt.gt.nopt(5)) delt = nopt(5)
+            if (delt.gt.nopt(50)) delt = nopt(50)
 
             x = unstch (pxmn(lpoly,lsite,k))
 
@@ -10849,7 +10814,7 @@ c                                 the composition
             ycum = ycum + y(i,ind(i))
          end do
 c                                 until 2/17/19 this was > 1.
-         if (ycum.gt.r1) then
+         if (ycum.gt.nopt(55)) then
 c                                 no matter what this is the last point
 c                                 to be generated for ind(indx), set ieyit
 c                                 to change indx
@@ -11407,12 +11372,11 @@ c-----------------------------------------------------------------------
 
       external epsh2o
 
-      double precision p,t,xco2,u1,u2,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       character specie*4
       integer isp, ins
@@ -12174,10 +12138,10 @@ c-----------------------------------------------------------------------
 
          x = x + dx
 
-         if (x.le.0d0.or.it.gt.iopt(21)) then
+         if (x.le.0d0.or.x.gt.1d3.or.it.gt.iopt(21)) then
             bad = .true.
             exit
-         else if (dx/x.lt.nopt(5)) then
+         else if (dx.lt.nopt(50)) then
             bad = .false.
             exit
          end if
@@ -13048,9 +13012,6 @@ c                                 working arrays
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
 c                                 compute the chemical potential
 c                                 of the projected components. 
@@ -14529,9 +14490,6 @@ c-----------------------------------------------------------------------
       double precision r,tr,pr,ps,p,t,xco2,u1,u2
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       integer jnd
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
@@ -14679,7 +14637,7 @@ c                                 DH law activity coefficient factor (gamma = ga
 c                                 check for convergence
             dix = dabs(xis-is)/is
 
-            if (dix.lt.nopt(5)) then
+            if (dix.lt.nopt(50)) then
 c                                 converged
                return
 
@@ -15205,7 +15163,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, qmax, qmin, q, q0, dq, rqmax
+      double precision g, qmax, qmin, q, q0, dq, rqmax, gold
 
       double precision omega, gex
       external omega, gex
@@ -15232,9 +15190,6 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       error = .false.
 c                                 rqmax the maximum amount of the
@@ -15265,43 +15220,45 @@ c                                 composition to the max - nopt(5), at this
 c                                 condition the first derivative < 0,
 c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(5).
-      if (rqmax.gt.zero) then
+      if (rqmax.gt.nopt(50)) then
 
          pin(1) = .true.
-         qmax = rqmax - zero
-         qmin = zero
+         qmax = rqmax - nopt(50)
+         qmin = nopt(50)
 c                                 the p's are computed in gpderi
-            call gpder1 (id,qmax-q0,dq,g,.false.)
+         call gpder1 (id,qmax-q0,dq,g,.false.)
 
-            if (dq.lt.0d0) then
+         if (dq.lt.0d0) then
 c                                 at the maximum concentration, the
 c                                 first derivative is positive, if
 c                                 the second is also > 0 then we're
 c                                 business
-               q = qmax
+            q = qmax
+
+         else
+c                                 try the min
+            call gpder1 (id,qmin-q0,dq,g,.false.)
+
+            if (dq.gt.0d0) then
+c                                 ok
+               q = qmin
 
             else
-c                                 try the min
-               call gpder1 (id,qmin-q0,dq,g,.false.)
-
-               if (dq.gt.0d0) then
-c                                 ok
-                  q = qmin
-
-               else
 c                                 no search from either limit possible
 c                                 set error .true. to compare g at the
 c                                 limits.
-                  error = .true.
-                  goto 90
+               error = .true.
+               goto 90
 
-               end if
             end if
+         end if
 c                                 increment and check p
-            call pcheck (q,qmin,qmax,dq,done)
+         call pcheck (q,qmin,qmax,dq,done)
 c                                 iteration counter to escape
 c                                 infinite loops
          itic = 0
+
+         gold = g
 c                                 newton raphson iteration
          do
 
@@ -15309,13 +15266,19 @@ c                                 newton raphson iteration
 
             call pcheck (q,qmin,qmax,dq,done)
 c                                 done is just a flag to quit
-            if (done) then
+            if (done.or.dabs(gold-g).lt.nopt(53)) then
+
+               if (dabs(gold-g).gt.1d-5) write (*,*) 'oink3',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
 c                                 in principle the p's could be incremented
 c                                 here and g evaluated for the last update.
                return
+
+            else
+
+               gold = g
 
             end if
 
@@ -15371,7 +15334,7 @@ c----------------------------------------------------------------------
 
       logical minfxc
 
-      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, zinf,
+      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, 
      *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
      *                 d2z, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
      *                 z, n(m11), dn(m11), d2n(m11), t, dt, d2t
@@ -15390,9 +15353,6 @@ c                                 configurational entropy variables:
       double precision dppp,d2gx,sdzdp
       common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       double precision alpha,dt0
       common/ cyt0  /alpha(m4),dt0(j3)
 
@@ -15410,8 +15370,6 @@ c                                 initialize
       s = 0d0
       ds = 0d0
       d2s = 0d0
-
-      zinf = 1d0 + dlog(zero)
 
       gnorm  = 1d0 + dnu(id) * q
       dgnorm = dnu(id)
@@ -15525,7 +15483,7 @@ c                                 n(j) is molar site population
 
             end do
 
-            if (nt.gt.zero) then
+            if (nt.gt.nopt(50)) then
 c                                 site has non-zero multiplicity
                do j = 1, zsp(id,i)
 
@@ -15534,17 +15492,7 @@ c                                 site has non-zero multiplicity
                   d2z = (2d0*dnt*(z*dnt-dn(j)) + nt*d2n(j) - n(j)*d2nt)
      *                  /nt**2
 
-                  if (z.gt.zero) then
- 
-                     lnz1 = dlog(z) + 1d0
-                     zlnz = zlnz + z * dlog(z)
-
-                  else
-
-                     z = zero
-                     lnz1 = zinf
-
-                  end if
+                  call ckdzlz (z,zlnz,lnz1)
 
                   dzlnz = dzlnz + dz * lnz1
                   d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
@@ -15572,17 +15520,7 @@ c                                 for each term:
                   d2z = d2z + dcoef(k,j,i,id) * d2p(ksub(k,j,i,id))
                end do
 
-              if (z.gt.zero) then
- 
-                     lnz1 = dlog(z) + 1d0
-                     zlnz = zlnz + z * dlog(z)
-
-              else
-
-                     z = zero
-                     lnz1 = zinf
-
-               end if
+               call ckdzlz (z,zlnz,lnz1)
 
                dzlnz = dzlnz + dz * lnz1
                d2zlnz = d2zlnz + d2z * lnz1 + dz**2 / z
@@ -15595,17 +15533,7 @@ c                                 for each term:
 c                                 add the contibution from the last species:
             z = 1d0 - nt
 
-            if (z.gt.zero) then
- 
-               lnz1 = dlog(z) + 1d0
-               zlnz = zlnz + z * dlog(z)
-
-            else
-
-              z = zero
-              lnz1 = zinf
-
-            end if
+            call ckdzlz (z,zlnz,lnz1)
 
             s = s - zmult(id,i)*zlnz/r
             ds = ds - zmult(id,i)*(dzlnz - dnt * lnz1)/r
@@ -15727,9 +15655,6 @@ c---------------------------------------------------------------------
 
       character mname*8
       common/ cst18a /mname(m4)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
@@ -15926,7 +15851,7 @@ c                               nreact is returned by readr
                   idep(mdep,j) = inds(j+1)
                end do
 
-              if (dabs(sum-1d0).gt.zero) then 
+              if (dabs(sum-1d0).gt.nopt(50)) then 
                   write (*,'(/,a,g12.6,/)') 'coefficient sum = ', sum
                   call error (72,sum,i,'dependent endmember '//
      *                 mname(inds(1))//' definition coefficients do not'
@@ -16849,9 +16774,6 @@ c---------------------------------------------------------------------
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c---------------------------------------------------------------------
       if (ksmod(ids).eq.20) then
 c                                 subdivision with charge balance
@@ -16928,7 +16850,7 @@ c                                 compositions
 c                                 do the subdivisions for each polytope
          do ii = 1, poly(ids)
 
-            if (pwt(ii).le.zero) then
+            if (pwt(ii).le.nopt(50)) then
                pwt(ii) = 0d0
                npol(ii) = 0
                cycle
@@ -17090,9 +17012,6 @@ c-----------------------------------------------------------------------
 
       double precision sum
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -17116,7 +17035,7 @@ c                                 weights
 
             jpos = icox(id) + 1
 
-            if (sum.lt.one) then
+            if (sum.lt.1d0) then
                pwt(ii) = 1d0 - sum
             else 
                pwt(ii) = 0d0
@@ -17153,7 +17072,7 @@ c                                 skip 0-d simplices
 
                end do
 
-               if (sum.lt.one) then
+               if (sum.lt.1d0) then
                   x(ii,i,k) = 1d0 - sum
                else 
                   x(ii,i,k) = 0d0
@@ -17328,9 +17247,6 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
@@ -17342,7 +17258,7 @@ c----------------------------------------------------------------------
 
             k = 0
 
-            if (pwt(ii).lt.zero) then 
+            if (pwt(ii).lt.nopt(50)) then 
 
                do l = pvert(ids,ii,1), pvert(ids,ii,2)
 
@@ -17362,7 +17278,7 @@ c----------------------------------------------------------------------
                   y(l) = y(l)*x(ii,m,kmsol(ids,l,m))
                end do
 
-               if (y(l).gt.one) then
+               if (y(l).gt.nopt(56)) then
                   k = l
                   exit
                end if
@@ -17372,7 +17288,7 @@ c----------------------------------------------------------------------
             if (k.ne.0) then
 c                                 reject pure independent endmember compositions.
                if (ldsol(k,ids).gt.0.and.nrf(ids)
-     *                              .and.pwt(ii).gt.one) then
+     *                              .and.pwt(ii).gt.nopt(56)) then
 
                   bad = .true.
 
@@ -17509,9 +17425,6 @@ c-----------------------------------------------------------------------
       integer kd, na1, na2, na3, nat
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
 
       scp(1:icomp) = 0d0
@@ -17597,7 +17510,7 @@ c                                 note normalization is to the total amount of
 c                                 thermodynamic components.
       do i = 1, icp
 
-         if (scp(i).lt.0d0.and.scp(i).gt.-zero) scp(i) = 0d0
+         if (scp(i).lt.0d0.and.scp(i).gt.-nopt(50)) scp(i) = 0d0
          scptot = scptot + scp(i)
 
       end do
@@ -19024,9 +18937,6 @@ c----------------------------------------------------------------------
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c---------------------------------------------------------
       nvar = nstot(id) - 1
 c                                 to be counted:
@@ -19134,9 +19044,6 @@ c----------------------------------------------------------------------
       double precision ayx
       common/ csty2x /ayx(h9,h4,mst*msp,m4),mx(h9,h4)
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -19156,7 +19063,7 @@ c                                  get the polytope weight
                pwt(ii) = pwt(ii) + y(k)
             end do
 
-            if (dabs(pwt(ii)).lt.zero) then
+            if (dabs(pwt(ii)).lt.nopt(50)) then
 
                pwt(ii) = 0d0
 
@@ -19164,7 +19071,7 @@ c                                  get the polytope weight
                   y(k) = 0d0
                end do
 
-            else if (pwt(ii).gt.r1) then 
+            else if (pwt(ii).gt.nopt(55)) then 
 
                pwt(ii) = 1d0
 
@@ -19187,11 +19094,11 @@ c                                 the algebra
 
             end do
 
-            if (pwt(ii).gt.zero) xt = xt / pwt(ii)
+            if (pwt(ii).gt.nopt(50)) xt = xt / pwt(ii)
 
-            if (xt.lt.zero) then 
+            if (xt.lt.nopt(50)) then 
                xt = 0d0
-            else if (xt.gt.one) then 
+            else if (xt.gt.nopt(56)) then 
                xt = 1d0
             end if
 
@@ -19238,10 +19145,6 @@ c----------------------------------------------------------------------
       double precision p(*), z(*)
 
       integer i,j,k,l,ids
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19290,10 +19193,6 @@ c----------------------------------------------------------------------
       double precision y(*), zt, z(ldz,*)
 
       integer i,j,k,ldz,ids
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -19662,7 +19561,6 @@ c----------------------------------------------------------------------
 
       end
 
-
       subroutine p2sds (s,dsdp,nvar,ids)
 c----------------------------------------------------------------------
 c subroutine to configurational negentropy  and its derivatives with
@@ -19672,15 +19570,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision zt, z(m11), dsdp(*), dzlnz, s, zlnz, zinf, lnz
+      double precision zt, z(m11), dsdp(*), dzlnz, s, zlnz, lnz
 
       integer i, j, k, l, ids, nvar
-
-      double precision wmach
-      common/ cstmch /wmach(9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
@@ -19692,7 +19584,6 @@ c----------------------------------------------------------------------
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c----------------------------------------------------------------------
-      zinf = 1d0 + dlog(zero)
 c                                 for each site
       do i = 1, msite(ids)
 
@@ -19714,13 +19605,9 @@ c                                 for each term:
 
                zt = zt + z(j)
 
-               do l = 1, nvar
+               call ckdlnz (z(j),lnz)
 
-                  if (z(j).gt.0d0) then 
-                     lnz = 1d0 + dlog(z(j))
-                  else
-                     lnz = zinf
-                  end if
+               do l = 1, nvar
 
                   dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * lnz
 
@@ -19734,13 +19621,9 @@ c                                 for each term:
 c                                 site negentropy
             zlnz = zmult(ids,i) * zlnz
 c                                 for non-temkin sites dzdp is already scaled by q*R
-            do l = 1, nvar
+            call ckdlnz (zt,lnz)
 
-               if (zt.gt.0d0) then 
-                  lnz = 1d0 + dlog(zt)
-               else
-                  lnz = zinf
-               end if
+            do l = 1, nvar
 
                dsdp(l) = dsdp(l) + dzdp(j,i,l,ids) * lnz
 
@@ -19760,7 +19643,7 @@ c                                 zt is the multiplicity here
 
             end do
 c                                 site doesn't exist if zt = 0
-            if (zt.lt.zero) cycle
+            if (zt.lt.nopt(50)) cycle
 c                                 convert molar amounts to fractions
             z(1:zsp(ids,i)) = z(1:zsp(ids,i)) / zt
 
@@ -19776,11 +19659,7 @@ c                                 derivatives
 c                                 for each species
                do j = 1, zsp(ids,i)
 
-                  if (z(j).gt.0d0) then 
-                     lnz = 1d0 + dlog(z(j))
-                  else
-                     lnz = zinf
-                  end if
+                  call ckdlnz (z(j),lnz)
 
                   dzlnz = dzlnz + dzdp(j,i,l,ids) * lnz
 
@@ -19798,23 +19677,65 @@ c                                 for each species
 
       end
 
+      subroutine ckdzlz (z,zlnz,dlnz)
+c----------------------------------------------------------------------
+c subroutine to test and accumulate z*ln(z) and set 1 + ln(z)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision z, zlnz, dlnz
+c----------------------------------------------------------------------
+      if (z.gt.0d0) then
+ 
+         dlnz = dlog(z) + 1d0
+         zlnz = zlnz + z * dlog(z)
+
+      else
+c                                 z is set only for evaluation of second 
+c                                 derivative
+         z = nopt(50)
+         dlnz = nopt(54)
+
+      end if
+
+      end 
+
       subroutine ckzlnz (z,zlnz)
 c----------------------------------------------------------------------
 c subroutine to test/reset site fraction value z and accumulate z*ln(z)
 c----------------------------------------------------------------------
       implicit none
 
-      double precision z, zlnz
+      include 'perplex_parameters.h'
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+      double precision z, zlnz
 c----------------------------------------------------------------------
       if (z.gt.1d0) then
          z = 1d0
-      else if (z.lt.zero) then
+      else if (z.lt.nopt(50)) then
          z = 0d0
       else
          zlnz = zlnz + z * dlog(z)
+      end if
+
+      end
+
+      subroutine ckdlnz (z,dlnz)
+c----------------------------------------------------------------------
+c subroutine to test/reset site fraction value z and accumulate 1+ln(z)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      double precision z, dlnz
+c----------------------------------------------------------------------
+      if (z.gt.0d0) then
+         dlnz = 1d0 + dlog(z)
+      else
+         dlnz = nopt(54)
       end if
 
       end
@@ -20072,10 +19993,6 @@ c                                 endmember pointers
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
 c                                 models with speciation:
       do j = 1, norder
@@ -20150,7 +20067,7 @@ c                                with respect to the ordered species
             dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
          end do
 c                                dnu =~ 0 => speciation reaction is not equimolar
-         if (dabs(dnu(im)).gt.zero) then
+         if (dabs(dnu(im)).gt.nopt(50)) then
             if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)
@@ -20228,11 +20145,12 @@ c                                 count in evaluating derivatives.
             dzt = 0d0
 
             do j = 1, zsp(im,i)
-               if (dabs(sdzdp(k,j,i,im)).lt.zero) sdzdp(k,j,i,im) = 0d0
+               if (dabs(sdzdp(k,j,i,im)).lt.nopt(50)) 
+     *                                       sdzdp(k,j,i,im) = 0d0
                dzt = dzt + sdzdp(k,j,i,im)
             end do
 
-            if (dabs(dzt).lt.zero) dzt = 0d0
+            if (dabs(dzt).lt.nopt(50)) dzt = 0d0
             sdzdp(k,j,i,im) = -dzt
 
          end do
@@ -20267,7 +20185,7 @@ c                                 if it has a non zero fraction
 
                call zmake (zij,i,l,im)
 
-               if (dabs(zij).lt.zero) cycle
+               if (dabs(zij).lt.nopt(50)) cycle
 
                lterm(jp1,i,im) = lterm(jp1,i,im) + 1
                dcoef(lterm(jp1,i,im),jp1,i,im) = zij
@@ -20327,7 +20245,8 @@ c                                 z(p,p0), below they are rearranged to get p(kk
 c                                 in other words the loop on mord(im) is superfluous, but what the heck...
                   kk = lstot(im)+k
 
-                  if (l.eq.lterm(j,i,im).and.dabs(c1(kk)).gt.zero) then
+                  if (l.eq.lterm(j,i,im).and.dabs(c1(kk)).gt.nopt(50))
+     *                                                              then
 
                      do ik = 0, nstot(im)
                         c0(ik) = -c0(ik)/c1(kk)
@@ -20360,7 +20279,7 @@ c                                 initialize p0 term counter for limit
 c                                 load the p0 coefficients, if simplicial p0 > lstot(im) = 0
                      do ik = 1, nstot(im)
 
-                        if (dabs(c0(ik)).lt.zero) cycle
+                        if (dabs(c0(ik)).lt.nopt(50)) cycle
 c                                 increment term counter:
                         lt(ln(k,im),k,im) = lt(ln(k,im),k,im) + 1
 c                                 save the coefficient and index:
@@ -20373,7 +20292,7 @@ c                                 initialize p term counter for limit
 c                                 load the p coefficients
                      do ik = lstot(im) + 1, nstot(im)
 
-                        if (dabs(c0(ik)).lt.zero) cycle
+                        if (dabs(c0(ik)).lt.nopt(50)) cycle
 c                                 increment term counter:
                         jt(ln(k,im),k,im) = jt(ln(k,im),k,im) + 1
 c                                 save the coefficient and index:
@@ -20861,7 +20780,7 @@ c----------------------------------------------------------------------
 
 c      g1 = g1p - gmag(1d0)
 
-      if (y.le.nopt(5).or.y.ge.1d0-nopt(5)) then
+      if (y.le.nopt(50).or.y.ge.1d0-nopt(50)) then
 c                                 endmember compositions, no order possible
          gfesi = y*g1 + (1d0-y)*g2 + gmag(y)
          return
@@ -20887,8 +20806,8 @@ c        xmin = 2d0*(y-.5d0)
 c        xmin = 0d0
       end if
 
-      xmax = xmax - nopt(5)
-      xmin = y + nopt(5)
+      xmax = xmax - nopt(50)
+      xmin = y + nopt(50)
       x = xmax
 c                                 get 1st and 2nd derivatives
       call dgfesi (dg,d2g,y,x,g12,rt)
@@ -20993,7 +20912,7 @@ c-----------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
 
-      if (y.le.nopt(5).or.y.ge.1d0-nopt(5)) then
+      if (y.le.nopt(50).or.y.ge.nopt(56)) then
 c                          endmember compositions, no order possible
          gfes =  y*g2 + (1d0 - y)*g1
          return
@@ -21019,12 +20938,12 @@ c                          by b,
 c                          xmax = (2 y Zab Zba)/
 c                                   (Zaa Zab - y Zaa Zab - y Zaa Zba + 2 y Zab Zba);
 c                          the case below is for ZFeFe = ZSS = 6;  ZFeS = ZSFe = 2
-      xmin = nopt(5)
+      xmin = nopt(50)
 
       if (y.lt.0.5d0) then
-         xmax = 2.d0*y/(3d0 - 4d0*y) - nopt(5)
+         xmax = 2.d0*y/(3d0 - 4d0*y) - nopt(50)
       else
-         xmax = 2d0*(1d0-y)/(3d0 - 4d0*(1d0-y)) - nopt(5)
+         xmax = 2d0*(1d0-y)/(3d0 - 4d0*(1d0-y)) - nopt(50)
       end if
 
 c                                 get 1st and 2nd derivatives
