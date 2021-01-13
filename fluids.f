@@ -884,7 +884,7 @@ c                                 atomic fractions
                      tot = tot + xs(ins(k))
                   end do 
 
-                  if (dabs(tot-1d0).gt.nopt(5)+0.5d0) then
+                  if (dabs(tot-1d0).gt.nopt(50)+0.5d0) then
                      write (*,*) ' bad total :',tot-1d0,xo,elag
                      bad = .true. 
                   end if 

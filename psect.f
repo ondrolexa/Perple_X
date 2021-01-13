@@ -493,6 +493,12 @@ c                                 last label centroids:
 c                                 the assemblage doesn't occur if lex(k) = 0
 c                                 but this should be possible
          if (lex(k).eq.0) cycle
+
+         if (nctr(k).lt.2) then 
+            write (*,*) 'skipping label for dot field: ',
+     *                  text(1:nblen(text))
+            cycle
+         end if
 c                                 compute barycenter, added by 
 c                                 G Helffrich, Mar 24, 2009. 
          i = max(1,nint(bctr(1,k)/nctr(k)))
@@ -638,6 +644,12 @@ c                                  extent for label.
 
                   end do
                end do
+
+               if (iend-ibeg.lt.2.or.jend-jbeg.lt.2) then 
+                  write (*,*) 'skipping label for dot field: ',
+     *                        text(1:nblen(text))
+                  cycle
+               end if
 c                                 george had ii = max(1,nint(x/i)) for 
 c                                 grid spacing 1, changed 10/13/2018
 c                                 for grid spacing jinc. JADC

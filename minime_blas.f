@@ -1,7 +1,7 @@
       subroutine dummy
       end 
 
-      subroutine minfrc (jter)
+      subroutine minfrc
 c-----------------------------------------------------------------------
 c minimize the omega function for the independent endmember fractions
 c of solution ids subject to site fraction constraints
@@ -20,22 +20,22 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical inp, tic, zbad, toc
+      logical tic, zbad
 
-      integer i, nvar, iter, iwork(m22), jter, itic,
+      integer i, nvar, iter, iwork(m22), itic,
      *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
-     *        ,iprint,mode,j
+     *        ,iprint,mode
 
-      double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,fdif,
+      double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),yt(m4),fdint,ftol,
+     *                 ,c(1),cjac(1,1),yt(m4),
      *                 zsite(m10,m11), pinc0,sum
 
 
-      character ctol*20,cdint*20
+      character ctol*20
 
       external gsol2, gsol1, dummy
 
@@ -64,9 +64,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      data fac,pinc0,iprint,inp,toc/1d0,1d-2,0,.false.,.false./
+      data fac,pinc0/1d-2,1d-2/
 
-      save fac,pinc0,iprint,inp,toc,fdif
+      save fac,pinc0
 c-----------------------------------------------------------------------
       yt = pa
 
@@ -125,15 +125,16 @@ c                                 closure for molecular models
 
       end if
 
-      if (.not.toc) then
+c     if (.not.toc) then
 c        write (*,*) 'fac fdif?'
 c        read (*,*) fac,fdif
-          fac = 1d-2
-          fdif = 1d-7
-         toc = .true.
-      end if
+c         fac = 1d-2
+c        toc = .true.
+c     end if
 
       itic = 0
+
+      iprint = 0
 
 10    idead = -1
 c                                 obj call counter
@@ -141,20 +142,7 @@ c                                 obj call counter
 c                                 saved obj value counter
       istuff(4) = 0
 
-      if (inp) then
-
-         write (*,*) 'ftol,fdint'
-         read (*,*) ftol, fdint
-         write (ctol,'(g14.7)') ftol
-         write (cdint,'(g14.7)') fdint
-         CALL E04UEF ('optimality tolerance = '//ctol)
-         CALL E04UEF ('difference interval = '//cdint)
-         write (ctol,'(i4)') iprint
-         CALL E04UEF ('print level = '//ctol)
-
-      else
-
-         CALL E04UEF ('nolist')
+      CALL E04UEF ('nolist')
 c                                 in NLPSOL:
 c                                 EPSRF is function precision
 c                                 CTOL  is feasibility tolerance
@@ -163,25 +151,22 @@ c                                 none of these are allowed to go below epsmch, 
 c                                 reset to their defaults in terms of epsmch, this leads to 
 c                                 the possibility that decreasing fac increases the result...
 c                                 to stop this behavior modify
-         CALL E04UEF ('verify level 0')
-         write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
-         CALL E04UEF ('function precision = '//ctol)
+      CALL E04UEF ('verify level 0')
+      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
+      CALL E04UEF ('function precision = '//ctol)
 c                                 really should be powers of function precision, not epsmch
-         write (ctol,'(g14.7)') (wmach(3)*fac)**(0.8)
-         CALL E04UEF ('optimality tolerance = '//ctol)
-c        write (ctol,'(g14.7)')  (wmach(3)*fac)**(0.5)
-         write (ctol,'(g14.7)')  zero
-         CALL E04UEF ('feasibility tolerance = '//ctol)
+      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.8)
+      CALL E04UEF ('optimality tolerance = '//ctol)
+c     write (ctol,'(g14.7)') (wmach(3)*fac)**(0.5)
+      write (ctol,'(g14.7)') zero
+      CALL E04UEF ('feasibility tolerance = '//ctol)
 c step limit < nopt(5) leads to bad results, coincidence?
-         write (ctol,'(g14.7)') 0.5
-         CALL E04UEF ('step limit = '//ctol)
+      CALL E04UEF ('step limit = 0.5')
 c low values -> more accurate search -> more function calls
 c                              0.05-.4 seem best
-         CALL E04UEF ('linesearch tolerance = 0.225')
-         write (ctol,'(i4)') iprint
-         CALL E04UEF ('print level = '//ctol)
-
-      end if
+      CALL E04UEF ('linesearch tolerance = 0.225')
+      write (ctol,'(i4)') iprint
+      CALL E04UEF ('print level = '//ctol)
 
       if (deriv(rids)) then
 
@@ -189,21 +174,18 @@ c                              0.05-.4 seem best
 
          if (itic.eq.1) then
             CALL E04UEF ('verify level 1')
-            write (ctol,'(g14.7)') fdif
+            write (ctol,'(g14.7)') nopt(49)
             CALL E04UEF ('difference interval ='//ctol)
-c           CALL E04UEF ('print level = 10')
          else if (itic.eq.2) then
             CALL E04UEF ('verify level 0')
             CALL E04UEF ('derivative level = 0')
-c           CALL E04UEF ('print level = 10')
          end if 
-
 
       else
 
          CALL E04UEF ('verify level 0')
          CALL E04UEF ('derivative level = 0')
-         write (ctol,'(g14.7)') fdif
+         write (ctol,'(g14.7)') nopt(49)
          CALL E04UEF ('difference interval ='//ctol)
 
       end if
@@ -226,14 +208,12 @@ c           CALL E04UEF ('print level = 10')
       else
 
          if (iter.eq.0) then
-
-c           return
-
-c           write (*,*) 'zapra',itic,rids
+c           write (*,*) 'zapra off',itic,rids
+            return
             ppp(1:nvar) = yt(1:nvar)
-
          end if
 
+      end if
 c--------------------------
       sum = 0d0
       do i = 1, nvar
@@ -258,17 +238,15 @@ c                                 if logical arg = T use implicit ordering
 c                                 increment the counter
       call savrpc (gfinal,zero,jphct)
 c---------------
-         if (lopt(54)) then
+      if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
-            do j = 1, 1
+         pinc = 1d0 + pinc0
 
-            pinc = 1d0 + pinc0/2**(j-1)
+         do i = 1, lstot(rids)
 
-            do i = 1, lstot(rids)
+            pa = yt/pinc
 
-               pa = yt/pinc
- 
-               pa(i) = pa(i) + (1d0 - 1d0/pinc)
+            pa(i) = pa(i) + (1d0 - 1d0/pinc)
 
             if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
      *                                                            cycle 
@@ -280,10 +258,6 @@ c                                 increment the counter
             call savrpc (gfinal,nopt(37),jphct)
 
          end do
-
-         end do
-
-         end if
 
       end if
 
@@ -905,7 +879,6 @@ c                                 convert the y's to x's
 
       end
 
-
       subroutine minfxc (gfinal,ids,maxs)
 c-----------------------------------------------------------------------
 c optimize solution gibbs energy or configurational entropy at constant 
@@ -928,18 +901,18 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical maxs, inp
+      logical maxs
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
      *        istuff(10),istate(m21), idead, nclin, lord
 
-      double precision ggrd(m19), gordp0, g0,
+      double precision ggrd(m19), gordp0, g0, fac,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
      *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),xp(m14), ftol, fdint
-      character*14 cdint, ctol
+     *                 ,c(1),cjac(1,1),xp(m14), ftol
+      character*14 ctol
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -977,10 +950,6 @@ c DEBUG691                    dummies for NCNLN > 0
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       external gsol4, gordp0, dummy
-c DEBUG691 minfxc
-      data iprint,inp/0,.false./
-
-      save iprint,inp
 c-----------------------------------------------------------------------
 c                                 initialize limit expressions from p0
       call p0limt (ids)
@@ -990,6 +959,8 @@ c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
       call pinc0 (ids,lord)
+
+      fac = 1d-2
 
       if (icase(ids).eq.0) then 
 c                                 o/d reactions are independent and
@@ -1010,6 +981,7 @@ c                                 maxs inversion is mostly likely to be
 c                                 called for a general composition, the
 c                                 lazy solution here is to keep everything
 c                                 in:
+         fac = 1d0
          pin = .true.
          lord = nord(ids)
 
@@ -1062,10 +1034,6 @@ c                                coefficients
                lapz(nclin,jid(j,i,k,ids)-lstot(ids)) = jc(j,i,k,ids)
 
             end do
-
-            if (lapz(nclin,k).ne.0d0) then 
-               write (*,*) 'wtf',lapz(nclin,k)
-            end if
 
             lapz(nclin,k) = -1d0
 
@@ -1120,71 +1088,30 @@ c                                 initialize ppp
 
 10    idead = -1
 
-      if (inp) then
-
-         istuff(4) = 0
-
-         iprint = 10
-
-         ppp(1:nvar) = xp(1:nvar)
-
-         write (*,*) 'ftol,fdint'
-         read (*,*) ftol, fdint
-         write (ctol,'(g14.7)') ftol
-         write (cdint,'(g14.7)') fdint
-
-         CALL E04UEF ('optimality tolerance = '//ctol)
-         CALL E04UEF ('difference interval = '//cdint)
-         write (ctol,'(i4)') iprint
-         CALL E04UEF ('print level = '//ctol)
-
-      else
-
-         iprint = 0 
-         
-         CALL E04UEF ('nolist')
-         write (ctol,'(g14.7)') (wmach(1)*1d1)
-         CALL E04UEF ('function precision = '//ctol)
-         write (ctol,'(g14.7)') (wmach(1)*1d1)**(0.8)
-         CALL E04UEF ('optimality tolerance = '//ctol)
-         write (ctol,'(g14.7)') zero
-         CALL E04UEF ('feasibility tolerance = '//ctol)
+      CALL E04UEF ('nolist')
+      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
+      CALL E04UEF ('function precision = '//ctol)
+      write (ctol,'(g14.7)') (wmach(3)*1d1)**(0.8)
+      CALL E04UEF ('optimality tolerance = '//ctol)
+      write (ctol,'(g14.7)') zero
+      CALL E04UEF ('feasibility tolerance = '//ctol)
 c step limit < nopt(5) leads to bad results, coincidence?
-         ftol = 0.2
-         write (ctol,'(g14.7)') ftol
-         CALL E04UEF ('step limit = '//ctol)
+      CALL E04UEF ('step limit = 0.5')
 c low values -> more accurate search -> more function calls
-         ftol = 0.2
-         write (ctol,'(g14.7)') ftol
-         CALL E04UEF ('linesearch tolerance = '//ctol)
-         write (ctol,'(i4)') iprint
-         CALL E04UEF ('print level = '//ctol)
+      CALL E04UEF ('linesearch tolerance = 0.225')
+      write (ctol,'(i4)') iprint
+      CALL E04UEF ('print level = '//ctol)
 
+      if (itic.le.1) CALL E04UEF ('derivative level = 3')
+
+      if (itic.eq.1) then
+         CALL E04UEF ('verify level 1')
+         write (ctol,'(g14.7)') nopt(49)
+         CALL E04UEF ('difference interval ='//ctol)
+      else if (itic.eq.2) then
+         CALL E04UEF ('verify level 0')
+         CALL E04UEF ('derivative level = 0')
       end if
-
-c     if (deriv(ids)) then
-
-         if (itic.le.1) CALL E04UEF ('derivative level = 3')
-
-         if (itic.eq.1) then
-            CALL E04UEF ('verify level 1')
-c           CALL E04UEF ('print level = 10')
-            CALL E04UEF ('difference interval = 1d-3')
-         else if (itic.eq.2) then
-            CALL E04UEF ('verify level 0')
-            CALL E04UEF ('derivative level = 0')
-c           CALL E04UEF ('print level = 10')
-         end if 
-
-c     else
-
-c        istuff(6) = 1
-
-c        CALL E04UEF ('difference interval = 1d-3')
-c        CALL E04UEF ('verify level 0')
-c        CALL E04UEF ('derivative level = 0')
-
-c     end if
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,

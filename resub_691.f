@@ -599,7 +599,7 @@ c                                 refinement point was the same solution.
 
 c           if (lopt(28)) call begtim (9)
 c                                  normal solution
-            call minfrc (iter)
+            call minfrc
 
 c           if (lopt(28)) call endtim (9,.true.,'minfrc')
 
@@ -1639,7 +1639,7 @@ c----------------------------------------------------------------------
 
       external ffirst, degen 
 
-      logical degen, solvus, quit, news, solvnt(1)
+      logical degen, solvus, quit, news, solvnt(k19)
 
       double precision clamda(*), x(*), slam(h9)
 
@@ -1760,7 +1760,13 @@ c                                 new point, add to list
 
          end if 
 
-      end do 
+      end do
+c                                 amt < 0
+      if (npt.gt.icp) call reject (is,1,solvnt)
+c                                 amt < featol
+      if (npt.gt.icp) call reject (is,2,solvnt)
+c                                 is = 4
+      if (npt.gt.icp) call reject (is,3,solvnt)
 c                                 get mus for lagged speciation
       call getmus (1,0,solvnt,.false.)
 
@@ -2196,7 +2202,6 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
-
       save tic
       data tic/0/
 c----------------------------------------------------------------------
@@ -2289,6 +2294,17 @@ c                                 keep the least metastable point
          end if
 
       end do
+c                                 amt < 0
+      if (npt.gt.icp) call reject (is,1,solvnt)
+c                                 amt < featol
+      if (npt.gt.icp) call reject (is,2,solvnt)
+c                                 is = 4
+      if (npt.gt.icp) call reject (is,3,solvnt)
+c                                 at this point could signal bad result if
+c                                 npt > icp, could also switch
+c                                 icp for the non-degenerate 
+c                                 component counter.
+
 c                                 abort is set if pure solvent is stable, if 
 c                                 it is the only solvent then reset abort
       if (abort.and.mpt.eq.0) abort = .false.
@@ -2450,6 +2466,67 @@ c                                 check zero modes the amounts
 
       end
 
+      subroutine reject (is,icrit,solvnt)
+c----------------------------------------------------------------------
+c subroutine to reject bad results from lpopt by one of 3 criteria:
+c  icrit = 1 -> amt(i) < 0
+c  icrit = 2 -> amt(i) < featol
+c  icrit = 3 -> is(i) = 4, weak solution
+c cases 1 & 2 should be, but are not, flagged by the NAG version of 
+c lpsol; this was not a problem with the pre-690 solver. This may be
+c related to bugwandita, some forensic analysis is in order. 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical solvnt(*)
+
+      integer i, id, is(*), kpt, icrit
+
+      integer npt,jdv
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
+
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+      kpt = 0
+
+      do i = 1, npt
+
+         id = jdv(i)
+
+         if (icrit.eq.1.and.amt(i).lt.0d0.or.
+     *       icrit.eq.2.and.amt(i).lt.zero.or.
+     *       icrit.eq.3.and.is(id).eq.4) then 
+
+c            write (*,'(a,i2,1x,g14.7,5(1x,i3))') 'rejecting ',
+c    *                         icrit,amt(i),is(id),npt,npt-icp
+
+             if (kpt.eq.icp) exit
+
+         else
+
+            kpt = kpt + 1
+            jdv(kpt) = id
+            amt(kpt) = amt(i)
+            solvnt(kpt) = solvnt(i)
+
+         end if
+
+      end do
+
+      npt = kpt
+
+      end
 
       subroutine rebulk (abort,stic)
 c----------------------------------------------------------------------
@@ -2467,7 +2544,7 @@ c----------------------------------------------------------------------
 
       logical abort, stic, bad
 
-      double precision c(k5), scp(k5), sum
+      double precision c(k5), scp(k5)
  
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp

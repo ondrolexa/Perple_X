@@ -26,8 +26,8 @@
 
 
 optimization_max_it       40    | [20] maximum number of sucessive LP optimizations
-optimization_precision    1d-1 | [1d-1 energy unit] absolute precision for succesive LP optimization
-replicate_threshold       1d-3 | nopt(35) savdyn => smaller values may cause failed optimization
+optimization_precision    1d-1 | [1d-1 energy unit] absolute precision for successive LP optimization
+replicate_threshold       1d-2 | nopt(35) savdyn => smaller values may cause failed optimization
 rep_dynamic_threshold     aut  | nopt(37) savrpc => larger values may cause rough boundaries
 intermediate_savrpc       T    | lopt(57)
 intermediate_savdyn       T    | lopt(58)
@@ -122,6 +122,6 @@ T_stop                    default | [0.] equilibration temperature (K) cut off
 variance                 1 99 | [1 99] exploratory and auto-refine; maximum variance of traced equilibria; only relevant for CONVEX
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 warning_ver637            default | [T] F -> warn and cease interpolation in WERAMI when immiscible solutions are present
-x_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
+x_nodes                  10 60 default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                  10 60 default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
 zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations

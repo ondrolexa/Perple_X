@@ -730,7 +730,7 @@ c                                 solve for xh2, xco
 
       if (nit.gt.iopt(21)) call warn (502,xo,ier,'COHSGR')
 
-      if (dabs(y(1)-oh2o).lt.nopt(5)*y(1)) goto 90
+      if (dabs(y(1)-oh2o).lt.nopt(50)) goto 90
 
       oh2o = y(1)
 
@@ -807,7 +807,7 @@ c                                 for xh2, find roots:
       xh2 = r0 - g/dg
       if (xh2.lt.0d0) xh2 = r0/2d0
 c                                 converged:
-      if (dabs((xh2-r0)/xh2).lt.nopt(5)) goto 999
+      if (dabs(xh2-r0).lt.nopt(50)) goto 999
 
       it = it + 1
 
@@ -921,7 +921,7 @@ c                                 evaluate dg:
       xh2 = r0 - g/dg
       if (xh2.lt.0d0) xh2 = r0/2d0
 c                                 converged:
-      if (dabs((xh2-r0)/xh2).lt.nopt(5)) goto 40
+      if (dabs(xh2-r0).lt.nopt(50)) goto 40
 
       it = it + 1
 
@@ -983,7 +983,7 @@ c                                 evaluate df:
          xh2o = r0 + (1d0 - r0)/2d0
       end if         
 c                                 converged:
-      if (dabs((xh2o-r0)/xh2o).lt.nopt(5)) goto 99
+      if (dabs(xh2o-r0).lt.nopt(50)) goto 99
 
       it = it + 1
 
@@ -1002,7 +1002,7 @@ c                                 converged:
       yco = -(d2*t4*xh2o + d3*xh2o*t11)/
      *       (d4*t10*xh2o - d7*xh2*t4 - d8*t25)
 c                                 is new xh2o same as guess?:
-      if (dabs((xh2o-r1)/xh2o).lt.nopt(5)) goto 9999
+      if (dabs(xh2o-r1).lt.nopt(50)) goto 9999
 
       jt = jt + 1
 
@@ -1135,7 +1135,7 @@ c                                 evaluate dc:
 
       if (xh2.lt.0d0) xh2 = r0/2d0
 c                                 converged:
-      if (dabs((xh2-r0)/xh2).lt.nopt(5)) goto 40
+      if (dabs(xh2-r0).lt.nopt(50)) goto 40
 
       it = it + 1
 
@@ -1198,7 +1198,7 @@ c                                 evaluate df:
          xh2o = r0 + (1d0 - r0)/2d0
       end if         
 c                                 converged:
-      if (dabs((xh2o-r0)/xh2o).lt.nopt(5)) goto 99
+      if (dabs(xh2o-r0).lt.nopt(50)) goto 99
 
       it = it + 1
 
@@ -1215,7 +1215,7 @@ c                                 converged:
 99    yco = -((g1-g2)*xh2o**2+((1d0-g3)*xh2o-(g4+g5)*xh2)*xh2**2)*xh2o/
      *       ((((g6-g7)*xh2o+(1d0+c1-xo-g8)*xh2)*xh2o-g9*xh2**4)*xh2)
 c                                 is new xh2o same as guess?:
-      if (dabs((xh2o-r1)/xh2o).lt.nopt(5)) goto 9999
+      if (dabs(xh2o-r1).lt.nopt(50)) goto 9999
 
       jt = jt + 1
 
@@ -1509,7 +1509,7 @@ c                                 solve for xh2, yco
          goto 90
       end if     
 
-      if (dabs(y(1)-oh2o).lt.nopt(5)*y(1)) goto 90
+      if (dabs(y(1)-oh2o).lt.nopt(50)) goto 90
 
       oh2o = y(1)
 
@@ -1635,7 +1635,7 @@ c                                 inner iteration loop:
             y(7) = c5*c6*(y(1)*y(1))/(y(5)*y(5))
             y(8) = c3*c4*y(7)
  
-            if (dabs((xi-y(1))/y(1)).lt.nopt(5)) goto 20
+            if (dabs(xi-y(1)).lt.nopt(50)) goto 20
             if (y(1).ge.1d0) y(1) = xi + (1d0-xi)/2d0
 10          xi = y(1)
 
@@ -1647,7 +1647,7 @@ c                                 inner iteration loop:
          y(7) = c5*c6*(y(1)*y(1))/(y(5)*y(5))
          y(8) = c3*c4*y(7)
 
-         if (dabs((oy5-y(5))/y(5)).lt.nopt(5)) goto 40
+         if (dabs(oy5-y(5)).lt.nopt(50)) goto 40
 
          call mrkhyb (ins, jns, 5, 1, 1)
 
@@ -1756,7 +1756,7 @@ c
 c                                 inner iteration loop:
             y(7) = xo + c10 * y(1)
 
-            if (y(7).gt.nopt(5)) then  
+            if (y(7).gt.nopt(50)) then  
 
                x12 = dsqrt (y(7))
 
@@ -1770,7 +1770,7 @@ c                                 inner iteration loop:
 
             end if 
 
-            if (dabs((xi-y(1))/y(1)).lt.nopt(5)) goto 20
+            if (dabs(xi-y(1)).lt.nopt(50)) goto 20
             if (y(1).ge.1d0) y(1) = xi + (1d0-xi)/2d0
 10          xi = y(1)
 
@@ -1780,7 +1780,7 @@ c                                 inner iteration loop:
 
 20       if (y(7).lt.0d0) y(7) = 0d0
          y(5) = 1d0 - y(7) - y(1)
-         if (j.gt.1.and.dabs((xl-y(1))/y(1)).lt.nopt(5)) goto 40
+         if (j.gt.1.and.dabs(xl-y(1)).lt.nopt(50)) goto 40
 
          call mrkhyb (ins, jns, 3, 1, 1)
 
@@ -1795,7 +1795,7 @@ c                                 inner iteration loop:
 
       vol = vol + y(1) * vh(1) 
       
-      if (y(7).lt.y(5)) then
+      if (y(7).lt.y(50)) then
          fo2 = 2d0 * (f(1) - dlog(g(5)*p*y(5))- eqk(1))
       else
          fo2 = dlog (g(7) * p * y(7))
@@ -2009,7 +2009,7 @@ c                                 + qb * xh2 + qc
             
          end if 
 
-         if (dabs(y(1)-oh2o).lt.nopt(5)*y(1)) exit
+         if (dabs(y(1)-oh2o).lt.nopt(50)) exit
 
          oh2o = y(1)
 
@@ -2161,7 +2161,7 @@ c----------------------------------------------------------------------
      *         +p2)*vi+p3)*vi+p4)*vi+p5)*vi+p6)*vi+p7)*vi+p8)
          vi = vi + cor
 
-         if (dabs(cor).lt.nopt(50)) then
+         if (dabs(cor/vi).lt.nopt(50)) then
             exit
          else if (vi.lt.0d0) then 
             bad = .true.
@@ -4131,8 +4131,8 @@ c                                 of anything, try other root
 
                exit
 
-            else if (dabs(dxh2o).lt.nopt(5).and.
-     *               dabs(tx).lt.nopt(5)) then 
+            else if (dabs(dxh2o).lt.nopt(50).and.
+     *               dabs(tx).lt.nopt(50)) then 
 c                                 seems to have converged
                if (y(ins(1)).gt.1d0.or.y(ins(1)).lt.0d0.or.
      *             y(ins(7)).gt.1d0.or.y(ins(7)).lt.0d0) then
@@ -4516,7 +4516,7 @@ c                                 dpdv/rt
 
          end if 
 
-         if (dabs(dv).lt.nopt(50)) then
+         if (dabs(dv/v).lt.nopt(50)) then
 c                                 converged, compute ln(fugacity)      
             f = c1/v+1d0/a1-1d0/c2-(e1-c7)/c8-(e2-c9)/c0
      *          + dlog(rt/v) + p*v/rt - 1d0
@@ -4686,7 +4686,7 @@ c                                 mass balance => sio2:
 
             if (y(i1).lt.0d0) then
 
-               if (dabs(y(i1)).lt.nopt(5)) then
+               if (dabs(y(i1)).lt.nopt(50)) then
                   y(i1) = 0d0
                else 
                   cycle
@@ -4702,7 +4702,7 @@ c                                 mass balance => sio2:
 
             if (y(i2).lt.0d0) then
 
-               if (dabs(y(i2)).lt.nopt(5)) then
+               if (dabs(y(i2)).lt.nopt(50)) then
                   y(i2) = 0d0
                else 
                   cycle
@@ -4720,7 +4720,7 @@ c                                 mass balance => sio2:
  
          end do 
 
-         if ( dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) exit  
+         if ( dabs(oldy-y(icon)).lt.nopt(50)) exit  
 c                                 get new gamma's
          call mrkmix (ins, isp, iavg)
 
@@ -4900,7 +4900,8 @@ c                                 may not find the root if switch on
 c                                 first iteration       
             y(i3) = nopt(50)
 
-         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(5)) then
+         else if (isnan(y(i3)).or.y(i3).le.0d0.or.y(i3).eq.nopt(50)) 
+     *                                                              then
 
             bad = .true.
             exit 
@@ -4990,9 +4991,9 @@ c                                 renormalize, this helps!
          nsi = y(14) + y(13) + y(15)
          no  = 2d0*(y(7)+y(14)) + y(13) + y(12) 
 
-         if ( dabs(nymax-oymax)/nymax.lt.nopt(5).and.
-     *        dabs(nymin-oymin)/nymin.lt.nopt(5).and.
-     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5) ) then
+         if ( dabs(nymax-oymax).lt.nopt(50).and.
+     *        dabs(nymin-oymin).lt.nopt(50).and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(50) ) then
 
             exit 
 
@@ -5174,7 +5175,7 @@ c            lnk1 = (2d0*go - go2)/r/t
 
             c1 = dexp(lnk1) * p
 
-            if (c1.gt.1d0/nopt(5)) then 
+            if (c1.gt.1d0/nopt(50)) then 
 c                                assume pure O2
                fh2o = (dlog(p*g(i4)) - lnk1)/2d0
                fco2 = dlog(1d12*p)
@@ -5542,9 +5543,9 @@ c                                 renormalize, this helps!
          nsi = y(14) + y(13) + y(15)
          no  = 2d0*(y(7)+y(14)) + y(13) + y(12) 
 
-         if ( dabs(nymax-oymax)/nymax.lt.nopt(5).and.
-     *        dabs(nymin-oymin)/nymin.lt.nopt(5).and.
-     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5) ) then 
+         if ( dabs(nymax-oymax).lt.nopt(50).and.
+     *        dabs(nymin-oymin).lt.nopt(50).and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(50) ) then 
 
             exit 
 
@@ -5560,7 +5561,7 @@ c                                 this does help!
 
             do i = 1, isp
 
-               y(ins(i)) = (0.5*y(ins(i))+0.5*oy(ins(i)))
+               y(ins(i)) = (y(ins(i))+oy(ins(i)))/2d0
 
             end do  
 
@@ -6235,7 +6236,7 @@ c                                 closure => sio2:
 
             end do 
         
-            if ( bad .or. dabs((oldy-y(icon))/y(icon)).lt.nopt(5)) exit
+            if ( bad .or. dabs(oldy-y(icon)).lt.nopt(50)) exit
 c                                 get new gamma's
             call mrkmix (ins, 5, 1)
 
@@ -6511,7 +6512,7 @@ c                                iterate for non-ideality
          y(i3) = (a1-g(i4))/a0
          if (y(i3).gt.1d0.or.y(i3).lt.0d0) y(i3) = -(a1+g(i4))/a0
          y(i4) = 1d0 - y(i3)
-         if ( dabs((oldy-y(i3))/y(i3)).lt.nopt(5)) exit  
+         if ( dabs(oldy-y(i3)).lt.nopt(50)) exit  
 c                                 get new gamma's
          call mrkmix (ins, 2, iavg)
 
@@ -6674,10 +6675,10 @@ c                                 convergence
 
          end do
 
-         if ( dabs(nymax-oymax)/nymax.lt.nopt(5).and.
-     *        dabs(nymin-oymin)/nymin.lt.nopt(5).and.
-     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5).and.
-     *        dabs(nsi+y(7)-1d0).lt.nopt(5) ) then
+         if ( dabs(nymax-oymax).lt.nopt(50).and.
+     *        dabs(nymin-oymin).lt.nopt(50).and.
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(50).and.
+     *        dabs(nsi+y(7)-1d0).lt.nopt(50) ) then
 
             igood = igood + 1
 
@@ -6686,8 +6687,8 @@ c                                 convergence
          else if (nit.gt.400.and.
      *        dabs(nymax-oymax)/nymax.lt.1d-3.and.
      *        dabs(nymin-oymin)/nymin.lt.1d0.and.
-     *        dabs(xc-nsi/(nsi+no)).lt.nopt(5).and.
-     *        dabs(nsi+y(7)-1d0).lt.nopt(5) ) then
+     *        dabs(xc-nsi/(nsi+no)).lt.nopt(50).and.
+     *        dabs(nsi+y(7)-1d0).lt.nopt(50) ) then
           
             imed = imed + 1
 
@@ -7046,7 +7047,7 @@ c                                 renormalize
          end do 
 c                                 check for convergence, could 
 c                                 do better than this
-         if (dabs(y5-oy5).lt.nopt(5)*y5) exit
+         if (dabs(y5-oy5).lt.nopt(50)) exit
 c                                 check if iteration count exceeded
          if (nit.gt.iopt(21)) then 
             call warn (176,y5,nit,'GCOHX6')
@@ -7328,9 +7329,9 @@ c----------------------------------------------------------------------
       yh2 = 1d0 - yo2 - yc
 
 20    if (yc.ge.1d0/3d0+yo2.or.bad
-     *                     .or.yh2.lt.nopt(5).or.yh2.ge.1d0-nopt(50)
-     *                     .or.yo2.lt.nopt(5).or.yo2.ge.1d0-nopt(50)
-     *                     .or.yc .lt.nopt(5).or.yc .ge.1d0-nopt(50)
+     *                     .or.yh2.lt.nopt(50).or.yh2.ge.nopt(56)
+     *                     .or.yo2.lt.nopt(50).or.yo2.ge.nopt(56)
+     *                     .or.yc .lt.nopt(50).or.yc .ge.nopt(56)
      *                            ) then
 c                                 above the ch4-co join
          deltag = 1d5
@@ -7577,7 +7578,7 @@ c                                 update independent fractions
                y(ins(i)) = y(ins(i)) + dp(i)
             end if 
 c                                 check convergence
-            if (dabs(y(ins(i))-oy(i))/oy(i).gt.nopt(5)) then
+            if (dabs(y(ins(i))-oy(i)).gt.nopt(50)) then
                quit = .false.
             end if 
 
@@ -7606,17 +7607,17 @@ c                                 update dependent fractions
 
             end if
 c                                 check convergence
-            if (dabs(y(ins(j))-oy(j))/oy(j).gt.nopt(5)) then
+            if (dabs(y(ins(j))-oy(j)).gt.nopt(50)) then
               quit = .false.
             end if 
 
          end do 
 
-         if (itct.gt.1.and.dabs(gtot-ogtot).lt.nopt(5)) then
+         if (itct.gt.1.and.dabs((gtot-ogtot)/gtot).lt.nopt(50)) then
             quit = .true.
             do j = 1, 5
 
-               if (dabs(y(ins(j))-oy(j))/oy(j).gt.nopt(5)) then
+               if (dabs(y(ins(j))-oy(j)).gt.nopt(50)) then
                quit = .false.
                end if 
 
@@ -8056,7 +8057,7 @@ c                                 diff(veq,v)
 
          end if 
 
-         if (dabs(dv).lt.nopt(50)) then
+         if (dabs(dv/vol).lt.nopt(50)) then
 
             exit
           
@@ -8155,7 +8156,7 @@ c                                 diff(veq,v)
 
          end if 
 
-         if (dabs(dv).lt.nopt(50)) then
+         if (dabs(dv/v).lt.nopt(50)) then
 
             exit
           

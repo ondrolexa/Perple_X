@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated January 11, 2021.',
+     *     'Perple_X version 6.9.1, source updated January 13, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -246,7 +246,7 @@ c                                 increase in resolution for Schreinemakers diag
 c                                 T_melt cutoff 
       nopt(20) = 873d0
 c                                 optimization_precision, absolute
-      nopt(21) = 1d-3
+      nopt(21) = 1d-4
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -265,6 +265,8 @@ c                                 replicate_threshold (savdyn)
 c                                 rep_dynamic_threshold (savrpc)
       valu(11) = 'aut'
       nopt(37) = 1d-3
+c                                 MINFRC_diff_increment
+      nopt(49) = 1d-7
 c                                 -------------------------------------
 c                                 composition_phase
       iopt(2) = 0 
@@ -718,7 +720,11 @@ c                                 bad number key
                read (strg,*) nopt(37)
             else
                valu(11) = val 
-            end if 
+            end if
+
+         else if (key.eq.'MINFRC_diff_increment') then 
+
+            read (strg,*) nopt(49)
 
          else if (key.eq.'speciation_precision') then 
 
@@ -1526,7 +1532,7 @@ c                                 reaction format and lists
          else 
 c                                 adaptive optimization
             write (n,1180) nopt(21),iopt(20),iopt(31),k5,lopt(49),
-     *                     nval2,nopt(9),lopt(54)
+     *                     nval2,nopt(9),lopt(54),nopt(49)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1728,14 +1734,16 @@ c                                 thermo options for frendly
      *        4x,'short_print_file        ',a3,7x,'[on] off')
 1180  format (/,2x,'Free energy minimization options:',//,
      *        4x,'optimization_precision ',g7.1E1,4x,
-     *           '[1e-3], 1e-1 => 1e-6, absolute',/,
+     *           '[1e-4], 1e-1 => 1e-6, absolute',/,
      *        4x,'optimization_max_it     ',i2,8x,'[40] >1',/,
      *        4x,'refinement_points       ',i2,8x,'[auto] 1->',i2,/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
      *        4x,'solvus_tolerance_II     ',a7,3x,'[0.2] 0->1 ',/,
      *        4x,'zero_mode              ',e7.1E1,4x,
      *           '[1e-6] 0->1; < 0 => off',/,
-     *        4x,'scatter-points          ',l1,9x,'[T] F')
+     *        4x,'scatter-points          ',l1,9x,'[T] F',/,
+     *        4x,'MINFRC_diff_increment  ',g7.1E1,4x,
+     *           '[1e-7], 1e-3 => 1e-9')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40] >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,

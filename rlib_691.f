@@ -3389,7 +3389,7 @@ c                                 thermal part derivatives:
          if (itic.gt.iopt(21).or.dabs(f1).gt.1d40) then
             bad = .true.
             exit
-         else if (dabs(dv).lt.nopt(50)) then
+         else if (dabs(dv/v).lt.nopt(50)) then
             bad = .false.
             exit
          end if
@@ -3469,7 +3469,7 @@ c-----------------------------------------------------------------------
          dinc = (p2 + (p3 + 2d0/p4)/p4)*p1**i/p4/p4
          plg = plg + dinc
 
-         if (dinc.lt.nopt(50)) exit
+         if (dabs(dinc/plg).lt.nopt(50)) exit
 
       end do
 
@@ -5707,7 +5707,6 @@ c                                 macroscopic formulation for normal solutions.
       else if (lorder(id).and.order) then
 c                                 get the speciation, excess and entropy effects.
          if (.not.noder(id)) then
-c        if (deriv(id)) then
 
             call specis (gg,id,minfx)
 
@@ -6887,7 +6886,7 @@ c                                 read switch to make GALL use MINFXC
 
       if (abc.eq.'X') then
          noder(im) = .true.
-         write (*,*) 'using MINFXC for ',tname
+         if (iam.lt.3) write (*,*) 'using MINFXC for ',tname
       else
          noder(im) = .false.
       end if 
@@ -8359,7 +8358,7 @@ c                                 fully disordered, y=0, c1 = c2
 
       c1 = (n+y)/c0
 
-      if (c1.lt.1d0-nopt(50).and.c1.gt.nopt(50)) then
+      if (c1.lt.nopt(56).and.c1.gt.nopt(50)) then
          g = rt*n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1))
       else
          g = 0d0
@@ -8367,7 +8366,7 @@ c                                 fully disordered, y=0, c1 = c2
 
       c2 = (1d0-y)*n/c0
 
-      if (c2.lt.1d0-nopt(50).and.c2.gt.nopt(50))
+      if (c2.lt.nopt(56).and.c2.gt.nopt(50))
      *   g = g + rt*(c2*dlog(c2) + (1d0-c2)*dlog(1d0-c2))
 
       g = g + (1d0-y)*( w*y + h)
@@ -8409,8 +8408,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, ga, pmax, pmin, dp, gord, dy(m14), gold, xdp,
-     *                 s1,s2,s3,i1, i2, i3
+      double precision g, ga, pmax, pmin, dp, gord, dy(m14), gold, xdp
 
       external gord
 
@@ -8430,9 +8428,6 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
-
-      save s1,s2,s3,i1, i2, i3
-      data s1,s2,s3,i1, i2, i3/6*0d0/
 c----------------------------------------------------------------------
 c                                 number of reactants to form ordered species k
       nr = nrct(k,id)
@@ -8492,10 +8487,7 @@ c                                 the case is set to max order here:
 c                                 increment and check p
          call pcheck (pa(jd),pmin,pmax,dp,done)
 
-         if (done) then 
-
-             write (*,*) 'oink33'
-         endif
+         if (done) write (*,*) 'oink33'
 c                                 set speciation
          call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 c                                 iteration counter
@@ -8513,7 +8505,7 @@ c                                 or dp < tolerance.
 
             if (done.or.dabs((gold-g)).lt.nopt(53)) then
 
-               if (dabs(gold-g).gt.1d-1) write (*,*) 'oink1',gold-g
+               if (dabs(gold-g).gt.1d0) write (*,*) 'oink1',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8648,11 +8640,10 @@ c                                 species are necessary to describe the ordering
 
             end do
 
-            if (tdp.lt.nopt(50).and.itic.gt.1) then
+            if ((tdp.lt.nopt(50).or.dabs((gold-g)).lt.nopt(53))
+     *          .and.itic.gt.1) then
 
-               if (dabs(gold-g).gt.1d-1) then 
-                  write (*,*) 'oink2',gold-g
-               end if
+               if (dabs(gold-g).gt.1d0) write (*,*) 'oink2',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8660,7 +8651,6 @@ c                                 species are necessary to describe the ordering
 
             else if (itic.gt.5.and.gold.lt.g) then
 
-c              write (*,*) 'div1 ',gold-g,id,itic,g,tdp
                minfx = .true.
                exit
 
@@ -8672,7 +8662,6 @@ c              write (*,*) 'div1 ',gold-g,id,itic,g,tdp
 
             else if (tdp.eq.xtdp) then 
 
-c              write (*,*) 'div3 ',gold-g,id,itic,g,tdp
                minfx = .true. 
                exit
 
@@ -8689,7 +8678,6 @@ c              write (*,*) 'div3 ',gold-g,id,itic,g,tdp
       end if
 
       end
-
 
       subroutine pincs (dp,dy,ind,jd,nr)
 c----------------------------------------------------------------------
@@ -15263,9 +15251,9 @@ c                                 newton raphson iteration
 
             call pcheck (q,qmin,qmax,dq,done)
 c                                 done is just a flag to quit
-            if (done) then
+            if (done.or.dabs((gold-g)).lt.nopt(53)) then
 
-               if (dabs(gold-g).gt.1d-1) write (*,*) 'oink3',gold-g
+               if (dabs(gold-g).gt.1d0) write (*,*) 'oink3',gold-g
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -19250,7 +19238,7 @@ c---------------------------------------------------------------------
 
       integer ids, ind, i, j, k, l, ntot, nvar
 
-      character tname*(*)
+      character tname*(*), reason*20
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -19261,35 +19249,30 @@ c                                 configurational entropy variables:
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
      *               jsub(m2,m1,h9)
+
+      integer iam
+      common/ cst4 /iam
 c----------------------------------------------------------------------
       if (ksmod(ids).eq.0.or.
      *    (ksmod(ids).ge.20.and.ksmod(ids).le.50)) then 
 
           deriv(ids) = .false.
-          write (*,*) 'no derivatives for special case: ',tname
+          reason =  'special case'
 
       else if (extyp(ids).eq.1) then 
 
           deriv(ids) = .false.
-          write (*,*) 'no derivatives for redlich-kistler: ',tname
+          reason = 'redlich-kistler ex'
 
       else if (jord(ids).gt.2) then
 
           deriv(ids) = .false.
-          write (*,*) 'no derivatives for high order excess: ',
-     *                tname
+          reason = 'high order excess'
 
       else if (dnu(ids).ne.0d0) then
 
           deriv(ids) = .false.
-          write (*,*) 'no derivatives for non-equimolar ordering: ',
-     *                tname
-
-c     else if (fname(ids).eq.'Ep(HP11)') then 
-
-c         deriv(ids) = .false.
-c         write (*,*) 'turned off deriv for  ',
-c    *                fname(ids)
+          reason = 'non-equimolar O/D'
 
       else
 
@@ -19297,7 +19280,10 @@ c    *                fname(ids)
 
       end if
 
-      if (.not.deriv(ids)) return
+      if (.not.deriv(ids)) then
+         if (iam.lt.3) write (*,1000) tname, reason
+         return
+      end if
 
       ntot = nstot(ids)
       nvar = ntot - 1
@@ -19389,6 +19375,8 @@ c                                 excess function derivatives
                end do 
             end do 
          end do
+
+1000  format ('No MINFRC derivatives for: ',a,/,'Reason: ',a,/)
 
       end
 

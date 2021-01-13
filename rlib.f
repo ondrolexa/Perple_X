@@ -7645,7 +7645,7 @@ c----------------------------------------------------------------------
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
 c                                 check ordered state
-      y = 1d0 - nopt(5)
+      y = nopt(56)
       rt = r*t*fac
 
       odg = dgdy(h,w,n,f,y,rt)
@@ -7663,7 +7663,7 @@ c                                 iteration loop:
          do
 
             y = y + dy
-            if (y.le.0d0) y = nopt(5)
+            if (y.le.0d0) y = nopt(50)
 
             ndg = dgdy(h,w,n,f,y,rt)
 
@@ -7674,11 +7674,11 @@ c                                 crossed the zero, flip the search
                odg = ndg
                dy = -dy/2d0
 
-            else if (dabs(dy).lt.nopt(5)) then
+            else if (dabs(dy).lt.nopt(50)) then
 c                                 refined to tolerance
                exit
 
-            else if (y.le.nopt(5)) then
+            else if (y.le.nopt(50)) then
 c                                 fully disordered, y=0, c1 = c2
                y = 0d0
                exit
@@ -7691,7 +7691,7 @@ c                                 fully disordered, y=0, c1 = c2
 
       c1 = (n+y)/c0
 
-      if (c1.lt.1d0-nopt(5).and.c1.gt.nopt(5)) then
+      if (c1.lt.nopt(56).and.c1.gt.nopt(50)) then
          g = rt*n*(c1*dlog(c1)+(1d0-c1)*dlog(1d0-c1))
       else
          g = 0d0
@@ -7699,7 +7699,7 @@ c                                 fully disordered, y=0, c1 = c2
 
       c2 = (1d0-y)*n/c0
 
-      if (c2.lt.1d0-nopt(5).and.c2.gt.nopt(5))
+      if (c2.lt.nopt(56).and.c2.gt.nopt(50))
      *   g = g + rt*(c2*dlog(c2) + (1d0-c2)*dlog(1d0-c2))
 
       g = g + (1d0-y)*( w*y + h)
