@@ -1890,7 +1890,7 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer ibeg, jend, ier, iscan, lord, imax, match, idim,
-     *        i, j, iscnlt
+     *        i, iscnlt
 
       double precision nums(m3)
 
@@ -1916,7 +1916,6 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 
       iterm = 0
-      iord = 0
       xtyp = 0
 
       call readcd (n9,ier,.true.)
@@ -1929,11 +1928,7 @@ c----------------------------------------------------------------------
          goto 90
       end if
 
-      do i = 1, m1
-         do j = 1, m2
-            isub(i,j) = 0
-         end do
-      end do
+      isub(1:m1,1:m2) = 0
 
       eod = ' '
 
@@ -1978,7 +1973,7 @@ c                                 data found
 
             ibeg = imax + 2
 c                                 read standard form margules pt functions
-            if (lord.gt.iord) iord = lord
+            rkord(iterm) = lord
 
             call redlpt (nums,ibeg,jend,ier)
 
@@ -1989,17 +1984,10 @@ c                                 read standard form margules pt functions
             end do
 
          else
-c                                 set "perplex" order
+c                                 initialize order
             rkord(iterm) = 0
-            iord = 2
 c                                 rk form, read a new card for each term
-            do j = 1, m17
-
-               do i = 1, m16
-                  wk(i,j,iterm) = 0d0
-               end do
-
-            end do
+            wk(1:m16,1:m17,iterm) = 0d0
 
             do
 
@@ -4078,7 +4066,7 @@ c---------------------------------------------------------------------
       integer jsp,jtic,morder,jend,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
      *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
-     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,tord
+     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord
 c                                 dqf variables
       integer indq,idqf
       double precision dqf
@@ -4287,13 +4275,13 @@ c                                 macroscopic formulation
          do j = 1, kill
 c                                 check if subscript points to a killed
 c                                 endmember
-            do k = 1, iord
-               if (isub(i,k).eq.0) then
-                  cycle
-               else if (isub(i,k).eq.ijkill(j)) then
+            do k = 1, rkord(i)
+
+               if (isub(i,k).eq.ijkill(j)) then
                   skip = .true.
                   exit
                end if
+
             end do
 
             if (skip) exit
@@ -4304,42 +4292,29 @@ c                                 endmember
 c                               the term is acceptable
          itic = itic + 1
 
-         tord = iord
+         rkord(itic) = rkord(i)
 
-         do j = 1, iord
-            if (isub(i,j).eq.0) then
-               isub(itic,j) = 0
-            else
-               isub(itic,j) = i2ni(isub(i,j))
-            end if
-         end do
+         isub(itic,1:rkord(i)) = i2ni(isub(i,1:rkord(i)))
 
          if (xtyp.eq.0) then
 c                                save the coefficient
             do j = 1, m3
                wg(itic,j) = wg(i,j)
             end do
-c                                find highest order term
-            if (tord.gt.maxord) maxord = tord
 
          else
 c                                 redlich kistler
-            rkord(itic) = rkord(i)
-
             do j = 1, rkord(itic)
                do k = 1, m16
                   wk(k,j,itic) = wk(k,j,i)
                end do
             end do
 
-            maxord = 2
-
          end if
 
       end do
-c                                reset counters, iord is not reset
+c                                reset counter
       iterm = itic
-      iord = maxord
 c                                --------------------------------------
 c                                van laar volume functions
       if (laar) then
@@ -6592,12 +6567,8 @@ c                                 redlich kistler is a special case
       if (lorder(id)) then
 c                                 set higher order derivatives for
 c                                 speciation
-         do k = 1, nord(id)
-            dt(k) = 0d0
-            do l = 1, nord(id)
-               d2gx(l,k) = 0d0
-            end do
-         end do
+         dt(1:nord(id)) = 0d0
+         d2gx(1:nord(id),1:nord(id)) = 0d0
 c                                 for both laar and regular need
 c                                 the d(gex)/dy(k)/dy(l)
          do i = 1, jterm(id)
@@ -6637,7 +6608,7 @@ c------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,k,ids
+      integer i,j,ids
 
       double precision y(*), tphi, xpr, lex(m17,m18)
 
@@ -6657,23 +6628,15 @@ c----------------------------------------------------------------------
       if (extyp(ids).eq.1) then
 c                                 redlich kistler; expand polynomial
          do i = 1, jterm(ids)
-c                                 on gfortran with -Wstrict-overflow(??) 
-c                                 jonas haldeman (7/1/19) found that using rko(i,ids)
-c                                 causes f951: Warning: ‘__builtin_memset’
-c                                 with O2/O3 optimization.
-            k = rko(i,ids)
- 
-            do j = 1, rko(i,ids)
-               lex(j,i) = 0d0
-            end do
-         end do
 
-         do i = 1, jterm(ids)
+            lex(1:rko(i,ids),i) = 0d0
+
             do j = 1, rko(i,ids)
 c                                 interchanged subscripts, G Helffrich, 4/8/16.
                lex(j,i) = lex(j,i) + wl(j,i)*
      *                        (y(jsub(1,i,ids))-y(jsub(2,i,ids)))**(j-1)
             end do
+
          end do
 
          do i = 1, jterm(ids)
@@ -6711,8 +6674,7 @@ c                                 macroscopic margules formulation by default
 
                xpr = 1d0
 
-               do j = 1, jord(ids)
-                  if (jsub(j,i,ids).eq.0d0) exit
+               do j = 1, rko(i,ids)
                   xpr = xpr * y(jsub(j,i,ids))
                end do
 
@@ -7187,11 +7149,16 @@ c                                 as lrecip.
 c                                 -------------------------------------
 c                                 save the excess terms
       jterm(im) = iterm
-      jord(im) = iord
 
       do i = 1, iterm
 
+         rko(i,im) = rkord(i)
+
          if (xtyp.eq.0) then
+c                                 van-laar implementation
+c                                 probably assumes quadratic...
+            if (laar.and.rkord(i).gt.2) 
+     *         call error (999,dx,800,'RMODEL')
 c                                 arbitrary expansion
             do j = 1, m3
                wgl(j,i,im) = wg(i,j)
@@ -7199,8 +7166,6 @@ c                                 arbitrary expansion
 
          else
 c                                 redlich-kistler
-            rko(i,im) = rkord(i)
-
             do k = 1, rkord(i)
                do j = 1, m16
                   wkl(j,k,i,im) = wk(j,k,i)
@@ -7209,26 +7174,18 @@ c                                 redlich-kistler
 
          end if
 
-         do j = 1, iord
+         do j = 1, rkord(i)
 c                                 isub points to the position in the list
 c                                 of endmembers potentially including dependent
 c                                 species. use iy2p to convert to independent
 c                                 endmember pointers.
-            if (isub(i,j).eq.0) then
-c                                 term may be of order < iord
-               jsub(j,i,im) = 0
+            jsub(j,i,im) = iy2p(isub(i,j))
 
-            else
+            if (kdsol(isub(i,j)).eq.-2) then
 
-               jsub(j,i,im) = iy2p(isub(i,j))
-
-               if (kdsol(isub(i,j)).eq.-2) then
-
-                  call error (72,r,i,'dependent endmember '
-     *                 //mname(iorig(isub(i,j)))//' in solution '
-     *                 //tname//'appears in an excess term.')
-
-               end if
+               call error (72,r,i,'dependent endmember '
+     *              //mname(iorig(isub(i,j)))//' in solution '
+     *              //tname//'appears in an excess term.')
 
             end if
 
@@ -7887,9 +7844,9 @@ c----------------------------------------------------------------------
       subroutine gderiv (id,g,dp,minfx,error)
 c----------------------------------------------------------------------
 c subroutine to compute the g of a solution (id) and it's 1st and 2nd
-c derivatives with respect to the oncentrations of nord(id) ordered
+c derivatives with respect to the fractions of the nord(id) ordered
 c species. the formulation assumes atomic site fractions are linear
-c functions of the ordered species concentrations (p's) and that the
+c functions of the ordered species fractions (p's) and that the
 c excess function is second order.
 c----------------------------------------------------------------------
       implicit none
@@ -7898,7 +7855,7 @@ c----------------------------------------------------------------------
 
       logical minfx, error
 
-      integer i,k,l,i1,i2,id,norder,ipvt(j3)
+      integer i,k,l,i1,i2,i3,id,norder,ipvt(j3)
 
       double precision g,dp(*),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
 c                                 working arrays
@@ -7925,37 +7882,85 @@ c                                 excess energy variables
       logical pin
       common/ cyt2 /pin(j3)
 c----------------------------------------------------------------------
-c                                 initialize, d2gx has been set in setw
+c                                 initialize
       g = 0d0
-
       norder = nord(id)
-
-      do k = 1, norder
-         dg(k) = 0d0
-         do l = k, norder
-            d2g(l,k) = d2gx(l,k)
-         end do
-      end do
+      dg(1:norder) = 0d0
+      d2g(1:norder,1:norder) = 0d0
 
       if (lexces(id)) then
 
          do i = 1, jterm(id)
-c                                 assuming regular terms
-            i1 = jsub(1,i,id)
-            i2 = jsub(2,i,id)
+c                                 rather than write expensive
+c                                 general code only the 2nd and 3rd
+c                                 order cases are considered here:
+            if (rko(i,id).eq.2) then
 
-            g = g + w(i) * pa(i1) * pa(i2)
+               i1 = jsub(1,i,id)
+               i2 = jsub(2,i,id)
 
-            do k = 1, norder
+               g = g + w(i) * pa(i1) * pa(i2)
 
-               if (.not.pin(k)) cycle
+               do k = 1, norder
 
-               dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id)
-     *                               + pa(i2)*dydy(i1,k,id))
-            end do
+                  if (.not.pin(k)) cycle
+
+                  dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id)
+     *                                  + pa(i2)*dydy(i1,k,id))
+
+                  do l = 1, norder
+
+                     if (k.eq.l.and.dppp(l,k,i,id).ne.0d0) then 
+
+                        write (*,*) 'oink',k,l
+
+                     end if
+
+                     d2g(l,k) = d2g(l,k) + w(i) * dppp(l,k,i,id)
+
+                  end do
+
+               end do
+
+            else if (rko(i,id).eq.3) then
+
+               i1 = jsub(1,i,id)
+               i2 = jsub(2,i,id)
+               i3 = jsub(3,i,id)
+
+               g = g + w(i) * pa(i1) * pa(i2) * pa(i2)
+
+               do k = 1, norder
+
+                  if (.not.pin(k)) cycle
+
+                  dg(k) = dg(k) + w(i) * (
+     *                                     pa(i1)*pa(i2)*dydy(i3,k,id)
+     *                                   + pa(i1)*pa(i3)*dydy(i2,k,id)
+     *                                   + pa(i2)*pa(i3)*dydy(i1,k,id) )
+
+                  do l = 1, norder
+
+                     d2g(l,k) = d2g(l,k) + w(i) * (
+     *                            pa(i1)*(dydy(i2,l,id)*dydy(i3,k,id) +
+     *                                    dydy(i2,k,id)*dydy(i3,l,id))
+     *                          + pa(i2)*(dydy(i1,l,id)*dydy(i3,k,id) +
+     *                                    dydy(i1,k,id)*dydy(i3,l,id))
+     *                          + pa(i3)*(dydy(i1,l,id)*dydy(i2,k,id) +
+     *                                    dydy(i1,k,id)*dydy(i2,l,id)) )
+
+                  end do
+
+               end do
+
+            else
+
+               call errdbg ('o > 3 gderiv')
+
+            end if
 
          end do
-c                                 get derivative of excess function
+
          if (llaar(id)) then
 c                                 so far this is unessecary because
 c                                 t does not vary in h&p ordering models.
@@ -10005,8 +10010,8 @@ c                                 load excess terms, if not Laar or ordered:
 
                zpr = 1d0
 
-               do j = 1, jord(im)
-                  if (jsub(j,i,im).ne.0) zpr = zpr * pa(jsub(j,i,im))
+               do j = 1, rko(i,im)
+                  zpr = zpr * pa(jsub(j,i,im))
                end do
 
                do j = 1, m3
@@ -10108,14 +10113,14 @@ c                                 compositions from the arf file
          read (n10,*) i
          read (n10,'(7(a,1x))') sname(1:i)
          read (n10,*) jend(1:i,2)
-         if (i.ne.isoct) call error (63,y(1),i,'GMODEL/isoct')
+         if (i.ne.isoct) call error (63,y(1),i,'RELOAD/isoct')
 
          tcct = 0
 
          do i = 1, isoct
 
             if (sname(i).ne.fname(i)) 
-     *         call error (63,y(1),i,'GMODEL/sname')
+     *         call error (63,y(1),i,'RELOAD/sname')
             tpct = jend(i,2)*nstot(i)
             read (n10,*) txco(tcct+1:tcct+tpct)
 
@@ -15920,8 +15925,6 @@ c                                 initialize endmember flags
 c                              look for van laar and/or dqf parameters
 c                              endmember flags or the end_of_model tag
       call readop (idim,istot-mdep,tname)
-
-      if (laar.and.iord.gt.2) call error (999,coeffs(1),800,'RMODEL')
 c                                 save original indices, need this for
 c                                 melt models etc that have species specific
 c                                 equations of state.
@@ -16315,7 +16318,7 @@ c---------------------------------------------------------------------
       integer jsp,jtic,morder,pkill,ii,ivct,
      *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
      *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
-     *        j2oj(msp),j2nj(msp),i2oi(m4),maxord,tord
+     *        j2oj(msp),j2nj(msp),i2oi(m4)
 c                                 dqf variables
       integer indq,idqf
       double precision dqf
@@ -16519,7 +16522,6 @@ c                                 polytopes where nothing happened
 c                                --------------------------------------
 c                                excess terms:
       itic = 0
-      maxord = 0
 
       do i = 1, iterm
 c                                check for forbidden terms (i.e., terms
@@ -16529,10 +16531,8 @@ c                                 macroscopic formulation
          do j = 1, kill
 c                                 check if subscript points to a killed
 c                                 endmember
-            do k = 1, iord
-               if (isub(i,k).eq.0) then
-                  cycle
-               else if (isub(i,k).eq.ijkill(j)) then
+            do k = 1, rkord(i)
+               if (isub(i,k).eq.ijkill(j)) then
                   skip = .true.
                   exit
                end if
@@ -16546,42 +16546,29 @@ c                                 endmember
 c                               the term is acceptable
          itic = itic + 1
 
-         tord = iord
+         rkord(itic) = rkord(i)
 
-         do j = 1, iord
-            if (isub(i,j).eq.0) then
-               isub(itic,j) = 0
-            else
-               isub(itic,j) = i2ni(isub(i,j))
-            end if
-         end do
+         isub(itic,1:rkord(i)) = i2ni(isub(i,1:rkord(i)))
 
          if (xtyp.eq.0) then
 c                                save the coefficient
             do j = 1, m3
                wg(itic,j) = wg(i,j)
             end do
-c                                find highest order term
-            if (tord.gt.maxord) maxord = tord
 
          else
 c                                 redlich kistler
-            rkord(itic) = rkord(i)
-
             do j = 1, rkord(itic)
                do k = 1, m16
                   wk(k,j,itic) = wk(k,j,i)
                end do
             end do
 
-            maxord = 2
-
          end if
 
       end do
-c                                reset counters, iord is not reset
+c                                reset counter
       iterm = itic
-      iord = maxord
 c                                --------------------------------------
 c                                van laar volume functions
       if (laar) then
@@ -19264,11 +19251,6 @@ c----------------------------------------------------------------------
           deriv(ids) = .false.
           reason = 'redlich-kistler ex'
 
-      else if (jord(ids).gt.2) then
-
-          deriv(ids) = .false.
-          reason = 'high order excess'
-
       else if (dnu(ids).ne.0d0) then
 
           deriv(ids) = .false.
@@ -19361,20 +19343,27 @@ c                                 pa coordinates used to compute the composition
       end do
 c----------------------------------------------------------------------
 c                                 excess function derivatives
-         do i = 1, jterm(ids)
-            do j = 1, jord(ids)
-               k = jsub(j,i,ids)
-               do l = 1, nvar
-                  if (k.eq.l) then
-                     dgex(l,j,i,ids) = 1d0
-                  else if (k.eq.ntot) then
-                     dgex(l,j,i,ids) = -1d0
-                  else 
-                     dgex(l,j,i,ids) = 0d0
-                  end if
-               end do 
+      do i = 1, jterm(ids)
+
+         do j = 1, rko(i,ids)
+
+            k = jsub(j,i,ids)
+
+            do l = 1, nvar
+
+              if (k.eq.l) then
+                  dgex(l,j,i,ids) = 1d0
+              else if (k.eq.ntot) then
+                  dgex(l,j,i,ids) = -1d0
+               else 
+                  dgex(l,j,i,ids) = 0d0
+               end if
+
             end do 
+
          end do
+
+      end do
 
 1000  format ('No MINFRC derivatives for: ',a,/,'Reason: ',a,/)
 
@@ -19492,9 +19481,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision dgdp(*), g, t
+      double precision dgdp(*), g, t, tcum
 
-      integer i, l, nvar, ntot, ids
+      integer i, j, l, k, nvar, ntot, ids
 
       double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -19512,13 +19501,43 @@ c----------------------------------------------------------------------
 
       do i = 1, jterm(ids)
 
-         g = g + w(i) * pa(jsub(1,i,ids)) * pa(jsub(2,i,ids)) 
+         t = 1d0
+
+         do j = 1, rko(i,ids)
+            t = t * pa(jsub(j,i,ids))
+         end do
+
+         g = g + w(i) * t
 
          do l = 1, nvar
 
-            dgdp(l) = dgdp(l) + w(i) * ( 
-     *                          pa(jsub(1,i,ids)) * dgex(l,2,i,ids)
-     *                        + pa(jsub(2,i,ids)) * dgex(l,1,i,ids))
+            tcum = 0d0
+
+            do j = 1, rko(i,ids)
+
+               t = 1d0
+
+               do k = 1, rko(i,ids)
+
+                  if (k.eq.j) then
+
+                     t = t * dgex(l,k,i,ids)
+
+                  else 
+
+                     t = t * pa(jsub(k,i,ids))
+
+                  end if
+
+                  if (t.eq.0d0) exit
+
+               end do
+
+               tcum = tcum + t
+
+            end do
+
+            dgdp(l) = dgdp(l) + w(i) * tcum
 
          end do
 
@@ -20108,7 +20127,7 @@ c                                 with respect to ordered species
      *                  + dydy(ideps(ii,l,im),l,im)*dcoef(k,j,i,im)
                         itic = itic + 1
 c                                 high order terms not allowed
-                        if (itic.gt.1) call error (999,r,801,'GMODEL')
+                        if (itic.gt.1) call error (999,r,801,'SETORD')
                      end if
                   end do
 c                                 the derivative of a term with the
