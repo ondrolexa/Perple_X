@@ -495,8 +495,8 @@ c                                 but this should be possible
          if (lex(k).eq.0) cycle
 
          if (nctr(k).lt.2) then 
-            write (*,*) 'skipping label for dot field: ',
-     *                  text(1:nblen(text))
+c           write (*,*) 'skipping label for dot field: ',
+c    *                  text(1:nblen(text))
             cycle
          end if
 c                                 compute barycenter, added by 
@@ -646,8 +646,8 @@ c                                  extent for label.
                end do
 
                if (iend-ibeg.lt.2.or.jend-jbeg.lt.2) then 
-                  write (*,*) 'skipping label for dot field: ',
-     *                        text(1:nblen(text))
+c                 write (*,*) 'skipping label for dot field: ',
+c    *                        text(1:nblen(text))
                   cycle
                end if
 c                                 george had ii = max(1,nint(x/i)) for 

@@ -1904,7 +1904,7 @@ c----------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer length,com
       character chars*1
@@ -3853,7 +3853,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 c----------------------------------------------------------------------
 
       if (jsmod.eq.20) then
@@ -3993,7 +3993,7 @@ c                                 local input variables
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 c----------------------------------------------------------------------
 
       itic = 0
@@ -4089,7 +4089,7 @@ c                                 local input variables
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -4491,7 +4491,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 c----------------------------------------------------------------------
 c                                 count the number of species
 c                                 missing on site
@@ -4532,7 +4532,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -4652,7 +4652,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer mdep,idep,jdep,ndph
       double precision nu,y2p
@@ -4896,7 +4896,7 @@ c----------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -4999,7 +4999,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       logical depend,laar,order,fluid,macro,recip,lres
       common/ cst160 /depend,laar,order,fluid,macro,recip,lres
@@ -5356,7 +5356,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -5432,7 +5432,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -6495,7 +6495,7 @@ c---------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       double precision wgl, wkl, vlar
@@ -6617,7 +6617,7 @@ c------------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 c                                 local alpha
       double precision alpha,dt
@@ -6735,7 +6735,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -6762,7 +6762,7 @@ c                                 configurational entropy variables:
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       double precision wgl, wkl, vlar
@@ -7867,7 +7867,7 @@ c                                 working arrays
       common/ cyt0  /alpha(m4),dt(j3)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       double precision dppp,d2gx,sdzdp
@@ -7909,12 +7909,6 @@ c                                 order cases are considered here:
      *                                  + pa(i2)*dydy(i1,k,id))
 
                   do l = 1, norder
-
-                     if (k.eq.l.and.dppp(l,k,i,id).ne.0d0) then 
-
-                        write (*,*) 'oink',k,l
-
-                     end if
 
                      d2g(l,k) = d2g(l,k) + w(i) * dppp(l,k,i,id)
 
@@ -9061,7 +9055,7 @@ c                                 working arrays
       common/ cyt0  /alpha(m4),dt(j3)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       double precision dppp,d2gx,sdzdp
@@ -9392,7 +9386,7 @@ c-----------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       character mname*8
       common/ cst18a /mname(m4)
@@ -9780,7 +9774,7 @@ c--------------------------------------------------------------------------
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       double precision wgl, wkl, vlar
@@ -10876,7 +10870,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -15334,7 +15328,7 @@ c                                 working arrays
      *              wl(m17,m18),pp(m4)
 c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 c                                 configurational entropy variables:
       integer lterm, ksub
@@ -15625,7 +15619,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       logical depend,laar,order,fluid,macro,recip,lres
       common/ cst160 /depend,laar,order,fluid,macro,recip,lres
@@ -15960,7 +15954,7 @@ c----------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 c----------------------------------------------------------------------
 
       do
@@ -16020,7 +16014,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       logical depend,laar,order,fluid,macro,recip,lres
       common/ cst160 /depend,laar,order,fluid,macro,recip,lres
@@ -16341,7 +16335,7 @@ c                                 local input variables
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
@@ -19234,7 +19228,7 @@ c                                 configurational entropy variables:
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       integer iam
@@ -19490,7 +19484,7 @@ c----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 c                                 local alpha
       double precision alpha,dt
@@ -19951,7 +19945,7 @@ c---------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -19992,7 +19986,7 @@ c                                 endmember pointers
       common/ cst18a /mname(m4)
 
       integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m18,h9),
+      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
       integer ideps,icase,nrct

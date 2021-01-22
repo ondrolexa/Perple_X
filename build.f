@@ -124,7 +124,7 @@ c-----------------------------------------------------------------------
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
-     *      rkord(m18),iterm,iord,istot,jstot,kstot
+     *      rkord(m1),iterm,iord,istot,jstot,kstot
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)

@@ -819,26 +819,30 @@ c                                 initial resolution
                if (iam.eq.15) nopt(13) = 1d0/16d0
                write (*,1050)
             end if
+
+            if (iam.eq.15) then 
 c                                  686+ read second value as arf value
-            ibeg = iend + 1
+               ibeg = iend + 1
 
-            call readfr (nopt(17),ibeg,iend,40,ier)
+               call readfr (nopt(17),ibeg,iend,40,ier)
 
-            if (ier.ne.0) then
+               if (ier.ne.0) then
 c                                  special backward compatibility msg
-               write (*,1010) opname
-               call errpau
+                  write (*,1010) opname
+                  call errpau
 
-            end if 
+               end if 
 
-            if (nopt(17).ge.1d0.or.nopt(17).lt.0d0) then
-               nopt(17) = nopt(13)/3d0
-               write (*,1050)
-            end if
+               if (nopt(17).ge.1d0.or.nopt(17).lt.0d0) then
+                  nopt(17) = nopt(13)/3d0
+                  write (*,1050)
+               end if
 
-            nopt(17) = nopt(13)/nopt(17)
-            nopt(18) = nopt(17)
-            nopt(19) = nopt(17)
+               nopt(17) = nopt(13)/nopt(17)
+               nopt(18) = nopt(17)
+               nopt(19) = nopt(17)
+
+             end if
 
          else if (key.eq.'final_resolution') then
 c                                 final_resolution keys 
@@ -1712,8 +1716,8 @@ c                                 thermo options for frendly
      *        4x,'hybrid_EoS_CO2          ',i4,6x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4          ',i4,6x,'[0] 0-1, 7')
 1017  format (4x,'fd_expansion_factor     ',f3.1,7x,'[2] >0',/,
-     *        4x,'finite_difference_p     ',g7.1E1,3x,'[1d4] >0; ',
-     *           'fraction = ',g7.0,3x,'[1d-2]')
+     *        4x,'finite_difference_p     ',g7.1,3x,'[1d4] >0; ',
+     *           'fraction = ',g7.1,3x,'[1d-2]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
 1100  format (/,2x,'Adapative minimization will be done with: ',
