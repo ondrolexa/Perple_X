@@ -21100,7 +21100,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical rplica, xplica
+      logical rplica, xplica, isend
 
       integer ids
 
@@ -21113,6 +21113,8 @@ c----------------------------------------------------------------------
       if (nopt(35).gt.0d0) then
          if (xplica(ids)) return
       end if
+
+      if (isend(ids)) return
 
       tpct = tpct + 1
 
@@ -21128,6 +21130,38 @@ c                                 increment the counter
       tcct = tcct + nstot(ids)
 
       end 
+
+      logical function isend (id)
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer id, i, j
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c-----------------------------------------------------------------------
+      i = 0
+
+      do j = 1, nstot(id)
+         if (dabs(pa(j)).gt.zero) then 
+            i = i + 1
+            if (i.gt.1) then 
+               isend = .false.
+               return
+            end if
+         end if
+      end do
+
+      isend = .true.
+
+      end
+
 
       logical function xplica (id)
 c-----------------------------------------------------------------------

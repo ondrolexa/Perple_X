@@ -1569,7 +1569,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       save ins, jns
       data ins, jns/ 1,5,6,7,8,1/

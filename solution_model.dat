@@ -11760,7 +11760,7 @@ abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-10
+11
 CO2
 CH4
 H2S
@@ -11770,11 +11770,13 @@ CO
 N2
 NH3
 HF
+C2H6
 H2O
 
 
-0 0 0 0 0 0 0 0 0 0        | endmember flags
+0 0 0 0 0 0 0 0 0 0 0      | endmember flags
 
+0  1   .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 0  1   .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 0  1   .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
 0  1   .1  0               | subdivision ranges, imod = 0 -> cartesian subdivision
@@ -11809,7 +11811,7 @@ abbreviation F
 full_name    fluid
 
 39                          | model type: Generic Hybrid EoS
-8
+9
 CO2
 CH4
 H2S
@@ -11817,6 +11819,7 @@ SO2
 H2
 CO
 HF
+C2H6
 H2O
 
 0 0 0 0 0 0 0 0 0           | endmember flags
@@ -11825,6 +11828,7 @@ H2O
 1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-3      .1       1        | H2S subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   2.5e-5    .1       1        | SO2 subdivision ranges, imod = 1 -> non-linear subdivision
+1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
 1e-5   1e-2      .1       1        | subdivision ranges, imod = 1 -> non-linear subdivision
