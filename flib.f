@@ -4516,14 +4516,14 @@ c                                 dpdv/rt
          end if 
 
          if (dabs(dv/v).lt.nopt(50)) then
-c                                 converged, compute ln(fugacity)      
+c                                 converged, compute ln(fugacity)
             f = c1/v+1d0/a1-1d0/c2-(e1-c7)/c8-(e2-c9)/c0
      *          + dlog(rt/v) + p*v/rt - 1d0
 
             exit
           
          else if (v.lt.0d0.or.it.gt.iopt(21)) then
-c                                 use cork fugacities
+c                                 will use cork fugacities
             iwarn = iwarn + 1
 
             if (iwarn.le.50) then 

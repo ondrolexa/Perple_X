@@ -64,9 +64,9 @@ c DEBUG691                    dummies for NCNLN > 0
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
-      data fac,pinc0/1d-2,1d-2/
+      data fac/1d-2/
 
-      save fac,pinc0
+      save fac
 c-----------------------------------------------------------------------
       yt = pa
 
@@ -240,7 +240,7 @@ c                                 increment the counter
 c---------------
       if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
-         pinc = 1d0 + pinc0
+         pinc = 1d0 + nopt(48)
 
          do i = 1, lstot(rids)
 
@@ -255,7 +255,7 @@ c                                 scatter in only for nstot-1 gradients
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(37),jphct)
+            call savrpc (gfinal,nopt(48)/2d0,jphct)
 
          end do
 

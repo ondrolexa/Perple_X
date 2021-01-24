@@ -26,11 +26,12 @@
 
 
 optimization_max_it       40    | [20] maximum number of sucessive LP optimizations
-optimization_precision    1d-4 | [1d-1 energy unit] absolute precision for successive LP optimization
+optimization_precision    1d-3 | [1d-1 energy unit] absolute precision for successive LP optimization
 replicate_threshold       1d-8 | nopt(35) savdyn => smaller values may cause failed optimization
 rep_dynamic_threshold     1d-3  | nopt(37) savrpc => larger values may cause rough boundaries
 intermediate_savrpc       F    | lopt(57)
 intermediate_savdyn       T    | lopt(58)
+scatter-increment         1d-2
 scatter-points            T    | lopt(54)
 keep_all_rpcs             T    | lopt(59)
 

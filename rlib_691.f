@@ -8504,7 +8504,9 @@ c                                 or dp < tolerance.
 
             if (done.or.dabs((gold-g)).lt.nopt(53)) then
 
-               if (dabs(gold-g).gt.1d0) write (*,*) 'oink1',gold-g
+c              if (done.and.dabs((gold-g)/g).gt.nopt(53)) then 
+c                 write (*,*) 'oink1',gold-g,g,itic,id
+c              end if
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -8642,7 +8644,10 @@ c                                 species are necessary to describe the ordering
             if ((tdp.lt.nopt(50).or.dabs((gold-g)).lt.nopt(53))
      *          .and.itic.gt.1) then
 
-               if (dabs(gold-g).gt.1d0) write (*,*) 'oink2',gold-g
+c              if (tdp.lt.nopt(52).and.dabs((gold-g)/g).gt.nopt(53))
+c    *            then 
+c                 write (*,*) 'oink2',gold-g,g,itic,id
+c              end if
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
@@ -15252,7 +15257,9 @@ c                                 newton raphson iteration
 c                                 done is just a flag to quit
             if (done.or.dabs((gold-g)).lt.nopt(53)) then
 
-               if (dabs(gold-g).gt.1d0) write (*,*) 'oink3',gold-g
+c              if (done.and.dabs((gold-g)/g).gt.nopt(53)) then 
+c                 write (*,*) 'oink3',gold-g,g,itic,id
+c              end if
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)

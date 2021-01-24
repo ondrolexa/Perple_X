@@ -164,18 +164,16 @@ c                                 function precision
       wmach(1) = r2**0.9d0
 c                                 optimality tolerance.
       wmach(2) = r2**0.8d0
-
-      nopt(50) = wmach(2)*1d1
-      nopt(51) = wmach(2)
 c                                 precision (eps)
       wmach(3) = r2
-      nopt(52) = 2d0*wmach(3)
 c                                 feasibility tolerance (often used as numeric zero)
       wmach(4) = dsqrt(r2)
-      nopt(53) = wmach(1)
 
-c     nopt(50) = wmach(4)/1d4
+      nopt(51) = wmach(2)
+      nopt(52) = 2d0*wmach(3)
+      nopt(53) = wmach(1)
 c                                 infinite log + 1, for conigurational entropy derivatives
+      nopt(50) = wmach(4)/1d4
       nopt(54) = 1d0 + dlog(nopt(50))
       nopt(55) = 1d0 + nopt(50)
       nopt(56) = 1d0 - nopt(50)
@@ -265,6 +263,8 @@ c                                 replicate_threshold (savdyn)
 c                                 rep_dynamic_threshold (savrpc)
       valu(11) = 'aut'
       nopt(37) = 1d-3
+c                                 scatter_increment
+      nopt(48) = 1d-2
 c                                 MINFRC_diff_increment
       nopt(49) = 1d-7
 c                                 -------------------------------------
@@ -775,6 +775,10 @@ c                                  output interim results (VERTEX/PSSECT/WERAMI)
 c                                 generate points scattered about refinement
 c                                 point compositions
             if (val.eq.'F') lopt(54) = .false.
+
+         else if (key.eq.'scatter-increment') then
+c                                 scatter point increment
+            read (strg,*) nopt(48)
 
          else if (key.eq.'re-refine') then
 c                                 allow re-refinement in VERTEX
@@ -1536,7 +1540,7 @@ c                                 reaction format and lists
          else 
 c                                 adaptive optimization
             write (n,1180) nopt(21),iopt(20),iopt(31),k5,lopt(49),
-     *                     nval2,nopt(9),lopt(54),nopt(49)
+     *                     nval2,nopt(9),lopt(54),nopt(48),nopt(49)
 c                                 gridding parameters
             if (iam.eq.1.and.icopt.eq.5.and.oned) then
 c                                 1d multilevel grid
@@ -1746,8 +1750,10 @@ c                                 thermo options for frendly
      *        4x,'zero_mode              ',e7.1E1,4x,
      *           '[1e-6] 0->1; < 0 => off',/,
      *        4x,'scatter-points          ',l1,9x,'[T] F',/,
+     *        4x,'scatter-increment      ',g7.1E1,4x,
+     *           '[1e-2] 1e-2 => 1e-7',/,
      *        4x,'MINFRC_diff_increment  ',g7.1E1,4x,
-     *           '[1e-7], 1e-3 => 1e-9')
+     *           '[1e-7] 1e-3 => 1e-9')
 1190  format (/,2x,'1D grid options:',//,
      *        4x,'y_nodes               ',i3,' /',i3,4x,'[40/40] >0, '
      *          ,'<',i4,'; effective y-resolution ',i4,' /',i4,

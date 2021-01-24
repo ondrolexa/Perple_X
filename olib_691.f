@@ -3137,15 +3137,15 @@ c              on endmember fractions
 
 c the composition is saved in arrays cp3 and pa3, entry jd
 
-c getcmp is called by FRENDLY, WERAMI, MEEMUM and VERTEX
+c getcmp is called by FRENDLY, WERAMI.
 c-----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      integer i, jd, ids
+      integer i, j, k, jd, ids
 
-      double precision scp(k5), scptot
+      double precision scp(k5), xx
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -3170,6 +3170,17 @@ c-----------------------------------------------------------------------
       logical fulrnk
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -3202,15 +3213,39 @@ c                                 frendly
 
       else
 
-         rkwak = .true.
+         if (caq(jd,na1).eq.0d0) then
+
+            rkwak = .true.
 c                                 solutions:
-         call getscp (scp,scptot,ids,jd)
+            call getscp (scp,cptot(jd),ids,jd)
 
-         do i = 1, icomp
-            cp3(i,jd) = scp(i)
-         end do
+            cp3(1:icomp,jd) = scp(1:icomp)
 
-         cptot(jd) = scptot
+         else
+
+            rkwak = .false.
+            cp3(1:icomp,jd) = 0d0
+c                                 lagged speciation:
+c                                 impure solvent
+            do i = 1, ns
+               do j = 1, icomp 
+                  cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+               end do 
+            end do
+
+            do i = sn1, nsa
+
+               k = i - ns
+c                                 convert molality to mole fraction (xx)
+               xx = caq(jd,i)/caq(jd,na2)
+
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)
+               end do  
+
+            end do
+
+         end if
 
       end if
 
