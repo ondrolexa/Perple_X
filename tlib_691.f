@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated January 21, 2021.',
+     *     'Perple_X version 6.9.1, source updated February 1, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -259,9 +259,8 @@ c                                 fractionation_upper_threshold
 c                                 aq_vapor_epsilon
       nopt(34) = 1d0
 c                                 replicate_threshold (savdyn)
-      nopt(35) = 1d-3
+      nopt(35) = 1d-2
 c                                 rep_dynamic_threshold (savrpc)
-      valu(11) = 'aut'
       nopt(37) = 1d-3
 c                                 scatter_increment
       nopt(48) = 1d-2
@@ -282,17 +281,8 @@ c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
       valu(6) = 'aut'
 c                                 subdivision_override, 0 - solution model choice
 c                                 1 - all cartesian, 2 - all stretch
-      if (iam.eq.15) then
-c                                 CONVEX
-         iopt(13) = 0 
-         valu(13)  = 'off'
-
-      else
-c                                 VERTEX/MEEMUM override all with linear (691+)
-         iopt(13) = 0 
-         valu(13)  = 'lin'
-
-      end if 
+      iopt(13) = 0 
+      valu(13)  = 'off'
 c                                 poisson ratio switch fpr calculating
 c                                 missing shear moduli
       iopt(16) = 1
@@ -366,7 +356,11 @@ c                                 automatic solvus tolerance
 c                                 pseudocompound_file
       lopt(10) = .false.
 c                                 auto_refine_file
-      lopt(11) = .true.
+      if (iam.eq.15) then 
+         lopt(11) = .true.
+      else 
+         lopt(11) = .false.
+      end if
 c                                 option_list_files
       lopt(12) = .false.
 c                                 automatic solvus_tolerance_II
@@ -715,12 +709,7 @@ c                                 bad number key
 
          else if (key.eq.'rep_dynamic_threshold') then 
 
-            if (val.ne.'aut') then 
-               lopt(9) = .false.
-               read (strg,*) nopt(37)
-            else
-               valu(11) = val 
-            end if
+            read (strg,*) nopt(37)
 
          else if (key.eq.'MINFRC_diff_increment') then 
 
@@ -1155,7 +1144,11 @@ c                                 perturbation to eliminate pseudocompound degen
 
          else if (key.eq.'auto_refine_file') then
 
-            if (val.eq.'F') lopt(11) = .false.
+            if (val.eq.'F') then 
+               lopt(11) = .false.
+            else if (val.eq.'T') then 
+               lopt(11) = .true.
+            end if
 
          else if (key.eq.'option_list_files') then
 
@@ -1206,8 +1199,6 @@ c                                 reserved values for debugging, etc
          end if
 
       end do
-
-      if (valu(11).eq.'aut') nopt(37) = nopt(35)
 
       close (n8)
 c                                 -------------------------------------
@@ -1705,9 +1696,9 @@ c                                 generic thermo options
 1015  format (/,2x,'Auto-refine options:',//,
      *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
      *        4x,'replicate_threshold    ',g7.1E1,4x,
-     *           '[1e-3]; static opt; <0 => no replica test',/,
+     *           '[1e-2]; static opt; <0 => no replica test',/,
      *        4x,'rep_dynamic_threshold  ',g7.1E1,4x,
-     *           '[aut]; dynamic opt; <0 => no replica test',/,
+     *           '[1d-3]; dynamic opt; <0 => no replica test',/,
      *        4x,'re-refine               ',l1,9x,'[F] T',/,
      *        4x,'intermediate_savrpc     ',l1,9x,'[F] T',/,
      *        4x,'intermediate_savdyn     ',l1,9x,'[F] T',/,

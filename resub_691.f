@@ -710,7 +710,7 @@ c                                 it's a solution:
 
          if (lopt(58).and.(.not.refine.or.lopt(55))) then
             pa(1:nstot(ids)) = zco(icoz(id)+1:icoz(id)+nstot(ids))
-            call savdyn (ids)
+            call savdyn (nopt(35),ids)
          end if
 
       end do 
@@ -1127,10 +1127,14 @@ c                                count fraction of impure solvent
 
             jd = jdsol(i,j)
 
-            if (.not.lopt(58).and.(.not.refine.or.lopt(55))) then 
+            if (.not.refine.or.lopt(55)) then
+c                                 savdyn with zero tolerance assures
+c                                 final solution will be saved even if
+c                                 lopt(58) is true.
+c           if (.not.lopt(58).and.(.not.refine.or.lopt(55))) then 
 c                                 load into pa and save for refinement
                pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
-               call savdyn (ids)
+               call savdyn (zero,ids)
             end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 

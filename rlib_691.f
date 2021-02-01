@@ -10153,7 +10153,7 @@ c                                 the list of dynamic compositions
                if (ststbl(i)) then
                   ids = ikp(i)
                   call setxyp (ids,i,ststbl(i))
-                  call savdyn (ids)
+                  call savdyn (nopt(35),ids)
                end if
             end do
 
@@ -10165,7 +10165,7 @@ c                                 load the whole damn thing
                ntot = nstot(i)
                do j = 1, jend(i,2)
                   pa(1:ntot) = txco(zcoct+1:zcoct+ntot)
-                  call savdyn (i)
+                  call savdyn (nopt(35),i)
                   zcoct = zcoct + ntot
                   if (tcct+ntot.gt.m25) call errdbg ('increase m25')
                end do
@@ -21097,7 +21097,7 @@ c                                 George's Hillert & Jarl magnetic transition mo
       end
 
 
-      subroutine savdyn (ids)
+      subroutine savdyn (tol,ids)
 c----------------------------------------------------------------------
 c subroutine to save exploratory stage dynamic compositions for use
 c as static compositions during auto-refine, pa loaded by sollim
@@ -21111,13 +21111,17 @@ c----------------------------------------------------------------------
 
       integer ids
 
+      double precision tol
+
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
       external rplica, xplica
 c----------------------------------------------------------------------
-      if (nopt(35).gt.0d0) then
+      if (iopt(6).eq.0) return
+
+      if (tol.gt.0d0) then
          if (xplica(ids)) return
       end if
 

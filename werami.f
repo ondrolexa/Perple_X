@@ -203,9 +203,6 @@ c----------------------------------------------------------------------
       integer ivar,ind
       common/ cst83 /ivar,ind
 
-
-
-
       character vnm*8
       common/ cxt18a /vnm(l3)
 c----------------------------------------------------------------------
@@ -4345,6 +4342,22 @@ c                                 21-30
 c                                 31-39
      *         25,26,27,20,21, 0, 45, 0, 28/
 c----------------------------------------------------------------------
+      if ((lop.eq.6.or.lop.eq.36).and..not.warned) then
+c                                this warning could be shifted to where
+c                                the phase/system option is chosen.
+         if (lopt(23)) then
+
+            if (iopt(2).eq.0) write (*,1010) 'mole','mass','mole'
+
+         else
+
+            if (iopt(2).eq.1) write (*,1010) 'mass','mole','mass'
+
+         end if
+
+         warned = .true.
+
+      end if
 c                                 make property name
       if (lop.eq.6) then
 c                                 wt% or mol component icx
@@ -4401,23 +4414,6 @@ c                                chemical potential of a component
         temp = 'mu['//cname(icx)//'],J/mol'
 
       else if (lop.eq.36) then 
-c                                this warning could be shifted to where
-c                                the phase/system option is chosen.
-         if (.not.warned) then
-
-            if (lopt(23)) then
-
-               if (iopt(2).eq.0) write (*,1010) 'mole','mass','mole'
-
-            else
-
-               if (iopt(2).eq.1) write (*,1010) 'mass','mole','mass'
-
-            end if
-
-            warned = .true.
-
-         end if
 c                                allprp option, lop points directly
 c                                to prmame
          temp = prname(jprop)
@@ -4603,8 +4599,8 @@ c-----------------------------------------------------------------------
 
       subroutine aqname 
 c----------------------------------------------------------------
-c makes a list of porperty names for and saves then in dname(iprop)
-c called only by chsprp for back-calculated aqueous speciation
+c makes a list of property names for and saves then in dname(iprop)
+c called only by chsprp for back-calculated and lagged aqueous speciation
 c----------------------------------------------------------------
       implicit none
 
@@ -4647,10 +4643,10 @@ c----------------------------------------------------------------
       data spec/'pH-pH_0','pH','error_pH','permittivity','I,m',
      *          'ref_chg','tot_solute_m'/
 c----------------------------------------------------------------------
-      if (icp+ns+aqct+7.gt.i11) call error (1,rt,icp+ns+aqct+7,'i11')
+      if (icomp+ns+aqct+7.gt.i11)
+     *                           call error (1,rt,icomp+ns+aqct+7,'i11')
 c                                 bulk composition, wt% or mol 
-      do i = 1, icp 
-
+      do i = 1, icomp 
 
          if (iopt(2).eq.1) then
 
@@ -4684,7 +4680,7 @@ c                                 mass fraction (%)
 
       end do
 
-      iprop = icp 
+      iprop = icomp 
 c                                 solvent composition, mol or molal
       do i = 1, ns 
 
@@ -4751,7 +4747,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -4794,11 +4789,11 @@ c                                 relative composition
             x = 1d0
          end if 
 
-         do i = 1, icp
+         do i = 1, icomp
             prop(i) = pcomp(i,jd) * x
          end do
 
-         k = icp
+         k = icomp
 
          do i = 1, ns 
 c                                 solvent speciation
@@ -4857,11 +4852,11 @@ c                                 relative composition
             x = 1d0
          end if 
 
-         do i = 1, icp
+         do i = 1, icomp
             prop(i) = pcomp(i,jd)*x
          end do
 c                                 initialize remaining prop values
-         do i = icp+1, icp+nat
+         do i = icomp+1, icomp+nat
             prop(i) = 0d0
          end do
 c                                 get molar proportions:
