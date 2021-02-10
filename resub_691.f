@@ -247,7 +247,7 @@ c-----------------------------------------------------------------------
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision ax(k5), clamda(k21+k5), w(lw), tot(k5), gtot,
-     *                 ogtot, bl(k21+k5), bu(k21+k5), d2g(3), curve
+     *                 ogtot, bl(k21+k5), bu(k21+k5), d2g(3)
 
       integer is(k21+k5), iw(liw)
 
@@ -1693,7 +1693,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
       npt = 0
       nsol = 0
@@ -1770,9 +1769,11 @@ c                                 amt < 0
 c                                 amt < featol
       if (npt.gt.icp) call reject (is,2,solvnt)
 c                                 is = 4
-      if (npt.gt.icp) call reject (is,3,solvnt)
+c     if (npt.gt.icp) call reject (is,3,solvnt)
 c                                 get mus for lagged speciation
-      call getmus (1,0,solvnt,.false.)
+c     js(1:npt) = is(jdv(1:npt))
+
+      call getmus (1,0,is,solvnt,.false.)
 
       if (.not.mus) then
          call muwarn (quit,0)
@@ -2073,7 +2074,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,jphct,is(*)
+      integer i, jphct, is(*)
 
       logical solvnt(1)
 
@@ -2108,7 +2109,9 @@ c                                 this will be wrong if jphct > jpoint
  
       end do
 
-      call getmus (1,0,solvnt,.false.)
+c     js(1:npt) = is(jdv(1:npt))
+
+      call getmus (1,0,is,solvnt,.false.)
 
       end
 
@@ -2241,6 +2244,7 @@ c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
+
             if (id.gt.0) stabl(id) = .true.
 
             if (lopt(32)) then
@@ -2303,7 +2307,7 @@ c                                 amt < 0
 c                                 amt < featol
       if (npt.gt.icp) call reject (is,2,solvnt)
 c                                 is = 4
-      if (npt.gt.icp) call reject (is,3,solvnt)
+c     if (npt.gt.icp) call reject (is,3,solvnt)
 c                                 at this point could signal bad result if
 c                                 npt > icp, could also switch
 c                                 icp for the non-degenerate 
@@ -2322,7 +2326,9 @@ c                                 get mu's for lagged speciation
 
          if (test) abort = .true.
 
-         call getmus (iter,iter-1,solvnt,abort)
+c        js(1:npt) = is(jdv(1:npt))
+
+         call getmus (iter,iter-1,is,solvnt,abort)
 
          if (abort) then 
 c                                 undersaturated solute component
@@ -2730,7 +2736,7 @@ c                                 homogeneous phases.
 
       end
 
-      subroutine getgc (lc,lg,iter) 
+      subroutine getgc (lc,lg,ldc,iter) 
 c----------------------------------------------------------------------
 c iter is a flag indicating where the compositions are and is sort of 
 c      related to the iteration count during optimization.
@@ -2740,9 +2746,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, iter
+      integer i, id, iter, ldc
 
-      double precision lc(k8,k8), lg(k8)
+      double precision lc(ldc,*), lg(*)
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -2760,24 +2766,19 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 c----------------------------------------------------------------------
-
       do i = 1, npt
 
          id = jdv(i) 
 
          if (iter.gt.1) then
 
-            do j = 1, hcp
-               lc(i,j) = cp2(j,id)
-            end do
+            lc(i,1:hcp) = cp2(1:hcp,id)
 
             lg(i) = g2(id)
 
          else
 
-            do j = 1, hcp
-               lc(i,j) = a(j,id)
-            end do
+            lc(i,1:hcp) = a(1:hcp,id)
 
             lg(i) = c(id)
 
@@ -2787,7 +2788,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine getmus (iter,jter,solvnt,abort) 
+      subroutine getmus (iter,jter,is,solvnt,abort) 
 c----------------------------------------------------------------------
 c iter is a flag indicating where the compositions are and is sort of 
 c      related to the iteration count during optimization.
@@ -2797,12 +2798,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvnt(*), bad, abort, cslut(k19), cslvt(k19)
+      logical solvnt(*), bad, abort, cslut(k19), cslvt(k19), error
 
       integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
-     *        inp(k8)
+     *        inp(k8), is(*)
 
-      double precision comp(k8,k8), g, lc(k8,k8), lg(k8)
+      double precision comp(k19,k19), g, lc(k19,k19), lg(k19)
 
       character cname*5
       common/ csta4  /cname(k5)
@@ -2834,12 +2835,11 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
 c----------------------------------------------------------------------
       ier = 1
 c                                 load c and g into a local array to 
 c                                 avoid a myriad of conditionals
-      call getgc (lc,lg,iter)
+      call getgc (lc,lg,k19,iter)
 c                                 for lagged speciation 
       if (abort) then
 
@@ -2894,35 +2894,36 @@ c                                 iteration will become unstable
 
       end if 
 c                                 look for a general solution if npt > icp
-      if (npt.ge.hcp) then 
+      if (npt.ge.hcp) then
+
+         ier = 0 
 
          do i = 1, npt
 
-            do j = 1, hcp
-               comp(i,j) = lc(i,j)
-            end do 
+            comp(i,1:hcp) = lc(i,1:hcp)
 
             mu(i) = lg(i)
 
          end do
 
-         ier = 0 
-
-         if (npt.gt.hcp) then
-c                                try filtering out zero mode phases
+         if (npt.gt.hcp) then 
+c                                need to eliminate npt - hcp phases
+c                                try filtering weak solution results
+            kcp = npt - hcp
             lcp = 0
 
             do i = 1, npt
 
-               if (amt(i).lt.zero) cycle
+               if (is(jdv(i)).eq.4.and.kcp.gt.0) then
+                  kcp = kcp - 1
+                  cycle
+               end if
 
                lcp = lcp + 1
 
                mu(lcp) = mu(i)
 
-               do j = 1, jcp 
-                  comp(lcp,j) = comp(i,j)
-               end do 
+               comp(lcp,1:hcp) = comp(i,1:hcp)
 
             end do
 
@@ -2930,13 +2931,17 @@ c                                try filtering out zero mode phases
 
          end if 
 
-         if (ier.eq.0) call factor (comp,hcp,ipvt,ier)
+         if (ier.eq.0) then 
 
-         if (ier.eq.0) call subst (comp,ipvt,hcp,mu,ier)
+            call factor (comp,k19,hcp,ipvt,error)
+
+            if (.not.error) call subst (comp,k19,ipvt,hcp,mu,error)
+
+         end if
 
       end if 
 c                                 ier ne 0 => look for degenerate solution
-      if (idegen.gt.0.and.ier.ne.0) then
+      if (idegen.gt.0.and.(ier.ne.0.or.error)) then
 
          ier = 0 
          kcp = 0
@@ -2958,9 +2963,7 @@ c                                 load the phase
 
             inp(kcp) = i
 
-            do j = 1, jcp 
-               comp(kcp,j) = lc(i,jin(j))
-            end do 
+            comp(kcp,1:jcp) = lc(i,jin(1:jcp))
 
             mu(kcp) = lg(i)
 
@@ -2979,9 +2982,7 @@ c                                 phases present in zero amount
 
                mu(lcp) = mu(i)
 
-               do j = 1, jcp 
-                  comp(lcp,j) =  comp(i,j)
-               end do 
+               comp(lcp,1:jcp) =  comp(i,1:jcp)
 
             end do
 
@@ -2995,11 +2996,11 @@ c                                 phases present in zero amount
 
          if (ier.eq.0) then 
 
-            call factor (comp,jcp,ipvt,ier)
+            call factor (comp,k19,jcp,ipvt,error)
 
-            if (ier.eq.0) call subst (comp,ipvt,jcp,mu,ier)
+            if (.not.error) call subst (comp,k19,ipvt,jcp,mu,error)
 
-            if (ier.eq.0) then 
+            if (.not.error) then 
 c                                 load the chemical potentials 
 c                                 into their correct positions
                do i = jcp, 1, -1
@@ -3014,9 +3015,11 @@ c                                 and NaN the missing values
 
          end if 
 
-      end if 
+      end if
 
-      if (ier.eq.0) then 
+      if (ier.ne.0) error = .true.
+
+      if (.not.error) then 
 c                                 output as requested:
          mus = .true. 
 
@@ -3060,9 +3063,7 @@ c                                 output failure msg
 
          end if
 c                                 failed
-         do i = 1, hcp
-            mu(i) = nopt(7)
-         end do
+         mu(1:hcp) = nopt(7)
 
       end if
 

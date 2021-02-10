@@ -492,7 +492,7 @@ c                                 find node associated with condition
       i = int(res)
       res = res-dfloat(i)
 
-      if (dabs(res).gt.1d-3) then 
+      if (dabs(res).gt.1d-3.and.dabs(res).lt.0.999d0) then 
          ongrid = .false.
       else
          ongrid = .true.
@@ -508,7 +508,9 @@ c                                 find node associated with condition
       j = int(res)
       res = res-dfloat(j)
 
-      if (dabs(res).gt.1d-3) ongrid = .false.
+      if (dabs(res).gt.1d-3.and.dabs(res).lt.0.999d0) then 
+         ongrid = .false.
+      end if
 
       if (res.gt.0.5d0) then 
          j = (j+1)*jinc + 1

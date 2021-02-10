@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated February 1, 2021.',
+     *     'Perple_X version 6.9.1, source updated February 10, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -9244,7 +9244,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical dynam, titrat, qfile 
+      logical dynam, titrat, qfile, err
 
       integer i,j,k,ier
 
@@ -9362,11 +9362,11 @@ c                                 polynomial
 
          end do
 
-         call factor (a,npoly,ipvt,i)
+         call factor (a,k8,npoly,ipvt,err)
 
-         if (i.eq.0) call subst (a,ipvt,npoly,b,i)
+         if (.not.err) call subst (a,k8,ipvt,npoly,b,err)
 
-         if (i.ne.0) call error (72,b(1),i,'degenerate t-z'//
+         if (err) call error (72,b(1),i,'degenerate t-z'//
      *                                     ' coordinates, FRAC2D')
          do i = 1, npoly
             abc0(1,i) = b(i)
@@ -9491,6 +9491,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical err
+
       integer i,j
 
       double precision p0, z0, dz, z2, z3, z4, z5, z6, t0, t1, t2,aa,bb
@@ -9607,11 +9609,11 @@ c                                 depth for geotherm
 
          end do
 
-         call factor (a,npoly,ipvt,i)
+         call factor (a,k8,npoly,ipvt,err)
 
-         if (i.eq.0) call subst (a,ipvt,npoly,b,i)
+         if (.not.err) call subst (a,k8,ipvt,npoly,b,err)
 
-         if (i.ne.0) call error (72,b(1),i,'degenerate t-z'//
+         if (err) call error (72,b(1),i,'degenerate t-z'//
      *                                     ' coordinates, FRAC2D')
 c                                  true depth is 
          z0 = p0 - dz
@@ -9838,7 +9840,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine factor (a,n,ipvt,ier)
+      subroutine factor (a,lda,n,ipvt,error)
 c-----------------------------------------------------------------------
 c factor is a subroutine which calculates the triangular
 c decompositions of the matrix 'a'. factor is modified from
@@ -9852,21 +9854,20 @@ c output    a- an n by n array containing the upper, u, and lower, l,
 c              triangular decompositions of input matrix a.
 c        ipvt- a vector indicating that row ipvt(k) was used to
 c              eliminate the a(n,k).
-c         ier- a flag, zero if a is of rank = n, and 1 if a is of
+c       error- false if a is of rank = n, and true if a is of
 c              lower rank.
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      double precision a(k8,k8),d(k8),rmax,tmax,temp,ratio
+      logical error
 
-      integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
+      integer ipvt(*), lda, i,j,k,ip1,n,istr,nm1
 
-      double precision wmach
-      common/ cstmch /wmach(9)
+      double precision a(lda,*),d(lda),rmax,tmax,temp,ratio
 c-----------------------------------------------------------------------
-      ier = 0
+      error = .false.
 c                            initialize ipvt,d
       do i = 1, n
 
@@ -9877,7 +9878,10 @@ c                            initialize ipvt,d
             rmax = dmax1(rmax,dabs(a(i,j)))
          end do
 c                            ax = b is singular if rmax = 0
-         if (dabs(rmax).lt.wmach(3)) goto 9000
+         if (dabs(rmax).lt.nopt(50)) then
+            error = .true.
+            return
+         end if
 
          d(i) = rmax
 
@@ -9898,7 +9902,10 @@ c                            determine pivot row (istr).
             end if
          end do
 
-         if (dabs(rmax).lt.wmach(3)) goto 9000
+         if (dabs(rmax).lt.nopt(50)) then
+            error = .true.
+            return
+         end if
 c                            if istr gt i, make i the pivot row
 c                            by interchanging it with row istr.
          if (istr.gt.i) then
@@ -9925,16 +9932,12 @@ c                            eliminate x(k) from rows k+1,...,n.
          end do
       end do
 
-      if (dabs(a(n,n)).lt.wmach(3)) ier = 1
-
-      return
-c                           algoritmic singularity.
-9000  ier = 1
+      if (dabs(a(n,n)).lt.nopt(50)) error = .true.
 
       end
 
 
-      subroutine subst (a,ipvt,n,b,ier)
+      subroutine subst (a,lda,ipvt,n,b,error)
 c-----------------------------------------------------------------------
 c subst uses the lu decomposition of the matrix 'a' contained
 c in the array 'a' to solve ax = b for x. subst is modified from the
@@ -9954,9 +9957,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision a(k8,k8),b(k8),x(k8),sum
+      logical error
 
-      integer ipvt(k8),ip,i,j,n,ii,ier
+      integer lda, ipvt(*), ip, i, j, n, ii
+
+      double precision a(lda,*), b(*), x(lda), sum
 c----------------------------------------------------------------------
 c                                 solve ly = b for y:
       ip = ipvt(1)
@@ -9978,8 +9983,8 @@ c                                 solve ux = y for x:
 c                                 this check should be superfluous,
 c                                 but reopt requires it. should check
 c                                 what's with factor.
-         ier = 1
-         goto 99
+         error = .true.
+         return
       end if
 
       x(n) = x(n)/a(n,n)
@@ -9996,8 +10001,8 @@ c                                 what's with factor.
 
          if (a(i,i).eq.0d0) then
 c                                 as above.
-            ier = 1
-            goto 99
+            error = .true.
+            return
          end if
 
          x(i) = (x(i)-sum)/a(i,i)

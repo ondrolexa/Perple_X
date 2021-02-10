@@ -3599,84 +3599,6 @@ c                                 scan for blanks:
 
       end
 
-      subroutine subst2 (a,ipvt,m,n,b,error)
-c-----------------------------------------------------------------------
-c subst uses the lu decomposition of the matrix 'a' contained
-c in the array 'a' to solve ax = b for x. subst is modified from the
-c the subroutine of the same name listed by conte and de boor
-c in 'elementary numerical analysis', mcgraw-hill, 1980.
-c factor uses scaled partial pivoting.
-
-c input     a- an n by n array containing the non-zero elements of
-c              the u and l decompositions of a, as output by factor.
-c           n- the actual dimension of the matrix a.
-c           m- the physical dimension of a.
-c        ipvt- a vector indicating that row ipvt(k) was used to
-c              eliminate the coefficient a(n,k).
-c           b- the vector b.
-c output    b- the solution vector x.
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical error
-
-      integer m,ipvt(*),ip,i,j,n,ii
-
-      double precision a(m,*),b(*),x(m),sum
-c----------------------------------------------------------------------
-c                                 solve ly = b for y:
-      ip = ipvt(1)
-      x(1) = b(ip)
-
-      do i = 2, n
-
-         sum = 0d0
-
-         do j = 1, i - 1
-            sum = a(i,j)*x(j) + sum
-         end do
-
-         ip = ipvt(i)
-         x(i) = b(ip)-sum
-
-      end do
-c                                 solve ux = y for x:
-      if (a(n,n).eq.0d0) then
-c                                 this check should be superfluous. should check
-c                                 what's with factor.
-         error = .true.
-         return
-      end if
-
-      x(n) = x(n)/a(n,n)
-
-      do ii = 1, n - 1
-
-         i = n-ii
-
-         sum = 0d0
-
-         do j = i + 1, n
-            sum = a(i,j)*x(j)+sum
-         end do
-
-         if (a(i,i).eq.0d0) then
-c                                 as above.
-            error = .true.
-            return
-         end if
-
-         x(i) = (x(i)-sum)/a(i,i)
-         b(i) = x(i)
-
-      end do
-
-      b(n) = x(n)
-
-      end
-
       subroutine sattst (ifer,good)
 c----------------------------------------------------------------------
 c sorts phases into the appropriate saturated phase list called by
@@ -8046,11 +7968,11 @@ c                                 copy dg and d2g into dp and d2s
 c                                 get the newton-raphson increments:
 c                                 this is a general factorization routine, should
 c                                 exploit that d2g is symmetric.
-      call factr2 (d2s,j3,norder,ipvt,error)
+      call factor (d2s,j3,norder,ipvt,error)
 c                                 solve for the increments by back-substitution,
 c                                 this routine is also not efficient and should
 c                                 be re written.
-      if (.not.error) call subst2 (d2s,ipvt,j3,norder,dp,error)
+      if (.not.error) call subst (d2s,j3,ipvt,norder,dp,error)
 c                                 substitute replaces the values of dg with the
 c                                 newton-raphson increments for the ordered species
 c                                 compositions.
@@ -8178,111 +8100,6 @@ c                                 endmember corrections
          end do
 
       end do
-
-      end
-
-      subroutine factr2 (a,m,n,ipvt,error)
-c-----------------------------------------------------------------------
-c factr2 is a subroutine which calculates the triangular
-c decompositions of the matrix 'a'. factor is modified from
-c the subroutine of the same name given by conte and de boor
-c in 'elementary numerical analysis', mcgraw-hill, 1980.
-c factor uses scaled partial pivoting.
-c
-c input     a- an n by n array containing the elements of matrix a.
-c           n- the actual dimension of matrix a
-c           m- the phsical dimension of matrix a
-c output    a- an n by n array containing the upper, u, and lower, l,
-c              triangular decompositions of input matrix a.
-c        ipvt- a vector indicating that row ipvt(k) was used to
-c              eliminate the a(n,k).
-c       error- false if a is of rank = n, and true if a is of
-c              lower rank.
-c-----------------------------------------------------------------------
-      implicit none
-
-      logical error
-
-      include 'perplex_parameters.h'
-
-      integer m,ipvt(m),i,j,k,ip1,n,istr
-
-      double precision a(m,m),d(m),rmax,tmax,temp,ratio
-c-----------------------------------------------------------------------
-      error = .false.
-c                            initialize ipvt,d
-      do i = 1, n
-
-         ipvt(i) = i
-         rmax = 0d0
-
-         do j = 1, n
-            rmax = dmax1(rmax,dabs(a(i,j)))
-         end do
-c                            ax = b is singular if rmax = 0
-         if (dabs(rmax).lt.nopt(50)) then
-            error = .true.
-            return
-         end if
-
-         d(i) = rmax
-
-      end do
-c                            begin decomposition:
-      do i = 1, n-1
-c                            determine pivot row (istr).
-         ip1 = i+1
-         rmax = dabs(a(i,i))/d(i)
-         istr = i
-
-         do j = ip1, n
-
-            tmax = dabs(a(j,i))/d(j)
-
-            if (tmax.gt.rmax) then
-               rmax = tmax
-               istr = j
-            end if
-
-         end do
-
-         if (dabs(rmax).lt.nopt(50)) then
-            error = .true.
-            return
-         end if
-c                            if istr gt i, make i the pivot row
-c                            by interchanging it with row istr.
-         if (istr.gt.i) then
-
-            j = ipvt(istr)
-            ipvt(istr) = ipvt(i)
-            ipvt(i) = j
-            temp = d(istr)
-            d(istr) = d(i)
-            d(i) = temp
-
-            do j = 1, n
-               temp = a(istr,j)
-               a(istr,j) = a(i,j)
-               a(i,j) = temp
-            end do
-
-         end if
-c                            eliminate x(k) from rows k+1,...,n.
-         do j = ip1, n
-
-            a(j,i) = a(j,i)/a(i,i)
-            ratio = a(j,i)
-
-            do k = ip1, n
-               a(j,k) = a(j,k)-ratio*a(i,k)
-            end do
-
-         end do
-
-      end do
-
-      if (dabs(a(n,n)).lt.nopt(50)) error = .true.
 
       end
 
