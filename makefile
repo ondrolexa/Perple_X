@@ -57,7 +57,7 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = vertex691 meemum691 pssect691 werami691 actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+MYOBJ = convex691 vertex691 meemum691 pssect691 werami691 actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
 all: $(MYOBJ)
 
 clean: 
@@ -91,7 +91,7 @@ htog: htog.o
 #gmee691a: meemum.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o
 #	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o -o gmee691a
 
-meemum: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
+meemum690: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
@@ -103,34 +103,37 @@ pspts: pspts.o pslib.o tlib.o pscom.o
 psvdraw: psvdraw.o pslib.o tlib.o pscom.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
 
-pssect: psect.o pscom.o pslib.o tlib.o rlib.o flib.o 
+pssect690: psect.o pscom.o pslib.o tlib.o rlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o -o $@
 
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
-vertex: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
+vertex690: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o $@
 
-werami: werami.o rlib.o tlib.o flib.o olib.o 
+werami690: werami.o rlib.o tlib.o flib.o olib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o  rlib.o tlib.o flib.o olib.o  -o $@
 
 unsplt: unsplt.o rlib.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
-convex: convex.o rlib.o tlib.o flib.o 
+convex690: convex.o rlib.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
-meemum691: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
+convex: convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o -o $@
+
+meemum: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
 
-vertex691: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
+vertex: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o vertex691
 
-werami691: werami.o rlib_691.o tlib_691.o flib.o olib_691.o  minime_blas.o orinag.o
+werami: werami.o rlib_691.o tlib_691.o flib.o olib_691.o  minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) werami.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o werami691
 
-pssect691: psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
+pssect: psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o pssect691
 
 # targets missing from '07:
@@ -158,6 +161,8 @@ fluids.o: fluids.f
 	$(COMP77) $(FFLAGS) -c fluids.f
 convex.o: convex.f
 	$(COMP77) $(FFLAGS) -c convex.f
+convex_691.o: convex_691.f
+	$(COMP77) $(FFLAGS) -c convex_691.f
 cont_lib.o: cont_lib.f
 	$(COMP77) $(FFLAGS) -c cont_lib.f
 ctransf.o: ctransf.f
