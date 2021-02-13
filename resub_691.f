@@ -1744,6 +1744,7 @@ c                                 new point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
+            if (id.gt.ipoint) jkp(i) = ikp(id)
 
             if (lopt(34)) then
 
@@ -2106,10 +2107,8 @@ c                                                  2 active, upper bound
          amt(npt) = x(i)
 c                                 this will be wrong if jphct > jpoint
          jkp(jdv(npt)) = -i - jiinc
- 
-      end do
 
-c     js(1:npt) = is(jdv(1:npt))
+      end do
 
       call getmus (1,0,is,solvnt,.false.)
 
@@ -2229,6 +2228,10 @@ c                                 solution.
       mpt = 0
 
       do i = 1, jphct
+
+         if (is(i).eq.1.and.x(i).ne.0d0) then 
+            write (*,*) ' is = 1, x = ',x(i),i,iter
+         end if
 c                                 id indicates the original refinement
 c                                 point.
          id = hkp(i)
@@ -2244,6 +2247,7 @@ c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
+            if (clamda(i).ne.0d0) is(i) = 4
 
             if (id.gt.0) stabl(id) = .true.
 
@@ -2302,12 +2306,22 @@ c                                 keep the least metastable point
          end if
 
       end do
+
 c                                 amt < 0
       if (npt.gt.icp) call reject (is,1,solvnt)
 c                                 amt < featol
       if (npt.gt.icp) call reject (is,2,solvnt)
 c                                 is = 4
 c     if (npt.gt.icp) call reject (is,3,solvnt)
+
+c     if (npt.gt.icp) then 
+c        do i = 1, npt
+c           id = jdv(i)
+c           write (*,'(3(i4,1x),2(g14.7,1x))') i,id,is(id),x(id),
+c    *                                        clamda(id)
+c        end do
+c     end if
+
 c                                 at this point could signal bad result if
 c                                 npt > icp, could also switch
 c                                 icp for the non-degenerate 
@@ -2325,8 +2339,6 @@ c                                 get mu's for lagged speciation
       else 
 
          if (test) abort = .true.
-
-c        js(1:npt) = is(jdv(1:npt))
 
          call getmus (iter,iter-1,is,solvnt,abort)
 
@@ -2798,12 +2810,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvnt(*), bad, abort, cslut(k19), cslvt(k19), error
+      logical solvnt(*), bad, abort, cslut(k19), cslvt(k19), error, skip
 
-      integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, 
-     *        inp(k8), is(*)
+      integer i, j, ier, ipvt(k8), iter, jter, imu(k8), kcp, lcp, mcp,
+     *        inp(k8), is(*), kdv(k19)
 
-      double precision comp(k19,k19), g, lc(k19,k19), lg(k19)
+      double precision comp(k8,k8), g, lc(k19,k19), lg(k19)
 
       character cname*5
       common/ csta4  /cname(k5)
@@ -2837,6 +2849,7 @@ c----------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       ier = 1
+      error = .false.
 c                                 load c and g into a local array to 
 c                                 avoid a myriad of conditionals
       call getgc (lc,lg,k19,iter)
@@ -2898,20 +2911,22 @@ c                                 look for a general solution if npt > icp
 
          ier = 0 
 
-         do i = 1, npt
+         if (npt.eq.hcp) then
 
-            comp(i,1:hcp) = lc(i,1:hcp)
+            do i = 1, npt
 
-            mu(i) = lg(i)
+               comp(i,1:hcp) = lc(i,1:hcp)
 
-         end do
+               mu(i) = lg(i)
 
-         if (npt.gt.hcp) then 
+            end do
+
+         else
 c                                need to eliminate npt - hcp phases
 c                                try filtering weak solution results
             kcp = npt - hcp
             lcp = 0
-
+c                                first the obvious bad actors
             do i = 1, npt
 
                if (is(jdv(i)).eq.4.and.kcp.gt.0) then
@@ -2921,21 +2936,71 @@ c                                try filtering weak solution results
 
                lcp = lcp + 1
 
-               mu(lcp) = mu(i)
-
-               comp(lcp,1:hcp) = comp(i,1:hcp)
+               kdv(lcp) = jdv(i)
 
             end do
 
-            if (lcp.ne.hcp) ier = 2
+            if (kcp.gt.0) then
+c                                 next chop multiple instances of the 
+c                                 same solution, this could be done a 
+c                                 lot more cleverly
+               mcp = 0
 
-         end if 
+               do i = 1, lcp
 
-         if (ier.eq.0) then 
+                  skip = .false.
 
-            call factor (comp,k19,hcp,ipvt,error)
+                  do j = 1, i - 1
 
-            if (.not.error) call subst (comp,k19,ipvt,hcp,mu,error)
+                     if (jkp(kdv(j)).eq.jkp(kdv(i)).and.kcp.gt.0) then 
+                        kcp = kcp - 1
+                        skip = .true.
+                        exit
+                     end if
+
+                  end do
+
+                  if (skip) cycle
+
+                  mcp = mcp + 1
+                  kdv(mcp) = kdv(i)
+
+               end do
+
+               lcp = mcp
+
+            end if
+
+
+            if (lcp.ne.hcp) then
+
+               ier = 2
+
+            else
+
+               lcp = 1
+
+               do i = 1, npt
+
+                  if (jdv(i).ne.kdv(lcp)) cycle
+
+                  comp(lcp,1:hcp) = lc(i,1:hcp)
+
+                  mu(lcp) = lg(i)
+
+                  lcp = lcp + 1
+
+               end do
+
+            end if
+
+         end if
+
+         if (ier.eq.0) then
+
+            call factor (comp,k8,hcp,ipvt,error)
+
+            if (.not.error) call subst (comp,k8,ipvt,hcp,mu,error)
 
          end if
 

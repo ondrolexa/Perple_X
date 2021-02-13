@@ -60,7 +60,7 @@ FFLAGS = -O3
 FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = convex691 vertex691 meemum691 pssect691 werami691 actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+MYOBJ = convex690 vertex690 meemum690 pssect690 werami690 actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
 all: $(MYOBJ)
 
 clean: 
