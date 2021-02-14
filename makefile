@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.9.0
+# makefile for Perple_X 6.9.1
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -57,7 +57,7 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = convex690 vertex690 meemum690 pssect690 werami690 actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+MYOBJ = convex690 vertex690 meemum690 pssect690 werami actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
 all: $(MYOBJ)
 
 clean: 
@@ -88,11 +88,8 @@ frendly: frendly.o tlib.o rlib.o flib.o olib.o
 htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
-#gmee691a: meemum.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o
-#	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib_691.o tlib.o flib.o olib_691.o resub_691.o minime_blas.o nlib.o BLASlib.o nlp.o -o gmee691a
-
 meemum690: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
@@ -110,19 +107,19 @@ pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
 vertex690: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o $@
 
 werami690: werami.o rlib.o tlib.o flib.o olib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o  rlib.o tlib.o flib.o olib.o  -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) werami.o  rlib.o tlib.o flib.o olib.o  -o $@
 
 unsplt: unsplt.o rlib.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
 convex690: convex.o rlib.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) convex.o rlib.o tlib.o flib.o -o $@
 
 convex: convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o -o $@
 
 meemum: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
@@ -217,8 +214,6 @@ olib.o: olib.f
 
 vertex_691.o: vertex_691.f
 	$(COMP77) $(FFLAGS) -c vertex_691.f
-werami_691.o: werami_691.f
-	$(COMP77) $(FFLAGS) -c werami_691.f
 meemum_691.o: meemum_691.f
 	$(COMP77) $(FFLAGS) -c meemum_691.f
 resub_691.o: resub_691.f

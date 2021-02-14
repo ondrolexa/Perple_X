@@ -1794,7 +1794,7 @@ c                                 inner iteration loop:
 
       vol = vol + y(1) * vh(1) 
       
-      if (y(7).lt.y(50)) then
+      if (y(7).lt.y(5)) then
          fo2 = 2d0 * (f(1) - dlog(g(5)*p*y(5))- eqk(1))
       else
          fo2 = dlog (g(7) * p * y(7))
