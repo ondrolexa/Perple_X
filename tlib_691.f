@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated February 13, 2021.',
+     *     'Perple_X version 6.9.1, source updated February 19, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3109,8 +3109,10 @@ c                                 generic warning, also 99
      *          'its bulk composition.',//,
      *          4x,'In the 1st case:',/,
      *          8x,'increase (sic) optimization_precision and/or',/,
-     *          8x,'increase speciation_precision and/or',/,
-     *          8x,'increase speciation_max_it.',/,
+     *          8x,'increase (sic) replicate_threshold and/or',/,
+     *          8x,'increase (sic) rep_dynamic_threshold.'/,
+c    *          8x,'increase speciation_precision and/or',/,
+c    *          8x,'increase speciation_max_it.',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',

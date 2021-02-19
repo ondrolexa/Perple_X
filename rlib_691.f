@@ -19183,7 +19183,8 @@ c                                 excess function derivatives
 
       end do
 
-1000  format ('No MINFRC derivatives for: ',a,/,'Reason: ',a,/)
+1000  format (/,'**warning ver212** No MINFRC derivatives for: ',a,/,
+     *          'Reason: ',a,/)
 
       end
 

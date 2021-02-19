@@ -30,12 +30,12 @@
 |replicate_threshold       default 1d-8    | nopt(35) savdyn => smaller values may cause failed optimization
 |rep_dynamic_threshold     default 1d-3    | nopt(37) savrpc => larger values may cause rough boundaries
 |intermediate_savrpc       default | lopt(57)
-intermediate_savdyn      T default       | lopt(58)
+|intermediate_savdyn       default       | lopt(58)
 |scatter-increment         default
 |scatter-points            default | lopt(54)
 |keep_all_rpcs             default | lopt(59)
-x_nodes                   default 10 60   | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   default 10 60   | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
+x_nodes                    default 10 60   | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
+y_nodes                    default 10 60   | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
 
 
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
