@@ -122,16 +122,16 @@ convex: convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_69
 	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o -o $@
 
 meemum: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
-	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum691
+	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum
 
 vertex: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
-	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o vertex691
+	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o vertex
 
 werami: werami.o rlib_691.o tlib_691.o flib.o olib_691.o  minime_blas.o orinag.o
-	$(COMP77) $(FFLAGS) $(FLINK) werami.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o werami691
+	$(COMP77) $(FFLAGS) $(FLINK) werami.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o werami
 
 pssect: psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o pssect691
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o orinag.o -o pssect
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o
