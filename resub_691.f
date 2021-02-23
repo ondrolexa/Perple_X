@@ -1103,7 +1103,7 @@ c                                 swap phase at i+1 with the one at j
       end if 
 c                                 if a solution is represented by
 c                                 more than one pseudocompound get
-c                                 the everage composition
+c                                 the average composition
       do i = 1, np 
 c                                 initialize
          bnew(i) = 0d0
@@ -2730,7 +2730,7 @@ c                                  the bulk composition.
             end do 
 c                                  load the saturated phase composition 
             do j = 1, icomp
-               cp3(j,i) = cp(j,id)
+               cp3(j,npt) = cp(j,id)
             end do
 
          end do
