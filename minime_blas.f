@@ -653,9 +653,12 @@ c DEBUG691
      *                        pp(1:lstot(id))
                   bad = .true.
                   return
-               end if 
-               if (pp(i).lt.zero) pp(i) = 0d0
+               end if
+
+               if (pp(i).lt.0d0) pp(i) = 0d0
+
                sum = sum + pp(i)
+
             end do
 
             x(1,1,1:lstot(id)) = pp(1:lstot(id))/sum

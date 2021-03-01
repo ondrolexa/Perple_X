@@ -7265,15 +7265,17 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                check if xo is <1, >0,
 c                                reset if necessary
-      if (x.le.0d0) then
-         x = 0d0
-         lmt = .true.
-      else if (x.ge.1d0) then
-         x = 1d0
-         lmt = .true.
-      else
-         lmt = .false.
+      if (x.lt.nopt(50)) then
+         x = nopt(50)
+c        lmt = .true.
+      else if (x.gt.nopt(56)) then
+         x = nopt(56)
+c        lmt = .true.
+c     else
+c        lmt = .false.
       end if 
+
+      lmt = .false.
 
       end 
 

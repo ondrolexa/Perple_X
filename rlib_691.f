@@ -4794,7 +4794,7 @@ c                                missing endmember warnings:
       end if
 
 1000  format (/,'**warning ver114** the following endmembers',
-     *          ' are missing for ',a,/,4(8(2x,a),/))
+     *          ' are missing for ',a,//,4(8(2x,a),/))
 
       end
 
@@ -7259,6 +7259,17 @@ c                                 implemented).
       else
 
          ndep(im) = 0
+
+      end if
+c                                 -------------------------------------
+c                                 relict equipartion warning:
+      if (lopt(56).and..not.stck.and..not.refine.and.iam.lt.3) then
+
+         call warn (17,r,i,tname)
+
+         read (*,'(a)') abc
+
+         if (abc.ne.'y'.and.abc.ne.'Y') stop
 
       end if
 c                                 -------------------------------------
@@ -20935,9 +20946,13 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
+
       external rplica, xplica
 c----------------------------------------------------------------------
-      if (iopt(6).eq.0) return
+      if (refine.and..not.lopt(55)) return
 
       if (tol.gt.0d0) then
          if (xplica(ids)) return
