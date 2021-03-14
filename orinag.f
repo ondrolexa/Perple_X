@@ -756,14 +756,18 @@ C     Default names will be provided for variables during printing.
 C
       NAMED = .FALSE.
       INFORM = 0
-C DEBUG 691
+C     Set the default values for the parameters.
+C
+      CALL E04UCX(N,NCLIN,NCNLN,TITLE)
+C DEBUG 691 these are to set the working values
 c                                 set defaults from user/iuser
 c                                 EPSRF, function precision
       EPSRF = user(1)
 c                                 FTOL,.optimality tolerance
       FTOL = user(2)
-c                                 CTOL,feasibility tolerance
+c                                 CTOL and TOLFEA,feasibility tolerance
       CTOL = user(3)
+      TOLFEA = CTOL
 c                                 ETA, step limit < nopt(5) leads to bad results, coincidence?
       ETA = user(4)
 c                                 DXLIM, linesearch tolerance, low values -> more accurate search -> more function calls
@@ -777,10 +781,10 @@ c                                 MSGNP, print level, default off, may be reset,
       MSGNP = iuser(12)
 c                                 LVLDER, derivative level, 3 - all available, 1 - some, 0 - none
       LVLDER = iuser(13)
-C
-C     Set the default values for the parameters.
-C
-      CALL E04UCX(N,NCLIN,NCNLN,TITLE)
+c                                 copy the equivalenced array iprmnp to the saved array
+      do i = 1, mxparm
+         ipsvnp(i) = iprmnp(i)
+      end do
 C
       NEEDFD = LVLDER .EQ. 0 .OR. LVLDER .EQ. 2 .OR.
      *         (LVLDER.EQ.1 .AND. NCNLN.GT.0)
@@ -15111,8 +15115,8 @@ C
          ILSDBG(I) = MOD(MSG2/K,10)
          K = K*10
    20 CONTINUE
-C
-      IF (MSGNP.GT.0) THEN
+c DEBUG 691 changed from > 0 to 99
+      IF (MSGNP.GT.99) THEN
 C
 C        Print the title. If no hot start is specified, the parameters
 C        are final and can be printed.
