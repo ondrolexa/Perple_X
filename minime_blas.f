@@ -23,13 +23,13 @@ c-----------------------------------------------------------------------
       logical tic, zbad
 
       integer i, nvar, iter, iwork(m22), itic,
-     *        ivars(13), istate(m21), idead, nclin, ntot
+     *        istuff(10), istate(m21), idead, nclin, ntot
 c DEBUG691
      *        ,iprint,mode
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
-     *                 clamda(m21),r(m19,m19),work(m23),rvars(9)
+     *                 clamda(m21),r(m19,m19),work(m23),stuff(2)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),yt(m4),
      *                 zsite(m10,m11), pinc0,sum
@@ -85,6 +85,10 @@ c                                 will be estimated at this
 c                                 coordinate, so choose a feasible 
 c                                 composition
       ppp(1:nvar) = pa(1:nvar)
+c                                 flag (if ~0) to force numerical
+c                                 finite differences even when 
+c                                 derivatives are available
+      istuff(6) = 0
 c                                 initialize bounds
       if (boundd(rids)) then 
 c                                 the endmember fractions are bounded
@@ -121,75 +125,94 @@ c                                 closure for molecular models
 
       end if
 
+c     if (.not.toc) then
+c        write (*,*) 'fac fdif?'
+c        read (*,*) fac,fdif
+c         fac = 1d-2
+c        toc = .true.
+c     end if
+
       itic = 0
 
       iprint = 0
 
 10    idead = -1
-c                                 EPSRF, function precision
-      rvars(1) = (wmach(3)*fac)**(0.9)
-c                                 FTOL, optimality tolerance
-      rvars(2) = (wmach(3)*fac)**(0.8)
-c                                 CTOL,feasibility tolerance
-      rvars(3) = zero
-c                                 ETA, step limit < nopt(5) leads to bad results
-      rvars(4) = 0.5d0
-c                                 DXLIM, linesearch tolerance, low values -> more accurate search 
-c                                 -> more function calls, 0.05-.4 seem best
-      rvars(5) = 0.225
-c                                 FDINT, finite difference interval, forward.
-      rvars(6) = nopt(49)
-c                                 ---------------------------------------------
-c                                 ivars(1:10) reserved for flags, counters used by GSOL2
-c                                 ---------------------------------------------
 c                                 obj call counter
-      ivars(3) = 0
-c                                 MSGNP, print level, default off, may be reset.
-      ivars(12) = 0
-c                                 LVLDER, derivative level, default all derivatives available
-      ivars(13) = 3
+      istuff(3) = 0
+c                                 saved obj value counter
+      istuff(4) = 0
+c DEBUG 691
+      fac = 1d0
 
-      if (deriv(rids).and.itic.lt.2) then
-c                                 LVLDER = 3, all derivatives available
-         ivars(13) = 3
-c                                 LVERFY = 1, verify derivatives 
-         ivars(11) = itic
-c                                 flag (if ~0) to force numerical
-c                                 finite differences even when 
-c                                 derivatives are available
-         ivars(6) = 0
+      CALL E04UEF ('nolist')
+c                                 in NLPSOL:
+c                                 EPSRF is function precision
+c                                 CTOL  is feasibility tolerance
+c                                 FTOL  is optimality tolerance
+c                                 none of these are allowed to go below epsmch, if so they are 
+c                                 reset to their defaults in terms of epsmch, this leads to 
+c                                 the possibility that decreasing fac increases the result...
+c                                 to stop this behavior modify
+      CALL E04UEF ('verify level 0')
+      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
+      CALL E04UEF ('function precision = '//ctol)
+c                                 really should be powers of function precision, not epsmch
+      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.8)
+      CALL E04UEF ('optimality tolerance = '//ctol)
+c     write (ctol,'(g14.7)') (wmach(3)*fac)**(0.5)
+      write (ctol,'(g14.7)') zero
+      CALL E04UEF ('feasibility tolerance = '//ctol)
+c step limit < nopt(5) leads to bad results, coincidence?
+      CALL E04UEF ('step limit = 0.5')
+c low values -> more accurate search -> more function calls
+c                              0.05-.4 seem best
+      CALL E04UEF ('linesearch tolerance = 0.225')
+      write (ctol,'(i4)') iprint
+      CALL E04UEF ('print level = '//ctol)
+
+      if (deriv(rids)) then
+
+         if (itic.le.1) CALL E04UEF ('derivative level = 3')
+
+         if (itic.eq.1) then
+            CALL E04UEF ('verify level 1')
+            write (ctol,'(g14.7)') nopt(49)
+            CALL E04UEF ('difference interval ='//ctol)
+         else if (itic.eq.2) then
+            CALL E04UEF ('verify level 0')
+            CALL E04UEF ('derivative level = 0')
+         end if 
 
       else
-c                                 Derivatives not available; or failed once:
-c                                 LVERFY = 0, don't verify
-         ivars(11) = 0
-c                                 LVLDER = 0, no derivatives
-         ivars(13) = 0
-c                                 Set flag to prevent GSOL2 from returning
-c                                 derivatives.
-         ivars(6) = 1
+
+         CALL E04UEF ('verify level 0')
+         CALL E04UEF ('derivative level = 0')
+         write (ctol,'(g14.7)') nopt(49)
+         CALL E04UEF ('difference interval ='//ctol)
 
       end if
 
+c     CALL E04UEF ('difference interval = 0')
+
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
-     *            m23,ivars,rvars,idead)
+     *            m23,istuff,stuff,idead,iprint)
 
       if (iter.eq.0.and.idead.eq.0.and.itic.le.1.and.deriv(rids)) then
 
          pa = yt
-c                                 error counter
          itic = itic + 1
-
+         if (itic.eq.2) istuff(6) = 1
          goto 10
 
       else if (idead.ne.0) then 
-    
+
          write (*,*) 'woana woaba, wanka?'
 
       else
 
          if (iter.eq.0) then
+c           write (*,*) 'zapra off',itic,rids
             return
             ppp(1:nvar) = yt(1:nvar)
          end if
@@ -244,7 +267,7 @@ c                                 increment the counter
 
       end
 
-      subroutine gsol2 (mode,nvar,ppp,gval,dgdp,istart,ivars,rvars)
+      subroutine gsol2 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
 c-----------------------------------------------------------------------
 c function to evaluate gibbs energy of a solution for minfrc. can call 
 c either gsol1 with order true or false, true seems to give better results
@@ -256,9 +279,9 @@ c-----------------------------------------------------------------------
 
       logical zbad
 
-      integer i, j, nvar, mode, ivars(*), istart
+      integer i, j, nvar, mode, istuff(*), istart
 
-      double precision ppp(*), gval, dgdp(*), rvars(*),
+      double precision ppp(*), gval, dgdp(*), stuff(*),
      *                 gsol1, g, sum1, zsite(m10,m11)
 
       external gsol1, zbad
@@ -316,7 +339,7 @@ c-----------------------------------------------------------------------
 
       call makepp (rids)
 
-      if (deriv(rids).and.ivars(6).eq.0) then
+      if (deriv(rids).and.istuff(6).eq.0) then
 
          call getder (g,dgdp,rids)
 c                                 get the bulk composition from pa
@@ -340,11 +363,15 @@ c                                 if logical arg = T use implicit ordering
          gval = gval - rcp(i)*mu(i)
       end do
 
-      if (lopt(57).and.ivars(2).ne.0.and.(nvar.lt.nstot(rids).or.
+      istuff(3) = istuff(3) + 1
+
+      if (lopt(57).and.istuff(2).ne.0.and.(nvar.lt.nstot(rids).or.
      *    sum1.ge.one.and.sum1.le.1d0+zero).and.rsum.gt.zero) then
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
+         istuff(4) = istuff(4) + 1
+c                                 increment the counter
          call savrpc (g,nopt(37),jphct)
 
       end if
@@ -426,7 +453,7 @@ c                                 save the endmember fractions
 
       end 
 
-      subroutine gsol4 (mode,nvar,ppp,gval,dgdp,istart,ivars,rvars)
+      subroutine gsol4 (mode,nvar,ppp,gval,dgdp,istart,istuff,stuff)
 c-----------------------------------------------------------------------
 c gsol4 - a shell to call gsol1 from minfxc, ingsol must be called
 c         prior to minfxc to initialize solution specific paramters. only
@@ -440,9 +467,9 @@ c-----------------------------------------------------------------------
 
       logical error 
 
-      integer ids, nvar, istart, mode, ivars(*)
+      integer ids, nvar, istart, mode, istuff(*)
 
-      double precision ppp(*), gval, dgdp(*), rvars(*), d2s(j3,j3), 
+      double precision ppp(*), gval, dgdp(*), stuff(*), d2s(j3,j3), 
      *                 gord
 
       double precision zz, pa, p0a, x, w, y, wl, pp
@@ -451,7 +478,7 @@ c-----------------------------------------------------------------------
 
       external gord
 c-----------------------------------------------------------------------
-      ids = ivars(1)
+      ids = istuff(1)
 c                                   ppp(1:nord) contains the 
 c                                   proportions of the ordered species
 c                                   pa(lstot+1:nstot).
@@ -459,9 +486,9 @@ c                                   -----------------------------------
 c                                   set the remaining proportions
       call ppp2pa (ppp,ids)
 
-      if (ivars(3).eq.0) then
+      if (istuff(3).eq.0) then
 
-        if (ivars(6).eq.1) then 
+        if (istuff(6).eq.1) then 
 c                                   numerical derivatives
            gval = gord(ids) * (1d0 + dnu(ids) * ppp(1)-p0a(nstot(ids)))
 
@@ -482,6 +509,8 @@ c                                   dnu = 0 case.
          call sderiv (ids,gval,dgdp,d2s,.true.)
 
       end if
+
+      istuff(4) = istuff(4) + 1
 
       end
 
@@ -882,11 +911,11 @@ c-----------------------------------------------------------------------
       logical maxs
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
-     *        ivars(15),istate(m21), idead, nclin, lord
+     *        istuff(10),istate(m21), idead, nclin, lord
 
       double precision ggrd(m19), gordp0, g0, fac,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
-     *                 clamda(m21),r(m19,m19),work(m23),rvars(6),
+     *                 clamda(m21),r(m19,m19),work(m23),stuff(2),
      *                 lapz(m20,m19)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),xp(m14), ftol
@@ -938,7 +967,7 @@ c                                 the number of non-frustrated od
 c                                 variables.
       call pinc0 (ids,lord)
 
-      fac = 1d-2
+      fac = 1d0
 
       if (icase(ids).eq.0) then 
 c                                 o/d reactions are independent and
@@ -1041,19 +1070,21 @@ c                                 related to a site fraction
 
       end if
 c                                 solution model index
-      ivars(1) = ids
-c                                 ivars(2) is set by NLP and is
+      istuff(1) = ids
+c                                 istuff(2) is set by NLP and is
 c                                 irrelevant.
-c                                 ivars(3) = 1 min g, 0 max entropy
+c                                 istuff(3) = 1 min g, 0 max entropy
       if (maxs) then 
-         ivars(3) = 1
+         istuff(3) = 1
       else 
-         ivars(3) = 0
+         istuff(3) = 0
       end if
+c                                 obj call counter
+      istuff(4) = 0
 c                                 flag (if ~0) to force numerical
 c                                 finite differences even when 
 c                                 derivatives are available
-      ivars(6) = 0
+      istuff(6) = 0
 
       itic = 0
 
@@ -1063,47 +1094,37 @@ c                                 initialize ppp
       xp(1:nvar) = ppp(1:nvar)
 
 10    idead = -1
-c                                 EPSRF, function precision
-      rvars(1) = (wmach(3)*fac)**(0.9)
-c                                 FTOL, optimality tolerance
-      rvars(2) = (wmach(3)*fac)**(0.8)
-c                                 CTOL,feasibility tolerance
-      rvars(3) = zero
-c                                 ETA, step limit < nopt(5) leads to bad results
-      rvars(4) = 0.5d0
-c                                 DXLIM, linesearch tolerance, low values -> more accurate search 
-c                                 -> more function calls, 0.05-.4 seem best
-      rvars(5) = 0.225
-c                                 FDINT, finite difference interval, forward.
-      rvars(6) = nopt(49)
-c                                 ---------------------------------------------
-c                                 ivars(1:10) reserved for flags, counters used by GSOL2
-c                                 ---------------------------------------------
-c                                 MSGNP, print level, default off, may be reset.
-      ivars(12) = 0
-c                                 LVLDER, derivative level, default all derivatives available
-      ivars(13) = 3
 
-      if (itic.lt.2) then
-c                                 LVLDER = 3, all derivatives available
-         ivars(13) = 3
-c                                 LVERFY = 1, verify derivatives 
-         ivars(11) = itic
+      CALL E04UEF ('nolist')
+      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
+      CALL E04UEF ('function precision = '//ctol)
+      write (ctol,'(g14.7)') (wmach(3)*1d1)**(0.8)
+      CALL E04UEF ('optimality tolerance = '//ctol)
+      write (ctol,'(g14.7)') zero
+      CALL E04UEF ('feasibility tolerance = '//ctol)
+c step limit < nopt(5) leads to bad results, coincidence?
+      CALL E04UEF ('step limit = 0.5')
+c low values -> more accurate search -> more function calls
+      CALL E04UEF ('linesearch tolerance = 0.225')
+      write (ctol,'(i4)') iprint
+      CALL E04UEF ('print level = '//ctol)
 
-      else
-c                                 Derivatives not available; or failed once:
-c                                 LVERFY = 0, don't verify
-         ivars(11) = 0
-c                                 LVLDER = 0, no derivatives
-         ivars(13) = 0
+      if (itic.le.1) CALL E04UEF ('derivative level = 3')
 
-         ivars(6) = 1
-
+      if (itic.eq.1) then
+         CALL E04UEF ('verify level 1')
+         write (ctol,'(g14.7)') nopt(49)
+         CALL E04UEF ('difference interval ='//ctol)
+      else if (itic.eq.2) then
+         CALL E04UEF ('verify level 0')
+         CALL E04UEF ('derivative level = 0')
       end if
+
+c     CALL E04UEF ('difference interval = 0')
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
-     *            m23,ivars,rvars,idead)
+     *            m23,istuff,stuff,idead,iprint)
 c                                 if nlpsol returns iter = 0 and idead 
 c                                 = 0, it's likely failed, make 2 additional 
 c                                 attempts, 1st try numerical verification of 
@@ -1113,6 +1134,8 @@ c                                 derivatives.
 
          ppp(1:nvar) = xp(1:nvar)
          itic = itic + 1
+
+         if (itic.eq.2) istuff(6) = 1
 
          goto 10
 
