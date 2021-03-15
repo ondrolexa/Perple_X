@@ -141,8 +141,6 @@ c                                 obj call counter
       istuff(3) = 0
 c                                 saved obj value counter
       istuff(4) = 0
-c DEBUG 691
-      fac = 1d0
 
       CALL E04UEF ('nolist')
 c                                 in NLPSOL:
@@ -967,7 +965,7 @@ c                                 the number of non-frustrated od
 c                                 variables.
       call pinc0 (ids,lord)
 
-      fac = 1d0
+      fac = 1d-2
 
       if (icase(ids).eq.0) then 
 c                                 o/d reactions are independent and

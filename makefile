@@ -67,8 +67,11 @@ clean:
 actcor: actcor.o tlib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o  -o $@
 
-build: build.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o $@ 
+build690: build.o tlib.o rlib.o flib.o 
+	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o $@
+
+build: build.o tlib_691.o rlib_691.o flib.o orinag.o minime_blas.o
+	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib_691.o rlib_691.o flib.o orinag.o minime_blas.o -o $@
 
 fluids: fluids.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o flib.o -o $@
@@ -211,7 +214,6 @@ tlib.o: tlib.f
 	$(COMP77) $(FFLAGS) -c tlib.f
 olib.o: olib.f
 	$(COMP77) $(FFLAGS) -c olib.f
-
 vertex_691.o: vertex_691.f
 	$(COMP77) $(FFLAGS) -c vertex_691.f
 meemum_691.o: meemum_691.f
