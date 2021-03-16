@@ -3372,7 +3372,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, dim
+      integer i, j, id, dim, dummy
 
       double precision mode(3), fwt, cprp(i11)
 
@@ -3451,10 +3451,10 @@ c                                 properties of phases
                   id = j 
                else
                   id = kcx(1)
-               end if 
+               end if
 
                do i = 1, iprop
-                  call getprp (prop(i),kop(i+1),id,0,.true.)
+                  call getprp (prop(i),kop(i+1),id,dummy,.true.)
                end do
 
                tname = pname(id)

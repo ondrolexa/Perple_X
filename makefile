@@ -32,6 +32,10 @@ COMP77 = gfortran
 # JADC 1/21/13: O2 and O3 cause fp errors in the speciation routine speci2 in gfortran, the optimization
 # seems to work if local variables are initialized to zero (even though there are no uninitialized variables).
 # use -ffpe-trap=zero,overflow,underflow to catch fp errors.
+# use -ffpe-trap 
+# use -fbounds-check array bound checking
+# use -finit-real=snan -fpe=trap check for unitialized variables
+# use -Wall -Wextra for extensive warnings
 
 # Mark Caddick's OSX generic gfortran compilation flags:
 
@@ -57,7 +61,7 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = convex690 vertex690 meemum690 pssect690 werami actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+MYOBJ = convex690 vertex690 meemum690 pssect690 build690 werami actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
 all: $(MYOBJ)
 
 clean: 
@@ -68,10 +72,10 @@ actcor: actcor.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o  -o $@
 
 build690: build.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o build690
 
 build: build.o tlib_691.o rlib_691.o flib.o orinag.o minime_blas.o
-	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib_691.o rlib_691.o flib.o orinag.o minime_blas.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib_691.o rlib_691.o flib.o orinag.o minime_blas.o -o build
 
 fluids: fluids.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o flib.o -o $@
@@ -92,7 +96,7 @@ htog: htog.o
 	$(COMP77) $(FFLAGS) $@.o -o $@
 
 meemum690: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o $@   
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o meemum690
 
 pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
@@ -104,25 +108,25 @@ psvdraw: psvdraw.o pslib.o tlib.o pscom.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
 
 pssect690: psect.o pscom.o pslib.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o -o pssect690
 
 pt2curv: pt2curv.o tlib.o
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
 
 vertex690: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
-	$(COMP77) $(FFLAGS) $(FLINK) vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o vertex690
 
 werami690: werami.o rlib.o tlib.o flib.o olib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) werami.o  rlib.o tlib.o flib.o olib.o  -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) werami.o  rlib.o tlib.o flib.o olib.o  -o werami690
 
 unsplt: unsplt.o rlib.o tlib.o flib.o 
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
 
 convex690: convex.o rlib.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) convex.o rlib.o tlib.o flib.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) convex.o rlib.o tlib.o flib.o -o convex690
 
 convex: convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o
-	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o orinag.o olib_691.o -o convex
 
 meemum: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o
 	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o orinag.o -o meemum

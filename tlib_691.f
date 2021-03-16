@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated March 1, 2021.',
+     *     'Perple_X version 6.9.1, source updated March 16, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3835,6 +3835,10 @@ c-----------------------------------------------------------------------
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      integer jd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,jd
 c-----------------------------------------------------------------------
       data hs2p/4, 5, 18, 19, 20, 21/
 
@@ -3869,6 +3873,10 @@ c                                 fluid eos species
      *      'Si  ','C2H6','HF  '/
 
       data times,btime,etime/90*0d0/
+c                                 na1 must be initalized because the
+c                                 array element caq(jd,na1) is used to test
+c                                 for aq speciation on output.
+      data na1/1/
 
       end
 
