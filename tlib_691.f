@@ -2848,7 +2848,10 @@ c----------------------------------------------------------------------
       else if (ier.eq.39) then
          write (*,39) 
       else if (ier.eq.40) then
-         write (*,40) 
+         write (*,40)
+      else if (ier.eq.41) then
+         write (*,41) char, int
+         call prtptx
       else if (ier.eq.42) then
          write (*,42)     
       else if (ier.eq.45) then
@@ -3118,6 +3121,10 @@ c                                 generic warning, also 99
      *       'composition use',/, 'gridded minimization.',/)
 40    format (/,'**warning ver040** you have configured a ',
      *       'problem with only one independent variable.',/)
+41    format (/,'**warning ver040** ',a,' occurs ',i1,' times in an as',
+     *       'semblage, properties will be',/,'reported for its last i',
+     *       'nstance. To avoid this problem do not use multi-property',
+     *       /,'choices to extract the properties of this solution.',/)
 42    format (/,'**warning ver042** an optimization failed due ',
      *          'to numerical instability',/,
      *          'or because the phases of the system do not span ',
@@ -7813,7 +7820,7 @@ c----------------------------------------------------------------------
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 c----------------------------------------------------------------------
-      write (*,'(a,/)') 'Current optimization conditions:'
+      write (*,'(a,/)') 'Current conditions:'
 
       do i = 1, ipot
          write (*,1000) vname(iv(i)),v(iv(i))

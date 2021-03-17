@@ -3372,7 +3372,7 @@ c----------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id, dim, dummy
+      integer i, j, k, id, dim, dummy
 
       double precision mode(3), fwt, cprp(i11)
 
@@ -3448,14 +3448,44 @@ c                                 properties of phases
             do j = 1, ntot
              
                if (kcx(1).eq.999) then
-                  id = j 
-               else
-                  id = kcx(1)
-               end if
+c                                 phemgp output, the phase
+c                                 will be identified by name
+                  id = j
 
-               do i = 1, iprop
-                  call getprp (prop(i),kop(i+1),id,dummy,.true.)
-               end do
+                  do i = 1, iprop
+                     call getprp (prop(i),kop(i+1),id,dummy,.true.)
+                  end do
+
+               else
+c                                 kcx is true phase id, locate
+c                                 the phase in the assemblage:
+                  dummy = 0
+
+                  do k = 1, ntot
+                     if (kkp(k).eq.kcx(1)) then
+                        dummy = dummy + 1
+                        id = k
+                     end if
+                  end do
+
+                  if (dummy.eq.0) then 
+c                                 the phase is not present assign badnum
+                     do i = 1, iprop
+                        prop(i) = nopt(7)
+                     end do
+
+                  else
+c                                 the solution is present
+                     do i = 1, iprop
+                        call getprp (prop(i),kop(i+1),id,dummy,.true.)
+                     end do
+c                                 but as more than one phase, write warning
+                     if (dummy.gt.1) call warn (41,prop(1),dummy,
+     *                                                        pname(id))
+
+                  end if
+
+               end if
 
                tname = pname(id)
 
@@ -3662,7 +3692,7 @@ c                                 phase
 
          end if
 
-      end if 
+      end if
 
 99    end 
 
