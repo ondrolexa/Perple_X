@@ -544,7 +544,7 @@ C
 
       SUBROUTINE nlpsol (N,NCLIN,NCNLN,LDA,LDCJU,LDR,A,BL,BU,CONFUN,
      *                  OBJFUN,ITER,ISTATE,C,CJACU,CLAMDA,OBJF,GRADU,R,
-     *                  X,IW,LENIW,W,LENW,IUSER,USER,IFAIL,jprint)
+     *                  X,IW,LENIW,W,LENW,IUSER,USER,IFAIL)
 C     MARK 14 RE-ISSUE.  NAG COPYRIGHT 1989.
 C     MARK 15B REVISED. IER-951 (NOV 1991).
 C     MARK 16 REVISED. IER-1077 (JUL 1993).
@@ -632,7 +632,7 @@ C     .. Parameters ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION  OBJF
       INTEGER           IFAIL, ITER, LDA, LDCJU, LDR, LENIW, LENW, N,
-     *                  NCLIN, NCNLN, jprint
+     *                  NCLIN, NCNLN
 C     .. Array Arguments ..
       DOUBLE PRECISION  A(LDA,*), BL(N+NCLIN+NCNLN), BU(N+NCLIN+NCNLN),
      *                  C(*), CJACU(LDCJU,*), CLAMDA(N+NCLIN+NCNLN),
@@ -756,12 +756,53 @@ C     Default names will be provided for variables during printing.
 C
       NAMED = .FALSE.
       INFORM = 0
-C
 C     Set the default values for the parameters.
 C
       CALL E04UCX(N,NCLIN,NCNLN,TITLE)
-c DEBUG 691
-c     LFDSET = 0
+C DEBUG 691 these are to set the working values
+c                                 set defaults from user/iuser
+c                                 EPSRF, function precision
+      EPSRF = user(1)
+c                                 FTOL,.optimality tolerance
+      FTOL = user(2)
+c                                 CTOL and TOLFEA,feasibility tolerance
+      CTOL = user(3)
+      TOLFEA = CTOL
+c                                 ETA, step limit < nopt(5) leads to bad results, coincidence?
+      ETA = user(5)
+c                                 DXLIM, linesearch tolerance, low values -> more accurate search -> more function calls
+c                                 0.05-.4 seem best
+      DXLIM = user(4)
+c                                 FDINT, finite difference interval, forward.
+      FDINT = user(6)
+c                                 CDINT, centered finite difference interval
+      CDINT = FDINT**(0.67d0)
+      CDINT = EPSRF**(0.33d0)
+c                                 HCNDBD -> CONDBD, used to detect poor conditioning
+c                                 during factorization
+      HCNDBD = max(1d-2/dble(n)/epsmch,1d6)
+
+      if (fdint.gt.0d0) then
+         LFDSET = 1
+      else 
+         LFDSET = 0
+      end if 
+c                                 LVERFY, verify level, default off, may be reset. 0 - off, 1 - on
+      LVERFY = iuser(11)
+c                                 range of objective function gradients to be verified, stored in CE04UC
+      JVRFY1 = 1
+      JVRFY2 = n
+c                                 range of jacobian gradients to be verified, surely this should be 1:NCNLN
+      JVRFY3 = 1
+      JVRFY4 = n
+c                                 MSGNP, print level, default off, may be reset, 0 - off, > 0 on. 
+      MSGNP = iuser(12)
+c                                 LVLDER, derivative level, 3 - all available, 1 - some, 0 - none
+      LVLDER = iuser(13)
+c                                 copy the equivalenced array iprmnp to the saved array
+      do i = 1, mxparm
+         ipsvnp(i) = iprmnp(i)
+      end do
 C
       NEEDFD = LVLDER .EQ. 0 .OR. LVLDER .EQ. 2 .OR.
      *         (LVLDER.EQ.1 .AND. NCNLN.GT.0)
@@ -1120,7 +1161,7 @@ C
 C
       CALL DCOPY(N,W(LGRAD),1,W(LGQ),1)
       CALL E04NBW(6,N,NZ,NFREE,LDQ,UNITQ,IW(LKX),W(LGQ),W(LQ),W(LWRK1))
-
+c DEBUG 691
       iuser(2) = 1
 C     ==================================================================
 C     Solve the problem.
@@ -1229,8 +1270,8 @@ C
      *                               CJACU,LDCJU)
          CALL DCOPY(N,W(LGRAD),1,GRADU,1)
       END IF
-C
-      if (jprint.eq.0) inform = 0
+C DEBUG 691
+      if (MSGNP.eq.0) inform = 0
 
       IF (INFORM.NE.0 .AND. (IFAIL.EQ.0 .OR. IFAIL.EQ.-1)) THEN
          IF (INFORM.LT.0) WRITE (REC,FMT=99985)
@@ -15055,11 +15096,8 @@ C     IF (EPSRF.LT.EPSPT9 .OR. EPSRF.GE.ONE) EPSRF = EPSPT9
       IF (FDINT.LT.ZERO) LFDSET = 2
       IF (FDINT.EQ.RDUMMY) LFDSET = 0
       IF (FDINT.GE.EPSMCH .AND. FDINT.LT.ONE) LFDSET = 1
-      IF (LFDSET.EQ.1 .AND. (CDINT.LT.EPSMCH .OR. CDINT.GE.ONE)) then
-          CDINT = EPSRF**POINT3
-c DEBUG 691
-c        cdint = fdint**(0.67d0)
-      end if 
+      IF (LFDSET.EQ.1 .AND. (CDINT.LT.EPSMCH .OR. CDINT.GE.ONE))
+     *    CDINT = EPSRF**POINT3
       IF (BIGBND.LE.ZERO) BIGBND = GIGANT
       IF (BIGDX.LE.ZERO) BIGDX = MAX(GIGANT,BIGBND)
       IF (DXLIM.LE.ZERO) DXLIM = TWO
@@ -15095,8 +15133,8 @@ C
          ILSDBG(I) = MOD(MSG2/K,10)
          K = K*10
    20 CONTINUE
-C
-      IF (MSGNP.GT.0) THEN
+c DEBUG 691 changed from > 0 to 99
+      IF (MSGNP.GT.99) THEN
 C
 C        Print the title. If no hot start is specified, the parameters
 C        are final and can be printed.
