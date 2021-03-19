@@ -35,7 +35,7 @@ c DEBUG691                    dummies for NCNLN > 0
      *                 zsite(m10,m11), pinc0,sum
 
 
-      character ctol*20
+      character ctol*24
 
       external gsol2, gsol1, dummy
 
@@ -152,13 +152,13 @@ c                                 reset to their defaults in terms of epsmch, th
 c                                 the possibility that decreasing fac increases the result...
 c                                 to stop this behavior modify
       CALL E04UEF ('verify level 0')
-      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.9)
+      write (ctol,'(d16.10)') (wmach(3)*fac)**(0.9)
       CALL E04UEF ('function precision = '//ctol)
 c                                 really should be powers of function precision, not epsmch
-      write (ctol,'(g14.7)') (wmach(3)*fac)**(0.8)
+      write (ctol,'(d16.10)') (wmach(3)*fac)**(0.8)
       CALL E04UEF ('optimality tolerance = '//ctol)
-c     write (ctol,'(g14.7)') (wmach(3)*fac)**(0.5)
-      write (ctol,'(g14.7)') zero
+c     write (ctol,'(d16.10)') (wmach(3)*fac)**(0.5)
+      write (ctol,'(d16.10)') zero
       CALL E04UEF ('feasibility tolerance = '//ctol)
 c step limit < nopt(5) leads to bad results, coincidence?
       CALL E04UEF ('step limit = 0.5')
@@ -174,7 +174,7 @@ c                              0.05-.4 seem best
 
          if (itic.eq.1) then
             CALL E04UEF ('verify level 1')
-            write (ctol,'(g14.7)') nopt(49)
+            write (ctol,'(d16.10)') nopt(49)
             CALL E04UEF ('difference interval ='//ctol)
          else if (itic.eq.2) then
             CALL E04UEF ('verify level 0')
@@ -185,7 +185,7 @@ c                              0.05-.4 seem best
 
          CALL E04UEF ('verify level 0')
          CALL E04UEF ('derivative level = 0')
-         write (ctol,'(g14.7)') nopt(49)
+         write (ctol,'(d16.10)') nopt(49)
          CALL E04UEF ('difference interval ='//ctol)
 
       end if
@@ -360,8 +360,6 @@ c                                 if logical arg = T use implicit ordering
       do i = 1, icp
          gval = gval - rcp(i)*mu(i)
       end do
-
-      istuff(3) = istuff(3) + 1
 
       if (lopt(57).and.istuff(2).ne.0.and.(nvar.lt.nstot(rids).or.
      *    sum1.ge.one.and.sum1.le.1d0+zero).and.rsum.gt.zero) then
