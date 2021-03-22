@@ -71,7 +71,7 @@ c-----------------------------------------------------------------------
       common/ cstabo /abort1
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       save ax, x, clamda, w, iw
 c-----------------------------------------------------------------------
@@ -252,7 +252,7 @@ c-----------------------------------------------------------------------
       integer is(k21+k5), iw(liw)
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       integer jphct
       double precision g2, cp2, c2tot

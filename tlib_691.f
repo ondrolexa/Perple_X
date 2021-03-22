@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated March 19, 2021.',
+     *     'Perple_X version 6.9.1, source updated March 22, 2021.',
 
      *     'Copyright (C) 1986-2020 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -131,7 +131,7 @@ c----------------------------------------------------------------------
       common/ cst6 /icomp,istct,iphct,icp
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -168,22 +168,24 @@ c                                 precision (eps)
       wmach(3) = r2
 c                                 feasibility tolerance (often used as numeric zero)
       wmach(4) = dsqrt(r2)
+      wmach(9) = dmax1(1d0/wmach(4),1d2)
 
       nopt(51) = wmach(2)
       nopt(52) = 2d0*wmach(3)
       nopt(53) = wmach(1)
-c                                 infinite log + 1, for conigurational entropy derivatives
+c                                 infinite log + 1, for configurational entropy derivatives
       nopt(50) = wmach(4)/1d4
       nopt(54) = 1d0 + dlog(nopt(50))
       nopt(55) = 1d0 + nopt(50)
       nopt(56) = 1d0 - nopt(50)
 
       wmach(5) = 1d0 + r2
-c                                 largest number
-      wmach(6) = dsqrt(1d0/huge(0d0))
-      wmach(7) = huge(0d0)
+c                                 largest number, sqrt
+      wmach(7) = huge(0d0)**(0.998d0)
       wmach(8) = dsqrt(wmach(7))
-      wmach(9) = dmax1(1d0/wmach(4),1d2)
+c                                 smallest number, sqrt
+      wmach(10) = 1d0/wmach(7)
+      wmach(6) = dsqrt(wmach(10))
 c                                 solution composition zero and one
       zero = dsqrt(r2)
       r1 = 1d0 + zero

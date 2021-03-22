@@ -79,7 +79,7 @@ C     .. Scalars in Common ..
      *                  NOUT, NPROB
       LOGICAL           HEADER, LCDBG, NEWOPT, PRNT
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM), WMACH(15)
+      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM)
       INTEGER           ILCDBG(LDBG), IPADLC(14), IPSVLC(MXPARM),
      *                  LOCLC(LENLC), NFIX(2)
 C     .. Local Scalars ..
@@ -117,7 +117,10 @@ C     .. Intrinsic Functions ..
 C     .. Common blocks ..
       COMMON            /AE04MF/LOCLC
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04MF/NEWOPT
       COMMON            /BE04NB/LENNAM, LDT, NCOLT, LDQ
       COMMON            /CE04MF/TOLX0, TOLINC, KDEGEN, NDEGEN, ITNFIX,
@@ -137,19 +140,14 @@ C     .. Equivalences ..
       EQUIVALENCE       (IPRMLC(1),IDBGLC), (RPRMLC(1),BIGBND)
       EQUIVALENCE       (MSGLC,MSGLVL), (IDBGLC,IDBG), (LDBGLC,MSGDBG)
 C     .. Save statement ..
-      SAVE              /AX02ZA/, /AE04MF/, /BE04MF/, /FE04MF/, /GE04MF/
+      SAVE              /AE04MF/, /BE04MF/, /FE04MF/, /GE04MF/
 C     .. Data statements ..
-      DATA              TITLE/' *** E04MFF'/
-C     .. Executable Statements ..
-C
-C     Set the machine-dependent constants.
-C
-      CALL X02ZAZ
-C
-      EPSMCH = WMACH(3)
-      RTEPS = WMACH(4)
-      NOUT = WMACH(11)
-      NERR = WMACH(12)
+      DATA              TITLE/' *** lpsol'/
+c----------------------------------------------------------------------
+      epsmch = wmach(3)
+      rteps = wmach(4)
+      nout = 6
+      nerr = 6
 C
       EPSPT3 = EPSMCH**POINT3
       EPSPT5 = RTEPS
@@ -545,10 +543,7 @@ C
       SUBROUTINE nlpsol (N,NCLIN,NCNLN,LDA,LDCJU,LDR,A,BL,BU,CONFUN,
      *                  OBJFUN,ITER,ISTATE,C,CJACU,CLAMDA,OBJF,GRADU,R,
      *                  X,IW,LENIW,W,LENW,IUSER,USER,IFAIL)
-C     MARK 14 RE-ISSUE.  NAG COPYRIGHT 1989.
-C     MARK 15B REVISED. IER-951 (NOV 1991).
-C     MARK 16 REVISED. IER-1077 (JUL 1993).
-C
+
 C     ==================================================================
 C     E04UCF   solves the nonlinear program
 C
@@ -657,7 +652,7 @@ C     .. Scalars in Common ..
       LOGICAL           CMDBG, INCRUN, LSDBG, NPDBG, UNITQ
 C     .. Arrays in Common ..
       DOUBLE PRECISION  RPADLS(23), RPADNP(22), RPSVLS(MXPARM),
-     *                  RPSVNP(MXPARM), WMACH(15)
+     *                  RPSVNP(MXPARM)
       INTEGER           ICMDBG(LDBG), ILSDBG(LDBG), INPDBG(LDBG),
      *                  IPADLS(18), IPADNP(12), IPSVLS(MXPARM),
      *                  IPSVNP(MXPARM), JVERFY(4), LOCLS(LENLS),
@@ -700,7 +695,10 @@ C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /AE04NC/LOCLS
       COMMON            /AE04UC/LOCNP
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04NB/LENNAM, LDT, NCOLT, LDQ
       COMMON            /BE04UC/LVLDIF, NCDIFF, NFDIFF, LFDSET
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
@@ -730,19 +728,14 @@ C     .. Equivalences ..
       EQUIVALENCE       (LDBGLS,MNRDBG), (LDBGNP,MJRDBG), (MSGLS,MSGQP)
 C     .. Save statement ..
       SAVE              /DE04NC/, /EE04NC/, /GE04UC/, /HE04UC/,
-     *                  /AX02ZA/, /FE04NC/
+     *                  /FE04NC/
 C     .. Data statements ..
       DATA              TITLE/' *** E04UCF'/
-C     .. Executable Statements ..
-C
-C     Set the machine-dependent constants.
-C
-      CALL X02ZAZ
-C
-      EPSMCH = WMACH(3)
-      RTEPS = WMACH(4)
-      NOUT = WMACH(11)
-      NERR = WMACH(12)
+c----------------------------------------------------------------------
+      epsmch = wmach(3)
+      rteps = wmach(4)
+      nout = 6
+      nerr = 6
 C
       EPSPT3 = EPSMCH**POINT3
       EPSPT5 = RTEPS
@@ -10294,7 +10287,6 @@ C     .. Scalars in Common ..
       INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
       LOGICAL           INCRUN, NPDBG
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
       INTEGER           INPDBG(LDBG)
 C     .. Local Scalars ..
       DOUBLE PRECISION  PTERM, PTERM2, QNORM, RHO1, RHOI, RHOMIN,
@@ -10312,11 +10304,13 @@ C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX, MIN, SQRT
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /DE04UC/RHOMAX, RHONRM, RHODMP, SCALE, INCRUN
       COMMON            /FE04UC/INPDBG, NPDBG
-C     .. Save statement ..
-      SAVE              /AX02ZA/
+
 C     .. Executable Statements ..
 C
       IF (NCNLN.EQ.0) RETURN
@@ -11227,7 +11221,6 @@ C     .. Scalars in Common ..
      *                  NCDIFF, NFDIFF, NOUT
       LOGICAL           INCRUN, NPDBG
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
       INTEGER           INPDBG(LDBG)
 C     .. Local Scalars ..
       DOUBLE PRECISION  ALFBST, CS1JDX, CSJDX, CURVC, CURVLF, EPSAF,
@@ -11249,15 +11242,15 @@ C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX, MIN
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04UC/LVLDIF, NCDIFF, NFDIFF, LFDSET
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
       COMMON            /DE04UC/RHOMAX, RHONRM, RHODMP, SCALE, INCRUN
       COMMON            /NPDEBG/INPDBG, NPDBG
-C     .. Save statement ..
-      SAVE              /AX02ZA/
-C     .. Executable Statements ..
-C
+
       EPSMCH = WMACH(3)
 C
       IF ( .NOT. NEEDFD .AND. NCNLN.GT.0) CS1JDX = DDOT(NCNLN,CS1,1,
@@ -12667,8 +12660,6 @@ C     .. Array Arguments ..
       INTEGER           ISTATE(*), KACTIV(N), KX(N)
 C     .. Scalars in Common ..
       DOUBLE PRECISION  ASIZE, DTMAX, DTMIN
-C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
 C     .. Local Scalars ..
       DOUBLE PRECISION  CNDMAX, RNORM, ROWMAX, RTMAX
       INTEGER           I, IADD, IARTIF, IFIX, ISWAP, JADD, K, L, NZADD
@@ -12678,11 +12669,11 @@ C     .. External Functions ..
 C     .. External Subroutines ..
       EXTERNAL          E04NCV, F06FLF
 C     .. Common blocks ..
-      COMMON            /AX02ZA/WMACH
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /DE04NB/ASIZE, DTMAX, DTMIN
-C     .. Save statement ..
-      SAVE              /AX02ZA/
-C     .. Executable Statements ..
+
       RTMAX = WMACH(8)
 C
 C     Estimate the condition number of the constraints that are not
@@ -12859,7 +12850,7 @@ C     .. Scalars in Common ..
      *                  NOUT, NPROB
       LOGICAL           CMDBG, HEADER, LCDBG, PRNT
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM), WMACH(15)
+      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM)
       INTEGER           ICMDBG(LDBG), ILCDBG(LDBG), IPADLC(14),
      *                  IPSVLC(MXPARM), LOCLC(LENLC), NFIX(2)
 C     .. Local Scalars ..
@@ -12890,7 +12881,10 @@ C     .. Intrinsic Functions ..
 C     .. Common blocks ..
       COMMON            /AE04MF/LOCLC
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04NB/LENNAM, LDT, NCOLT, LDQ
       COMMON            /CE04MF/TOLX0, TOLINC, KDEGEN, NDEGEN, ITNFIX,
      *                  NFIX
@@ -12910,7 +12904,7 @@ C     .. Equivalences ..
       EQUIVALENCE       (IPRMLC(1),IDBGLC), (RPRMLC(1),BIGBND)
       EQUIVALENCE       (MSGLC,MSGLVL), (IDBGLC,IDBG), (LDBGLC,MSGDBG)
 C     .. Save statement ..
-      SAVE              /AX02ZA/, /AE04MF/, /FE04MF/, /GE04MF/, FIRSTV
+      SAVE              /AE04MF/, /FE04MF/, /GE04MF/, FIRSTV
 C     .. Executable Statements ..
 C
 C     Specify the machine-dependent parameters.
@@ -13574,7 +13568,7 @@ C     .. Scalars in Common ..
       LOGICAL           CMDBG, INCRUN, NPDBG
 C     .. Arrays in Common ..
       DOUBLE PRECISION  RPADLS(23), RPADNP(22), RPSVLS(MXPARM),
-     *                  RPSVNP(MXPARM), WMACH(15)
+     *                  RPSVNP(MXPARM)
       INTEGER           ICMDBG(LDBG), INPDBG(LDBG), IPADLS(18),
      *                  IPADNP(12), IPSVLS(MXPARM), IPSVNP(MXPARM),
      *                  JVERFY(4), LOCLS(LENLS), LOCNP(LENNP)
@@ -13617,7 +13611,10 @@ C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /AE04NC/LOCLS
       COMMON            /AE04UC/LOCNP
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04NB/LENNAM, LDT, NCOLT, LDZY
       COMMON            /BE04UC/LVLDIF, NCDIFF, NFDIFF, LFDSET
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
@@ -13644,7 +13641,7 @@ C     .. Equivalences ..
       EQUIVALENCE       (IDBGNP,IDBG), (ITMXNP,NMAJOR), (ITMAX2,NMINOR)
       EQUIVALENCE       (LDBGLS,MNRDBG), (LDBGNP,MJRDBG), (MSGLS,MSGQP)
 C     .. Save statement ..
-      SAVE              /AX02ZA/, /DE04NC/, /EE04NC/, /GE04UC/, /HE04UC/
+      SAVE              /DE04NC/, /EE04NC/, /GE04UC/, /HE04UC/
 C     .. Executable Statements ..
 C
 C     Specify machine-dependent parameters.
@@ -14505,7 +14502,7 @@ C     .. Scalars in Common ..
      *                  NPROB
       LOGICAL           CMDBG, LCDBG, NEWOPT
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM), WMACH(15)
+      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM)
       INTEGER           ICMDBG(LDBG), ILCDBG(LDBG), IPADLC(14),
      *                  IPSVLC(MXPARM), NFIX(2)
 C     .. Local Scalars ..
@@ -14524,7 +14521,10 @@ C     .. Intrinsic Functions ..
       INTRINSIC         LEN, MAX, MIN, MOD
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04MF/NEWOPT
       COMMON            /CE04MF/TOLX0, TOLINC, KDEGEN, NDEGEN, ITNFIX,
      *                  NFIX
@@ -14541,7 +14541,7 @@ C     .. Equivalences ..
       EQUIVALENCE       (IPRMLC(1),IDBGLC), (RPRMLC(1),BIGBND)
       EQUIVALENCE       (MSGLC,MSGLVL), (IDBGLC,IDBG), (LDBGLC,MSGDBG)
 C     .. Save statement ..
-      SAVE              /AX02ZA/, /BE04MF/, /FE04MF/, /GE04MF/
+      SAVE              /BE04MF/, /FE04MF/, /GE04MF/
 C     .. Data statements ..
       DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'cold', 'warm',
      *                  'hot '/
@@ -14694,7 +14694,6 @@ C     .. Scalars in Common ..
       INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
       LOGICAL           CMDBG
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
       INTEGER           ICMDBG(LDBG)
 C     .. Local Scalars ..
       DOUBLE PRECISION  CNDMAX, COND, DELTA, DRZZ, DTNEW, RNORM, ROWMAX,
@@ -14714,14 +14713,14 @@ C     .. Intrinsic Functions ..
       INTRINSIC         MAX, MIN
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
       COMMON            /DE04NB/ASIZE, DTMAX, DTMIN
       COMMON            /FE04NB/ICMDBG, CMDBG
-C     .. Save statement ..
-      SAVE              /AX02ZA/
-C     .. Executable Statements ..
-C
+
       RTMAX = WMACH(8)
 C
       JT = NZ + 1
@@ -14976,7 +14975,7 @@ C     .. Scalars in Common ..
       LOGICAL           CMDBG, LSDBG, NEWOPT, NPDBG
 C     .. Arrays in Common ..
       DOUBLE PRECISION  RPADLS(23), RPADNP(22), RPSVLS(MXPARM),
-     *                  RPSVNP(MXPARM), WMACH(15)
+     *                  RPSVNP(MXPARM)
       INTEGER           ICMDBG(LDBG), ILSDBG(LDBG), INPDBG(LDBG),
      *                  IPADLS(18), IPADNP(12), IPSVLS(MXPARM),
      *                  IPSVNP(MXPARM), JVERFY(4)
@@ -14997,7 +14996,10 @@ C     .. Intrinsic Functions ..
       INTRINSIC         DBLE, LEN, MAX, MOD
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04UC/LVLDIF, NCDIFF, NFDIFF, LFDSET
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
       COMMON            /CE04NC/ILSDBG, LSDBG
@@ -15022,7 +15024,7 @@ C     .. Equivalences ..
       EQUIVALENCE       (IDBGNP,IDBG), (ITMXNP,NMAJOR), (ITMAX2,NMINOR)
       EQUIVALENCE       (LDBGLS,MNRDBG), (LDBGNP,MJRDBG), (MSGLS,MSGQP)
 C     .. Save statement ..
-      SAVE              /AX02ZA/, /EE04UC/, /DE04NC/, /EE04NC/,
+      SAVE              /EE04UC/, /DE04NC/, /EE04NC/,
      *                  /GE04UC/, /HE04UC/
 C     .. Data statements ..
       DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'cold', 'warm',
@@ -15031,7 +15033,7 @@ C     .. Data statements ..
 C     .. Executable Statements ..
 C
       EPSMCH = WMACH(3)
-      NOUT = WMACH(11)
+      NOUT = 6
 C
       CONDBD = MAX(ONE/(HUNDRD*EPSMCH*DBLE(N)),TENP6)
 C
@@ -15762,7 +15764,7 @@ C     .. Scalars in Common ..
      *                  NOUT, NPROB
       LOGICAL           CMDBG, LSDBG
 C     .. Arrays in Common ..
-      DOUBLE PRECISION  RPADLS(23), RPSVLS(MXPARM), WMACH(15)
+      DOUBLE PRECISION  RPADLS(23), RPSVLS(MXPARM)
       INTEGER           ICMDBG(LDBG), ILSDBG(LDBG), IPADLS(18),
      *                  IPSVLS(MXPARM), LOCLS(LENLS)
 C     .. Local Scalars ..
@@ -15796,7 +15798,10 @@ C     .. Intrinsic Functions ..
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /AE04NC/LOCLS
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /BE04NB/LENNAM, LDT, NCOLT, LDZY
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
       COMMON            /CE04NC/ILSDBG, LSDBG
@@ -15811,7 +15816,7 @@ C     .. Equivalences ..
       EQUIVALENCE       (IPRMLS(1),IDBGLS), (RPRMLS(1),BIGBND)
       EQUIVALENCE       (MSGLS,MSGLVL), (IDBGLS,IDBG), (LDBGLS,MSGDBG)
 C     .. Save statement ..
-      SAVE              /AX02ZA/, /DE04NC/, /EE04NC/
+      SAVE              /DE04NC/, /EE04NC/
 C     .. Executable Statements ..
       FLMAX = WMACH(7)
 C
@@ -16903,8 +16908,7 @@ C     .. Scalars in Common ..
       DOUBLE PRECISION  TOLINC, TOLX0
       INTEGER           IPRINT, ISUMM, ITNFIX, KDEGEN, LINES1, LINES2,
      *                  NDEGEN, NOUT
-C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
+
       INTEGER           NFIX(2)
 C     .. Local Scalars ..
       DOUBLE PRECISION  D, EPSMCH, TOLX1, TOLZ
@@ -16916,11 +16920,14 @@ C     .. Intrinsic Functions ..
       INTRINSIC         ABS
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /CE04MF/TOLX0, TOLINC, KDEGEN, NDEGEN, ITNFIX,
      *                  NFIX
 C     .. Save statement ..
-      SAVE              /AX02ZA/, TOLZ
+      SAVE              TOLZ
 C     .. Executable Statements ..
 C
       NMOVED = 0
@@ -17299,8 +17306,7 @@ C     .. Array Arguments ..
 C     .. Scalars in Common ..
       INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
       LOGICAL           NPDBG
-C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
+
       INTEGER           INPDBG(LDBG)
 C     .. Local Scalars ..
       DOUBLE PRECISION  B1, B2, BIGLOW, BIGUPP, CMIN, RES, RESL, RESU,
@@ -17314,12 +17320,12 @@ C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MIN
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /FE04UC/INPDBG, NPDBG
-C     .. Save statement ..
-      SAVE              /AX02ZA/
-C     .. Executable Statements ..
-C
+
       NFIXED = N - NFREE
       LINACT = NACTIV
       NPLIN = N + NCLIN
@@ -17847,8 +17853,7 @@ C     .. Array Arguments ..
 C     .. Scalars in Common ..
       INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
       LOGICAL           CMDBG
-C     .. Arrays in Common ..
-      DOUBLE PRECISION  WMACH(15)
+
       INTEGER           ICMDBG(LDBG)
 C     .. Local Scalars ..
       DOUBLE PRECISION  B1, B2, BIGLOW, BIGUPP, COLMIN, COLSIZ, FLMAX,
@@ -17865,12 +17870,12 @@ C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MIN
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /AX02ZA/WMACH
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       COMMON            /FE04NB/ICMDBG, CMDBG
-C     .. Save statement ..
-      SAVE              /AX02ZA/
-C     .. Executable Statements ..
-C
+
       FLMAX = WMACH(7)
       BIGLOW = -BIGBND
       BIGUPP = BIGBND
@@ -19959,9 +19964,9 @@ C     .. External Functions ..
       EXTERNAL          DNRM2, X02AJF, P01ABF
 C     .. External Subroutines ..
       EXTERNAL          DGEMV, DGER, DSWAP, F06FRF, P01ABW, P01ABY
-C     .. Intrinsic Functions ..
-      INTRINSIC         ABS, MAX, MIN, SQRT
-C     .. Executable Statements ..
+
+      double precision wmach
+      common/ cstmch /wmach(10)
 C
 C     Check the input parameters.
 C
@@ -19984,7 +19989,7 @@ C
          IFAIL = P01ABF(IFAIL,0,SRNAME,0,REC)
          RETURN
       END IF
-      EPS = X02AJF()
+      EPS = wmach(3)
       DO 20 J = 1, N
          WORK(J) = DNRM2(M,A(1,J),1)
          WORK(J+N) = WORK(J)
@@ -20734,11 +20739,13 @@ C     .. Save statement ..
       SAVE               FIRST, EPS, REPS, RTEPS, RRTEPS
 C     .. Data statements ..
       DATA               FIRST/ .TRUE. /
-C     ..
+
+      double precision wmach
+      common/ cstmch /wmach(10)
 C     .. Executable Statements ..
       IF( FIRST )THEN
          FIRST  = .FALSE.
-         EPS    =  X02AJF( )
+         EPS    =  wmach(3)
          REPS   =  1/EPS
          RTEPS  =  SQRT( EPS )
          RRTEPS =  1/RTEPS
@@ -20945,15 +20952,15 @@ C     .. Local Scalars ..
 C     .. External Functions ..
       DOUBLE PRECISION         X02AJF
       EXTERNAL                 X02AJF
-C     .. Intrinsic Functions ..
-      INTRINSIC                ABS, MAX
-C     ..
+
+      double precision wmach
+      common/ cstmch /wmach(10)
 C     .. Executable Statements ..
       K = 0
       IF( N.GE.1 )THEN
          IX = 1
          IF( TOL.LT.ZERO )THEN
-            TL = X02AJF( )
+            TL = wmach(3)
          ELSE
             TL = TOL
          END IF
@@ -21429,12 +21436,10 @@ C     .. Parameters ..
 C     .. Local Scalars ..
       DOUBLE PRECISION      ABSB, DIV, FLMAX, FLMIN
       LOGICAL               FIRST
-C     .. External Functions ..
-      DOUBLE PRECISION      X02AMF
-      EXTERNAL              X02AMF
-C     .. Intrinsic Functions ..
-      INTRINSIC             ABS, SIGN
-C     .. Save statement ..
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       SAVE                  FIRST, FLMIN, FLMAX
 C     .. Data statements ..
       DATA                  FIRST/ .TRUE. /
@@ -21451,7 +21456,7 @@ C     .. Executable Statements ..
 C
          IF( FIRST )THEN
             FIRST = .FALSE.
-            FLMIN =  X02AMF( )
+            FLMIN =  wmach(10)
             FLMAX =  1/FLMIN
          END IF
 C
@@ -21994,12 +21999,10 @@ C
 C     .. Local Scalars ..
       DOUBLE PRECISION      FLMAX, FLMIN, NORM, SQT
       LOGICAL               FIRST
-C     .. External Functions ..
-      DOUBLE PRECISION      X02AMF
-      EXTERNAL              X02AMF
-C     .. Intrinsic Functions ..
-      INTRINSIC             SQRT
-C     .. Save statement ..
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       SAVE                  FIRST, FLMAX
 C     .. Data statements ..
       DATA                  FIRST/ .TRUE. /
@@ -22007,7 +22010,7 @@ C     ..
 C     .. Executable Statements ..
       IF( FIRST )THEN
          FIRST = .FALSE.
-         FLMIN =  X02AMF( )
+         FLMIN =  wmach(10)
          FLMAX =  1/FLMIN
       END IF
 C
@@ -22486,9 +22489,10 @@ C     .. External Functions ..
       EXTERNAL           X02AJF
 C     .. External Subroutines ..
       EXTERNAL           F06FJF, DSCAL
-C     .. Intrinsic Functions ..
-      INTRINSIC          ABS, MAX, SIGN, SQRT
-C     .. Save statement ..
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       SAVE               EPS, FIRST
 C     .. Data statements ..
       DATA               FIRST/ .TRUE. /
@@ -22502,7 +22506,7 @@ C     .. Executable Statements ..
 C
          IF( FIRST )THEN
             FIRST = .FALSE.
-            EPS   =  X02AJF( )
+            EPS   =  wmach(3)
          END IF
 C
 C        Treat case where P is a 2 by 2 matrix specially.
@@ -23544,44 +23548,6 @@ C
      *  '  ***** ',/8X,'Value supplied is',/8X,A)
       END
 
-
-      INTEGER FUNCTION X02BHF()
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     RETURNS THE MODEL PARAMETER, B.
-C
-C     .. Executable Statements ..
-      X02BHF =     2
-      RETURN
-      END
-      INTEGER FUNCTION X02BJF()
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     RETURNS THE MODEL PARAMETER, p.
-C
-C     .. Executable Statements ..
-      X02BJF =    53
-      RETURN
-      END
-      LOGICAL FUNCTION X02DAF(X)
-C     MARK 8 RELEASE. NAG COPYRIGHT 1980.
-C     MARK 11.5(F77) REVISED. (SEPT 1985.)
-C
-C     RETURNS .FALSE. IF THE SYSTEM SETS UNDERFLOWING QUANTITIES
-C     TO ZERO, WITHOUT ANY ERROR INDICATION OR UNDESIRABLE WARNING
-C     OR SYSTEM OVERHEAD.
-C     RETURNS .TRUE. OTHERWISE, IN WHICH CASE CERTAIN LIBRARY
-C     ROUTINES WILL TAKE SPECIAL PRECAUTIONS TO AVOID UNDERFLOW
-C     (USUALLY AT SOME COST IN EFFICIENCY).
-C
-C     X IS A DUMMY ARGUMENT
-C
-C     .. Scalar Arguments ..
-      DOUBLE PRECISION        X
-C     .. Executable Statements ..
-      X02DAF = .FALSE.
-      RETURN
-      END
       SUBROUTINE X04ABF(I,NADV)
 C     MARK 7 RELEASE. NAG COPYRIGHT 1978
 C     MARK 7C REVISED IER-190 (MAY 1979)
@@ -23719,102 +23685,9 @@ C
 C     IBASE = WMACH( 1 ) + 0.25
 C
 C***********************************************************************
-C
-C     .. Parameters ..
-      DOUBLE PRECISION ZERO
-      PARAMETER        (ZERO=0.0D+0)
-C     .. Arrays in Common ..
-      DOUBLE PRECISION WMACH(15)
-C     .. Local Scalars ..
-      DOUBLE PRECISION EPS, RMAX, RMIN, UNDFLW
-      INTEGER          NBASE, NDIGIT, NERR, NOUT
-      LOGICAL          FIRST
-C     .. External Functions ..
-      DOUBLE PRECISION X02AJF, X02AMF
-      INTEGER          X02BHF, X02BJF
-      LOGICAL          X02DAF
-      EXTERNAL         X02AJF, X02AMF, X02BHF, X02BJF, X02DAF
-C     .. External Subroutines ..
-      EXTERNAL         X04AAF, X04ABF
-C     .. Intrinsic Functions ..
-      INTRINSIC        SQRT
-C     .. Common blocks ..
-      COMMON           /AX02ZA/WMACH
-C     .. Save statement ..
-      SAVE             /AX02ZA/, FIRST
-C     .. Data statements ..
-      DATA             FIRST/.TRUE./
-C     .. Executable Statements ..
-C
-      IF (FIRST) THEN
-         FIRST = .FALSE.
-C
-         IF (X02DAF(ZERO)) THEN
-            UNDFLW = 1
-         ELSE
-            UNDFLW = 0
-         END IF
-         NBASE = X02BHF()
-         NDIGIT = X02BJF()
-         EPS = X02AJF()
-         RMIN = X02AMF()
-         RMAX = 1/RMIN
-C
-         WMACH(1) = NBASE
-         WMACH(2) = NDIGIT
-         WMACH(3) = EPS
-         WMACH(4) = SQRT(EPS)
-         WMACH(5) = RMIN
-         WMACH(6) = SQRT(RMIN)
-         WMACH(7) = RMAX
-         WMACH(8) = SQRT(RMAX)
-         WMACH(9) = UNDFLW
-      END IF
-      CALL X04ABF(0,NOUT)
-      WMACH(10) = 5
-      WMACH(11) = NOUT
-      CALL X04AAF(0,NERR)
-      WMACH(12) = NERR
-      RETURN
-C
-C     End of  X02ZAZ. (MCHPAR)
-C
-      END
-      DOUBLE PRECISION FUNCTION X02AJF()
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     RETURNS  (1/2)*B**(1-P)  IF ROUNDS IS .TRUE.
-C     RETURNS  B**(1-P)  OTHERWISE
-C
-      DOUBLE PRECISION X02CON
-      DATA X02CON /1.11022302462516D-16 /
-C     .. Executable Statements ..
-      X02AJF = X02CON
-      RETURN
+
       END
 
-      DOUBLE PRECISION FUNCTION X02AMF()
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     RETURNS THE 'SAFE RANGE' PARAMETER
-C     I.E. THE SMALLEST POSITIVE MODEL NUMBER Z SUCH THAT
-C     FOR ANY X WHICH SATISFIES X.GE.Z AND X.LE.1/Z
-C     THE FOLLOWING CAN BE COMPUTED WITHOUT OVERFLOW, UNDERFLOW OR OTHER
-C     ERROR
-C
-C        -X
-C        1.0/X
-C        SQRT(X)
-C        LOG(X)
-C        EXP(LOG(X))
-C        Y**(LOG(X)/LOG(Y)) FOR ANY Y
-C
-      DOUBLE PRECISION X02CON
-      DATA X02CON /2.22507385850721D-308 /
-C     .. Executable Statements ..
-      X02AMF = X02CON
-      RETURN
-      END
       subroutine e04uef(string)
 c----------------------------------------------------------------------
 c     e04uef  loads the option supplied in string into the relevant
@@ -23825,8 +23698,8 @@ c     .. scalars in common ..
       logical           newopt
 
       double precision wmach
-      common/ cstmch /wmach(9)
-c     .. local scalars ..
+      common/ cstmch /wmach(10)
+
       integer           nout
       logical           first, prnt
       character*16      key
@@ -23903,7 +23776,7 @@ c     .. local arrays ..
       character*80      rec(5)
 c     .. common blocks ..
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04mf/newopt
 c     .. save statement ..

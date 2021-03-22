@@ -98,7 +98,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04mf/newopt
       common            /be04nb/lennam, ldt, ncolt, ldq
@@ -645,7 +645,7 @@ c     .. common blocks ..
       common            /ae04uc/locnp
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04nb/lennam, ldt, ncolt, ldq
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
@@ -8855,7 +8855,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /de04uc/rhomax, rhonrm, rhodmp, scale, incrun
       common            /fe04uc/inpdbg, npdbg
@@ -9685,7 +9685,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
@@ -10946,7 +10946,7 @@ c     .. external functions ..
       external          dnrm2
 c     .. common blocks ..
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /de04nb/asize, dtmax, dtmin
 c----------------------------------------------------------------------
@@ -11145,7 +11145,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04nb/lennam, ldt, ncolt, ldq
       common            /ce04mf/tolx0, tolinc, kdegen, ndegen, itnfix,
@@ -11809,7 +11809,7 @@ c     .. common blocks ..
       common            /ae04uc/locnp
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04nb/lennam, ldt, ncolt, ldzy
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
@@ -12616,7 +12616,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04mf/newopt
       common            /ce04mf/tolx0, tolinc, kdegen, ndegen, itnfix,
@@ -12782,7 +12782,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
       common            /de04nb/asize, dtmax, dtmin
@@ -13036,7 +13036,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04uc/lvldif, ncdiff, nfdiff, lfdset
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
@@ -13287,7 +13287,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       flmax = wmach(7)
       biglow = -bigbnd
@@ -13725,7 +13725,7 @@ c     .. common blocks ..
       common            /ae04nc/locls
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04nb/lennam, ldt, ncolt, ldzy
       common            /ce04nb/epspt3, epspt5, epspt8, epspt9
@@ -14696,7 +14696,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /ce04mf/tolx0, tolinc, kdegen, ndegen, itnfix,
      *                  nfix
@@ -15058,7 +15058,7 @@ c     .. common blocks ..
       common            /fe04uc/inpdbg, npdbg
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       nfixed = n - nfree
       linact = nactiv
@@ -15551,7 +15551,7 @@ c     .. common blocks ..
       common            /ae04nb/nout, iprint, isumm, lines1, lines2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /fe04nb/icmdbg, cmdbg
 c----------------------------------------------------------------------
@@ -19026,7 +19026,7 @@ c     .. local arrays ..
       character*80      rec(5)
 c     .. common blocks ..
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /be04mf/newopt
 c     .. save statement ..
@@ -19088,7 +19088,7 @@ c     .. scalars in common ..
       logical           newopt
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c     .. local scalars ..
       integer           nout
       logical           first, prnt

@@ -58,7 +58,7 @@ c DEBUG691                    dummies for NCNLN > 0
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       integer jphct
       double precision g2, cp2, c2tot
@@ -566,7 +566,7 @@ c-----------------------------------------------------------------------
      *                 gopt, sum, b(mcon)
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       double precision ayz
       common/ csty2z /ayz(h9,m20,m4)
@@ -928,7 +928,7 @@ c DEBUG691                    dummies for NCNLN > 0
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
