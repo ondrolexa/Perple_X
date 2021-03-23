@@ -135,7 +135,7 @@ c----------------------------------------------------------------------
       common/ cst6 /icomp,istct,iphct,icp
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -9866,7 +9866,7 @@ c-----------------------------------------------------------------------
       integer ipvt(k8),i,j,k,ier,ip1,n,istr,nm1
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c-----------------------------------------------------------------------
       ier = 0
 c                            initialize ipvt,d

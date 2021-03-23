@@ -580,7 +580,7 @@ c----------------------------------------------------------------------
       double precision a, b, absb, absa, div
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       absa = dabs(a)
       absb = dabs(b)
@@ -1752,7 +1752,7 @@ c----------------------------------------------------------------------
       logical            left, right
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       left = (side.eq.'l')
       right = (side.eq.'r')
@@ -2076,7 +2076,7 @@ c----------------------------------------------------------------------
       double precision beta, scale, ssq
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       if (n.lt.1) then
          zeta = 0d0
@@ -2157,7 +2157,7 @@ c----------------------------------------------------------------------
       integer n
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       if (n.lt.1) then
 
@@ -2253,7 +2253,7 @@ c----------------------------------------------------------------------
       external adivb
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       if (b.eq.0d0) then
 
@@ -2629,7 +2629,7 @@ c----------------------------------------------------------------------
       integer     ix, k
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
 
       k = 0
@@ -2841,7 +2841,7 @@ c----------------------------------------------------------------------
      *                 temp
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       if ((min(n, k1).lt.1).or.(k2.le.k1).or.(k2.gt.n))return
 
@@ -2908,7 +2908,7 @@ c----------------------------------------------------------------------
       double precision a(lda, *), c(*), s(*), aij, ctemp, stemp, temp
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       if (min(n,k1).lt.1.or.k2.le.k1.or.k2.gt.n) return
 
@@ -2973,7 +2973,7 @@ c----------------------------------------------------------------------
       double precision scale, ssq, sqt, norm
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       sqt = dsqrt(ssq)
 
@@ -3161,7 +3161,7 @@ c-----------------------------------------------------------------------
       integer i, id, ix
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c-----------------------------------------------------------------------
       if (n.gt.0) then
          if (incd.eq.0.and.incx.ne.0) then
@@ -3378,7 +3378,7 @@ c  information  will  be  output  on  the  error message  channel.
       external          dnrm2
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
 c     check the input parameters.
 

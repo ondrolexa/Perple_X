@@ -16,13 +16,12 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,liw,lw,k,idead,inc,lphct,jter, iprint
-
-      character cit*4, ctol*14
+      integer i,liw,lw,k,idead,inc,lphct,jter, iprint, lpprob
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
-      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot
+      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot,
+     *                 tol
 
       integer iw(liw)
 
@@ -113,36 +112,15 @@ c                                load the adaptive refinement cpd g's
 c                                 idead = -1 tells lpnag to save parameters
 c                                 for subsequent warm starts
       idead = -1
-      iprint = 0 
+      iprint = 0
+      lpprob = 2
+      tol = wmach(4)
 
 c     if (lopt(28)) call begtim (2)
 
-      write (ctol,'(g14.7)') zero
-      write (cit,'(i4)') l6
-
-      call e04mhf ('nolist')
-      call e04mhf ('iteration limit = '//cit)
-      call e04mhf ('feasibility tolerance = '//ctol)
-
-      if (istart.eq.0) then
-
-         call e04mhf ('cold start')
-         istart = 1
-
-      else
-
-         call e04mhf ('warm start')
-
-      end if
-
-      call e04mhf ('problem type = lp')
-      write (ctol,'(i4)') iprint
-      call e04mhf ('print level = '//ctol)
-
       call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,
-     *            clamda,iw,liw,w,lw,idead,iprint)
-c DEBUG691 to account for the unmodified lpsol ifail setting
-      if (idead.lt.3) idead = 0
+     *            clamda,iw,liw,w,lw,idead,
+     *            iprint,istart,l6,tol,lpprob)
 
 c     if (lopt(28)) call endtim (2,.true.,'Static optimization ')
 
@@ -238,16 +216,14 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j,
-     *        idead1, jter, iprint
+     *        idead1, jter, iprint, lpprob
 
       logical quit, kterat
-
-      character cit*4, ctol*14
 
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision ax(k5), clamda(k21+k5), w(lw), tot(k5), gtot,
-     *                 ogtot, bl(k21+k5), bu(k21+k5), d2g(3)
+     *                 ogtot, bl(k21+k5), bu(k21+k5), d2g(3), tol
 
       integer is(k21+k5), iw(liw)
 
@@ -324,20 +300,8 @@ c                                 set idead = 0 to prevent lpsol from
 c                                 overwriting warm start parameters
          idead = 0
          iprint = 0
-
-c        if (lopt(28)) call begtim (8)
-c                                 do the optimization
-         write (ctol,'(d14.7)') zero
-         write (cit,'(i4)') l6
-
-         call e04mhf ('nolist')
-         call e04mhf ('iteration limit = '//cit)
-         call e04mhf ('feasibility tolerance = '//ctol)
-         call e04mhf ('cold start')
-c        call e04mhf ('problem type = lp')
-         write (ctol,'(i4)') iprint
-         call e04mhf ('print level = '//ctol)
-c        call e04mhf ('minimum sum of infeasibilities = yes')
+         lpprob = 2
+         tol = wmach(4)
 
          bl(1:jphct) = 0d0
          bu(1:jphct) = 1d0
@@ -346,9 +310,8 @@ c        call e04mhf ('minimum sum of infeasibilities = yes')
          bu(jphct+1:jphct+icp) = b(1:icp)
 
          call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,jter,gtot,ax,
-     *               clamda,iw,liw,w,lw,idead,iprint)
-c DEBUG691 to account for the unmodified lpsol ifail setting
-         if (idead.lt.3) idead = 0
+     *               clamda,iw,liw,w,lw,idead,
+     *               iprint,jstart,l6,tol,lpprob)
 
 c        if (lopt(28)) then 
 c           call endtim (8,.true.,'Dynamic optimization N ')

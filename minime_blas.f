@@ -32,7 +32,7 @@ c DEBUG691
      *                 clamda(m21),r(m19,m19),work(m23),rvars(9)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),yt(m4),
-     *                 zsite(m10,m11), pinc0,sum
+     *                 zsite(m10,m11), sum
 
 
       character ctol*20
@@ -550,9 +550,7 @@ c-----------------------------------------------------------------------
       logical bad, site, comp, clos, inv, zbad
 
       integer liw, lw, mvar, mcon, nvar, i, jter, iprint, iwarn,
-     *        iwarn1, iwarn2
-
-      character cit*4, ctol*14
+     *        iwarn1, iwarn2, lpprob
 
       double precision scp(k5), tol
 
@@ -714,32 +712,18 @@ c                                 cold start
       istart = 0
       idead = -1
       iprint = 0
+c                                 feasible point
+      lpprob = 1
 
 c     if (lopt(28)) call begtim (9)
 
-      write (ctol,'(d14.7)') tol
-      write (cit,'(i4)') l6
-
-      call e04mhf ('nolist')
-      call e04mhf ('iteration limit = '//cit)
-      call e04mhf ('feasibility tolerance = '//ctol)
-      call e04mhf ('print level = 0')
-      call e04mhf ('cold start')
-      call e04mhf ('problem type = fp')
-
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
-     *            clamda,iw,liw,wrk,lw,idead,iprint)
+     *            clamda,iw,liw,wrk,lw,idead,
+     *            iprint,istart,l6,tol,lpprob)
 
 c     if (lopt(28)) call endtim (9,.true.,'p2y inversion')
 
-c                                 reset ldt, ldq, istart for phase eq
-      istart = 0
-c DEBUG691 to account for the unmodified lpsol ifail setting
-      if (idead.le.3) then
-
-         idead = 0
-
-      else
+      if (idead.gt.0) then
 c                                 really bad inversion result
          if (iwarn.lt.11) then
 
@@ -896,7 +880,6 @@ c-----------------------------------------------------------------------
      *                 lapz(m20,m19)
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),xp(m14), ftol
-      character*14 ctol
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),

@@ -3375,7 +3375,7 @@ c-----------------------------------------------------------------------
       double precision t, p1, p2, p3, p4, dinc
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c-----------------------------------------------------------------------
 
       p1 = dexp(-t)
@@ -7463,7 +7463,7 @@ c-----------------------------------------------------------------------
       double precision a(m,*),d(m),rmax,tmax,temp,ratio
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c-----------------------------------------------------------------------
       error = .false.
 c                            initialize ipvt,d
@@ -19554,7 +19554,7 @@ c                                 configurational entropy variables:
       common/ cyt2 /pin(j3)
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -19946,7 +19946,7 @@ c                                 configurational entropy variables:
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 c----------------------------------------------------------------------
       ds = 0d0
       d2s = 0d0

@@ -36,7 +36,7 @@ c----------------------------------------------------------------------
       common/ ae04mf /loclc(15)
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       integer ldq,ldt,ncolt
       common/ be04nb /ldt,ncolt,ldq
@@ -314,7 +314,7 @@ c----------------------------------------------------------------------
       common/ ae04mf /loclc(15)
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common/ be04nb /ldt,ncolt,ldq
       common/ de04nb /asize, dtmax, dtmin
@@ -769,7 +769,7 @@ c        with its (1,1) element in position  (it,jt)  of the array  t.
       double precision  dnrm2, adivb
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common            /de04nb/asize, dtmax, dtmin
 
@@ -1062,7 +1062,7 @@ c        variables exactly on their bounds.
       integer           is, j, maxfix
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       common/ce04mf/tolx0, ndegen, itnfix, nfix
       save              tolz
@@ -1382,7 +1382,7 @@ c     gamma = 0.001 seems to be safe.
       common/ce04mf/tolx0, ndegen, itnfix, nfix
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
 c     tolpiv is a tolerance to exclude negligible elements of a'p.
 
@@ -1779,7 +1779,7 @@ c     columns of the  (ngq x n)  matrix  gqm'.
       common            /de04nb/asize, dtmax, dtmin
 
       double precision wmach
-      common/ cstmch /wmach(9)
+      common/ cstmch /wmach(10)
 
       overfl = .false.
       bound = jadd .le. n

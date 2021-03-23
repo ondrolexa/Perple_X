@@ -1,9 +1,15 @@
       SUBROUTINE lpsol (N,NCLIN,A,LDA,BL,BU,CVEC,ISTATE,X,ITER,OBJ,AX,
-     *                  CLAMDA,IW,LENIW,W,LENW,IFAIL,jprint)
-C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
-C
+     *                  CLAMDA,IW,LENIW,W,LENW,IFAIL,
+     *                  nsglvl,istart,jtmax2,tol,lpprob)
+
+c     iprint - print level
+c     istart - 0 - cold start, 1 - warm start, 2 - hot (no benefit)
+c     jtmax2 - maximum number of iterations, l6
+c     tol - feasibility tolerance
+c     lpprob - problem type
+
 C     ******************************************************************
-C     E04MFF  solves the linear programming problem
+C     lpsol  solves the linear programming problem
 C
 C           minimize               c' x
 C              x
@@ -44,7 +50,8 @@ C
 C     .. Parameters ..
       implicit none
 
-      integer jprint
+      integer nsglvl, jtmax2, istart, lpprob
+      double precision tol
 
       CHARACTER*6       SRNAME
       PARAMETER         (SRNAME='E04MFF')
@@ -109,11 +116,10 @@ C     .. External Functions ..
       EXTERNAL          DNRM2, P01ABF
 C     .. External Subroutines ..
       EXTERNAL          DCOPY, DSCAL, E04MFJ, E04MFK, E04MFP, E04MFR,
-     *                  E04MFT, E04MFU, E04MFV, E04MFW, E04MFZ, E04NBW,
-     *                  E04NFQ, F06DFF, F06FBF, F06FLF, X02ZAZ, X04BAF,
+     *                  E04MFT, E04MFV, E04MFZ, E04NBW,
+     *                  E04NFQ, ICOPY , SLOAD, F06FLF,X04BAF,
      *                  X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MAX
+
 C     .. Common blocks ..
       COMMON            /AE04MF/LOCLC
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
@@ -146,8 +152,48 @@ C     .. Data statements ..
 c----------------------------------------------------------------------
       epsmch = wmach(3)
       rteps = wmach(4)
+      msglvl = nsglvl
+      itmax2 = jtmax2
+      lcrash = istart
+
       nout = 6
       nerr = 6
+c                                 defaults, assigned to iprmlc and 
+c                                 rprmlc by equivalence
+c                                 ----------------------------------
+c                                 feasibility tolerance, sqrt(eps)
+      tolfea = tol
+c                                 problem type 1 - fp, 2 - lp
+      lprob = lpprob
+
+      IPRNT = NOUT
+      ISUMRY = -1
+      IPRINT = IPRNT
+      ISUMM = ISUMRY
+      KCHK = 50
+      KCYCLE = 10000
+      KDEGEN = KCYCLE
+      ITMAX1 = MAX(50,5*(N+NCLIN))
+      MAXACT = MAX(1,MIN(N,NCLIN))
+      MAXNZ = N
+      MXFREE = N
+
+      IF (NCLIN.LT.N) THEN
+         MXFREE = NCLIN + 1
+         MAXNZ = MXFREE
+      END IF
+C
+      MSGDBG = 0
+      IDBG = ITMAX1 + ITMAX2 + 1
+      TOLACT = 1d-2
+      BIGBND = 1.0D+20*0.99999D+0
+      BIGDX = BIGBND
+
+      LCDBG = .false.
+c                                     iprmlc and rprmlc may be changed(?) so
+c                                     copy into ipsvlc and rpsvlc
+      CALL ICOPY (MXPARM,IPRMLC,1,IPSVLC,1)
+      CALL DCOPY(MXPARM,RPRMLC,1,RPSVLC,1)
 C
       EPSPT3 = EPSMCH**POINT3
       EPSPT5 = RTEPS
@@ -163,11 +209,7 @@ C
       PRNT = .TRUE.
 C
       CONDMX = MAX(ONE/EPSPT5,HUNDRD)
-C
-C     Set the default values of the parameters.
-C
-      CALL E04MFW(N,NCLIN,TITLE)
-C
+
       LLPTYP = LPROB
       NCTOTL = N + NCLIN
 C
@@ -179,10 +221,6 @@ C
       ELSE IF (LLPTYP.EQ.2) THEN
          PRBTYP = 'LP'
          CSET = .TRUE.
-      ELSE
-         PRBTYP = 'illegal'
-         MSG = 'noprob'
-         GO TO 60
       END IF
 C
 C     Assign the dimensions of arrays in the parameter list of E04MFZ.
@@ -271,7 +309,7 @@ C
 C     ------------------------------------------------------------------
 C     Define the initial feasibility tolerances in CLAMDA.
 C     ------------------------------------------------------------------
-      IF (TOLFEA.GT.ZERO) CALL F06FBF(N+NCLIN,(TOLFEA),W(LFEATU),1)
+      IF (TOLFEA.GT.ZERO) CALL SLOAD(N+NCLIN,(TOLFEA),W(LFEATU),1)
 C
       CALL E04MFR('Initialize anti-cycling variables',MSGLVL,N,NCLIN,
      *            NMOVED,ITER,NUMINF,ISTATE,BIGBND,AX,BL,BU,CLAMDA,
@@ -360,10 +398,6 @@ C     ---------------------------------------------------------------
      *            BU,W(LFEATU),W(LT),X,W(LQ),W(LD),W(LWRK))
 C
       IF (ROWERR) THEN
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99981)
-            CALL X04BAF(IPRINT,REC(1))
-         END IF
          MSG = 'infeas'
          NUMINF = 1
          OBJ = ERRMAX
@@ -372,7 +406,7 @@ C
 C
       CALL E04MFZ(PRBTYP,MSG,CSET,NAMED,NAMES,RSET,UNITQ,ITER,ITMAX,
      *            JINF,NVIOL,N,NCLIN,LDA,NACTIV,NFREE,NRZ,NZ,ISTATE,
-     *            IW(LKACTV),IW(LKX),E04MFU,OBJ,NUMINF,XNORM,A,AX,BL,BU,
+     *            IW(LKACTV),IW(LKX),OBJ,NUMINF,XNORM,A,AX,BL,BU,
      *            CVEC,CLAMDA,W(LFEATU),X,IW,W)
 C
       FOUND = MSG .EQ. 'feasbl' .OR. MSG .EQ. 'optiml' .OR. MSG .EQ.
@@ -403,141 +437,51 @@ C
 C
 C     ==================================================================
 C     Print messages if required.
-C     Recover the optional parameters set by the user.
 C     ==================================================================
    60 IF (MSG.EQ.'optiml') THEN
          INFORM = 0
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99997) PRBTYP
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
 C
       ELSE IF (MSG.EQ.'feasbl') THEN
          INFORM = 0
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99998)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
 C
       ELSE IF (MSG.EQ.'weak  ') THEN
          INFORM = 1
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99996) PRBTYP
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) WRITE (ERRREC,FMT=99995)
-     *       PRBTYP
 C
       ELSE IF (MSG.EQ.'unbndd') THEN
          INFORM = 2
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99994) PRBTYP
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) WRITE (ERRREC,FMT=99993)
-     *       PRBTYP
 C
       ELSE IF (MSG.EQ.'infeas') THEN
          INFORM = 3
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99992)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) WRITE (ERRREC,FMT=99991)
-C
       ELSE IF (MSG.EQ.'itnlim') THEN
          INFORM = 4
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99990)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) WRITE (ERRREC,FMT=99989)
 C
       ELSE IF (MSG.EQ.'errors') THEN
          INFORM = 6
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99988) NERROR
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) WRITE (ERRREC,FMT=99987)
-     *       NERROR
 C
       ELSE IF (MSG.EQ.'noprob') THEN
          INFORM = 7
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99986)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) WRITE (ERRREC,FMT=99985)
       END IF
-C
-      IF (MSGLVL.GT.0) THEN
-C
-         IF (INFORM.LT.6) THEN
-            IF (NUMINF.EQ.0) THEN
-               IF (PRBTYP.NE.'FP') THEN
-                  WRITE (REC,FMT=99984) PRBTYP, OBJ
-                  CALL X04BAY(IPRINT,2,REC)
-               END IF
-            ELSE IF (INFORM.EQ.3) THEN
-               WRITE (REC,FMT=99983) OBJ
-               CALL X04BAY(IPRINT,2,REC)
-            ELSE
-               WRITE (REC,FMT=99982) OBJ
-               CALL X04BAY(IPRINT,2,REC)
-            END IF
-         END IF
-      END IF
-C
-      IF (INFORM.LT.6) THEN
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99999) PRBTYP, ITER
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-      END IF
-C
-      CALL F06DFF(MXPARM,IPSVLC,1,IPRMLC,1)
-      CALL DCOPY(MXPARM,RPSVLC,1,RPRMLC,1)
-C
-      IF ((INFORM.GE.1 .AND. INFORM.LE.7.and.jprint.gt.0)
-     *    .AND. (IFAIL.EQ.0 .OR. IFAIL.EQ.-1)) CALL X04BAY(NERR,2,
-     *    ERRREC)
 
-      if (jprint.gt.0) then 
-         IFAIL = P01ABF(IFAIL,INFORM,SRNAME,0,REC)
-      else if (inform.ge.0) then 
+      if (inform.ge.0) then
+
          ifail = inform
+
+         if (ifail.lt.3) ifail = 0
+
+         if (ifail.lt.4) then
+            istart = 1
+         else
+            istart = 0
+         end if
+
       else
+
          call errdbg ('wanola')
+
       end if
 
-C
 C     End of  E04MFF.  (LPOPT)
-C
-99999 FORMAT (/' Exit from ',A2,' problem after ',I5,' iterations.')
-99998 FORMAT (/' Exit E04MFF - Feasible point found.     ')
-99997 FORMAT (/' Exit E04MFF - Optimal ',A2,' solution.')
-99996 FORMAT (/' Exit E04MFF - Weak ',A2,' solution.')
-99995 FORMAT (/' ** Weak ',A2,' solution.')
-99994 FORMAT (/' Exit E04MFF - ',A2,' solution is unbounded.')
-99993 FORMAT (/' ** ',A2,' solution is unbounded.')
-99992 FORMAT (/' Exit E04MFF - No feasible point for the linear constr',
-     *       'aints.')
-99991 FORMAT (/' ** No feasible point for the linear constraints.')
-99990 FORMAT (/' Exit E04MFF - Too many iterations.')
-99989 FORMAT (/' ** Too many iterations.')
-99988 FORMAT (/' Exit E04MFF - ',I7,' errors found in the input parame',
-     *       'ters.  Problem abandoned.')
-99987 FORMAT (/' ** ',I7,' errors found in the input parameters.  Prob',
-     *       'lem abandoned.')
-99986 FORMAT (/' Exit E04MFF - Problem type not recognized.  Problem a',
-     *       'bandoned.')
-99985 FORMAT (/' ** Problem type not recognized.  Problem abandoned.')
-99984 FORMAT (/' Final ',A2,' objective value =',G16.7)
-99983 FORMAT (/' Minimum sum of infeasibilities =',G16.7)
-99982 FORMAT (/' Final sum of infeasibilities =',G16.7)
-99981 FORMAT (' XXX  Cannot satisfy the working set constraints to the',
-     *       ' accuracy requested.')
+
       END
 
       SUBROUTINE nlpsol (N,NCLIN,NCNLN,LDA,LDCJU,LDR,A,BL,BU,CONFUN,
@@ -681,16 +625,14 @@ C     .. Local Arrays ..
       CHARACTER*8       NAMES(1)
       CHARACTER*80      REC(2)
 C     .. External Functions ..
-      DOUBLE PRECISION  DNRM2, F06BLF, F06RJF
+      DOUBLE PRECISION  DNRM2, F06BLF, DLANTR
       INTEGER           P01ABF
-      EXTERNAL          DNRM2, F06BLF, F06RJF, P01ABF
+      EXTERNAL          DNRM2, F06BLF, DLANTR, P01ABF
 C     .. External Subroutines ..
       EXTERNAL          DCOPY, DSCAL, E04NBW, E04NBZ, E04NCH, E04NCU,
      *                  E04NCX, E04NCY, E04NCZ, E04UCP, E04UCS, E04UCX,
-     *                  E04UCY, E04UCZ, E04UDR, F01QCF, F06DFF, F06FBF,
-     *                  F06FLF, F06QFF, F06QHF, X02ZAZ, X04BAF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         DBLE, MAX, MIN, SQRT
+     *                  E04UCY, E04UCZ, E04UDR, SGEQR , ICOPY , SLOAD,
+     *                  F06FLF, F06QFF, SMLOAD, X04BAF, X04BAY
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /AE04NC/LOCLS
@@ -911,9 +853,9 @@ C
 C     ==================================================================
 C     Load the arrays of feasibility tolerances.
 C     ==================================================================
-      IF (TOLFEA.GT.ZERO) CALL F06FBF(NPLIN,TOLFEA,W(LFEATL),1)
+      IF (TOLFEA.GT.ZERO) CALL SLOAD(NPLIN,TOLFEA,W(LFEATL),1)
 C
-      IF (NCNLN.GT.0 .AND. CTOL.GT.ZERO) CALL F06FBF(NCNLN,CTOL,
+      IF (NCNLN.GT.0 .AND. CTOL.GT.ZERO) CALL SLOAD(NCNLN,CTOL,
      *    W(LFEATL+NPLIN),1)
 C
       IF (LFDSET.EQ.0) THEN
@@ -953,7 +895,7 @@ C
          NSTATE = 0
       END IF
 C
-      CALL F06DFF(LDBG,ILSDBG,1,ICMDBG,1)
+      CALL ICOPY (LDBG,ILSDBG,1,ICMDBG,1)
 C
       IF (NCLIN.GT.0) THEN
          IANRMJ = LANORM
@@ -996,17 +938,17 @@ C
    40    CONTINUE
 C
          IF (COLD) THEN
-            CALL F06QHF('Upper-triangular',N,N,ZERO,ONE,R,LDR)
+            CALL SMLOAD('Upper-triangular',N,N,ZERO,ONE,R,LDR)
             RFROBN = ROOTN
 C
             NRANK = 0
-            IF (NCNLN.GT.0) CALL F06FBF(NCNLN,(ZERO),W(LCMUL),1)
+            IF (NCNLN.GT.0) CALL SLOAD(NCNLN,(ZERO),W(LCMUL),1)
          ELSE
 C
 C           R will be updated while finding a feasible x.
 C
             NRANK = NLNX
-            CALL F06FBF(NLNX,(ZERO),W(LRES0),1)
+            CALL SLOAD(NLNX,(ZERO),W(LRES0),1)
             IF (NCNLN.GT.0) CALL DCOPY(NCNLN,CLAMDA(NPLIN+1),1,W(LCMUL),
      *                                 1)
 C
@@ -1016,7 +958,7 @@ C
          RHONRM = ZERO
          RHODMP = ONE
          SCALE = ONE
-         CALL F06FBF(NCNLN,(ZERO),W(LRHO),1)
+         CALL SLOAD(NCNLN,(ZERO),W(LRHO),1)
 C
 C        ---------------------------------------------------------------
 C        Re-order KX so that the free variables come first.
@@ -1092,13 +1034,10 @@ C
          IF (NLPERR.GT.0) THEN
             INFORM = 2
             GO TO 80
-         ELSE IF (MSGQP.GT.0) THEN
-            WRITE (REC,FMT=99987)
-            CALL X04BAY(IPRINT,2,REC)
          END IF
 C
          IDBG = IDBGSV
-         CALL F06DFF(LDBG,INPDBG,1,ICMDBG,1)
+         CALL ICOPY (LDBG,INPDBG,1,ICMDBG,1)
       ELSE
 C        ---------------------------------------------------------------
 C        Hot start.
@@ -1115,7 +1054,7 @@ C
 C
 C        Check for a bad R.
 C
-         RFROBN = F06RJF('Frobenius norm','Upper','Non-unit diagonal',N,
+         RFROBN = DLANTR('Frobenius norm','Upper','Non-unit diagonal',N,
      *            N,R,LDR,W)
          CALL F06FLF(N,R,LDR+1,DRMAX,DRMIN)
          COND = F06BLF(DRMAX,DRMIN,OVERFL)
@@ -1124,10 +1063,6 @@ C
 C           ------------------------------------------------------------
 C           Refactorize the Hessian and bound the condition estimator.
 C           ------------------------------------------------------------
-            IF (MSGNP.GT.0) THEN
-               WRITE (REC,FMT=99986)
-               CALL X04BAF(IPRINT,REC(1))
-            END IF
             CALL E04UDR(UNITQ,N,NFREE,NZ,LDQ,LDR,IW(LIPERM),IW(LKX),
      *                  W(LGQ),R,W(LQ),W(LWRK1),W(LRES0))
          END IF
@@ -1208,7 +1143,7 @@ C
       IF (LFORMH.GT.0) THEN
          LV = LWRK2
          DO 60 J = 1, N
-            IF (J.GT.1) CALL F06FBF(J-1,ZERO,W(LV),1)
+            IF (J.GT.1) CALL SLOAD(J-1,ZERO,W(LV),1)
 C
             LVJ = LV + J - 1
             CALL DCOPY(N-J+1,R(J,J),LDR,W(LVJ),1)
@@ -1217,45 +1152,14 @@ C
             CALL DCOPY(N,W(LV),1,R(J,1),LDR)
    60    CONTINUE
 C
-         CALL F01QCF(N,N,R,LDR,W(LWRK1),INFO)
+         CALL SGEQR (N,N,R,LDR,W(LWRK1),INFO)
       END IF
-C
-C     ==================================================================
-C     Print messages if required.
-C     ==================================================================
-   80 IF (MSGNP.GT.0) THEN
-         IF (INFORM.LT.0) WRITE (REC,FMT=99999)
-         IF (INFORM.EQ.0) WRITE (REC,FMT=99998)
-         IF (INFORM.EQ.1) WRITE (REC,FMT=99997)
-         IF (INFORM.EQ.2) WRITE (REC,FMT=99996)
-         IF (INFORM.EQ.3) WRITE (REC,FMT=99995)
-         IF (INFORM.EQ.4) WRITE (REC,FMT=99994)
-         IF (INFORM.EQ.6) WRITE (REC,FMT=99993)
-         IF (INFORM.EQ.7) WRITE (REC,FMT=99992)
-         IF (INFORM.EQ.9) WRITE (REC,FMT=99991) NERROR
-         CALL X04BAY(IPRINT,2,REC)
-C
-         IF (INFORM.GE.0 .AND. INFORM.LT.7) THEN
-            IF (NLPERR.EQ.0) THEN
-               WRITE (REC,FMT=99990) OBJF
-               CALL X04BAY(IPRINT,2,REC)
-            ELSE
-               IF (NLPERR.EQ.3) THEN
-                  WRITE (REC,FMT=99989) SUMINF
-                  CALL X04BAY(IPRINT,2,REC)
-               ELSE
-                  WRITE (REC,FMT=99988) SUMINF
-                  CALL X04BAY(IPRINT,2,REC)
-               END IF
-            END IF
-         END IF
-      END IF
-C
+
 C     Recover the optional parameters set by the user.
 C
-      CALL F06DFF(MXPARM,IPSVLS,1,IPRMLS,1)
+80    CALL ICOPY (MXPARM,IPSVLS,1,IPRMLS,1)
       CALL DCOPY(MXPARM,RPSVLS,1,RPRMLS,1)
-      CALL F06DFF(MXPARM,IPSVNP,1,IPRMNP,1)
+      CALL ICOPY (MXPARM,IPSVNP,1,IPRMNP,1)
       CALL DCOPY(MXPARM,RPSVNP,1,RPRMNP,1)
 C
       IF (INFORM.LT.9) THEN
@@ -1263,118 +1167,11 @@ C
      *                               CJACU,LDCJU)
          CALL DCOPY(N,W(LGRAD),1,GRADU,1)
       END IF
-C DEBUG 691
-      if (MSGNP.eq.0) inform = 0
 
-      IF (INFORM.NE.0 .AND. (IFAIL.EQ.0 .OR. IFAIL.EQ.-1)) THEN
-         IF (INFORM.LT.0) WRITE (REC,FMT=99985)
-         IF (INFORM.EQ.1) WRITE (REC,FMT=99984)
-         IF (INFORM.EQ.2) WRITE (REC,FMT=99983)
-         IF (INFORM.EQ.3) WRITE (REC,FMT=99982)
-         IF (INFORM.EQ.4) WRITE (REC,FMT=99981)
-         IF (INFORM.EQ.6) WRITE (REC,FMT=99980)
-         IF (INFORM.EQ.7) WRITE (REC,FMT=99979)
-         IF (INFORM.EQ.9) WRITE (REC,FMT=99978) NERROR
-         CALL X04BAY(NERR,2,REC)
-      END IF
-      IFAIL = P01ABF(IFAIL,INFORM,SRNAME,0,REC)
-      RETURN
-C
-C
-C
+      IFAIL = INFORM
+
 C     End of  E04UCF. (NPSOL)
-C
-99999 FORMAT (/' Exit E04UCF - User requested termination.')
-99998 FORMAT (/' Exit E04UCF - Optimal solution found.')
-99997 FORMAT (/' Exit E04UCF - Optimal solution found, but requested a',
-     *       'ccuracy not achieved.')
-99996 FORMAT (/' Exit E04UCF - No feasible point for the linear constr',
-     *       'aints.')
-99995 FORMAT (/' Exit E04UCF - No feasible point for the nonlinear con',
-     *       'straints.')
-99994 FORMAT (/' Exit E04UCF - Too many major iterations.             ')
-99993 FORMAT (/' Exit E04UCF - Current point cannot be improved upon. ')
-99992 FORMAT (/' Exit E04UCF - Large errors found in the derivatives. ')
-99991 FORMAT (/' Exit E04UCF - ',I7,' errors found in the input parame',
-     *       'ters.  Problem abandoned.')
-99990 FORMAT (/' Final objective value =',G16.7)
-99989 FORMAT (/' Minimum sum of infeasibilities =',G16.7)
-99988 FORMAT (/' Final sum of infeasibilities =',G16.7)
-99987 FORMAT (/' The linear constraints are feasible.')
-99986 FORMAT (' XXX  Bad initial Hessian,   R  refactorized.')
-99985 FORMAT (/' ** User requested termination.')
-99984 FORMAT (/' ** Optimal solution found, but requested accuracy not',
-     *       ' achieved.')
-99983 FORMAT (/' ** No feasible point for the linear constraints.')
-99982 FORMAT (/' ** No feasible point for the nonlinear constraints.')
-99981 FORMAT (/' ** Too many major iterations.             ')
-99980 FORMAT (/' ** Current point cannot be improved upon. ')
-99979 FORMAT (/' ** Large errors found in the derivatives. ')
-99978 FORMAT (/' ** ',I7,' errors found in the input parameters.  Prob',
-     *       'lem abandoned.')
-      END
 
-      SUBROUTINE A00AAF
-C     MARK 15 RE-ISSUE. NAG COPYRIGHT 1991.
-C
-C     Writes information about the particular implementation of the
-C     NAG Library in use.
-C
-C     The output channel is given by a call to X04ABF.
-C
-C     .. Local Scalars ..
-      INTEGER          I, NADV
-C     .. Local Arrays ..
-      CHARACTER*80     MSG(20)
-C     .. External Subroutines ..
-      EXTERNAL         A00AAZ, X04ABF, X04BAF
-C     .. Executable Statements ..
-      CALL A00AAZ(MSG)
-      CALL X04ABF(0,NADV)
-      DO 20 I = 1, 7
-         CALL X04BAF(NADV,MSG(I))
-   20 CONTINUE
-      CALL X04BAF(NADV,MSG(20))
-      RETURN
-      END
-
-      SUBROUTINE A00AAZ(MSG)
-C     MARK 15 RELEASE. NAG COPYRIGHT 1991.
-C
-C     Returns information about the particular implementation of the
-C     NAG Fortran Library in use.
-C
-C     **************************************************************
-C
-C     Implementors must insert the correct details for each
-C     distinct implementation.
-C
-C     **************************************************************
-C
-C     .. Array Arguments ..
-      CHARACTER*80      MSG(20)
-C     .. Executable Statements ..
-      MSG(1) = ' *** Start of NAG Library implementation details ***'
-      MSG(2) = ' '
-      MSG(3) = ' Implementation title: Sun Solaris'
-      MSG(4) = '            Precision: Fortran Double Precision'
-      MSG(5) = '         Product Code: FLSOL16D'
-      MSG(6) = '                 Mark: 16A'
-      MSG(7) = ' '
-      MSG(8) = ' Created using:'
-      MSG(9) = '     hardware -   Sun SPARCstation 1'
-      MSG(10) = '     op. sys. -   Solaris 2.1'
-      MSG(11) = '     compiler -   Sun f77 2.0'
-      MSG(12) = '       using optimisation = -O'
-      MSG(13) = '       BLAS information: NAG BLAS used'
-      MSG(14) = ' '
-      MSG(15) = ' Applicable to:'
-      MSG(16) = '     hardware -   Sun Sparcstation'
-      MSG(17) = '     op. sys. -   Solaris 2.x'
-      MSG(18) = '     compiler -   Sun f77 2.0'
-      MSG(19) = ' '
-      MSG(20) = ' *** End of NAG Library implementation details ***'
-      RETURN
       END
 
       SUBROUTINE E04MFP(NERROR,MSGLVL,START,LIWORK,LWORK,LITOTL,LWTOTL,
@@ -1500,9 +1297,6 @@ C     ---------------------------------------------------------------
             WRITE (REC,FMT=99998)
             CALL X04BAY(NERR,2,REC)
          END IF
-      ELSE IF (MSGLVL.GT.0) THEN
-         WRITE (REC,FMT=99999) LIWORK, LWORK, LITOTL, LWTOTL
-         CALL X04BAY(IPRINT,3,REC)
       END IF
 C
       IF (NERROR.EQ.0) THEN
@@ -2005,108 +1799,7 @@ C
 99998 FORMAT (' //E04XAZ//  CE1BIG  CE2BIG  TE2BIG',5X,3L2)
 99997 FORMAT (' //E04XAZ//  INFORM  HOPT    ERRBND',I5,1P,2D16.6)
       END
-      LOGICAL FUNCTION E04UDX(STRING)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C***********************************************************************
-C     Description and usage:
-C
-C        A simple(-minded) test for numeric data is implemented by
-C        searching an input string for legitimate characters:
-C                digits 0 to 9, D, E, -, + and .
-C        Insurance is provided by requiring that a numeric string
-C        have at least one digit, at most one D, E or .
-C        and at most two -s or +s.  Note that a few ambiguities remain:
-C
-C           (a)  A string might have the form of numeric data but be
-C                intended as text.  No general test can hope to detect
-C                such cases.
-C
-C           (b)  There is no check for correctness of the data format.
-C                For example a meaningless string such as 'E1.+2-'
-C                will be accepted as numeric.
-C
-C        Despite these weaknesses, the method should work in the
-C        majority of cases.
-C
-C
-C     Parameters:
-C
-C        Name    Dimension  Type  I/O/S  Description
-C        E04UDX              L      O    Set .TRUE. if STRING appears
-C                                        to be numerical data.
-C        STRING              C    I      Input data to be tested.
-C
-C
-C     Environment:  ANSI FORTRAN 77.
-C
-C
-C     Notes:
-C
-C        (1)  It is assumed that STRING is a token extracted by
-C             E04UDV, which will have converted any lower-case
-C             characters to upper-case.
-C
-C        (2)  E04UDV pads STRING with blanks, so that a genuine
-C             number is of the form  '1234        '.
-C             Hence, the scan of STRING stops at the first blank.
-C
-C        (3)  COMPLEX data with parentheses will not look numeric.
-C
-C
-C     Systems Optimization Laboratory, Stanford University.
-C     12 Nov  1985    Initial design and coding, starting from the
-C                     routine ALPHA from Informatics General, Inc.
-C***********************************************************************
-C
-C     .. Scalar Arguments ..
-      CHARACTER*(*)           STRING
-C     .. Local Scalars ..
-      INTEGER                 J, LENGTH, NDIGIT, NEXP, NMINUS, NPLUS,
-     *                        NPOINT
-      LOGICAL                 NUMBER
-      CHARACTER*1             ATOM
-C     .. Intrinsic Functions ..
-      INTRINSIC               LEN, LGE, LLE
-C     .. Executable Statements ..
-      NDIGIT = 0
-      NEXP = 0
-      NMINUS = 0
-      NPLUS = 0
-      NPOINT = 0
-      NUMBER = .TRUE.
-      LENGTH = LEN(STRING)
-      J = 0
-C
-   20 J = J + 1
-      ATOM = STRING(J:J)
-      IF (LGE(ATOM,'0') .AND. LLE(ATOM,'9')) THEN
-C        IF (ATOM.GE.'0' .AND. ATOM.LE.'9') THEN
-         NDIGIT = NDIGIT + 1
-      ELSE IF (ATOM.EQ.'D' .OR. ATOM.EQ.'E' .or.
-     *         ATOM.EQ.'d' .OR. ATOM.EQ.'e') THEN
-         NEXP = NEXP + 1
-      ELSE IF (ATOM.EQ.'-') THEN
-         NMINUS = NMINUS + 1
-      ELSE IF (ATOM.EQ.'+') THEN
-         NPLUS = NPLUS + 1
-      ELSE IF (ATOM.EQ.'.') THEN
-         NPOINT = NPOINT + 1
-      ELSE IF (ATOM.EQ.' ') THEN
-         J = LENGTH
-      ELSE
-         NUMBER = .FALSE.
-      END IF
-C
-      IF (NUMBER .AND. J.LT.LENGTH) GO TO 20
-C
-      E04UDX = NUMBER .AND. NDIGIT .GE. 1 .AND. NEXP .LE. 1 .AND.
-     *         NMINUS .LE. 2 .AND. NPLUS .LE. 2 .AND. NPOINT .LE. 1
-C
-      RETURN
-C
-C     End of  E04UDX. (OPNUMB)
-      END
+
       SUBROUTINE E04UCH(FIRSTV,NEGSTP,BIGALF,BIGBND,PNORM,JADD1,JADD2,
      *                  PALFA1,PALFA2,ISTATE,N,NCTOTL,ANORM,AP,AX,BL,BU,
      *                  FEATOL,P,X)
@@ -2177,10 +1870,6 @@ C     .. Common blocks ..
       COMMON            /FE04NB/ICMDBG, CMDBG
 C     .. Executable Statements ..
 C
-      IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,3,REC)
-      END IF
       LASTV = .NOT. FIRSTV
       JADD1 = 0
       JADD2 = 0
@@ -2272,12 +1961,7 @@ C
                   END IF
                END IF
             END IF
-C
-            IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-               WRITE (REC,FMT=99998) J, JS, FEATOL(J), RES, ATP, JADD1,
-     *           PALFA1, JADD2, PALFA2
-               CALL X04BAF(IPRINT,REC(1))
-            END IF
+
          END IF
    20 CONTINUE
 C
@@ -2289,73 +1973,6 @@ C
 99999 FORMAT (/'    J  JS         FEATOL        RES             AP    ',
      *       ' JADD1       PALFA1     JADD2       PALFA2',/)
 99998 FORMAT (I5,I4,3G15.5,2(I6,G17.7))
-      END
-      SUBROUTINE E04UDU(STRING)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     PURPOSE:  This subroutine changes all lower case letters in the
-C               character string to upper case.
-C
-C     METHOD:   Each character in STRING is treated in turn.  The
-C               intrinsic function INDEX effectively allows a table
-C               lookup, with the local strings LOW and UPP acting as
-C               two tables. This method avoids the use of CHAR and
-C               ICHAR, which appear be different on ASCII and EBCDIC
-C               machines.
-C
-C     ARGUMENTS
-C     ARG       DIM     TYPE I/O/S DESCRIPTION
-C     STRING       *       C   I/O   Character string possibly
-C                                   containing some lower-case
-C                                   letters  on input; strictly
-C                                   upper-case letters on output
-C                                   with no change to any
-C                                   non-alphabetic characters.
-C
-C     EXTERNAL REFERENCES:
-C     LEN    - Returns the declared length of a CHARACTER variable.
-C     INDEX  - Returns the position of second string within first.
-C
-C     ENVIRONMENT:  ANSI FORTRAN 77
-C
-C     DEVELOPMENT HISTORY:
-C     DATE  INITIALS  DESCRIPTION
-C     06/28/83   CLH    Initial design.
-C     01/03/84   RAK    Eliminated NCHAR input.
-C     06/14/84   RAK    Used integer PARAMETERs in comparison.
-C     04/21/85   RAK    Eliminated DO/END DO in favor of standard code.
-C     09/10/85   MAS    Eliminated CHAR,ICHAR in favor of LOW, UPP,
-C                       INDEX.
-C
-C     AUTHOR: Charles Hooper, Informatics General, Palo Alto, CA.
-C
-C-----------------------------------------------------------------------
-C
-C     .. Scalar Arguments ..
-      CHARACTER*(*)     STRING
-C     .. Local Scalars ..
-      INTEGER           I, J
-      CHARACTER*1       C
-      CHARACTER*26      LOW, UPP
-C     .. Intrinsic Functions ..
-      INTRINSIC         INDEX, LEN, LGE, LLE
-C     .. Data statements ..
-      DATA              LOW/'abcdefghijklmnopqrstuvwxyz'/,
-     *                  UPP/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
-C     .. Executable Statements ..
-C
-      DO 20 J = 1, LEN(STRING)
-         C = STRING(J:J)
-         IF (LGE(C,'a') .AND. LLE(C,'z')) THEN
-C           IF (C.GE.'a' .AND. C.LE.'z') THEN
-            I = INDEX(LOW,C)
-            IF (I.GT.0) STRING(J:J) = UPP(I:I)
-         END IF
-   20 CONTINUE
-      RETURN
-C
-C     End of  E04UDU. (OPUPPR)
-C
       END
 
       SUBROUTINE E04NBV(N,NU,NRANK,LDR,LENV,LENW,R,U,V,W,C,S)
@@ -2386,7 +2003,7 @@ C     .. Array Arguments ..
 C     .. Local Scalars ..
       INTEGER           J
 C     .. External Subroutines ..
-      EXTERNAL          DAXPY, F06FQF, F06QSF, F06QWF, F06QXF
+      EXTERNAL          DAXPY, F06FQF, F06QSF, SUTSRS, F06QXF
 C     .. Intrinsic Functions ..
       INTRINSIC         MIN
 C     .. Executable Statements ..
@@ -2409,7 +2026,7 @@ C        ---------------------------------------------------------------
 C        Apply the sequence of rotations to R. This generates a spike in
 C        the j-th row of R, which is stored in s.
 C        ---------------------------------------------------------------
-         CALL F06QWF('Left',N,1,J,C,S,R,LDR)
+         CALL SUTSRS('Left',N,1,J,C,S,R,LDR)
 C
 C        ---------------------------------------------------------------
 C        Form  beta*e(j)*w' + R.  This a spiked matrix, with a row
@@ -2454,12 +2071,12 @@ C     .. Scalar Arguments ..
 C     .. Array Arguments ..
       DOUBLE PRECISION  R(LDR,*)
 C     .. External Subroutines ..
-      EXTERNAL          F06FBF
+      EXTERNAL          SLOAD
 C     .. Executable Statements ..
 C
       IF (NRZ.EQ.0) RETURN
 C
-      CALL F06FBF(NRZ-1,ZERO,R(1,NRZ),1)
+      CALL SLOAD(NRZ-1,ZERO,R(1,NRZ),1)
       R(NRZ,NRZ) = RZZ
 C
       RETURN
@@ -2515,10 +2132,7 @@ C     .. Common blocks ..
       COMMON            /FE04NB/ICMDBG, CMDBG
 C     .. Executable Statements ..
 C
-      IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
+
 C
       ALFA = ALFMAX
       J = 1
@@ -2559,11 +2173,7 @@ C
          END IF
 C
          IF (RES.GT.ZERO .AND. ALFA*ADXI.GT.RES) ALFA = RES/ADXI
-C
-         IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-            WRITE (REC,FMT=99998) J, RES, ADXI, ALFA
-            CALL X04BAF(IPRINT,REC(1))
-         END IF
+
 C
          J = J + 1
          GO TO 20
@@ -2578,11 +2188,6 @@ C
       INFORM = 0
       IF (ALFA.GE.ALFMAX) INFORM = 1
 C
-      IF (CMDBG .AND. ICMDBG(1).GT.0 .AND. INFORM.GT.0) THEN
-         WRITE (REC,FMT=99997) ALFA
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
-C
       RETURN
 C
 C
@@ -2594,338 +2199,7 @@ C
 99997 FORMAT (/' //E04UDT//  No finite step.',/' //E04UDT//           ',
      *       '  ALFA',/' //E04UDT//  ',G15.4)
       END
-      SUBROUTINE E04UDY(NDICT,DICTRY,ALPHA,KEY,ENTRY)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     MARK 14 REVISED. IER-724 (DEC 1989).
-C
-C     Description and usage:
-C
-C       Performs dictionary lookups.  A pointer is returned if a
-C     match is found between the input key and the corresponding
-C     initial characters of one of the elements of the dictionary.
-C     If a 'synonym' has been provided for an entry, the search is
-C     continued until a match to a primary dictionary entry is found.
-C     Cases of no match, or multiple matches, are also provided for.
-C
-C     Dictionary entries must be left-justified, and may be alphabetized
-C     for faster searches.  Secondary entries, if any, are composed of
-C     two words separated by one or more characters such as blank, tab,
-C     comma, colon, or equal sign which are treated as non-significant
-C     by E04UDW.  The first entry of each such pair serves as a synonym
-C     for the second, more fundamental keyword.
-C
-C       The ordered search stops after the section of the dictionary
-C     having the same first letters as the key has been checked, or
-C     after a specified number of entries have been examined.  A special
-C     dictionary entry, the currency symbol '$', will also terminate the
-C     search.  This will speed things up if an appropriate dictionary
-C     length parameter cannot be determined.  Both types of search are
-C     sequential.  See 'Notes' below for some suggestions if efficiency
-C     is an issue.
-C
-C
-C     Parameters:
-C
-C     Name    Dimension  Type  I/O/S  Description
-C     NDICT               I    I     Number of dictionary entries to be
-C                                    examined.
-C     DICTRY  NDICT       C    I     Array of dictionary entries,
-C                                    left-justified in their fields.
-C                                    May be alphabetized for efficiency,
-C                                    in which case ALPHA should be
-C                                    .TRUE.  Entries with synonyms are
-C                                    of the form
-C                                    'ENTRY : SYNONYM', where 'SYNONYM'
-C                                    is a more fundamental entry in the
-C                                    same dictionary.  NOTE: Don't build
-C                                    'circular' dictionaries.
-C     ALPHA               L    I     Indicates whether the dictionary
-C                                    is in alphabetical order, in which
-C                                    case the search can be terminated
-C                                    sooner.
-C     KEY                 C    I/O   String to be compared against the
-C                                    dictionary.  Abbreviations are OK
-C                                    if they correspond to a unique
-C                                    entry in the dictionary.  KEY is
-C                                    replaced on termination by its most
-C                                    fundamental equivalent dictionary
-C                                    entry (uppercase, left-justified)
-C                                    if a match was found.
-C     ENTRY               I      O   Dictionary pointer.  If .GT. 0, it
-C                                    indicates which entry matched KEY.
-C                                    In case of trouble, a negative
-C                                    value means that a UNIQUE match
-C                                    was not found - the absolute value
-C                                    of ENTRY points to the second
-C                                    dictionary entry that matched KEY.
-C                                    Zero means that NO match could be
-C                                    found.  ENTRY always refers to the
-C                                    last search performed -
-C                                    in searching a chain of synonyms,
-C                                    a non-positive value will be
-C                                    returned if there is any break,
-C                                    even if the original input key
-C                                    was found.
-C
-C
-C     External references:
-C
-C     Name    Description
-C     E04UDW  Finds first and last significant characters.
-C
-C
-C     Environment:  Digital VAX-11/780 VMS FORTRAN (FORTRAN 77).
-C               Appears to satisfy the ANSI Fortran 77 standard.
-C
-C
-C     Notes:
-C
-C     (1)  IMPLICIT NONE is non-standard.  (Has been commented out.)
-C
-C     (2)  We have assumed that the dictionary is not too big.  If
-C         many searches are to be done or if the dictionary has more
-C         than a dozen or so entries, it may be advantageous to build
-C         an index array of pointers to the beginning of the section
-C         of the dictionary containing each letter, then pass in the
-C         portion of the dictionary beginning with DICTRY (INDEX).
-C         (This won't generally work for dictionaries with synonyms.)
-C         For very large problems, a completely different approach may
-C         be advisable, e.g. a binary search for ordered dictionaries.
-C
-C     (3)  E04UDY is case sensitive.  In most applications it will be
-C         necessary to use an uppercase dictionary, and to convert the
-C         input key to uppercase before calling E04UDY.  Companion
-C         routines E04UDV and PAIRS, available from the author, already
-C         take care of this.
-C
-C     (4)  The key need not be left-justified.  Any leading (or
-C         trailing) characters which are 'non-significant' to E04UDW
-C         will be ignored.  These include blanks, horizontal tabs,
-C         commas, colons, and equal signs.  See E04UDW for details.
-C
-C     (5)  The ASCII collating sequence for character data is assumed.
-C         (N.B. This means the numerals precede the alphabet, unlike
-C         common practice.)  This should not cause trouble on EBCDIC
-C         machines if DICTRY just contains alphabetic keywords.
-C         Otherwise it may be necessary to use the FORTRAN lexical
-C         library routines to force use of the ASCII sequence.
-C
-C     (6)  Parameter NUMSIG sets a limit on the length of significant
-C         dictionary entries.  Special applications may require that
-C         this be increased.  (It is 16 in the present version.)
-C
-C     (7)  No protection against 'circular' dictionaries is provided:
-C         don't claim that A is B, and that B is A.  All synonym chains
-C         must terminate.  Other potential errors not checked for
-C         include duplicate or mis-ordered entries.
-C
-C     (8)  The handling of ambiguities introduces some ambiguity:
-C
-C            ALPHA = .TRUE.  A potential problem, when one entry
-C                            looks like an abbreviation for another
-C                            (eg. does 'A' match 'A' or 'AB') was
-C                            resolved by dropping out of the search
-C                            immediately when an 'exact' match is found.
-C
-C            ALPHA = .FALSE. The programmer must ensure that the above
-C                            situation does not arise: each dictionary
-C                            entry must be recognizable, at least when
-C                            specified to full length.  Otherwise, the
-C                            result of a search will depend on the
-C                            order of entries.
-C
-C
-C     Author:  Robert Kennelly, Informatics General Corporation.
-C
-C
-C     Development history:
-C
-C     24 Feb. 1984  RAK/DAS  Initial design and coding.
-C     25 Feb. 1984    RAK    Combined the two searches by suitable
-C                            choice of terminator FLAG.
-C     28 Feb. 1984    RAK    Optional synonyms in dictionary, no
-C                            longer update KEY.
-C     29 Mar. 1984    RAK    Put back replacement of KEY by its
-C                            corresponding entry.
-C     21 June 1984    RAK    Corrected bug in error handling for cases
-C                            where no match was found.
-C     23 Apr. 1985    RAK    Introduced test for exact matches, which
-C                            permits use of dictionary entries which
-C                            would appear to be ambiguous (for ordered
-C                            case).  Return -I to point to the entry
-C                            which appeared ambiguous (had been -1).
-C                            Repaired loop termination - had to use
-C                            equal length strings or risk quitting too
-C                            soon when one entry is an abbreviation
-C                            for another.  Eliminated HIT, reduced
-C                            NUMSIG to 16.
-C     28 May 1986     MPH    Changed to test if an apparently
-C                            ambiguous keyword is in fact unique.
-C                            If ALPHA is .FALSE. FLAG is now '$'.
-C                            Local CHARACTER scalars declared as
-C                            CHARACTER*16.
-C
-C-----------------------------------------------------------------------
-C     .. Parameters ..
-      CHARACTER         BLANK, CURLY
-      INTEGER           NUMSIG
-      PARAMETER         (BLANK=' ',CURLY='$',NUMSIG=16)
-C     .. Scalar Arguments ..
-      INTEGER           ENTRY, NDICT
-      LOGICAL           ALPHA
-      CHARACTER*(*)     KEY
-C     .. Array Arguments ..
-      CHARACTER*(*)     DICTRY(NDICT)
-C     .. Local Scalars ..
-      INTEGER           FIRST, I, IFRST, IFRST1, ILAST, ILAST1, ILEN,
-     *                  ILEN1, ILST, IMARK, IMARK1, LAST, LENGTH, MARK
-      CHARACTER*16      FLAG, TARGET, TRGT, TRGT1
-C     .. External Subroutines ..
-      EXTERNAL          E04UDW
-C     .. Intrinsic Functions ..
-      INTRINSIC         MIN, LEN, LLE
-C     .. Executable Statements ..
-C
-      ENTRY = 0
-C
-C     Isolate the significant portion of the input key (if any).
-C
-      FIRST = 1
-      LAST = MIN(LEN(KEY),NUMSIG)
-      CALL E04UDW(KEY,FIRST,LAST,MARK)
-C
-      IF (MARK.GT.0) THEN
-         TARGET = KEY(FIRST:MARK)
-C
-C        Look up TARGET in the dictionary.
-C
-   20    CONTINUE
-         LENGTH = MARK - FIRST + 1
-C
-C           Select search strategy by cunning choice of termination test
-C           flag.  The left curly bracket follows all the alphabetic
-C           characters in the ASCII collating sequence, but precedes the
-C           vertical bar.
-C
-         IF (ALPHA) THEN
-            FLAG = TARGET
-         ELSE
-            FLAG = CURLY
-         END IF
-C
-C
-C           Perform search.
-C           ---------------
-C
-         I = 0
-   40    CONTINUE
-         I = I + 1
-         IF (TARGET(1:LENGTH).EQ.DICTRY(I)(1:LENGTH)) THEN
-            IF (ENTRY.EQ.0) THEN
-C
-C                    First 'hit' - must still guard against ambiguities
-C                    by searching until we've gone beyond the key
-C                    (ordered dictionary) or until the end-of-dictionary
-C                    mark is reached (exhaustive search).
-C
-               ENTRY = I
-C
-C                    Special handling if match is exact - terminate
-C                    search.  We thus avoid confusion if one dictionary
-C                    entry looks like an abbreviation of another.
-C                    This fix won't generally work for un-ordered
-C                    dictionaries.
-C
-               FIRST = 1
-               LAST = NUMSIG
-               CALL E04UDW(DICTRY(ENTRY),FIRST,LAST,MARK)
-               IF (MARK.EQ.LENGTH) I = NDICT
-            ELSE
-C                    If two hits check if they are attempting to
-C                    indicate the same dictionary entry.
-C
-C                    Extract keyword from first match found
-C
-               ILST = NUMSIG
-               IFRST = MARK + 2
-               CALL E04UDW(DICTRY(ENTRY),IFRST,ILST,IMARK)
-               IF (IMARK.GT.0) THEN
-                  TRGT = DICTRY(ENTRY) (IFRST:IMARK)
-                  ILEN = IMARK - IFRST + 1
-               ELSE
-                  TRGT = DICTRY(ENTRY) (FIRST:MARK)
-                  ILEN = MARK - FIRST + 1
-               END IF
-C
-C                    Extract keyword from next match found
-C
-               IFRST = 1
-               ILAST = NUMSIG
-               CALL E04UDW(DICTRY(I),IFRST,ILAST,IMARK)
-               ILAST1 = NUMSIG
-               IFRST1 = IMARK + 2
-               CALL E04UDW(DICTRY(I),IFRST1,ILAST1,IMARK1)
-               IF (IMARK1.GT.0) THEN
-                  TRGT1 = DICTRY(I) (IFRST1:IMARK1)
-                  ILEN1 = IMARK1 - IFRST1 + 1
-               ELSE
-                  TRGT1 = DICTRY(I) (IFRST:IMARK)
-                  ILEN1 = IMARK - IFRST + 1
-               END IF
-C
-C                    If keywords not identical then ambiguity
-C
-               IF (TRGT(1:ILEN).NE.TRGT1(1:ILEN1)) THEN
-C
-C                       Oops - two hits.  Abnormal termination.
-C                       ---------------------------------------
-C
-                  ENTRY = -I
-                  RETURN
-               END IF
-            END IF
-         END IF
-C
-C           Check whether we've gone past the appropriate section of the
-C           dictionary.  The test on the index provides insurance and an
-C           optional means for limiting the extent of the search.
-C
-         IF (LLE(DICTRY(I)(1:LENGTH),FLAG) .AND. I.LT.NDICT) GO TO 40
-C
-C
-C           Check for a synonym.
-C           --------------------
-C
-         IF (ENTRY.GT.0) THEN
-C
-C              Look for a second entry 'behind' the first entry.  FIRST
-C              and MARK were determined above when the hit was detected.
-C
-            FIRST = MARK + 2
-            CALL E04UDW(DICTRY(ENTRY),FIRST,LAST,MARK)
-            IF (MARK.GT.0) THEN
-C
-C                 Re-set target and dictionary pointer, then repeat the
-C                 search for the synonym instead of the original key.
-C
-               TARGET = DICTRY(ENTRY) (FIRST:MARK)
-               ENTRY = 0
-               GO TO 20
-C
-            END IF
-         END IF
-C
-      END IF
-      IF (ENTRY.GT.0) KEY = DICTRY(ENTRY)
-C
-C
-C     Normal termination.
-C     -------------------
-C
-      RETURN
-C
-C     End of E04UDY.  (CMLOOK/OPLOOK)
-      END
+
       SUBROUTINE E04NBT(MODE,NROWT,N,T,Y)
 C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
 C     MARK 13 REVISED. IER-587 (MAR 1988).
@@ -3026,7 +2300,7 @@ C     .. Array Arguments ..
 C     .. Local Scalars ..
       INTEGER           LENJ
 C     .. External Subroutines ..
-      EXTERNAL          F06FBF, F06FQF, F06QSF, F06QWF, F06QXF, DSWAP
+      EXTERNAL          SLOAD, F06FQF, F06QSF, SUTSRS, F06QXF, DSWAP
 C     .. Intrinsic Functions ..
       INTRINSIC         MIN
 C     .. Executable Statements ..
@@ -3054,12 +2328,12 @@ C        Put zeros into the j-th column of R in positions corresponding
 C        to the sub-diagonals of the i-th column.
 C
          S(I) = R(LENJ,J)
-         CALL F06FBF(LENJ-I,ZERO,R(I+1,J),1)
+         CALL SLOAD(LENJ-I,ZERO,R(I+1,J),1)
 C
 C        Apply the sequence of rotations to R.  This generates a spike
 C        in the lenj-th row of R, which is stored in S.
 C
-         CALL F06QWF('Left',N,I+1,LENJ,C,S,R,LDR)
+         CALL SUTSRS('Left',N,I+1,LENJ,C,S,R,LDR)
 C
 C        Eliminate the spike using a forward sweep in planes
 C        (i,lenj), (i+1,lenj), ..., (lenj-1,lenj).
@@ -3122,7 +2396,7 @@ C     .. External Functions ..
       INTEGER           IDAMAX
       EXTERNAL          IDAMAX
 C     .. External Subroutines ..
-      EXTERNAL          DCOPY, DSWAP, E04NBU, F06BAF, F06FBF, F06FLF,
+      EXTERNAL          DCOPY, DSWAP, E04NBU, F06BAF, SLOAD, F06FLF,
      *                  F06QTF, F06QXF, F06QZZ, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         MAX, MIN
@@ -3171,8 +2445,8 @@ C
 C              Expand Q by adding a unit row and column.
 C
                IF (NFREE.GT.1) THEN
-                  CALL F06FBF(NFREE-1,ZERO,ZY(NFREE,1),LDZY)
-                  CALL F06FBF(NFREE-1,ZERO,ZY(1,NFREE),1)
+                  CALL SLOAD(NFREE-1,ZERO,ZY(NFREE,1),LDZY)
+                  CALL SLOAD(NFREE-1,ZERO,ZY(1,NFREE),1)
                END IF
                ZY(NFREE,NFREE) = ONE
             END IF
@@ -3363,7 +2637,7 @@ C     .. External Functions ..
       EXTERNAL          DDOT, DNRM2
 C     .. External Subroutines ..
       EXTERNAL          DCOPY, DGEMV, DSCAL, DTRMV, E04NBT, E04NBW,
-     *                  F06FBF, X04BAF, X04BAY
+     *                  SLOAD, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         MIN
 C     .. Common blocks ..
@@ -3374,9 +2648,9 @@ C
       NFIXED = N - NFREE
 C
       GDX = ZERO
-      CALL F06FBF(N,ZERO,DX,1)
-      CALL F06FBF(NLNX,ZERO,RPQ,1)
-      CALL F06FBF(NLNX,ZERO,RPQ0,1)
+      CALL SLOAD(N,ZERO,DX,1)
+      CALL SLOAD(NLNX,ZERO,RPQ,1)
+      CALL SLOAD(NLNX,ZERO,RPQ0,1)
 C
       IF (NACTIV+NFIXED.GT.0) THEN
 C
@@ -3410,7 +2684,7 @@ C
 C
          IF (NACTIV.GT.0) CALL E04NBT(1,LDT,NACTIV,T(1,NZ+1),WORK(NZ+1))
          CALL DCOPY(NACTIV+NFIXED,WORK(NZ+1),1,DX(NZ+1),1)
-         IF (NZ.GT.0) CALL F06FBF(NZ,ZERO,DX,1)
+         IF (NZ.GT.0) CALL SLOAD(NZ,ZERO,DX,1)
 C
          GDX = DDOT(NACTIV+NFIXED,GQ(NZ+1),1,DX(NZ+1),1)
 C
@@ -3559,17 +2833,7 @@ C        ---------------------------------------------------------------
                JTINY = J
             END IF
    20    CONTINUE
-C
-         IF (MSGLVL.GE.20) THEN
-            IF (ISUMM.GE.0) THEN
-               WRITE (REC,FMT=99999)
-               CALL X04BAY(ISUMM,2,REC)
-               DO 40 J = NRZ + 1, NZ, 4
-                  WRITE (REC,FMT=99993) (GQ(K),K=J,MIN(J+3,NZ))
-                  CALL X04BAF(ISUMM,REC(1))
-   40          CONTINUE
-            END IF
-         END IF
+
 C
       END IF
 C
@@ -3647,28 +2911,7 @@ C
 C     --------------------------------------------------------------
 C     If required, print the multipliers.
 C     --------------------------------------------------------------
-      IF (MSGLVL.GE.20) THEN
-         IF (ISUMM.GE.0) THEN
-            IF (NFIXED.GT.0) THEN
-               WRITE (REC,FMT=99998) PRBTYP
-               CALL X04BAY(ISUMM,2,REC)
-               DO 120 J = 1, NFIXED, 4
-                  WRITE (REC,FMT=99992) (KX(NFREE+K),RLAMDA(NACTIV+K),
-     *              K=J,MIN(J+3,NFIXED))
-                  CALL X04BAF(ISUMM,REC(1))
-  120          CONTINUE
-            END IF
-            IF (NACTIV.GT.0) THEN
-               WRITE (REC,FMT=99997) PRBTYP
-               CALL X04BAY(ISUMM,2,REC)
-               DO 140 J = 1, NACTIV, 4
-                  WRITE (REC,FMT=99992) (KACTIV(K),RLAMDA(K),K=J,
-     *              MIN(J+3,NACTIV))
-                  CALL X04BAF(ISUMM,REC(1))
-  140          CONTINUE
-            END IF
-         END IF
-      END IF
+
 C
       IF (LSDBG .AND. ILSDBG(1).GT.0) THEN
          WRITE (REC,FMT=99996) JSMLST, SMLLST, KSMLST
@@ -3807,11 +3050,7 @@ C
             END IF
          END IF
    40 CONTINUE
-C
-      IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-         WRITE (REC,FMT=99999) ERRMAX, JMAX
-         CALL X04BAY(IPRINT,2,REC)
-      END IF
+
 C
       RETURN
 C
@@ -3820,116 +3059,7 @@ C
 99999 FORMAT (/' //E04MFQ//  the maximum violation is ',1P,D14.2,' in ',
      *       'constraint',I5)
       END
-      SUBROUTINE E04UDV(STRING,NUMIN,NUMOUT,LIST)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     Description and usage:
-C
-C       An aid to parsing input data.  The individual 'tokens' in a
-C     character string are isolated, converted to uppercase, and stored
-C     in an array.  Here, a token is a group of significant, contiguous
-C     characters.  The following are NON-significant, and hence may
-C     serve as separators:  blanks, horizontal tabs, commas, colons,
-C     and equal signs.  See E04UDW for details.  Processing continues
-C     until the requested number of tokens have been found or the end
-C     of the input string is reached.
-C
-C
-C     Parameters:
-C
-C     Name    Dimension  Type  I/O/S  Description
-C     STRING              C    I      Input string to be analyzed.
-C     NUMIN               I    I/O    Number of tokens requested (input)
-C     NUMOUT                          and found (output).
-C     (NUMIN and NUMOUT were both called NUMBER in the original)
-C
-C     LIST    NUMIN       C      O    Array of tokens, changed to upper
-C                                    case.
-C
-C
-C     External references:
-C
-C     Name    Description
-C     E04UDW  Finds positions of first and last significant characters.
-C     E04UDU  Converts a string to uppercase.
-C
-C
-C     Environment:  Digital VAX-11/780 VMS FORTRAN (FORTRAN 77).
-C               Appears to satisfy the ANSI Fortran 77 standard.
-C
-C
-C     Notes:
-C
-C     (1)  IMPLICIT NONE is non-standard.  (Has been commented out.)
-C
-C
-C     Author:  Robert Kennelly, Informatics General Corporation.
-C
-C
-C     Development history:
-C
-C     16 Jan. 1984    RAK    Initial design and coding.
-C     16 Mar. 1984    RAK    Revised header to reflect full list of
-C                            separators, repaired faulty WHILE clause
-C                            in '10' loop.
-C     18 Sep. 1984    RAK    Change elements of LIST to uppercase one
-C                            at a time, leaving STRING unchanged.
-C
-C-----------------------------------------------------------------------
-C
-C     .. Parameters ..
-      CHARACTER         BLANK
-      PARAMETER         (BLANK=' ')
-C     .. Scalar Arguments ..
-      INTEGER           NUMIN, NUMOUT
-      CHARACTER*(*)     STRING
-C     .. Array Arguments ..
-      CHARACTER*(*)     LIST(NUMIN)
-C     .. Local Scalars ..
-      INTEGER           COUNT, FIRST, I, LAST, MARK
-C     .. External Subroutines ..
-      EXTERNAL          E04UDU, E04UDW
-C     .. Intrinsic Functions ..
-      INTRINSIC         LEN
-C     .. Executable Statements ..
-      FIRST = 1
-      LAST = LEN(STRING)
-C
-      COUNT = 0
-   20 CONTINUE
-C
-C        Get delimiting indices of next token, if any.
-C
-      CALL E04UDW(STRING,FIRST,LAST,MARK)
-      IF (LAST.GT.0) THEN
-         COUNT = COUNT + 1
-C
-C           Pass token to output string array, then change case.
-C
-         LIST(COUNT) = STRING(FIRST:MARK)
-c        CALL E04UDU(LIST(COUNT))
-         FIRST = MARK + 2
-         IF (COUNT.LT.NUMIN) GO TO 20
-C
-      END IF
-C
-C
-C     Fill the rest of LIST with blanks and set NUMBER for output.
-C
-      DO 40 I = COUNT + 1, NUMIN
-         LIST(I) = BLANK
-   40 CONTINUE
-C
-      NUMOUT = COUNT
-C
-C
-C     Termination.
-C     ------------
-C
-      RETURN
-C
-C     End of  E04UDV. (OPTOKN)
-      END
+
       SUBROUTINE E04UCK(FIRST,DEBUG,DONE,IMPRVD,INFORM,MAXF,NUMF,NOUT,
      *                  ALFMAX,EPSAF,G0,TARGTG,FTRY,GTRY,TOLABS,TOLREL,
      *                  TOLTNY,ALFA,ALFBST,FBEST,GBEST)
@@ -4802,11 +3932,10 @@ C     .. External Functions ..
       DOUBLE PRECISION  DNRM2, F06BLF
       EXTERNAL          DNRM2, F06BLF
 C     .. External Subroutines ..
-      EXTERNAL          DCOPY, DSCAL, E04NBW, F06FLF, F06FQF, F06QHF,
-     *                  F06QKF, F06QNZ, F06QRF, F06QVF, F06QXF, F06QZZ,
+      EXTERNAL          DCOPY, DSCAL, E04NBW, F06FLF, F06FQF, SMLOAD,
+     *                  SGEAPR, SUTSR1, SUHQR, SUTSRH, F06QXF, F06QZZ,
      *                  X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MAX, MIN
+
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
@@ -4907,7 +4036,7 @@ C
 C
 C           First general constraint added.  Set  Q = I.
 C
-            CALL F06QHF('General',NFREE,NFREE,ZERO,ONE,ZY,LDZY)
+            CALL SMLOAD('General',NFREE,NFREE,ZERO,ONE,ZY,LDZY)
             UNITQ = .FALSE.
          END IF
       END IF
@@ -4926,7 +4055,7 @@ C        Q (i.e., ZY) is not stored explicitly.
 C        Apply the sequence of pairwise interchanges P that moves the
 C        newly-fixed variable to position NFREE.
 C        ---------------------------------------------------------------
-         IF (NGQ.GT.0) CALL F06QKF('Left','Transpose',NFREE-1,W,NGQ,GQ,
+         IF (NGQ.GT.0) CALL SGEAPR('Left','Transpose',NFREE-1,W,NGQ,GQ,
      *                             N)
 C
          IF (NRANK.GT.0) THEN
@@ -4935,7 +4064,7 @@ C           Apply the pairwise interchanges to the triangular part of R.
 C           The subdiagonal elements generated by this process are
 C           stored in  s(1), s(2), ..., s(nt-1).
 C
-            CALL F06QNZ('Right',N,IFIX,NT,S,R,LDR)
+            CALL SUTSR1 ('Right',N,IFIX,NT,S,R,LDR)
 C
             IF (NT.LT.NPIV) THEN
 C
@@ -4946,14 +4075,14 @@ C
                   W(I) = I
    40          CONTINUE
 C
-               CALL F06QKF('Right','Normal',NFREE-1,W,NT,R,LDR)
+               CALL SGEAPR('Right','Normal',NFREE-1,W,NT,R,LDR)
             END IF
 C
 C           Eliminate the subdiagonal elements of R with a left-hand
 C           sweep of rotations P2 in planes (1,2), (2,3), ...,(nt-1,nt).
 C           Apply P2 to RES.
 C
-            CALL F06QRF('Left ',N,IFIX,NT,C,S,R,LDR)
+            CALL SUHQR('Left ',N,IFIX,NT,C,S,R,LDR)
             IF (NRES.GT.0) CALL F06QXF('Left','Variable','Forwards',NT,
      *                                 NRES,IFIX,NT,C,S,RES,N)
          END IF
@@ -4993,7 +4122,7 @@ C           The subdiagonal elements generated by this process are
 C           stored in  s(1),  s(2), ..., s(nt-1).
 C
             NT = MIN(NRANK,NPIV)
-            CALL F06QVF('Right',N,1,NT,C,S,R,LDR)
+            CALL SUTSRH('Right',N,1,NT,C,S,R,LDR)
 C
             IF (NT.LT.NPIV) THEN
 C
@@ -5008,7 +4137,7 @@ C           Eliminate the subdiagonal elements of R with a left-hand
 C           sweep of rotations P2 in planes (1,2), (2,3), ...,(nt-1,nt).
 C           Apply P2 to RES.
 C
-            CALL F06QRF('Left ',N,1,NT,C,S,R,LDR)
+            CALL SUHQR('Left ',N,1,NT,C,S,R,LDR)
             IF (NRES.GT.0) CALL F06QXF('Left','Variable','Forwards',NT,
      *                                 NRES,1,NT,C,S,RES,N)
          END IF
@@ -5052,12 +4181,7 @@ C
             INFORM = 0
             DTMAX = TDTMAX
             DTMIN = TDTMIN
-            IF (COND.GE.CONDBD) THEN
-               IF (MSGLVL.GT.0) THEN
-                  WRITE (REC,FMT=99997) JADD
-                  CALL X04BAY(IPRINT,5,REC)
-               END IF
-            END IF
+
          ELSE
 C
 C           The proposed working set appears to be linearly dependent.
@@ -5183,8 +4307,8 @@ C     .. External Functions ..
       INTEGER           IDAMAX
       EXTERNAL          IDAMAX
 C     .. External Subroutines ..
-      EXTERNAL          DAXPY, DCOPY, DGEMV, E04XAZ, F06DBF, F06FBF,
-     *                  F06QFF, F06QHF, X04BAF, X04BAY
+      EXTERNAL          DAXPY, DCOPY, DGEMV, E04XAZ, F06DBF, SLOAD,
+     *                  F06QFF, SMLOAD, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX, MIN, SQRT
 C     .. Common blocks ..
@@ -5202,11 +4326,7 @@ C
       NEEDED = NCNLN .GT. 0 .AND. LVRFYC .EQ. 0 .OR. LVRFYC .EQ. 2 .OR.
      *         LVRFYC .EQ. 3
       IF ( .NOT. NEEDED) RETURN
-C
-      IF (MSGLVL.GT.0) THEN
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
+
       DEBUG = NPDBG .AND. INPDBG(5) .GT. 0
       NSTATE = 0
 C
@@ -5262,10 +4382,7 @@ C
    60 CONTINUE
 C
       IF (NCHECK.EQ.0) THEN
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99995)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
+
       ELSE
 C
 C        Compute  (Jacobian)*DX.
@@ -5293,17 +4410,7 @@ C
          IMAX = IDAMAX(NCNLN,ERR,1)
          EMAX = ABS(ERR(IMAX))/(ABS(CJDX(IMAX))+ONE)
 C
-         IF (MSGLVL.GT.0) THEN
-            IF (EMAX.LE.OKTOL) THEN
-               WRITE (REC,FMT=99998)
-               CALL X04BAY(IPRINT,2,REC)
-            ELSE
-               WRITE (REC,FMT=99997)
-               CALL X04BAY(IPRINT,2,REC)
-            END IF
-            WRITE (REC,FMT=99996) EMAX, IMAX
-            CALL X04BAY(IPRINT,3,REC)
-         END IF
+
          IF (EMAX.GE.POINT9) INFORM = 1
       END IF
 C
@@ -5315,7 +4422,7 @@ C     ==================================================================
 C
 C           Recompute the Jacobian to find the non-constant elements.
 C
-            CALL F06QHF('General',NCNLN,N,RDUMMY,RDUMMY,CJACU,LDCJU)
+            CALL SMLOAD('General',NCNLN,N,RDUMMY,RDUMMY,CJACU,LDCJU)
 C
             CALL F06DBF(NCNLN,(1),NEEDC,1)
             NSTATE = 0
@@ -5345,7 +4452,7 @@ C        Loop over each column.
 C        ---------------------------------------------------------------
          DO 140 J = J3, J4
 C
-            CALL F06FBF(NCNLN,ZERO,ERR,1)
+            CALL SLOAD(NCNLN,ZERO,ERR,1)
             NCOLJ = 0
             HEADNG = .TRUE.
             XJ = X(J)
@@ -5416,34 +4523,6 @@ C
                      NWRONG = NWRONG + 1
                   END IF
 C
-                  IF (MSGLVL.GT.0) THEN
-                     CONST = OK .AND. INFO .EQ. 1 .AND. ABS(CIJ)
-     *                       .LT. EPSPT8
-                     IF ( .NOT. CONST) THEN
-                        IF (HEADNG) THEN
-                           WRITE (REC,FMT=99994)
-                           CALL X04BAY(IPRINT,4,REC)
-                           IF (OK) THEN
-                              WRITE (REC,FMT=99993) J, XJ, HOPT, I, CIJ,
-     *                          CJDIFF, KEY, ITER
-                           ELSE
-                              WRITE (REC,FMT=99992) J, XJ, HOPT, I, CIJ,
-     *                          CJDIFF, KEY, ITER, RESULT(INFO)
-                           END IF
-                           CALL X04BAF(IPRINT,REC(1))
-                           HEADNG = .FALSE.
-                        ELSE
-                           IF (OK) THEN
-                              WRITE (REC,FMT=99991) HOPT, I, CIJ,
-     *                          CJDIFF, KEY, ITER
-                           ELSE
-                              WRITE (REC,FMT=99990) HOPT, I, CIJ,
-     *                          CJDIFF, KEY, ITER, RESULT(INFO)
-                           END IF
-                           CALL X04BAF(IPRINT,REC(1))
-                        END IF
-                     END IF
-                  END IF
                   NEEDC(I) = 0
                END IF
   120       CONTINUE
@@ -5467,22 +4546,7 @@ C
 C
          INFORM = 0
          IF (COLMAX.GE.POINT9) INFORM = 1
-C
-         IF (MSGLVL.GT.0) THEN
-            IF (NCHECK.EQ.0) THEN
-               WRITE (REC,FMT=99986) NCSET
-               CALL X04BAF(IPRINT,REC(1))
-            ELSE
-               IF (NWRONG.EQ.0) THEN
-                  WRITE (REC,FMT=99989) NGOOD, NCHECK, J3, J4
-               ELSE
-                  WRITE (REC,FMT=99988) NWRONG, NCHECK, J3, J4
-               END IF
-               CALL X04BAY(IPRINT,3,REC)
-               WRITE (REC,FMT=99987) COLMAX, IROW, JCOL
-               CALL X04BAY(IPRINT,3,REC)
-            END IF
-         END IF
+
 C
       END IF
 C
@@ -5576,7 +4640,7 @@ C     .. External Functions ..
       DOUBLE PRECISION  DDOT, DNRM2
       EXTERNAL          DDOT, DNRM2
 C     .. External Subroutines ..
-      EXTERNAL          DCOPY, DGEMV, DSCAL, DTRSV, E04NBW, F06FBF,
+      EXTERNAL          DCOPY, DGEMV, DSCAL, DTRSV, E04NBW, SLOAD,
      *                  X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         MIN
@@ -5604,7 +4668,7 @@ C
                IF (UNITGZ) THEN
                   HZ(NRZ) = R(NRZ,NRZ)*P(NRZ)
                ELSE
-                  CALL F06FBF(NRZ,(ZERO),HZ,1)
+                  CALL SLOAD(NRZ,(ZERO),HZ,1)
                END IF
             ELSE
                HZ(1) = R(1,1)*P(1)
@@ -5616,7 +4680,7 @@ C        The objective is quadratic in the space spanned by Z1.
 C        ---------------------------------------------------------------
          IF (LINOBJ) THEN
             IF (UNITGZ) THEN
-               IF (NRZ.GT.1) CALL F06FBF(NRZ-1,(ZERO),HZ,1)
+               IF (NRZ.GT.1) CALL SLOAD(NRZ-1,(ZERO),HZ,1)
                HZ(NRZ) = -GQ(NRZ)/R(NRZ,NRZ)
             ELSE
                CALL DCOPY(NRZ,GQ,1,HZ,1)
@@ -5731,7 +4795,7 @@ C     .. External Functions ..
       INTEGER           F06KLF
       EXTERNAL          DDOT, DNRM2, F06KLF
 C     .. External Subroutines ..
-      EXTERNAL          DAXPY, DCOPY, DGEMV, DTRMV, E04NBW, F06FBF,
+      EXTERNAL          DAXPY, DCOPY, DGEMV, DTRMV, E04NBW, SLOAD,
      *                  F06FDF
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MIN
@@ -5741,7 +4805,7 @@ C     .. Executable Statements ..
 C
       NUMINF = 0
       SUMINF = ZERO
-      CALL F06FBF(N,ZERO,GQ,1)
+      CALL SLOAD(N,ZERO,GQ,1)
 C
       DO 40 J = 1, N + NCLIN
          IF (ISTATE(J).LE.0) THEN
@@ -5795,7 +4859,7 @@ C
          CALL E04NBW(6,N,NZ,NFREE,LDZY,UNITQ,KX,GQ,ZY,WRK)
          UNITGZ = .TRUE.
       ELSE IF (NUMINF.EQ.0 .AND. PRBTYP.EQ.'FP') THEN
-         CALL F06FBF(N,ZERO,GQ,1)
+         CALL SLOAD(N,ZERO,GQ,1)
       ELSE
 C
 C        Ready for the optimality phase.
@@ -5805,7 +4869,7 @@ C
             IF (LINOBJ) THEN
                CALL DCOPY(N,CQ,1,GQ,1)
             ELSE
-               CALL F06FBF(N,ZERO,GQ,1)
+               CALL SLOAD(N,ZERO,GQ,1)
             END IF
             NRZ = 0
          ELSE
@@ -5835,56 +4899,6 @@ C     End of  E04NCP. (LSGSET)
 C
       END
 
-      SUBROUTINE E04MFN(SUBR,MSG,V,LENV)
-C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
-C
-C     ******************************************************************
-C     E04MFN  prints the array V in debug format.
-C
-C     Original version dated 17-Jul-1987.
-C     This version of  E04MFN  dated  31-Jan-1988.
-C     ******************************************************************
-C
-C     .. Scalar Arguments ..
-      INTEGER           LENV
-      CHARACTER*6       SUBR
-      CHARACTER*(*)     MSG
-C     .. Array Arguments ..
-      DOUBLE PRECISION  V(*)
-C     .. Scalars in Common ..
-      INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
-C     .. Local Scalars ..
-      INTEGER           I, II
-C     .. Local Arrays ..
-      CHARACTER*80      REC(3)
-C     .. External Subroutines ..
-      EXTERNAL          X04BAF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MIN
-C     .. Common blocks ..
-      COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-C     .. Executable Statements ..
-C
-      IF (LENV.LE.0) THEN
-         WRITE (REC,FMT=99999) SUBR, MSG
-         CALL X04BAY(IPRINT,2,REC)
-      ELSE
-         WRITE (REC,FMT=99998) SUBR, MSG
-         CALL X04BAY(IPRINT,2,REC)
-         DO 20 I = 1, LENV, 5
-            WRITE (REC,FMT=99997) (V(II),II=I,MIN(I+4,LENV))
-            CALL X04BAF(IPRINT,REC(1))
-   20    CONTINUE
-      END IF
-C
-      RETURN
-C
-C     End of  E04MFN. (CMMSG1)
-C
-99999 FORMAT (/' //',A6,'//  ',A)
-99998 FORMAT (/' //',A6,'//  ',A,' ... ')
-99997 FORMAT (1P,5D15.5)
-      END
       SUBROUTINE E04NCR(N,NCLIN,ISTATE,BIGBND,CVNORM,ERRMAX,JMAX,NVIOL,
      *                  AX,BL,BU,FEATOL,X,WORK)
 C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
@@ -6064,23 +5078,7 @@ C
             JTINY = -J
          END IF
    20 CONTINUE
-C
-      IF (MSGLVL.GE.20) THEN
-         IF (ISUMM.GE.0) THEN
-            WRITE (REC,FMT=99999)
-            CALL X04BAY(ISUMM,2,REC)
-            LENGTH = NZ - NRZ
-            DO 40 K = 1, LENGTH, 4
-               WRITE (REC,FMT=99998) (GQ(KK),KK=K,MIN(K+3,LENGTH))
-               CALL X04BAF(ISUMM,REC(1))
-   40       CONTINUE
-         END IF
-      END IF
-C
-      IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-         WRITE (REC,FMT=99997) JSMLST, SMLLST
-         CALL X04BAY(IPRINT,3,REC)
-      END IF
+
 C
       RETURN
 C
@@ -7357,32 +6355,7 @@ C
             KBIGST = K
          END IF
    60 CONTINUE
-C
-C     -----------------------------------------------------------------
-C     If required, print the multipliers.
-C     -----------------------------------------------------------------
-      IF (MSGLVL.GE.20) THEN
-         IF (ISUMM.GE.0) THEN
-            IF (NFIXED.GT.0) THEN
-               WRITE (REC,FMT=99999) PRBTYP
-               CALL X04BAY(ISUMM,2,REC)
-               DO 80 K = 1, NFIXED, 4
-                  WRITE (REC,FMT=99998) (KX(NFREE+KK),RLAMDA(NACTIV+KK),
-     *              KK=K,MIN(K+3,NFIXED))
-                  CALL X04BAF(ISUMM,REC(1))
-   80          CONTINUE
-            END IF
-            IF (NACTIV.GT.0) THEN
-               WRITE (REC,FMT=99997) PRBTYP
-               CALL X04BAY(ISUMM,2,REC)
-               DO 100 K = 1, NACTIV, 4
-                  WRITE (REC,FMT=99998) (KACTIV(KK),RLAMDA(NACTIV-KK+1),
-     *              KK=K,MIN(K+3,NACTIV))
-                  CALL X04BAF(ISUMM,REC(1))
-  100          CONTINUE
-            END IF
-         END IF
-      END IF
+
 C
       IF (LCDBG .AND. ILCDBG(1).GT.0) THEN
          WRITE (REC,FMT=99996) JSMLST, SMLLST, KSMLST
@@ -7407,266 +6380,7 @@ C
 99994 FORMAT (' //E04MFM//   JTINY     TINYST                     ',
      *       /' //E04MFM//  ',I6,1P,D11.2)
       END
-      subroutine e04mfx(nout,buffer,key)
-c     mark 16 release. nag copyright 1992.
-c
-c     ******************************************************************
-c     e04mfx   decodes the option contained in  buffer  in order to set
-c     a parameter value in the relevant element of  iprmlc  or  rprmlc.
-c
-c
-c     input:
-c
-c     nout   a unit number for printing error messages.
-c            nout  must be a valid unit.
-c
-c     output:
-c
-c     key    the first keyword contained in buffer.
-c
-c
-c     e04mfx  calls e04udx and the subprograms
-c                 lookup, scannr, tokens, upcase
-c     (now called e04udy, e04udw, e04udv, e04udu)
-c     supplied by informatics general, inc., palo alto, california.
-c
-c     this version of e04mfx dated 20-apr-93.
-c     ******************************************************************
-c
-c     .. parameters ..
-      integer           mxparm
-      parameter         (mxparm=30)
-      integer           maxkey, maxtie, maxtok, maxtyp
-      parameter         (maxkey=18,maxtie=3,maxtok=10,maxtyp=4)
-      integer           idummy
-      double precision  rdummy
-      logical           sorted
-      double precision  zero
-      parameter         (idummy=-11111,rdummy=-11111.0d+0,sorted=.true.,
-     *                  zero=0.0d+0)
-c     .. scalar arguments ..
-      integer           nout
-      character*16      key
-      character*(*)     buffer
-c     .. scalars in common ..
-      double precision  bigbnd, bigdx, bndlow, bndupp, tolact, tolfea,
-     *                  tolrnk
-      integer           idbglc, iprnt, isumry, itmax1, itmax2, kchk,
-     *                  kcycle, lcrash, ldbglc, lprob, maxact, maxnz,
-     *                  mm, msglc, mxfree, nn, nnclin, nprob
-c     .. arrays in common ..
-      double precision  rpadlc(23), rpsvlc(mxparm)
-      integer           ipadlc(14), ipsvlc(mxparm)
-c     .. local scalars ..
-      double precision  rvalue
-      integer           i, idbg, lenbuf, loc1, loc2, loc3, msgdbg,
-     *                  msglvl, ntoken
-      logical           first, more, number
-      character*16      key2, key3, value
-      character*80      rec
-c     .. local arrays ..
-      double precision  rprmlc(mxparm)
-      integer           iprmlc(mxparm)
-      character*16      keys(maxkey), ties(maxtie), token(maxtok),
-     *                  type(maxtyp)
-c     .. external functions ..
-      logical           e04udx
-      external          e04udx
-c     .. external subroutines ..
-      external          e04udv, e04udy, x04baf
-c     .. intrinsic functions ..
-      intrinsic         index, len
-c     .. common blocks ..
-      common            /fe04mf/ipsvlc, idbglc, iprnt, isumry, itmax1,
-     *                  itmax2, kchk, kcycle, lcrash, lprob, maxact,
-     *                  mxfree, maxnz, mm, ldbglc, msglc, nn, nnclin,
-     *                  nprob, ipadlc
-      common            /ge04mf/rpsvlc, bigbnd, bigdx, bndlow, bndupp,
-     *                  tolact, tolfea, tolrnk, rpadlc
-c     .. equivalences ..
-      equivalence       (iprmlc(1),idbglc), (rprmlc(1),bigbnd)
-      equivalence       (msglc,msglvl), (idbglc,idbg), (ldbglc,msgdbg)
-c     .. save statement ..
-      save              /fe04mf/, /ge04mf/, first
-c     .. data statements ..
-      data              first/.true./
-      data              keys(1)/'begin           '/,
-     *                  keys(2)/'check           '/,
-     *                  keys(3)/'cold            '/,
-     *                  keys(4)/'crash           '/,
-     *                  keys(5)/'defaults        '/,
-     *                  keys(6)/'end             '/,
-     *                  keys(7)/'expand          '/,
-     *                  keys(8)/'feasibility     '/,
-     *                  keys(9)/'infinite        '/,
-     *                  keys(10)/'iterations      '/,
-     *                  keys(11)/'iters:iterations'/,
-     *                  keys(12)/'itns :iterations'/,
-     *                  keys(13)/'list            '/,
-     *                  keys(14)/'monitoring      '/,
-     *                  keys(15)/'nolist          '/,
-     *                  keys(16)/'print           '/,
-     *                  keys(17)/'problem         '/,
-     *                  keys(18)/'warm            '/
-      data              ties/'bound           ', 'step            ',
-     *                  'type            '/
-      data              type/'feasible     :fp', 'fp              ',
-     *                  'linear       :lp', 'lp              '/
-c     .. executable statements ..
-c     ------------------------------------------------------------------
-c
-      if (first) then
-         first = .false.
-         do 20 i = 1, mxparm
-            iprmlc(i) = idummy
-            rprmlc(i) = rdummy
-   20    continue
-      end if
-c
-c     eliminate comments and empty lines.
-c     a '*' appearing anywhere in buffer terminates the string.
-c
-      i = index(buffer,'*')
-      if (i.eq.0) then
-         lenbuf = len(buffer)
-      else
-         lenbuf = i - 1
-      end if
-      if (lenbuf.le.0) then
-         key = '*'
-         go to 80
-      end if
-c
-c     ------------------------------------------------------------------
-c     extract up to maxtok tokens from the record.
-c     ntoken returns how many were actually found.
-c     key, key2, key3 are the first tokens if any, otherwise blank.
-c     ------------------------------------------------------------------
-      ntoken = maxtok
-      call e04udv(buffer(1:lenbuf),maxtok,ntoken,token)
-      key = token(1)
-      key2 = token(2)
-      key3 = token(3)
-c
-c     certain keywords require no action.
-c
-      if (key.eq.' ' .or. key.eq.'begin') go to 80
-      if (key.eq.'list' .or. key.eq.'nolist') go to 80
-      if (key.eq.'end') go to 80
-c
-c     most keywords will have an associated integer or real value,
-c     so look for it no matter what the keyword.
-c
-      i = 1
-      number = .false.
-c
-   40 if (i.lt.ntoken .and. .not. number) then
-         i = i + 1
-         value = token(i)
-         number = e04udx(value)
-         go to 40
-      end if
-c
-      if (number) then
-         read (value,fmt='(bn, e16.0)') rvalue
-      else
-         rvalue = zero
-      end if
-c
-c     convert the keywords to their most fundamental form
-c     (upper case, no abbreviations).
-c     sorted says whether the dictionaries are in alphabetic order.
-c     loci   says where the keywords are in the dictionaries.
-c     loci = 0 signals that the keyword wasn't there.
-c     loci < 0 signals that the keyword is ambiguous.
-c
-      call e04udy(maxkey,keys,sorted,key,loc1)
-      if (loc1.lt.0) then
-         write (rec,fmt=99996) key
-         call x04baf(nout,rec)
-         return
-      end if
-      call e04udy(maxtie,ties,sorted,key2,loc2)
-c
-c     ------------------------------------------------------------------
-c     decide what to do about each keyword.
-c     the second keyword (if any) might be needed to break ties.
-c     some seemingly redundant testing of more is used
-c     to avoid compiler limits on the number of consecutive else ifs.
-c     ------------------------------------------------------------------
-      more = .true.
-      if (more) then
-         more = .false.
-         if (key.eq.'check       ') then
-            kchk = rvalue
-         else if (key.eq.'cold        ') then
-            lcrash = 0
-         else if (key.eq.'crash       ') then
-            tolact = rvalue
-         else if (key.eq.'defaults    ') then
-            do 60 i = 1, mxparm
-               iprmlc(i) = idummy
-               rprmlc(i) = rdummy
-   60       continue
-         else if (key.eq.'expand      ') then
-            kcycle = rvalue
-         else if (key.eq.'feasibility ') then
-            tolfea = rvalue
-         else
-            more = .true.
-         end if
-      end if
-c
-      if (more) then
-         more = .false.
-         if (key.eq.'infinite    ') then
-            if (key2.eq.'bound       ') bigbnd = rvalue*0.99999d+0
-            if (key2.eq.'step        ') bigdx = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'iterations  ') then
-            itmax2 = rvalue
-         else if (key.eq.'monitoring  ') then
-            isumry = rvalue
-         else if (key.eq.'print       ') then
-            msglvl = rvalue
-         else if (key.eq.'problem     ') then
-            if (key2.eq.'type  ') then
-c
-c              recognize     problem type = lp     etc.
-c
-               call e04udy(maxtyp,type,sorted,key3,loc3)
-               if (key3.eq.'fp') lprob = 1
-               if (key3.eq.'lp') lprob = 2
-               if (loc3.eq.0) then
-                  write (rec,fmt=99997) key3
-                  call x04baf(nout,rec)
-                  lprob = 10
-               end if
-            else
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'warm        ') then
-            lcrash = 1
-         else
-            write (rec,fmt=99999) key
-            call x04baf(nout,rec)
-         end if
-      end if
-c
-   80 return
-c
-c
-C     End of  E04MFX.  (LPKEY)
-C
-99999 FORMAT (' XXX  Keyword not recognized:         ',A)
-99998 FORMAT (' XXX  Second keyword not recognized:  ',A)
-99997 FORMAT (' XXX  Third  keyword not recognized:  ',A)
-99996 FORMAT (' XXX  Ambiguous keyword:              ',A)
-      END
+
       SUBROUTINE E04XAX(INFORM,MSGLVL,N,BIGBND,EPSRF,OKTOL,FDCHK,OBJF,
      *                  XNORM,OBJFUN,BL,BU,GRAD,GRADU,DX,X,Y,IUSER,USER)
 C     MARK 14 RE-ISSUE.  NAG COPYRIGHT 1989.
@@ -7771,10 +6485,6 @@ C
       NEEDED = LVRFYC .EQ. 0 .OR. LVRFYC .EQ. 1 .OR. LVRFYC .EQ. 3
       IF ( .NOT. NEEDED) RETURN
 C
-      IF (MSGLVL.GT.0) THEN
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
       DEBUG = NPDBG .AND. INPDBG(5) .GT. 0
       NSTATE = 0
 C
@@ -7826,13 +6536,7 @@ C
          END IF
    40 CONTINUE
 C
-      IF (NCHECK.EQ.0) THEN
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99989)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         RETURN
-      END IF
+
       GDX = DDOT(N,GRADU,1,DX,1)
 C
 C     ------------------------------------------------------------------
@@ -7849,18 +6553,7 @@ C
       ERROR = ABS(GDIFF-GDX)/(ABS(GDX)+ONE)
 C
       OK = ERROR .LE. OKTOL
-C
-      IF (MSGLVL.GT.0) THEN
-         IF (OK) THEN
-            WRITE (REC,FMT=99998)
-            CALL X04BAY(IPRINT,2,REC)
-         ELSE
-            WRITE (REC,FMT=99997)
-            CALL X04BAY(IPRINT,2,REC)
-         END IF
-         WRITE (REC,FMT=99996) GDX, GDIFF
-         CALL X04BAY(IPRINT,3,REC)
-      END IF
+
 C
       IF (ERROR.GE.POINT9) INFORM = 1
 C
@@ -7946,27 +6639,6 @@ C
                   NWRONG = NWRONG + 1
                END IF
 C
-               IF (MSGLVL.GT.0) THEN
-C
-C                 Zero elements are not printed.
-C
-                  CONST = OK .AND. INFO .EQ. 1 .AND. ABS(GJ) .LT. EPSPT8
-                  IF ( .NOT. CONST) THEN
-                     IF (HEADNG) THEN
-                        WRITE (REC,FMT=99995)
-                        CALL X04BAY(IPRINT,4,REC)
-                        HEADNG = .FALSE.
-                     END IF
-                     IF (OK) THEN
-                        WRITE (REC,FMT=99994) J, XJ, HOPT, GJ, GDIFF,
-     *                    KEY, ITER
-                     ELSE
-                        WRITE (REC,FMT=99993) J, XJ, HOPT, GJ, GDIFF,
-     *                    KEY, ITER, RESULT(INFO)
-                     END IF
-                     CALL X04BAF(IPRINT,REC(1))
-                  END IF
-               END IF
             END IF
    80    CONTINUE
 C
@@ -7974,17 +6646,6 @@ C        ===============================================================
 C        Done.
 C        ===============================================================
          INFORM = 0
-         IF (MSGLVL.GT.0) THEN
-            IF (NWRONG.EQ.0) THEN
-               WRITE (REC,FMT=99992) NGOOD, NCHECK, J1, J2
-               CALL X04BAY(IPRINT,3,REC)
-            ELSE
-               WRITE (REC,FMT=99991) NWRONG, NCHECK, J1, J2
-               CALL X04BAY(IPRINT,3,REC)
-            END IF
-            WRITE (REC,FMT=99990) EMAX, JMAX
-            CALL X04BAY(IPRINT,3,REC)
-         END IF
          IF (ERROR.GE.POINT9) INFORM = 1
       END IF
 C
@@ -8129,8 +6790,8 @@ C     .. External Functions ..
       EXTERNAL          DDOT, DNRM2, F06BLF
 C     .. External Subroutines ..
       EXTERNAL          DAXPY, DCOPY, DGEMV, DSCAL, DTRMV, DTRSV,
-     *                  E04NBW, E04NCY, E04NCZ, E04UCM, F06DBF, F06DFF,
-     *                  F06FBF, F06FLF, F06QFF, X04BAF, X04BAY
+     *                  E04NBW, E04NCY, E04NCZ, E04UCM, F06DBF, ICOPY ,
+     *                  SLOAD, F06FLF, F06QFF, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX, MIN
 C     .. Common blocks ..
@@ -8172,7 +6833,7 @@ C
       END IF
       LSDBG = NPDBG
       CMDBG = NPDBG
-      CALL F06DFF(LDBG,ILSDBG,1,ICMDBG,1)
+      CALL ICOPY (LDBG,ILSDBG,1,ICMDBG,1)
 C
       LRPQ = LOCLS(5)
       LRPQ0 = LOCLS(6)
@@ -8473,7 +7134,7 @@ C
       IF (NCNLN.GT.0) THEN
          IF (NUMINF.GT.0) THEN
             FEASQP = .FALSE.
-            CALL F06FBF(NCTOTL,(ZERO),CLAMDA,1)
+            CALL SLOAD(NCTOTL,(ZERO),CLAMDA,1)
 C
             IF (NZ.GT.0) THEN
 C              ---------------------------------------------------------
@@ -8617,7 +7278,7 @@ C
          END IF
       END IF
 C
-      CALL F06DFF(LDBG,INPDBG,1,ICMDBG,1)
+      CALL ICOPY (LDBG,INPDBG,1,ICMDBG,1)
       IDBG = IDBGSV
 C
       RETURN
@@ -8633,258 +7294,8 @@ C
 99994 FORMAT (1P,5D15.6)
 99993 FORMAT (5G12.3)
       END
-      SUBROUTINE E04NCJ(PRBTYP,ISDEL,ITER,JADD,JDEL,MSGLVL,NACTIV,NFREE,
-     *                  N,NCLIN,NRANK,LDR,LDT,NZ,NRZ,ISTATE,ALFA,CONDRZ,
-     *                  CONDT,GFNORM,GZRNRM,NUMINF,SUMINF,CTX,SSQ,AX,R,
-     *                  T,X,WORK)
-C     MARK 14 RE-ISSUE.  NAG COPYRIGHT 1989.
-C     MARK 16 REVISED. IER-1062 (JUL 1993).
-C
-C     ******************************************************************
-C     E04NCJ  prints various levels of output for  E04NCZ.
-C
-C           Msg        Cumulative result
-C           ---        -----------------
-C
-C        le   0        no output.
-C
-C        eq   1        nothing now (but full output later).
-C
-C        eq   5        one terse line of output.
-C
-C        ge  10        same as 5 (but full output later).
-C
-C        ge  20        constraint status,  x  and  Ax.
-C
-C        ge  30        diagonals of  T  and  R.
-C
-C
-C     Debug printing is performed depending on the logical variable
-C     LSDBG.  LSDBG  is set true when  IDBG  major iterations have
-C     been performed. At this point,  printing is done according to
-C     a string of binary digits of the form  SVT  (stored in the
-C     integer array  ILSDBG).
-C
-C     S  set 'on'  gives information from the maximum step routine
-C                  E04UCG.
-C     V  set 'on'  gives various vectors in  E04NCZ  and its
-C                  auxiliaries.
-C     T  set 'on'  gives a trace of which routine was called and an
-C                  indication of the progress of the run.
-C
-C     Systems Optimization Laboratory, Stanford University.
-C     Original version written 31-October-1984.
-C     This version of E04NCJ dated 21-Oct-1992.
-C     ******************************************************************
-C
-C     .. Parameters ..
-      INTEGER           LDBG
-      PARAMETER         (LDBG=5)
-      INTEGER           MLINE1, MLINE2
-      PARAMETER         (MLINE1=50000,MLINE2=50000)
-C     .. Scalar Arguments ..
-      DOUBLE PRECISION  ALFA, CONDRZ, CONDT, CTX, GFNORM, GZRNRM, SSQ,
-     *                  SUMINF
-      INTEGER           ISDEL, ITER, JADD, JDEL, LDR, LDT, MSGLVL, N,
-     *                  NACTIV, NCLIN, NFREE, NRANK, NRZ, NUMINF, NZ
-      CHARACTER*2       PRBTYP
-C     .. Array Arguments ..
-      DOUBLE PRECISION  AX(*), R(LDR,*), T(LDT,*), WORK(N), X(N)
-      INTEGER           ISTATE(*)
-C     .. Scalars in Common ..
-      INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
-      LOGICAL           LSDBG
-C     .. Arrays in Common ..
-      INTEGER           ILSDBG(LDBG)
-C     .. Local Scalars ..
-      DOUBLE PRECISION  OBJ
-      INTEGER           I, ITN, J, K, KADD, KDEL, NART, NDF
-      LOGICAL           FIRST, LINOBJ, NEWSET, PRTHDR
-      CHARACTER*2       LADD, LDEL
-C     .. Local Arrays ..
-      CHARACTER*2       LSTATE(0:5)
-      CHARACTER*120     REC(4)
-C     .. External Subroutines ..
-      EXTERNAL          DCOPY, X04BAF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MIN, MOD
-C     .. Common blocks ..
-      COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /CE04NC/ILSDBG, LSDBG
-C     .. Data statements ..
-      DATA              LSTATE(0), LSTATE(1), LSTATE(2)/'  ', 'L ',
-     *                  'U '/
-      DATA              LSTATE(3), LSTATE(4), LSTATE(5)/'E ', 'F ',
-     *                  'A '/
-C     .. Executable Statements ..
-      IF (MSGLVL.GE.15) THEN
-         IF (ISUMM.GE.0) THEN
-            WRITE (REC,FMT=99999) PRBTYP, ITER
-            CALL X04BAY(ISUMM,4,REC)
-         END IF
-      END IF
-C
-      IF (MSGLVL.GE.5) THEN
-C
-         FIRST = ITER .EQ. 0
-         LINOBJ = NRANK .EQ. 0
-C
-         ITN = MOD(ITER,10000)
-         NDF = MOD(NRZ,10000)
-C
-         NART = NZ - NRZ
-C
-         IF (JDEL.GT.0) THEN
-            KDEL = ISDEL
-         ELSE IF (JDEL.LT.0) THEN
-            JDEL = NART + 1
-            KDEL = 5
-         ELSE
-            KDEL = 0
-         END IF
-C
-         IF (JADD.GT.0) THEN
-            KADD = ISTATE(JADD)
-         ELSE
-            KADD = 0
-         END IF
-C
-         LDEL = LSTATE(KDEL)
-         LADD = LSTATE(KADD)
-C
-         IF (NUMINF.GT.0) THEN
-            OBJ = SUMINF
-         ELSE
-            OBJ = SSQ + CTX
-         END IF
-C        ---------------------------------------------------------------
-C        If necessary, print a header.
-C        Print a single line of information.
-C        ---------------------------------------------------------------
-         IF (ISUMM.GE.0) THEN
-C           -----------------------------------
-C           Terse line for the Monitoring file.
-C           -----------------------------------
-            NEWSET = LINES1 .GE. MLINE1
-            PRTHDR = MSGLVL .GE. 15 .OR. FIRST .OR. NEWSET
-C
-            IF (PRTHDR) THEN
-               IF (LINOBJ) THEN
-                  WRITE (REC,FMT=99998)
-                  CALL X04BAY(ISUMM,3,REC)
-               ELSE
-                  WRITE (REC,FMT=99996)
-                  CALL X04BAY(ISUMM,3,REC)
-               END IF
-               LINES1 = 0
-            END IF
-C
-            IF (LINOBJ) THEN
-               WRITE (REC,FMT=99994) ITN, JDEL, LDEL, JADD, LADD, ALFA,
-     *           NUMINF, OBJ, N - NFREE, NACTIV, NART, NDF, GZRNRM,
-     *           GFNORM, CONDT
-               CALL X04BAF(ISUMM,REC(1))
-            ELSE
-               WRITE (REC,FMT=99994) ITN, JDEL, LDEL, JADD, LADD, ALFA,
-     *           NUMINF, OBJ, N - NFREE, NACTIV, NART, NDF, GZRNRM,
-     *           GFNORM, CONDT, CONDRZ
-               CALL X04BAF(ISUMM,REC(1))
-            END IF
-            LINES1 = LINES1 + 1
-         END IF
-C
-         IF (IPRINT.GE.0 .AND. ISUMM.NE.IPRINT) THEN
-C           ------------------------------
-C           Terse line for the Print file.
-C           ------------------------------
-            NEWSET = LINES2 .GE. MLINE2
-            PRTHDR = FIRST .OR. NEWSET
-C
-            IF (PRTHDR) THEN
-               WRITE (REC,FMT=99997)
-               CALL X04BAY(IPRINT,3,REC)
-               LINES2 = 0
-            END IF
-C
-            WRITE (REC,FMT=99995) ITN, ALFA, NUMINF, OBJ, GZRNRM
-            CALL X04BAF(IPRINT,REC(1))
-            LINES2 = LINES2 + 1
-         END IF
-C
-         IF (MSGLVL.GE.20) THEN
-            IF (ISUMM.GE.0) THEN
-               WRITE (REC,FMT=99993) PRBTYP
-               CALL X04BAY(ISUMM,3,REC)
-               WRITE (REC,FMT=99992)
-               CALL X04BAY(ISUMM,2,REC)
-               DO 20 I = 1, N, 5
-                  WRITE (REC,FMT=99987) (X(J),ISTATE(J),J=I,MIN(I+4,N))
-                  CALL X04BAF(ISUMM,REC(1))
-   20          CONTINUE
-               IF (NCLIN.GT.0) THEN
-                  WRITE (REC,FMT=99991)
-                  CALL X04BAY(ISUMM,2,REC)
-                  DO 40 I = 1, NCLIN, 5
-                     WRITE (REC,FMT=99987) (AX(K),ISTATE(N+K),K=I,
-     *                 MIN(I+4,NCLIN))
-                     CALL X04BAF(ISUMM,REC(1))
-   40             CONTINUE
-               END IF
-C
-               IF (MSGLVL.GE.30) THEN
-C                 ------------------------------------------------------
-C                 Print the diagonals of  T  and  R.
-C                 ------------------------------------------------------
-                  IF (NACTIV.GT.0) THEN
-                     CALL DCOPY(NACTIV,T(NACTIV,NZ+1),LDT-1,WORK,1)
-                     WRITE (REC,FMT=99990) PRBTYP
-                     CALL X04BAY(ISUMM,2,REC)
-                     DO 60 I = 1, NACTIV, 5
-                        WRITE (REC,FMT=99986) (WORK(J),J=I,
-     *                    MIN(I+4,NACTIV))
-                        CALL X04BAF(ISUMM,REC(1))
-   60                CONTINUE
-                  END IF
-                  IF (NRANK.GT.0) THEN
-                     WRITE (REC,FMT=99989) PRBTYP
-                     CALL X04BAY(ISUMM,2,REC)
-                     DO 80 I = 1, NRANK, 5
-                        WRITE (REC,FMT=99986) (R(J,J),J=I,MIN(I+4,NRANK)
-     *                    )
-                        CALL X04BAF(ISUMM,REC(1))
-   80                CONTINUE
-                  END IF
-               END IF
-               WRITE (REC,FMT=99988)
-               CALL X04BAY(ISUMM,3,REC)
-            END IF
-         END IF
-      END IF
-C
-      RETURN
-C
-C
-C     End of  E04NCJ. (LSPRT)
-C
-99999 FORMAT (//' ',A2,' iteration',I5,/' =================')
-99998 FORMAT (//' Itn Jdel  Jadd      Step Ninf  Sinf/Objective  Bnd  ',
-     *       'Lin  Art   Zr  Norm Gz  Norm Gf   Cond T')
-99997 FORMAT (//' Itn     Step Ninf Sinf/Objective  Norm Gz')
-99996 FORMAT (//' Itn Jdel  Jadd      Step Ninf  Sinf/Objective  Bnd  ',
-     *       'Lin  Art   Zr  Norm Gz  Norm Gf   Cond T  Cond Rz')
-99995 FORMAT (I4,1P,D9.1,I5,D15.6,D9.1)
-99994 FORMAT (I4,I5,A1,I5,A1,1P,D9.1,I5,D16.8,4I5,4D9.1)
-99993 FORMAT (/' Values and status of the ',A2,' constraints',/' -----',
-     *       '----------------------------------')
-99992 FORMAT (/' Variables...')
-99991 FORMAT (/' General linear constraints...')
-99990 FORMAT (/' Diagonals of ',A2,' working set factor T')
-99989 FORMAT (/' Diagonals of ',A2,' triangle R         ')
-99988 FORMAT (//' ----------------------------------------------------',
-     *       '-------------------------------------------')
-99987 FORMAT (1X,5(1P,D15.6,I5))
-99986 FORMAT (1P,5D15.6)
-      END
+
+
       SUBROUTINE E04MFH(N,NCLIN,LDA,ISTATE,BIGBND,NUMINF,SUMINF,BL,BU,A,
      *                  FEATOL,CVEC,X,WTINF)
 C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
@@ -8925,7 +7336,7 @@ C     .. External Functions ..
       DOUBLE PRECISION  DDOT
       EXTERNAL          DDOT
 C     .. External Subroutines ..
-      EXTERNAL          DAXPY, F06FBF
+      EXTERNAL          DAXPY, SLOAD
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS
 C     .. Executable Statements ..
@@ -8935,7 +7346,7 @@ C
 C
       NUMINF = 0
       SUMINF = ZERO
-      CALL F06FBF(N,(ZERO),CVEC,1)
+      CALL SLOAD(N,(ZERO),CVEC,1)
 C
       DO 40 J = 1, N + NCLIN
          IF (ISTATE(J).LE.0) THEN
@@ -9033,7 +7444,7 @@ C     .. External Functions ..
       INTEGER           IDAMAX
       EXTERNAL          IDAMAX
 C     .. External Subroutines ..
-      EXTERNAL          DCOPY, DSWAP, F06BAF, F06FBF, F06FLF, F06QRF,
+      EXTERNAL          DCOPY, DSWAP, F06BAF, SLOAD, F06FLF, SUHQR,
      *                  F06QXF, X04BAY
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
@@ -9053,11 +7464,6 @@ C           Case 1.  A simple bound has been deleted.
 C           =======  Columns  NFREE+1  and  IR  of GQM' must be swapped.
 C
             IR = NZ + KDEL
-            IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-               WRITE (REC,FMT=99998) NACTIV, NRZ, NZ, NFREE, IR, JDEL,
-     *           UNITQ
-               CALL X04BAY(IPRINT,4,REC)
-            END IF
 C
             ITDEL = NACTIV + 1
             NFREE = NFREE + 1
@@ -9083,8 +7489,8 @@ c DEBUG DEBUG 691
                   write (*,*) 'wtf nfree > ldq we are gonna crash'
                else
                   IF (NFREE.GT.1) THEN
-                     CALL F06FBF(NFREE-1,ZERO,Q(NFREE,1),LDQ)
-                     CALL F06FBF(NFREE-1,ZERO,Q(1,NFREE),1)
+                     CALL SLOAD(NFREE-1,ZERO,Q(NFREE,1),LDQ)
+                     CALL SLOAD(NFREE-1,ZERO,Q(1,NFREE),1)
                   END IF
                   Q(NFREE,NFREE) = ONE
                end if
@@ -9093,11 +7499,6 @@ c DEBUG DEBUG 691
 C
 C           Case 2.  A general constraint has been deleted.
 C           =======
-C
-            IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-               WRITE (REC,FMT=99997) NACTIV, NRZ, NZ, NFREE, KDEL, JDEL
-               CALL X04BAY(IPRINT,4,REC)
-            END IF
 C
 C           Delete row  ITDEL  of  T  and move up the ones below it.
 C           T  becomes lower Hessenberg.
@@ -9136,7 +7537,7 @@ C
                NPIV = JT + ITDEL - 1
                IF (NSUP.GT.1) THEN
                   CALL DCOPY(NSUP-1,T(IT+1,JT+1),LDT+1,S(JT+1),1)
-                  CALL F06QRF('Right',NACTIV,1,NSUP,C(JT+1),S(JT+1),
+                  CALL SUHQR('Right',NACTIV,1,NSUP,C(JT+1),S(JT+1),
      *                        T(IT,JT+1),LDT)
                END IF
 C
@@ -9162,11 +7563,6 @@ C
             JART = NRZ1 - 1 + IDAMAX(NZ-NRZ1+1,GQM(NRZ1,1),1)
          ELSE
             JART = -JDEL
-         END IF
-C
-         IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-            WRITE (REC,FMT=99999) NZ, NRZ1, JART
-            CALL X04BAY(IPRINT,4,REC)
          END IF
 C
          IF (JART.GT.NRZ1) THEN
@@ -9378,10 +7774,7 @@ C     In degenerate cases, this strategy gives us some freedom in the
 C     second pass.  The general idea follows that described by P.M.J.
 C     Harris, p.21 of Mathematical Programming 5, 1 (1973), 1--28.
 C     ------------------------------------------------------------------
-      IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,3,REC)
-      END IF
+
 C
       ATPMXI = ZERO
       ALFAP = BIGALF
@@ -9444,11 +7837,7 @@ C
                IF (JS.EQ.-2) ATPMXI = MAX(ATPMXI,ATPSCD)
             END IF
 C
-            IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-               WRITE (REC,FMT=99998) J, JS, DELTA, RES, ATP, ALFAP,
-     *           ATPMXI
-               CALL X04BAF(IPRINT,REC(1))
-            END IF
+
          END IF
    20 CONTINUE
 C
@@ -9460,10 +7849,7 @@ C     That makes the largest angle with the search direction.
 C     For infeasible variables, find the largest step subject to a'p
 C     being no smaller than GAMMA * max(a'p).
 C     ------------------------------------------------------------------
-      IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-         WRITE (REC,FMT=99997)
-         CALL X04BAY(IPRINT,3,REC)
-      END IF
+
 C
       IF (FIRSTV) THEN
          ALFAI = BIGALF
@@ -9587,11 +7973,7 @@ C
                END IF
             END IF
 C
-            IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-               WRITE (REC,FMT=99996) J, JS, DELTA, RES, ATP, JHITF,
-     *           ATPMXF, JHITI, ALFAI
-               CALL X04BAF(IPRINT,REC(1))
-            END IF
+
          END IF
    40 CONTINUE
 C
@@ -9672,11 +8054,7 @@ C     ------------------------------------------------------------------
    60 ALFA = BIGALF
       MOVE = .TRUE.
       ONBND = .FALSE.
-C
-      IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-         WRITE (REC,FMT=99995) JHIT, ALFA
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
+
 C
       RETURN
 C
@@ -9693,6 +8071,7 @@ C
 99995 FORMAT (/' //E04MFS//  Unbounded step.',/' //E04MFS//  JHIT     ',
      *       '      ALFA',/' //E04MFS//  ',I4,G15.4)
       END
+
       SUBROUTINE E04NBX(MSGLVL,NFREE,NROWA,N,NCLIN,NCTOTL,BIGBND,NAMED,
      *                  NAMES,NACTIV,ISTATE,KACTIV,KX,A,BL,BU,C,CLAMDA,
      *                  RLAMDA,X)
@@ -9746,7 +8125,7 @@ C     .. External Functions ..
       DOUBLE PRECISION  DDOT
       EXTERNAL          DDOT
 C     .. External Subroutines ..
-      EXTERNAL          F06FBF, X04BAF, X04BAY
+      EXTERNAL          SLOAD, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS
 C     .. Common blocks ..
@@ -9769,7 +8148,7 @@ C
 C     Expand multipliers for bounds, linear and nonlinear constraints
 C     into the  CLAMDA  array.
 C
-      CALL F06FBF(NCTOTL,ZERO,CLAMDA,1)
+      CALL SLOAD(NCTOTL,ZERO,CLAMDA,1)
       NFIXED = N - NFREE
       DO 20 K = 1, NACTIV + NFIXED
          IF (K.LE.NACTIV) J = KACTIV(K) + N
@@ -9777,109 +8156,12 @@ C
          CLAMDA(J) = RLAMDA(K)
    20 CONTINUE
 C
-      IF (MSGLVL.LT.10 .AND. MSGLVL.NE.1) RETURN
-C
-      WRITE (REC,FMT=99999)
-      CALL X04BAY(IPRINT,4,REC)
-      ID3 = ID(1)
-C
-      DO 40 J = 1, NCTOTL
-         B1 = BL(J)
-         B2 = BU(J)
-         WLAM = CLAMDA(J)
-         IS = ISTATE(J)
-         LS = LSTATE(IS+3)
-         IF (J.LE.N) THEN
-C
-C           Section 1 -- the variables  x.
-C           ------------------------------
-            K = J
-            V = X(J)
-C
-         ELSE IF (J.LE.NPLIN) THEN
-C
-C           Section 2 -- the linear constraints  A*x.
-C           -----------------------------------------
-            IF (J.EQ.N+1) THEN
-               WRITE (REC,FMT=99998)
-               CALL X04BAY(IPRINT,4,REC)
-               ID3 = ID(2)
-            END IF
-C
-            K = J - N
-            V = DDOT(N,A(K,1),NROWA,X,1)
-         ELSE
-C
-C           Section 3 -- the nonlinear constraints  c(x).
-C           ---------------------------------------------
-C
-            IF (J.EQ.NPLIN+1) THEN
-               WRITE (REC,FMT=99997)
-               CALL X04BAY(IPRINT,4,REC)
-               ID3 = ID(3)
-            END IF
-C
-            K = J - NPLIN
-            V = C(K)
-         END IF
-C
-C        Print a line for the j-th variable or constraint.
-C        -------------------------------------------------
-         RES = V - B1
-         RES2 = B2 - V
-         IF (ABS(RES).GT.ABS(RES2)) RES = RES2
-         IP = 1
-         IF (B1.LE.(-BIGBND)) IP = 2
-         IF (B2.GE.BIGBND) IP = IP + 2
-         IF (NAMED) THEN
-C
-            ID4 = NAMES(J)
-            IF (IP.EQ.1) THEN
-               WRITE (REC,FMT=99996) ID4, LS, V, B1, B2, WLAM, RES
-            ELSE IF (IP.EQ.2) THEN
-               WRITE (REC,FMT=99995) ID4, LS, V, B2, WLAM, RES
-            ELSE IF (IP.EQ.3) THEN
-               WRITE (REC,FMT=99994) ID4, LS, V, B1, WLAM, RES
-            ELSE
-               WRITE (REC,FMT=99993) ID4, LS, V, WLAM, RES
-            END IF
-            CALL X04BAF(IPRINT,REC(1))
-C
-         ELSE
-C
-            IF (IP.EQ.1) THEN
-               WRITE (REC,FMT=99992) ID3, K, LS, V, B1, B2, WLAM, RES
-            ELSE IF (IP.EQ.2) THEN
-               WRITE (REC,FMT=99991) ID3, K, LS, V, B2, WLAM, RES
-            ELSE IF (IP.EQ.3) THEN
-               WRITE (REC,FMT=99990) ID3, K, LS, V, B1, WLAM, RES
-            ELSE
-               WRITE (REC,FMT=99989) ID3, K, LS, V, WLAM, RES
-            END IF
-            CALL X04BAF(IPRINT,REC(1))
-         END IF
-   40 CONTINUE
       RETURN
+
 C
 C
 C     End of  E04NBX. (CMPRT)
-C
-99999 FORMAT (//1X,'Varbl',1X,'State',5X,'Value',5X,'Lower Bound',3X,
-     *       'Upper Bound',4X,'Lagr Mult',3X,'Residual',/)
-99998 FORMAT (//1X,'L Con',1X,'State',5X,'Value',5X,'Lower Bound',3X,
-     *       'Upper Bound',4X,'Lagr Mult',3X,'Residual',/)
-99997 FORMAT (//1X,'N Con',1X,'State',5X,'Value',5X,'Lower Bound',3X,
-     *       'Upper Bound',4X,'Lagr Mult',3X,'Residual',/)
-99996 FORMAT (1X,A4,4X,A2,1X,1P,3G14.6,1P,2G12.4)
-99995 FORMAT (1X,A4,4X,A2,1X,1P,G14.6,5X,'None',5X,1P,G14.6,1P,2G12.4)
-99994 FORMAT (1X,A4,4X,A2,1X,1P,2G14.6,5X,'None',5X,1P,2G12.4)
-99993 FORMAT (1X,A4,4X,A2,1X,1P,G14.6,5X,'None',10X,'None',5X,1P,2G12.4)
-99992 FORMAT (1X,A1,I3,4X,A2,1X,1P,3G14.6,1P,2G12.4)
-99991 FORMAT (1X,A1,I3,4X,A2,1X,1P,G14.6,5X,'None',5X,1P,G14.6,1P,
-     *       2G12.4)
-99990 FORMAT (1X,A1,I3,4X,A2,1X,1P,2G14.6,5X,'None',5X,2G12.4)
-99989 FORMAT (1X,A1,I3,4X,A2,1X,1P,G14.6,5X,'None',10X,'None',5X,1P,
-     *       2G12.4)
+
       END
       SUBROUTINE E04NFR(UNITQ,RSET,INFORM,IFIX,IADD,JADD,IT,NACTIV,NZ,
      *                  NFREE,NRZ,NGQ,N,LDA,LDQ,LDR,LDT,KX,CONDMX,DRZZ,
@@ -9964,7 +8246,7 @@ C     .. External Functions ..
       EXTERNAL          DNRM2, F06BLF
 C     .. External Subroutines ..
       EXTERNAL          DCOPY, DSCAL, E04NBW, E04NFM, F06FLF, F06FQF,
-     *                  F06QHF, F06QKF, F06QRF, F06QVF, F06QXF, X04BAY
+     *                  SMLOAD, SGEAPR, SUHQR, SUTSRH, F06QXF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         MAX, MIN
 C     .. Common blocks ..
@@ -9987,11 +8269,7 @@ C
 C        ===============================================================
 C        A simple bound has entered the working set.  IADD is not used.
 C        ===============================================================
-         IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-            WRITE (REC,FMT=99999) NACTIV, NRZ, NZ, NFREE, IFIX, JADD,
-     *        UNITQ
-            CALL X04BAY(IPRINT,4,REC)
-         END IF
+
          NANEW = NACTIV
 C
          IF (UNITQ) THEN
@@ -10029,11 +8307,7 @@ C        ===============================================================
 C        A general constraint has entered the working set.
 C        IFIX is not used.
 C        ===============================================================
-         IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-            WRITE (REC,FMT=99998) NACTIV, NRZ, NZ, NFREE, IADD, JADD,
-     *        UNITQ
-            CALL X04BAY(IPRINT,4,REC)
-         END IF
+
 C
          NANEW = NACTIV + 1
 C
@@ -10069,7 +8343,7 @@ C
 C
 C           First general constraint added.  Set  Q = I.
 C
-            CALL F06QHF('General',NFREE,NFREE,ZERO,ONE,Q,LDQ)
+            CALL SMLOAD('General',NFREE,NFREE,ZERO,ONE,Q,LDQ)
             UNITQ = .FALSE.
             IT = 0
          END IF
@@ -10087,7 +8361,7 @@ C        The orthogonal matrix  Q  (i.e.,  Q) is not stored explicitly.
 C        Apply  P, the sequence of pairwise interchanges that moves the
 C        newly-fixed variable to position  NFREE.
 C        ---------------------------------------------------------------
-         IF (NGQ.GT.0) CALL F06QKF('Left','Transpose',NFREE-1,W,NGQ,GQM,
+         IF (NGQ.GT.0) CALL SGEAPR('Left','Transpose',NFREE-1,W,NGQ,GQM,
      *                             N)
 C
          IF (RSET) THEN
@@ -10122,7 +8396,7 @@ C           The subdiagonal elements generated by this process are
 C           stored in  S(1),  S(2), ..., S(NRZ-1).
 C
             NSUP = NRZ - 1
-            CALL F06QVF('Right',NRZ,1,NRZ,C,S,R,LDR)
+            CALL SUTSRH('Right',NRZ,1,NRZ,C,S,R,LDR)
          END IF
       END IF
 C
@@ -10132,7 +8406,7 @@ C        Eliminate the  NSUP  subdiagonal elements of  R  stored in
 C        S(NRZ-NSUP), ..., S(NRZ-1)  with a left-hand sweep of rotations
 C        in planes (NRZ-NSUP, NRZ-NSUP+1), ..., (NRZ-1, NRZ).
 C        ---------------------------------------------------------------
-         CALL F06QRF('Left ',NRZ,NRZ-NSUP,NRZ,C,S,R,LDR)
+         CALL SUHQR('Left ',NRZ,NRZ-NSUP,NRZ,C,S,R,LDR)
 C
          IF (NSUP.GT.0 .AND. DRZZ.NE.ONE) THEN
             DRZZ = C(NRZ-1)**2 + DRZZ*S(NRZ-1)**2
@@ -10158,7 +8432,7 @@ C
                T(IT,JT) = C(JT-1)*T(IT,JT)
 C
                IF (NACTIV.GT.1) THEN
-                  CALL F06QVF('Right',NACTIV,1,NACTIV,C(JT),S(JT),
+                  CALL SUTSRH('Right',NACTIV,1,NACTIV,C(JT),S(JT),
      *                        T(IT,JT),LDT)
                   CALL DCOPY(NACTIV-1,S(JT),1,T(IT+1,JT),LDT+1)
                END IF
@@ -10198,56 +8472,20 @@ C
             INFORM = 0
             DTMAX = TDTMAX
             DTMIN = TDTMIN
-            IF (COND.GE.CONDBD) THEN
-               IF (MSGLVL.GT.0) THEN
-                  WRITE (REC,FMT=99997) JADD
-                  CALL X04BAY(IPRINT,5,REC)
-               END IF
-            END IF
+
          ELSE
 C
 C           The proposed working set appears to be linearly dependent.
 C
             INFORM = 1
-            IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-               WRITE (REC,FMT=99996)
-               CALL X04BAY(IPRINT,2,REC)
-               IF (BOUND) THEN
-                  WRITE (REC,FMT=99995) ASIZE, DTMAX, DTMIN
-                  CALL X04BAY(IPRINT,3,REC)
-               ELSE
-                  IF (NACTIV.GT.0) THEN
-                     WRITE (REC,FMT=99994) ASIZE, DTMAX, DTMIN, DTNEW
-                     CALL X04BAY(IPRINT,3,REC)
-                  ELSE
-                     WRITE (REC,FMT=99993) ASIZE, DTNEW
-                     CALL X04BAY(IPRINT,3,REC)
-                  END IF
-               END IF
-            END IF
+
          END IF
       END IF
 C
       RETURN
 C
 C     End of  E04NFR.  (RZADD)
-C
-99999 FORMAT (/' //E04NFR //  Simple bound added.',/' //E04NFR //  NAC',
-     *       'TIV   NRZ    NZ NFREE  IFIX  JADD UNITQ         ',/' //E',
-     *       '04NFR //  ',6I6,L6)
-99998 FORMAT (/' //E04NFR //  General constraint added.           ',/
-     *       ' //E04NFR //  NACTIV   NRZ    NZ NFREE  IADD  JADD UNITQ',
-     *       /' //E04NFR //  ',6I6,L6)
-99997 FORMAT (/' XXX  Serious ill-conditioning in the working set afte',
-     *       'r adding constraint ',I5,/' XXX  Overflow may occur in s',
-     *       'ubsequent iterations.',//)
-99996 FORMAT (/' //E04NFR //  Dependent constraint rejected.')
-99995 FORMAT (/' //E04NFR //     ASIZE     DTMAX     DTMIN        ',
-     *       /' //E04NFR //',1P,3D10.2)
-99994 FORMAT (/' //E04NFR //     ASIZE     DTMAX     DTMIN     DTNEW',
-     *       /' //E04NFR //',1P,4D10.2)
-99993 FORMAT (/' //E04NFR //     ASIZE     DTNEW',/' //E04NFR //',1P,
-     *       2D10.2)
+
       END
       SUBROUTINE E04UCN(FEASQP,N,NCLIN,NCNLN,OBJALF,GRDALF,QPCURV,
      *                  ISTATE,CJDX,CMUL,CS,DLAM,RHO,VIOLN,WORK1,WORK2)
@@ -10525,8 +8763,7 @@ C     .. Local Arrays ..
       CHARACTER*80      REC(4)
 C     .. External Subroutines ..
       EXTERNAL          E04XAZ, F06DBF, X04BAF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         ABS, MAX, MIN, SQRT
+
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /BE04UC/LVLDIF, NCDIFF, NFDIFF, LFDSET
@@ -10540,10 +8777,6 @@ C     .. Executable Statements ..
 C
       DEBUG = NPDBG .AND. INPDBG(5) .GT. 0
       IF (LFDSET.EQ.0) THEN
-         IF (MSGLVL.GT.0) THEN
-            WRITE (REC,FMT=99999)
-            CALL X04BAY(IPRINT,4,REC)
-         END IF
 C
          NSTATE = 0
          ITMAX = 3
@@ -10702,15 +8935,7 @@ C
 C
                IF (HCD.EQ.ZERO) HCD = TEN*HFD
 C
-               IF (MSGLVL.GT.0) THEN
-                  IF (HEADNG) THEN
-                     WRITE (REC,FMT=99998)
-                     CALL X04BAY(IPRINT,4,REC)
-                  END IF
-                  WRITE (REC,FMT=99997) J, XJ, HFD, HCD, ERRMAX
-                  CALL X04BAF(IPRINT,REC(1))
-                  HEADNG = .FALSE.
-               END IF
+
                FDNORM = MAX(FDNORM,HFD)
                HFORWD(J) = HFD/(ONE+ABS(XJ))
                HCNTRL(J) = HCD/(ONE+ABS(XJ))
@@ -10810,34 +9035,18 @@ C
 C
                Y(J) = YJ
   140       CONTINUE
-C
-            IF (MSGLVL.GT.0) THEN
-               IF (LVLDER.LT.2 .AND. NCCNST.GT.0) THEN
-                  WRITE (REC,FMT=99996) NCCNST
-                  CALL X04BAY(IPRINT,2,REC)
-               END IF
-               IF (LVLDER.NE.1 .AND. NFCNST.GT.0) THEN
-                  WRITE (REC,FMT=99995) NFCNST
-                  CALL X04BAY(IPRINT,2,REC)
-               END IF
-            END IF
+
 C
             IF (NCDIFF.EQ.0 .AND. LVLDER.LT.2) THEN
                IF (LVLDER.EQ.0) LVLDER = 2
                IF (LVLDER.EQ.1) LVLDER = 3
-               IF (MSGLVL.GT.0) THEN
-                  WRITE (REC,FMT=99994) LVLDER
-                  CALL X04BAY(IPRINT,4,REC)
-               END IF
+
             END IF
 C
             IF (NFDIFF.EQ.0 .AND. LVLDER.NE.1) THEN
                IF (LVLDER.EQ.0) LVLDER = 1
                IF (LVLDER.EQ.2) LVLDER = 3
-               IF (MSGLVL.GT.0) THEN
-                  WRITE (REC,FMT=99993) LVLDER
-                  CALL X04BAY(IPRINT,4,REC)
-               END IF
+
             END IF
          END IF
       ELSE IF (LFDSET.EQ.2) THEN
@@ -10847,19 +9056,11 @@ C        Check for wild values.
 C
          DO 160 J = 1, N
             IF (HFORWD(J).LE.ZERO) THEN
-               IF (MSGLVL.GT.0) THEN
-                  WRITE (REC,FMT=99992) J, HFORWD(J), EPSPT5
-                  CALL X04BAF(IPRINT,REC(1))
-               END IF
                HFORWD(J) = EPSPT5
             END IF
   160    CONTINUE
          DO 180 J = 1, N
             IF (HCNTRL(J).LE.ZERO) THEN
-               IF (MSGLVL.GT.0) THEN
-                  WRITE (REC,FMT=99991) J, HCNTRL(J), EPSPT3
-                  CALL X04BAF(IPRINT,REC(1))
-               END IF
                HCNTRL(J) = EPSPT3
             END IF
   180    CONTINUE
@@ -10889,146 +9090,7 @@ C
 99991 FORMAT (' XXX  ',I4,'-th central-difference interval ',1P,D10.2,
      *       ' replaced by ',1P,D10.2)
       END
-      SUBROUTINE E04UDW(STRING,FIRST,LAST,MARK)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     Description and usage:
-C
-C       Looks for non-blank fields ('tokens') in a string, where the
-C     fields are of arbitrary length, separated by blanks, tabs, commas,
-C     colons, or equal signs.  The position of the end of the 1st token
-C     is also returned, so this routine may be conveniently used within
-C     a loop to process an entire line of text.
-C
-C       The procedure examines a substring, STRING (FIRST : LAST), which
-C     may of course be the entire string (in which case just call E04UDW
-C     with FIRST .LE. 1 and LAST .GE. LEN (STRING) ).  The indices
-C     returned are relative to STRING itself, not the substring.
-C
-C
-C     Parameters:
-C
-C     Name    Dimension  Type  I/O/S  Description
-C     STRING              C    I      Text string containing data to be
-C                                    scanned.
-C     FIRST               I    I/O    Index of beginning of substring.
-C                                    If .LE. 1, the search begins with
-C                                    1.
-C                                    Output is index of beginning of
-C                                    first non-blank field, or 0 if no
-C                                    token was found.
-C     LAST                I    I/O    Index of end of substring.
-C                                    If .GE. LEN (STRING), the search
-C                                    begins with LEN (STRING).  Output
-C                                    is index of end of last non-blank
-C                                    field, or 0 if no token was found.
-C     MARK                I      O    Points to end of first non-blank
-C                                    field in the specified substring.
-C                                    Set to 0 if no token was found.
-C
-C
-C     Environment:  Digital VAX-11/780 VMS FORTRAN (FORTRAN 77).
-C               ANSI Fortran 77, except for the tab character HT.
-C
-C     Notes:
-C
-C     (1)  IMPLICIT NONE is non-standard.  Constant HT (Tab) is defined
-C         in a non-standard way:  the CHAR function is not permitted
-C         in a PARAMETER declaration (OK on VAX, though).  For Absoft
-C         FORTRAN 77 on 68000 machines, use HT = 9.  In other cases, it
-C         may be best to declare HT as a variable and assign
-C         HT = CHAR(9) on ASCII machines, or CHAR(5) for EBCDIC.
-C
-C     (2)  The pseudo-recursive structure was chosen for fun.  It is
-C         equivalent to three DO loops with embedded GO TOs in sequence.
-C
-C     (3)  The variety of separators recognized limits the usefulness of
-C         this routine somewhat.  The intent is to facilitate handling
-C         such tokens as keywords or numerical values.  In other
-C         applications, it may be necessary for ALL printing characters
-C         to be significant.  A simple modification to statement
-C         function SOLID will do the trick.
-C
-C
-C     Author:  Robert Kennelly, Informatics General Corporation.
-C
-C
-C     Development history:
-C
-C     29 Dec. 1984    RAK    Initial design and coding, (very) loosely
-C                           based on SCAN_STRING by Ralph Carmichael.
-C     25 Feb. 1984    RAK    Added ':' and '=' to list of separators.
-C     16 Apr. 1985    RAK    Defined SOLID in terms of variable DUMMY
-C                           (previous re-use of STRING was ambiguous).
-C
-C-----------------------------------------------------------------------
-C
-C     .. Parameters ..
-      CHARACTER         BLANK, EQUAL, COLON, COMMA, RPARN, LPARN
-      PARAMETER         (BLANK=' ',EQUAL='=',COLON=':',COMMA=',',
-     *                  RPARN=')',LPARN='(')
-C     .. Scalar Arguments ..
-      INTEGER           FIRST, LAST, MARK
-      CHARACTER*(*)     STRING
-C     .. Local Scalars ..
-      INTEGER           BEGIN, END, LENGTH
-      CHARACTER         DUMMY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MAX, MIN, LEN
-C     .. Statement Functions ..
-      LOGICAL           SOLID
-C     .. Statement Function definitions ..
-      SOLID(DUMMY) = (DUMMY.NE.BLANK) .AND. (DUMMY.NE.COLON)
-     *               .AND. (DUMMY.NE.COMMA) .AND. (DUMMY.NE.EQUAL)
-     *               .AND. (DUMMY.NE.RPARN) .AND. (DUMMY.NE.LPARN)
-C     .. Executable Statements ..
-      MARK = 0
-      LENGTH = LEN(STRING)
-      BEGIN = MAX(FIRST,1)
-      END = MIN(LENGTH,LAST)
-C
-C     Find the first significant character ...
-C
-      DO 60 FIRST = BEGIN, END, +1
-         IF (SOLID(STRING(FIRST:FIRST))) THEN
-C
-C           ... then the end of the first token ...
-C
-            DO 40 MARK = FIRST, END - 1, +1
-               IF ( .NOT. SOLID(STRING(MARK+1:MARK+1))) THEN
-C
-C                 ... and finally the last significant character.
-C
-                  DO 20 LAST = END, MARK, -1
-                     IF (SOLID(STRING(LAST:LAST))) THEN
-                        RETURN
-                     END IF
-   20             CONTINUE
-C
-C                 Everything past the first token was a separator.
-C
-                  LAST = LAST + 1
-                  RETURN
-               END IF
-   40       CONTINUE
-C
-C           There was nothing past the first token.
-C
-            LAST = MARK
-            RETURN
-         END IF
-   60 CONTINUE
-C
-C     Whoops - the entire substring STRING (BEGIN : END) was composed of
-C     separators .
-C
-      FIRST = 0
-      MARK = 0
-      LAST = 0
-      RETURN
-C
-C     End of  E04UDW. (OPSCAN)
-      END
+
       SUBROUTINE E04UCW(N,NCLIN,NCNLN,ISTATE,BIGBND,CVNORM,ERRMAX,JMAX,
      *                  NVIOL,AX,BL,BU,C,FEATOL,X,WORK)
 C     MARK 13 RE-ISSUE. NAG COPYRIGHT 1988.
@@ -11594,7 +9656,7 @@ C     .. External Functions ..
       INTEGER           IDAMAX
       EXTERNAL          DNRM2, F06BLF, IDAMAX
 C     .. External Subroutines ..
-      EXTERNAL          DAXPY, DGEMV, DSCAL, E04NBV, E04NBW, F06FBF,
+      EXTERNAL          DAXPY, DGEMV, DSCAL, E04NBV, E04NBW, SLOAD,
      *                  X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX, MIN, SQRT
@@ -11605,7 +9667,7 @@ C     .. Common blocks ..
       COMMON            /FE04UC/INPDBG, NPDBG
 C     .. Executable Statements ..
 C
-      IF (NCNLN.GT.0) CALL F06FBF(NCNLN,ZERO,OMEGA,1)
+      IF (NCNLN.GT.0) CALL SLOAD(NCNLN,ZERO,OMEGA,1)
 C
 C     ------------------------------------------------------------------
 C     Set CURVL = (G2 - G1)'DX,  the approximate curvature along DX of
@@ -11862,10 +9924,7 @@ C     Amongst constraints that are less than the perturbed steps,
 C     choose the one (of each type) that makes the largest angle
 C     with the search direction.
 C     ------------------------------------------------------------------
-      IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
+
       ALFA1 = BIGALF
       ALFA2 = ZERO
       IF (FIRSTV) ALFA2 = BIGALF
@@ -11986,11 +10045,7 @@ C
                END IF
             END IF
 C
-            IF (CMDBG .AND. ICMDBG(3).GT.0) THEN
-               WRITE (REC,FMT=99998) J, JS, FEATOL(J), RES, ATP, JADD1,
-     *           ALFA1, JADD2, ALFA2
-               CALL X04BAF(IPRINT,REC(1))
-            END IF
+
          END IF
    20 CONTINUE
 C
@@ -12031,11 +10086,7 @@ C
             CALL E04UCH(FIRSTV,NEGSTP,BIGALF,BIGBND,PNORM,JADD1,JADD2,
      *                  PALFA1,PALFA2,ISTATE,N,NCTOTL,ANORM,AP,AX,BL,BU,
      *                  FEATOL,P,X)
-C
-            IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-               WRITE (REC,FMT=99997) ALFA, PALFA1
-               CALL X04BAY(IPRINT,4,REC)
-            END IF
+
 C
             ALFA = -MIN(ABS(ALFA),PALFA1)
          END IF
@@ -12049,10 +10100,7 @@ C
       END IF
 C
       IF (ALFA.GE.BIGALF) INFORM = 3
-      IF (CMDBG .AND. ICMDBG(1).GT.0 .AND. INFORM.GT.0) THEN
-         WRITE (REC,FMT=99996) JADD, ALFA
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
+
       RETURN
 C
 C
@@ -12067,389 +10115,7 @@ C
 99996 FORMAT (/' //E04UCG //  Unbounded step.',/' //E04UCG //  JADD   ',
      *       '        ALFA',/' //E04UCG //  ',I4,G15.4)
       END
-      subroutine e04ucq(nout,buffer,key)
-c     mark 13 re-issue.  nag copyright 1988.
-c     mark 16 revised. ier-1085 (jul 1993).
-c
-c     ******************************************************************
-c     e04ucq   decodes the option contained in  buffer  in order to set
-c     a parameter value in the relevant element of the parameter arrays.
-c
-c
-c     input:
-c
-c     nout   a unit number for printing error messages.
-c            nout  must be a valid unit.
-c
-c     output:
-c
-c     key    the first keyword contained in buffer.
-c
-c
-c     e04ucq  calls e04udx and the subprograms
-c                 lookup, scannr, tokens, upcase
-c     (now called e04udy, e04udw, e04udv, e04udu)
-c     supplied by informatics general, inc., palo alto, california.
-c
-c     systems optimization laboratory, stanford university.
-c     this version of e04ucq  dated 19-oct-92.
-c     ******************************************************************
-c
-c     .. parameters ..
-      integer           mxparm
-      parameter         (mxparm=30)
-      integer           maxkey, maxtie, maxtok
-      parameter         (maxkey=41,maxtie=19,maxtok=10)
-      integer           idummy
-      double precision  rdummy
-      logical           sorted
-      double precision  zero
-      parameter         (idummy=-11111,rdummy=-11111.0d+0,sorted=.true.,
-     *                  zero=0.0d+0)
-c     .. scalar arguments ..
-      integer           nout
-      character*16      key
-      character*(*)     buffer
-c     .. scalars in common ..
-      double precision  bigbnd, bigdx, bndlow, bndupp, cdint, ctol,
-     *                  dxlim, epsrf, eta, fdint, ftol, hcndbd, tolact,
-     *                  tolfea, tolrnk
-      integer           idbgls, idbgnp, iprnt, isumry, itmax1, itmax2,
-     *                  itmxnp, jvrfy1, jvrfy2, jvrfy3, jvrfy4, ksave,
-     *                  lcrash, ldbgls, ldbgnp, lformh, lprob, lverfy,
-     *                  lvlder, msgls, msgnp, nlnf, nlnj, nlnx, nload,
-     *                  nn, nnclin, nncnln, nprob, nsave
-c     .. arrays in common ..
-      double precision  rpadls(23), rpadnp(22), rpsvls(mxparm),
-     *                  rpsvnp(mxparm)
-      integer           ipadls(18), ipadnp(12), ipsvls(mxparm),
-     *                  ipsvnp(mxparm)
-c     .. local scalars ..
-      double precision  rvalue
-      integer           i, idbg, ivalue, lenbuf, loc1, loc2, mjrdbg,
-     *                  mnrdbg, msgqp, nmajor, nminor, ntoken
-      logical           first, more, number
-      character*16      key2, key3, value
-      character*80      rec
-c     .. local arrays ..
-      double precision  rprmls(mxparm), rprmnp(mxparm)
-      integer           iprmls(mxparm), iprmnp(mxparm)
-      character*16      keys(maxkey), ties(maxtie), token(maxtok)
-c     .. external functions ..
-      logical           e04udx
-      external          e04udx
-c     .. external subroutines ..
-      external          e04udv, e04udy, x04baf
-c     .. intrinsic functions ..
-      intrinsic         index, len
-c     .. common blocks ..
-      common            /de04nc/ipsvls, idbgls, iprnt, isumry, itmax1,
-     *                  itmax2, lcrash, ldbgls, lprob, msgls, nn,
-     *                  nnclin, nprob, ipadls
-      common            /ee04nc/rpsvls, bigbnd, bigdx, bndlow, bndupp,
-     *                  tolact, tolfea, tolrnk, rpadls
-      common            /ge04uc/ipsvnp, idbgnp, itmxnp, jvrfy1, jvrfy2,
-     *                  jvrfy3, jvrfy4, ldbgnp, lformh, lvlder, lverfy,
-     *                  msgnp, nlnf, nlnj, nlnx, nncnln, nsave, nload,
-     *                  ksave, ipadnp
-      common            /he04uc/rpsvnp, cdint, ctol, dxlim, epsrf, eta,
-     *                  fdint, ftol, hcndbd, rpadnp
-c     .. equivalences ..
-      equivalence       (iprmls(1),idbgls), (rprmls(1),bigbnd)
-      equivalence       (iprmnp(1),idbgnp), (rprmnp(1),cdint)
-      equivalence       (idbgnp,idbg), (itmxnp,nmajor), (itmax2,nminor)
-      equivalence       (ldbgls,mnrdbg), (ldbgnp,mjrdbg), (msgls,msgqp)
-c     .. save statement ..
-      save              /de04nc/, /ee04nc/, /ge04uc/, /he04uc/, first
-c     .. data statements ..
-      data              first/.true./
-      data keys/'begin           ', 'central         ',
-     *  'cold            ', 'condition       ', 'constraints     ',
-     *  'crash           ', 'debug           ', 'defaults        ',
-     *  'derivative      ', 'difference      ', 'end             ',
-     *  'feasibility     ', 'function        ', 'hessian         ',
-     *  'hot             ', 'infinite        ', 'iprmls          ',
-     *  'iterations      ', 'iters:iterations', 'itns :iterations',
-     *  'linear          ', 'linesearch      ', 'list            ',
-     *  'lower           ', 'major           ', 'minor           ',
-     *  'monitoring      ', 'nolist          ', 'nonlinear       ',
-     *  'optimality      ', 'print           ', 'problem         ',
-     *  'row             ', 'rprmls          ', 'start           ',
-     *  'step            ', 'stop            ', 'upper           ',
-     *  'variables       ', 'verify          ', 'warm            '/
-      data              ties/'bound           ', 'constraints     ',
-     *                  'debug           ', 'feasibility     ',
-     *                  'gradients       ', 'iterations      ',
-     *                  'iters:iterations', 'itns :iterations',
-     *                  'jacobian        ', 'level           ',
-     *                  'no              ', 'no.      :number',
-     *                  'number          ', 'objective       ',
-     *                  'print           ', 'step            ',
-     *                  'tolerance       ', 'variables       ',
-     *                  'yes             '/
-c     .. executable statements ..
-c
-      if (first) then
-         first = .false.
-         do 20 i = 1, mxparm
-            rprmls(i) = rdummy
-            iprmls(i) = idummy
-            rprmnp(i) = rdummy
-            iprmnp(i) = idummy
-   20    continue
-      end if
-c
-c     eliminate comments and empty lines.
-c     a '*' appearing anywhere in buffer terminates the string.
-c
-      i = index(buffer,'*')
-      if (i.eq.0) then
-         lenbuf = len(buffer)
-      else
-         lenbuf = i - 1
-      end if
-      if (lenbuf.le.0) then
-         key = '*'
-         go to 80
-      end if
-c
-c     ------------------------------------------------------------------
-c     extract up to maxtok tokens from the record.
-c     ntoken returns how many were actually found.
-c     key, key2, key3 are the first tokens if any, otherwise blank.
-c     ------------------------------------------------------------------
-      call e04udv(buffer(1:lenbuf),maxtok,ntoken,token)
-      key = token(1)
-      key2 = token(2)
-      key3 = token(3)
-c
-c     certain keywords require no action.
-c
-      if (key.eq.' ' .or. key.eq.'begin') go to 80
-      if (key.eq.'list' .or. key.eq.'nolist') go to 80
-      if (key.eq.'end') go to 80
-c
-c     most keywords will have an associated integer or real value,
-c     so look for it no matter what the keyword.
-c
-      i = 1
-      number = .false.
-c
-   40 if (i.lt.ntoken .and. .not. number) then
-         i = i + 1
-         value = token(i)
-         number = e04udx(value)
-         go to 40
-      end if
-c
-      if (number) then
-         read (value,fmt='(bn, e16.0)') rvalue
-      else
-         rvalue = zero
-      end if
-c
-c     convert the keywords to their most fundamental form
-c     (upper case, no abbreviations).
-c     sorted says whether the dictionaries are in alphabetic order.
-c     loci   says where the keywords are in the dictionaries.
-c     loci = 0 signals that the keyword wasn't there.
-c     loci < 0 signals that the keyword is ambiguous.
-c
-      call e04udy(maxkey,keys,sorted,key,loc1)
-      if (loc1.lt.0) then
-         write (rec,fmt=99996) key
-         call x04baf(nout,rec)
-         return
-      end if
-      call e04udy(maxtie,ties,sorted,key2,loc2)
-c
-c     ------------------------------------------------------------------
-c     decide what to do about each keyword.
-c     the second keyword (if any) might be needed to break ties.
-c     some seemingly redundant testing of more is used
-c     to avoid compiler limits on the number of consecutive else ifs.
-c     ------------------------------------------------------------------
-      more = .true.
-      if (more) then
-         more = .false.
-         if (key.eq.'central     ') then
-            cdint = rvalue
-         else if (key.eq.'cold        ') then
-            lcrash = 0
-         else if (key.eq.'condition   ') then
-            hcndbd = rvalue
-         else if (key.eq.'constraints ') then
-            nnclin = rvalue
-         else if (key.eq.'crash       ') then
-            tolact = rvalue
-         else if (key.eq.'debug       ') then
-            idbg = rvalue
-         else if (key.eq.'defaults    ') then
-            do 60 i = 1, mxparm
-               iprmls(i) = idummy
-               rprmls(i) = rdummy
-               iprmnp(i) = idummy
-               rprmnp(i) = rdummy
-   60       continue
-         else if (key.eq.'derivative  ') then
-            lvlder = rvalue
-         else if (key.eq.'difference  ') then
-            fdint = rvalue
-         else if (key.eq.'feasibility ') then
-            tolfea = rvalue
-            ctol = rvalue
-         else if (key.eq.'function    ') then
-            epsrf = rvalue
-         else
-            more = .true.
-         end if
-      end if
-c
-      if (more) then
-         more = .false.
-         if (key.eq.'hessian     ') then
-            lformh = 0
-            if (key2.eq.'yes         ') lformh = 1
-         else if (key.eq.'hot         ') then
-            lcrash = 2
-         else if (key.eq.'infinite    ') then
-            if (key2.eq.'bound       ') bigbnd = rvalue*0.99999d+0
-            if (key2.eq.'step        ') bigdx = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'iprmls      ') then
-c           allow things like  iprmls 21 = 100  to set iprmls(21) = 100
-            ivalue = rvalue
-            if (ivalue.ge.1 .and. ivalue.le.mxparm) then
-               read (key3,fmt='(bn, i16)') iprmls(ivalue)
-            else
-               write (rec,fmt=99997) ivalue
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'iterations  ') then
-            nmajor = rvalue
-         else if (key.eq.'linear      ') then
-            if (key2.eq.'constraints ') nnclin = rvalue
-            if (key2.eq.'feasibility ') tolfea = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'linesearch  ') then
-            eta = rvalue
-         else if (key.eq.'lower       ') then
-            bndlow = rvalue
-         else
-            more = .true.
-         end if
-      end if
-c
-      if (more) then
-         more = .false.
-         if (key.eq.'major       ') then
-            if (key2.eq.'debug       ') mjrdbg = rvalue
-            if (key2.eq.'iterations  ') nmajor = rvalue
-            if (key2.eq.'print       ') msgnp = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'minor       ') then
-            if (key2.eq.'debug       ') mnrdbg = rvalue
-            if (key2.eq.'iterations  ') nminor = rvalue
-            if (key2.eq.'print       ') msgqp = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'monitoring  ') then
-            isumry = rvalue
-         else if (key.eq.'nonlinear   ') then
-            if (key2.eq.'constraints ') nncnln = rvalue
-            if (key2.eq.'feasibility ') ctol = rvalue
-            if (key2.eq.'jacobian    ') nlnj = rvalue
-            if (key2.eq.'objective   ') nlnf = rvalue
-            if (key2.eq.'variables   ') nlnx = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'optimality  ') then
-            ftol = rvalue
-         else
-            more = .true.
-         end if
-      end if
-c
-      if (more) then
-         more = .false.
-         if (key.eq.'print       ') then
-            msgnp = rvalue
-         else if (key.eq.'problem     ') then
-            if (key2.eq.'number      ') nprob = rvalue
-         else if (key.eq.'row         ') then
-            if (key2.eq.'tolerance   ') ctol = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'rprmls      ') then
-c           allow things like  rprmls 21 = 2  to set rprmls(21) = 2.0
-            ivalue = rvalue
-            if (ivalue.ge.1 .and. ivalue.le.mxparm) then
-               read (key3,fmt='(bn, e16.0)') rprmls(ivalue)
-            else
-               write (rec,fmt=99997) ivalue
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'start       ') then
-            if (key2.eq.'constraints ') jvrfy3 = rvalue
-            if (key2.eq.'objective   ') jvrfy1 = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'step        ') then
-            dxlim = rvalue
-         else if (key.eq.'stop        ') then
-            if (key2.eq.'constraints ') jvrfy4 = rvalue
-            if (key2.eq.'objective   ') jvrfy2 = rvalue
-            if (loc2.eq.0) then
-               write (rec,fmt=99998) key2
-               call x04baf(nout,rec)
-            end if
-         else if (key.eq.'upper       ') then
-            bndupp = rvalue
-         else if (key.eq.'variables   ') then
-            nn = rvalue
-         else if (key.eq.'verify      ') then
-            if (key2.eq.'objective   ') lverfy = 1
-            if (key2.eq.'constraints ') lverfy = 2
-            if (key2.eq.'no          ') lverfy = -1
-            if (key2.eq.'yes         ') lverfy = 3
-            if (key2.eq.'gradients   ') lverfy = 3
-            if (key2.eq.'level       ') lverfy = rvalue
-            if (loc2.eq.0) lverfy = 3
-         else if (key.eq.'warm        ') then
-            lcrash = 1
-         else
-            write (rec,fmt=99999) key
-            call x04baf(nout,rec)
-         end if
-      end if
-c
-   80 return
-c
-c
-c     end of  e04ucq. (npkey)
-c
-99999 format (' xxx  keyword not recognized:         ',a)
-99998 format (' xxx  second keyword not recognized:  ',a)
-99997 format (' xxx  the parm subscript is out of range:',i10)
-99996 format (' xxx  ambiguous keyword:              ',a)
-      end
+
       SUBROUTINE E04NCH(LINOBJ,ROWERR,UNITQ,NCLIN,NACTIV,NFREE,NRANK,NZ,
      *                  N,NCTOTL,LDZY,LDA,LDR,LDT,ISTATE,KACTIV,KX,JMAX,
      *                  ERRMAX,CTX,XNORM,A,AX,BL,BU,CQ,RES,RES0,FEATOL,
@@ -12506,7 +10172,7 @@ C     .. External Functions ..
       EXTERNAL          DDOT, DNRM2, IDAMAX
 C     .. External Subroutines ..
       EXTERNAL          DAXPY, DCOPY, DGEMV, DTRMV, E04NBT, E04NBW,
-     *                  F06FBF, X04BAF, X04BAY
+     *                  SLOAD, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MIN
 C     .. Common blocks ..
@@ -12550,7 +10216,7 @@ C
    60    CONTINUE
 C
          CALL E04NBT(1,LDT,NACTIV,T(1,NZ+1),WORK)
-         CALL F06FBF(N,ZERO,P,1)
+         CALL SLOAD(N,ZERO,P,1)
          CALL DCOPY(NACTIV,WORK,1,P(NZ+1),1)
 C
          CALL E04NBW(2,N,NZ,NFREE,LDZY,UNITQ,KX,P,ZY,WORK)
@@ -12768,9 +10434,10 @@ C
 C     End of  E04NCY. (LSADDS)
 C
       END
+
       SUBROUTINE E04MFZ(PRBTYP,MSG,CSET,NAMED,NAMES,RSET,UNITQ,ITER,
      *                  ITMAX,JINF,NVIOL,N,NCLIN,LDA,NACTIV,NFREE,NRZ,
-     *                  NZ,ISTATE,KACTIV,KX,E04MFU,OBJ,NUMINF,XNORM,A,
+     *                  NZ,ISTATE,KACTIV,KX,OBJ,NUMINF,XNORM,A,
      *                  AX,BL,BU,CVEC,FEATOL,FEATLU,X,IW,W)
 C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
 C
@@ -12836,8 +10503,7 @@ C     .. Array Arguments ..
      *                  X(N)
       INTEGER           ISTATE(N+NCLIN), IW(*), KACTIV(N), KX(N)
       CHARACTER*8       NAMES(*)
-C     .. Subroutine Arguments ..
-      EXTERNAL          E04MFU
+
 C     .. Scalars in Common ..
       DOUBLE PRECISION  ALFA, ASIZE, BIGBND, BIGDX, BNDLOW, BNDUPP,
      *                  DTMAX, DTMIN, EPSPT3, EPSPT5, EPSPT8, EPSPT9,
@@ -12874,8 +10540,8 @@ C     .. External Functions ..
       EXTERNAL          DDOT, DNRM2, F06BLF
 C     .. External Subroutines ..
       EXTERNAL          DAXPY, DCOPY, DGEMV, DSCAL, E04MFH, E04MFL,
-     *                  E04MFM, E04MFN, E04MFQ, E04MFR, E04MFS, E04MFY,
-     *                  E04NBW, E04NFP, E04NFR, F06FBF, X04BAF, X04BAY
+     *                  E04MFM, E04MFQ, E04MFR, E04MFS, E04MFY,
+     *                  E04NBW, E04NFP, E04NFR, SLOAD, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX, MOD
 C     .. Common blocks ..
@@ -13013,11 +10679,8 @@ C
          IF (PRNT) THEN
             CONDT = ONE
             IF (NACTIV.GT.0) CONDT = F06BLF(DTMAX,DTMIN,OVERFL)
-C
-            CALL E04MFU(PRBTYP,HEADER,RSET,MSGLVL,ITER,ISDEL,JDEL,JADD,
-     *                  N,NCLIN,NACTIV,NFREE,NZ,NRZ,LDR,LDT,ISTATE,ALFA,
-     *                  CONDRZ,CONDT,DZZ,GFNORM,GZNORM,NUMINF,SUMINF,
-     *                  NOTOPT,OBJ,TRULAM,AX,W(LR),W(LT),X,W(LWRK))
+
+            HEADER = .FALSE.
             JDEL = 0
             JADD = 0
             ALFA = ZERO
@@ -13043,7 +10706,7 @@ C
          IF (NUMINF.EQ.0 .AND. FP) THEN
             MSG = 'feasbl'
             NFIXED = N - NFREE
-            CALL F06FBF(NACTIV+NFIXED,ZERO,W(LRLAM),1)
+            CALL SLOAD(NACTIV+NFIXED,ZERO,W(LRLAM),1)
             GO TO 20
          END IF
 C
@@ -13160,13 +10823,7 @@ C
             CALL E04NBW(1,N,NRZ,NFREE,LDQ,UNITQ,KX,W(LD),W(LQ),W(LWRK))
             CALL DGEMV('No transpose',NCLIN,N,ONE,A,LDA,W(LD),1,ZERO,
      *                 W(LAD),1)
-C
-            IF (LCDBG) THEN
-               IF (ILCDBG(2).GT.0) THEN
-                  CALL E04MFN('E04MFZ','     d',W(LD),N)
-                  CALL E04MFN('E04MFZ','    Ad',W(LAD),NCLIN)
-               END IF
-            END IF
+
 C
 C           ---------------------------------------------------------
 C           Find the constraint we bump into along d.
@@ -13254,13 +10911,7 @@ C              refinement and a switch to phase 1.
 C              ------------------------------------------------------
                CALL E04MFQ(N,NCLIN,ISTATE,BIGBND,NVIOL,JMAX,ERRMAX,AX,
      *                     BL,BU,FEATOL,X)
-C
-               IF (NVIOL.GT.0) THEN
-                  IF (MSGLVL.GT.0) THEN
-                     WRITE (REC,FMT=99999) ERRMAX, JMAX
-                     CALL X04BAF(IPRINT,REC(1))
-                  END IF
-               END IF
+
             END IF
 C
             IF (MOD(ITER,KDEGEN).EQ.0) THEN
@@ -14258,8 +11909,8 @@ C     .. External Functions ..
       INTEGER           IDAMAX
       EXTERNAL          DDOT, DNRM2, IDAMAX
 C     .. External Subroutines ..
-      EXTERNAL          DAXPY, DCOPY, DGEMV, DTRSV, E04MFN, E04NBW,
-     *                  F06FBF
+      EXTERNAL          DAXPY, DCOPY, DGEMV, DTRSV, E04NBW,
+     *                  SLOAD
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS
 C     .. Common blocks ..
@@ -14303,7 +11954,7 @@ C
    60    CONTINUE
 C
          CALL DTRSV('U','N','N',NACTIV,T(1,NZ+1),LDT,WORK,1)
-         CALL F06FBF(N,ZERO,P,1)
+         CALL SLOAD(N,ZERO,P,1)
          CALL DCOPY(NACTIV,WORK,1,P(NZ+1),1)
 C
          CALL E04NBW(2,N,NZ,NFREE,LDQ,UNITQ,KX,P,Q,WORK)
@@ -14339,27 +11990,21 @@ C     until    (errmax .le. featol(jmax) .or. ktry .gt. ntry
 C
       ROWERR = ERRMAX .GT. FEATOL(JMAX)
 C
-      IF (CMDBG .AND. ICMDBG(2).GT.0) CALL E04MFN('E04MFJ','     x',X,N)
-C
       RETURN
 C
 C     End of  E04MFJ.  (CMSETX)
 C
       END
+
       SUBROUTINE E04MFV(CSET,N,NCLIN,LITOTL,LWTOTL)
-C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
-C
+
 C     ******************************************************************
 C     E04MFV   allocates the addresses of the work arrays for E04MFZ.
 C
 C     Note that the arrays ( GQ, CQ ) lie in contiguous areas of
 C     workspace.
-C
-C     Original version written  2-January-1987.
-C     This version of  E04MFV  dated  18-Nov-1990.
 C     ******************************************************************
-C
-C     .. Parameters ..
+
       INTEGER           LENLC
       PARAMETER         (LENLC=20)
       INTEGER           LDBG
@@ -14464,203 +12109,11 @@ C
 C     End of  E04MFV.  (LPLOC)
 C
       END
-      SUBROUTINE E04MFW(N,NCLIN,TITLE)
-C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
-C
-C     ******************************************************************
-C     E04MFW loads the default values of parameters not set by the user.
-C
-C     Original Fortran 77 version written 30-December-1986.
-C     This version of  E04MFW  dated  11-Nov-92.
-C     ******************************************************************
-C
-C     .. Parameters ..
-      INTEGER           LDBG
-      PARAMETER         (LDBG=5)
-      INTEGER           MXPARM
-      PARAMETER         (MXPARM=30)
-      DOUBLE PRECISION  ZERO
-      PARAMETER         (ZERO=0.0D+0)
-      DOUBLE PRECISION  RDUMMY
-      INTEGER           IDUMMY
-      PARAMETER         (RDUMMY=-11111.0D+0,IDUMMY=-11111)
-      DOUBLE PRECISION  GIGANT
-      PARAMETER         (GIGANT=1.0D+20*0.99999D+0)
-      DOUBLE PRECISION  WRKTOL
-      PARAMETER         (WRKTOL=1.0D-2)
-C     .. Scalar Arguments ..
-      INTEGER           N, NCLIN
-      CHARACTER*(*)     TITLE
-C     .. Scalars in Common ..
-      DOUBLE PRECISION  BIGBND, BIGDX, BNDLOW, BNDUPP, EPSPT3, EPSPT5,
-     *                  EPSPT8, EPSPT9, TOLACT, TOLFEA, TOLINC, TOLRNK,
-     *                  TOLX0
-      INTEGER           IDBGLC, IPRINT, IPRNT, ISUMM, ISUMRY, ITMAX1,
-     *                  ITMAX2, ITNFIX, KCHK, KCYCLE, KDEGEN, LCRASH,
-     *                  LDBGLC, LINES1, LINES2, LPROB, MAXACT, MAXNZ,
-     *                  MM, MSGLC, MXFREE, NDEGEN, NN, NNCLIN, NOUT,
-     *                  NPROB
-      LOGICAL           CMDBG, LCDBG, NEWOPT
-C     .. Arrays in Common ..
-      DOUBLE PRECISION  RPADLC(23), RPSVLC(MXPARM)
-      INTEGER           ICMDBG(LDBG), ILCDBG(LDBG), IPADLC(14),
-     *                  IPSVLC(MXPARM), NFIX(2)
-C     .. Local Scalars ..
-      DOUBLE PRECISION  EPSMCH
-      INTEGER           I, IDBG, J, K, LENT, MSG, MSGDBG, MSGLVL
-      CHARACTER*16      KEY
-C     .. Local Arrays ..
-      DOUBLE PRECISION  RPRMLC(MXPARM)
-      INTEGER           IPRMLC(MXPARM)
-      CHARACTER*4       ICRSH(0:2)
-      CHARACTER*7       LPTYPE(1:10)
-      CHARACTER*80      REC(3)
-C     .. External Subroutines ..
-      EXTERNAL          A00AAF, DCOPY, E04MFX, F06DFF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         LEN, MAX, MIN, MOD
-C     .. Common blocks ..
-      COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
 
-      double precision wmach
-      common/ cstmch /wmach(10)
-
-      COMMON            /BE04MF/NEWOPT
-      COMMON            /CE04MF/TOLX0, TOLINC, KDEGEN, NDEGEN, ITNFIX,
-     *                  NFIX
-      COMMON            /CE04NB/EPSPT3, EPSPT5, EPSPT8, EPSPT9
-      COMMON            /EE04MF/ILCDBG, LCDBG
-      COMMON            /FE04MF/IPSVLC, IDBGLC, IPRNT, ISUMRY, ITMAX1,
-     *                  ITMAX2, KCHK, KCYCLE, LCRASH, LPROB, MAXACT,
-     *                  MXFREE, MAXNZ, MM, LDBGLC, MSGLC, NN, NNCLIN,
-     *                  NPROB, IPADLC
-      COMMON            /FE04NB/ICMDBG, CMDBG
-      COMMON            /GE04MF/RPSVLC, BIGBND, BIGDX, BNDLOW, BNDUPP,
-     *                  TOLACT, TOLFEA, TOLRNK, RPADLC
-C     .. Equivalences ..
-      EQUIVALENCE       (IPRMLC(1),IDBGLC), (RPRMLC(1),BIGBND)
-      EQUIVALENCE       (MSGLC,MSGLVL), (IDBGLC,IDBG), (LDBGLC,MSGDBG)
-C     .. Save statement ..
-      SAVE              /BE04MF/, /FE04MF/, /GE04MF/
-C     .. Data statements ..
-      DATA              ICRSH(0), ICRSH(1), ICRSH(2)/'cold', 'warm',
-     *                  'hot '/
-      DATA              LPTYPE(1), LPTYPE(2)/'     FP', '     LP'/
-      DATA              LPTYPE(3), LPTYPE(4), LPTYPE(5),
-     *                  LPTYPE(6)/'ILLEGAL', 'ILLEGAL', 'ILLEGAL',
-     *                  'ILLEGAL'/
-      DATA              LPTYPE(7), LPTYPE(8), LPTYPE(9),
-     *                  LPTYPE(10)/'       ', '       ', '       ',
-     *                  'ILLEGAL'/
-C     .. Executable Statements ..
-C
-      EPSMCH = WMACH(3)
-C
-C     Make a dummy call to E04MFX to ensure that the defaults are set.
-C
-      CALL E04MFX(NOUT,'*',KEY)
-      NEWOPT = .TRUE.
-C
-C     Save the optional parameters set by the user.  The values in
-C     RPRMLC and IPRMLC may be changed to their default values.
-C
-      CALL F06DFF(MXPARM,IPRMLC,1,IPSVLC,1)
-      CALL DCOPY(MXPARM,RPRMLC,1,RPSVLC,1)
-C
-      IF (MSGLVL.EQ.IDUMMY) MSGLVL = 10
-      IF (IPRNT.LT.0) IPRNT = NOUT
-      IF (ISUMRY.LT.0 .OR. MSGLVL.LT.5) ISUMRY = -1
-      IPRINT = IPRNT
-      ISUMM = ISUMRY
-      IF (KCHK.LE.0) KCHK = 50
-      IF (KCYCLE.LE.0) KCYCLE = 10000
-      IF (KCYCLE.GT.9999999) KCYCLE = 9999999
-      KDEGEN = KCYCLE
-      IF (LPROB.LT.0) LPROB = 2
-      IF (LCRASH.LT.0 .OR. LCRASH.GT.2) LCRASH = 0
-      IF (ITMAX1.LT.0) ITMAX1 = MAX(50,5*(N+NCLIN))
-      IF (ITMAX2.LT.0) ITMAX2 = MAX(50,5*(N+NCLIN))
-      IF (MAXACT.LT.0 .OR. MAXACT.GT.N .OR. MAXACT.GT.NCLIN)
-     *    MAXACT = MAX(1,MIN(N,NCLIN))
-      IF (MAXNZ.LT.0 .OR. MAXNZ.GT.N) MAXNZ = N
-      IF (MXFREE.LT.0 .OR. MXFREE.GT.N) MXFREE = N
-      IF (MXFREE.LT.MAXNZ) MXFREE = MAXNZ
-      IF (NCLIN.LT.N) THEN
-         MXFREE = NCLIN + 1
-         MAXNZ = MXFREE
-      END IF
-C
-      IF (IDBG.LT.0 .OR. IDBG.GT.ITMAX1+ITMAX2) IDBG = 0
-      IF (MSGDBG.LT.0) MSGDBG = 0
-      IF (MSGDBG.EQ.0) IDBG = ITMAX1 + ITMAX2 + 1
-      IF (TOLACT.LT.ZERO) TOLACT = WRKTOL
-      IF (TOLFEA.EQ.RDUMMY .OR. (TOLFEA.GE.ZERO .AND. TOLFEA.LT.EPSMCH))
-     *    TOLFEA = EPSPT5
-      IF (BIGBND.LE.ZERO) BIGBND = GIGANT
-      IF (BIGDX.LE.ZERO) BIGDX = MAX(GIGANT,BIGBND)
-C
-      LCDBG = IDBG .EQ. 0
-      CMDBG = LCDBG
-      K = 1
-      MSG = MSGDBG
-      DO 20 I = 1, LDBG
-         ILCDBG(I) = MOD(MSG/K,10)
-         ICMDBG(I) = ILCDBG(I)
-         K = K*10
-   20 CONTINUE
-C
-      IF (MSGLVL.GT.0) THEN
-C
-C        Print the title.
-C
-         LENT = LEN(TITLE)
-         WRITE (REC,FMT=99993) (TITLE(J:J),J=1,LENT)
-         CALL X04BAY(IPRINT,2,REC)
-         CALL A00AAF
-C
-         IF (MSGLVL.GE.5 .AND. ISUMM.GE.0 .AND. ISUMM.NE.IPRINT) THEN
-            WRITE (REC,FMT=99992) (TITLE(J:J),J=1,LENT)
-            CALL X04BAY(ISUMM,2,REC)
-         END IF
-C
-         WRITE (REC,FMT=99999)
-         CALL X04BAY(IPRINT,3,REC)
-         WRITE (REC,FMT=99998) LPTYPE(LPROB)
-         CALL X04BAY(IPRINT,2,REC)
-         WRITE (REC,FMT=99997) NCLIN, TOLFEA, N, TOLACT
-         CALL X04BAY(IPRINT,3,REC)
-         WRITE (REC,FMT=99996) BIGBND, ICRSH(LCRASH), BIGDX, EPSMCH
-         CALL X04BAY(IPRINT,3,REC)
-         WRITE (REC,FMT=99995) KCHK, KDEGEN
-         CALL X04BAY(IPRINT,2,REC)
-         WRITE (REC,FMT=99994) MSGLVL, ITMAX2, ISUMRY
-         CALL X04BAY(IPRINT,3,REC)
-      END IF
-      RETURN
-C
-C
-C     End of  E04MFW.  (LPDFLT)
-C
-99999 FORMAT (/' Parameters',/' ----------')
-99998 FORMAT (/' Problem type...........',3X,A7)
-99997 FORMAT (/' Linear constraints.....',I10,7X,'Feasibility toleranc',
-     *       'e..',1P,D10.2,/' Variables..............',I10,7X,'Crash ',
-     *       'tolerance........',1P,D10.2)
-99996 FORMAT (/' Infinite bound size....',1P,D10.2,7X,A4,' start......',
-     *       '.......',/' Infinite step size.....',1P,D10.2,7X,'EPS (m',
-     *       'achine precision)',1P,D10.2)
-99995 FORMAT (/' Check frequency........',I10,7X,'Expand frequency....',
-     *       '...',I10)
-99994 FORMAT (/' Print level............',I10,7X,'Iteration limit.....',
-     *       '...',I10,/' Monitoring file........',I10)
-99993 FORMAT (/80A1)
-99992 FORMAT (/11A1,' monitoring information ')
-      END
       SUBROUTINE E04NFQ(UNITQ,VERTEX,K1,K2,IT,NACTIV,NARTIF,NZ,NFREE,
      *                  NREJTD,NGQ,N,LDQ,LDA,LDT,ISTATE,KACTIV,KX,
      *                  CONDMX,A,T,GQM,Q,W,C,S,MSGLVL)
-C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
-C
+
 C     ******************************************************************
 C     E04NFQ  includes general constraints  K1  thru  K2  as new rows of
 C     the  TQ  factorization:
@@ -14708,7 +12161,7 @@ C     .. External Functions ..
       EXTERNAL          DNRM2, F06BLF
 C     .. External Subroutines ..
       EXTERNAL          DCOPY, DGEMV, DGER, E04NBW, E04NFR, F06FLF,
-     *                  F06FRF, F06QHF, X04BAY
+     *                  SGRFG, SMLOAD, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         MAX, MIN
 C     .. Common blocks ..
@@ -14735,7 +12188,7 @@ C
 C
 C           First general constraint added.  Set  Q = I.
 C
-            CALL F06QHF('General',NFREE,NFREE,ZERO,ONE,Q,LDQ)
+            CALL SMLOAD('General',NFREE,NFREE,ZERO,ONE,Q,LDQ)
             UNITQ = .FALSE.
          END IF
       ELSE
@@ -14746,11 +12199,7 @@ C
          IADD = KACTIV(K)
          JADD = N + IADD
          IF (NACTIV.LT.NFREE) THEN
-C
-            IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-               WRITE (REC,FMT=99999) NACTIV, NZ, NFREE, IADD, JADD
-               CALL X04BAY(IPRINT,4,REC)
-            END IF
+
 C
             OVERFL = .FALSE.
 C
@@ -14785,17 +12234,7 @@ C              ---------------------------------------------------------
 C              This constraint appears to be dependent on those already
 C              in the working set.  Skip it.
 C              ---------------------------------------------------------
-               IF (CMDBG .AND. ICMDBG(1).GT.0) THEN
-                  WRITE (REC,FMT=99998)
-                  CALL X04BAY(IPRINT,2,REC)
-                  IF (NACTIV.GT.0) THEN
-                     WRITE (REC,FMT=99997) ASIZE, DTMAX, DTMIN, DTNEW
-                     CALL X04BAY(IPRINT,3,REC)
-                  ELSE IF (NACTIV.EQ.0) THEN
-                     WRITE (REC,FMT=99996) ASIZE, DTNEW
-                     CALL X04BAY(IPRINT,3,REC)
-                  END IF
-               END IF
+
 C
                ISTATE(JADD) = 0
                KACTIV(K) = -KACTIV(K)
@@ -14816,7 +12255,7 @@ C                 Note that DELTA  has to be stored after the reflection
 C                 is used.
 C
                   DELTA = W(NZ)
-                  CALL F06FRF(NZ-1,DELTA,W,1,ZERO,W(NZ))
+                  CALL SGRFG(NZ-1,DELTA,W,1,ZERO,W(NZ))
                   IF (W(NZ).GT.ZERO) THEN
 C
                      CALL DGEMV('N',NFREE,NZ,ONE,Q,LDQ,W,1,ZERO,S,1)
@@ -14991,10 +12430,8 @@ C     .. Local Arrays ..
       CHARACTER*4       ICRSH(0:2)
       CHARACTER*80      REC(4)
 C     .. External Subroutines ..
-      EXTERNAL          A00AAF, DCOPY, E04UCQ, F06DFF, X04BAF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         DBLE, LEN, MAX, MOD
-C     .. Common blocks ..
+      EXTERNAL          DCOPY, ICOPY , X04BAF, X04BAY
+
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
 
       double precision wmach
@@ -15039,19 +12476,23 @@ C
 C
       NPLIN = N + NCLIN
       NCTOTL = NPLIN + NCNLN
-C
-C     Make a dummy call E04UCQ to ensure that the defaults are set.
-C
-      CALL E04UCQ(NOUT,'*',KEY)
+C                                 set defaults
+      do i = 1, mxparm
+         rprmls(i) = rdummy
+         iprmls(i) = idummy
+         rprmnp(i) = rdummy
+         iprmnp(i) = idummy
+      end do
+
       NEWOPT = .TRUE.
 C
 C     Save the optional parameters set by the user.  The values in
 C     IPRMLS, RPRMLS, IPRMNP and RPRMNP may be changed to their
 C     default values.
 C
-      CALL F06DFF(MXPARM,IPRMLS,1,IPSVLS,1)
+      CALL ICOPY (MXPARM,IPRMLS,1,IPSVLS,1)
       CALL DCOPY(MXPARM,RPRMLS,1,RPSVLS,1)
-      CALL F06DFF(MXPARM,IPRMNP,1,IPSVNP,1)
+      CALL ICOPY (MXPARM,IPRMNP,1,IPSVNP,1)
       CALL DCOPY(MXPARM,RPRMNP,1,RPSVNP,1)
 C
       IF (MSGNP.EQ.IDUMMY) MSGNP = 10
@@ -15135,63 +12576,7 @@ C
          ILSDBG(I) = MOD(MSG2/K,10)
          K = K*10
    20 CONTINUE
-c DEBUG 691 changed from > 0 to 99
-      IF (MSGNP.GT.99) THEN
-C
-C        Print the title. If no hot start is specified, the parameters
-C        are final and can be printed.
-C
-         LENT = LEN(TITLE)
-         WRITE (REC,FMT=99988) (TITLE(J:J),J=1,LENT)
-         CALL X04BAY(IPRINT,2,REC)
-         CALL A00AAF
-C
-         IF (LCRASH.LE.1) THEN
-            WRITE (REC,FMT=99999)
-            CALL X04BAY(IPRINT,3,REC)
-            WRITE (REC,FMT=99998) NCLIN, TOLFEA, N, TOLACT
-            CALL X04BAY(IPRINT,3,REC)
-            WRITE (REC,FMT=99997) BIGBND, ICRSH(LCRASH), BIGDX, EPSMCH,
-     *        DXLIM, CHESS(LFORMH)
-            CALL X04BAY(IPRINT,4,REC)
-            WRITE (REC,FMT=99996) NCNLN, CTOL, NLNF, FTOL, NLNJ, ETA
-            CALL X04BAY(IPRINT,4,REC)
-            WRITE (REC,FMT=99995) LVLDER, EPSRF, LVERFY, ISUMRY
-            CALL X04BAY(IPRINT,3,REC)
-            IF (LVERFY.GT.0) THEN
-               WRITE (REC,FMT=99994) JVRFY1, JVRFY2
-               CALL X04BAY(IPRINT,2,REC)
-               IF (NCNLN.GT.0) THEN
-                  WRITE (REC,FMT=99993) JVRFY3, JVRFY4
-                  CALL X04BAF(IPRINT,REC(1))
-               END IF
-            END IF
-            WRITE (REC,FMT=99992) NMAJOR, MSGNP, NMINOR, MSGQP
-            CALL X04BAY(IPRINT,3,REC)
-C
-            IF (LVLDER.LT.3) THEN
-               IF (LFDSET.EQ.0) THEN
-                  WRITE (REC,FMT=99991)
-                  CALL X04BAY(IPRINT,2,REC)
-               ELSE IF (LFDSET.EQ.1) THEN
-                  WRITE (REC,FMT=99990) FDINT, CDINT
-                  CALL X04BAY(IPRINT,2,REC)
-               ELSE IF (LFDSET.EQ.2) THEN
-                  WRITE (REC,FMT=99989)
-                  CALL X04BAY(IPRINT,2,REC)
-               END IF
-            END IF
-C
-         END IF
-      END IF
-C
-      IF (MSGNP.GE.5 .OR. MSGQP.GE.5) THEN
-         IF (ISUMM.GE.0 .AND. ISUMM.NE.IPRINT) THEN
-            LENT = LEN(TITLE)
-            WRITE (REC,FMT=99987) (TITLE(J:J),J=1,LENT)
-            CALL X04BAY(ISUMM,2,REC)
-         END IF
-      END IF
+
 C
       RETURN
 C
@@ -15592,7 +12977,7 @@ C     .. Array Arguments ..
 C     .. Local Scalars ..
       INTEGER           J, J1, J2, K, L, LENV, NFIXED
 C     .. External Subroutines ..
-      EXTERNAL          F06FBF, DCOPY, DGEMV
+      EXTERNAL          SLOAD, DCOPY, DGEMV
 C     .. Executable Statements ..
 C
       NFIXED = N - NFREE
@@ -15606,7 +12991,7 @@ C        ===============================================================
 C        Mode = 1, 2  or  3.
 C        ===============================================================
 C
-         IF (NFREE.GT.0) CALL F06FBF(NFREE,ZERO,WRK,1)
+         IF (NFREE.GT.0) CALL SLOAD(NFREE,ZERO,WRK,1)
 C
 C        Copy  v(fixed)  into the end of  wrk.
 C
@@ -15626,7 +13011,7 @@ C
 C
 C        Expand  WRK  into  V  as a full n-vector.
 C
-         CALL F06FBF(N,ZERO,V,1)
+         CALL SLOAD(N,ZERO,V,1)
          DO 20 K = 1, NFREE
             J = KX(K)
             V(J) = WRK(K)
@@ -15790,8 +13175,8 @@ C     .. External Functions ..
       DOUBLE PRECISION  DNRM2, F06BLF
       EXTERNAL          DNRM2, F06BLF
 C     .. External Subroutines ..
-      EXTERNAL          E04NBX, E04NCH, E04NCJ, E04NCK, E04NCL, E04NCP,
-     *                  E04NCQ, E04NCR, E04NCT, E04NCV, E04UCG, F06FBF,
+      EXTERNAL          E04NBX, E04NCH, E04NCK, E04NCL, E04NCP,
+     *                  E04NCQ, E04NCR, E04NCT, E04NCV, E04UCG, SLOAD,
      *                  F06FLF, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MAX
@@ -15990,10 +13375,6 @@ C
       IF (NACTIV.GT.0) CONDT = F06BLF(DTMAX,DTMIN,OVERFL)
 C
       IF (PRNT) THEN
-         CALL E04NCJ(PRBTYP,ISDEL,ITER,JADD,JDEL,MSGLVL,NACTIV,NFREE,N,
-     *               NCLIN,NRANK,LDR,LDT,NZ,NRZ,ISTATE,ALFA,CONDRZ,
-     *               CONDT,GFNORM,GRZNRM,NUMINF,SUMINF,CTX,SSQ,AX,R,
-     *               W(LT),X,W(LWRK))
 C
          JDEL = 0
          JADD = 0
@@ -16169,10 +13550,7 @@ C
                      CALL X04BAY(IPRINT,2,REC)
                   END IF
                   IF (ROWERR) THEN
-                     IF (MSGLVL.GT.0) THEN
-                        WRITE (REC,FMT=99997)
-                        CALL X04BAF(IPRINT,REC(1))
-                     END IF
+
                      NUMINF = 1
                      ERROR = .TRUE.
                   ELSE
@@ -16196,7 +13574,7 @@ C     ===============================================================
       JDEL = 0
 C
       IF (NUMINF.EQ.0 .AND. PRBTYP.EQ.'FP') THEN
-         IF (N.GT.NZ) CALL F06FBF(N-NZ,(ZERO),W(LRLAM),1)
+         IF (N.GT.NZ) CALL SLOAD(N-NZ,(ZERO),W(LRLAM),1)
          JTINY = 0
          JSMLST = 0
          JBIGST = 0
@@ -16293,10 +13671,6 @@ C     ------------------------------------------------------------------
 C     Set   CLAMDA.  Print the full solution.
 C     ------------------------------------------------------------------
       MSGLVL = MSGSVD
-      IF (MSGLVL.GT.0) THEN
-         WRITE (REC,FMT=99999) PRBTYP, ITER
-         CALL X04BAY(IPRINT,2,REC)
-      END IF
 C
       CALL E04NBX(MSGLVL,NFREE,LDA,N,NCLIN,NCTOTL,BIGBND,NAMED,NAMES,
      *            NACTIV,ISTATE,KACTIV,KX,A,BL,BU,X,CLAMDA,W(LRLAM),X)
@@ -16367,7 +13741,7 @@ C     .. Local Arrays ..
       CHARACTER*80      REC(3)
 C     .. External Subroutines ..
       EXTERNAL          DCOPY, E04UDS, E04XAW, E04XAX, E04XAY, F06DBF,
-     *                  F06FBF, F06QFF, F06QHF, X04BAY
+     *                  SLOAD, F06QFF, SMLOAD, X04BAY
 C     .. Common blocks ..
       COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
       COMMON            /BE04UC/LVLDIF, NCDIFF, NFDIFF, LFDSET
@@ -16392,7 +13766,7 @@ C        is stored in  CJACU.
 C
          NEEDFD = LVLDER .EQ. 0 .OR. LVLDER .EQ. 1
 C
-         IF (NEEDFD) CALL F06QHF('General',NCNLN,N,RDUMMY,RDUMMY,CJACU,
+         IF (NEEDFD) CALL SMLOAD('General',NCNLN,N,RDUMMY,RDUMMY,CJACU,
      *                           LDCJU)
 C
          CALL F06DBF(NCNLN,(1),NEEDC,1)
@@ -16438,7 +13812,7 @@ C     Repeat the procedure above for the objective function.
 C     ==================================================================
       NEEDFD = LVLDER .EQ. 0 .OR. LVLDER .EQ. 2
 C
-      IF (NEEDFD) CALL F06FBF(N,RDUMMY,GRADU,1)
+      IF (NEEDFD) CALL SLOAD(N,RDUMMY,GRADU,1)
 c                                 output the initial value
       iuser(2) = 1
 
@@ -16594,7 +13968,7 @@ C     .. External Functions ..
       DOUBLE PRECISION  DDOT
       EXTERNAL          DDOT
 C     .. External Subroutines ..
-      EXTERNAL          F06FBF, X04BAF, X04BAY
+      EXTERNAL          SLOAD, X04BAF, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS
 C     .. Common blocks ..
@@ -16616,7 +13990,7 @@ C
 C     Expand multipliers for bounds, linear and nonlinear constraints
 C     into the  CLAMDA  array.
 C
-      CALL F06FBF(NCTOTL,ZERO,CLAMDA,1)
+      CALL SLOAD(NCTOTL,ZERO,CLAMDA,1)
       NFIXED = N - NFREE
       DO 20 K = 1, NACTIV + NFIXED
          IF (K.LE.NACTIV) THEN
@@ -16629,109 +14003,12 @@ C
          CLAMDA(J) = RLAM
    20 CONTINUE
 C
-      IF (MSGLVL.NE.1 .AND. MSGLVL.LT.10) RETURN
-C
-      WRITE (REC,FMT=99999)
-      CALL X04BAY(IPRINT,4,REC)
-      ID3 = ID(1)
-C
-      DO 40 J = 1, NCTOTL
-         B1 = BL(J)
-         B2 = BU(J)
-         WLAM = CLAMDA(J)
-         IS = ISTATE(J)
-         LS = LSTATE(IS+3)
-         IF (J.LE.N) THEN
-C
-C           Section 1 -- the variables  x.
-C           ------------------------------
-            K = J
-            V = X(J)
-C
-         ELSE IF (J.LE.NPLIN) THEN
-C
-C           Section 2 -- the linear constraints  A*x.
-C           -----------------------------------------
-            IF (J.EQ.N+1) THEN
-               WRITE (REC,FMT=99998)
-               CALL X04BAY(IPRINT,4,REC)
-               ID3 = ID(2)
-            END IF
-C
-            K = J - N
-            V = DDOT(N,A(K,1),LDA,X,1)
-         ELSE
-C
-C           Section 3 -- the nonlinear constraints  c(x).
-C           ---------------------------------------------
-C
-            IF (J.EQ.NPLIN+1) THEN
-               WRITE (REC,FMT=99997)
-               CALL X04BAY(IPRINT,4,REC)
-               ID3 = ID(3)
-            END IF
-C
-            K = J - NPLIN
-            V = C(K)
-         END IF
-C
-C        Print a line for the j-th variable or constraint.
-C        -------------------------------------------------
-         RES = V - B1
-         RES2 = B2 - V
-         IF (ABS(RES).GT.ABS(RES2)) RES = RES2
-         IP = 1
-         IF (B1.LE.(-BIGBND)) IP = 2
-         IF (B2.GE.BIGBND) IP = IP + 2
-         IF (NAMED) THEN
-C
-            ID4 = NAMES(J)
-            IF (IP.EQ.1) THEN
-               WRITE (REC,FMT=99996) ID4, LS, V, B1, B2, WLAM, RES
-            ELSE IF (IP.EQ.2) THEN
-               WRITE (REC,FMT=99995) ID4, LS, V, B2, WLAM, RES
-            ELSE IF (IP.EQ.3) THEN
-               WRITE (REC,FMT=99994) ID4, LS, V, B1, WLAM, RES
-            ELSE
-               WRITE (REC,FMT=99993) ID4, LS, V, WLAM, RES
-            END IF
-            CALL X04BAF(IPRINT,REC(1))
-C
-         ELSE
-C
-            IF (IP.EQ.1) THEN
-               WRITE (REC,FMT=99992) ID3, K, LS, V, B1, B2, WLAM, RES
-            ELSE IF (IP.EQ.2) THEN
-               WRITE (REC,FMT=99991) ID3, K, LS, V, B2, WLAM, RES
-            ELSE IF (IP.EQ.3) THEN
-               WRITE (REC,FMT=99990) ID3, K, LS, V, B1, WLAM, RES
-            ELSE
-               WRITE (REC,FMT=99989) ID3, K, LS, V, WLAM, RES
-            END IF
-            CALL X04BAF(IPRINT,REC(1))
-         END IF
-   40 CONTINUE
       RETURN
 C
 C     End of  E04MFK.  (CMPRNT)
-C
-99999 FORMAT (//1X,'Varbl',1X,'State',5X,'Value',5X,'Lower Bound',3X,
-     *       'Upper Bound',4X,'Lagr Mult',3X,'Residual',/)
-99998 FORMAT (//1X,'L Con',1X,'State',5X,'Value',5X,'Lower Bound',3X,
-     *       'Upper Bound',4X,'Lagr Mult',3X,'Residual',/)
-99997 FORMAT (//1X,'N Con',1X,'State',5X,'Value',5X,'Lower Bound',3X,
-     *       'Upper Bound',4X,'Lagr Mult',3X,'Residual',/)
-99996 FORMAT (1X,A4,4X,A2,1X,1P,3G14.6,1P,2G12.4)
-99995 FORMAT (1X,A4,4X,A2,1X,1P,G14.6,5X,'None',5X,1P,G14.6,1P,2G12.4)
-99994 FORMAT (1X,A4,4X,A2,1X,1P,2G14.6,5X,'None',5X,1P,2G12.4)
-99993 FORMAT (1X,A4,4X,A2,1X,1P,G14.6,5X,'None',10X,'None',5X,1P,2G12.4)
-99992 FORMAT (1X,A1,I3,4X,A2,1X,1P,3G14.6,1P,2G12.4)
-99991 FORMAT (1X,A1,I3,4X,A2,1X,1P,G14.6,5X,'None',5X,1P,G14.6,1P,
-     *       2G12.4)
-99990 FORMAT (1X,A1,I3,4X,A2,1X,1P,2G14.6,5X,'None',5X,2G12.4)
-99989 FORMAT (1X,A1,I3,4X,A2,1X,1P,G14.6,5X,'None',10X,'None',5X,1P,
-     *       2G12.4)
+
       END
+
       SUBROUTINE E04NCX(UNITQ,INFORM,NZ,NFREE,NRANK,NRES,NGQ,N,LDZY,LDA,
      *                  LDR,LDT,ISTATE,KX,CONDMX,A,R,T,RES,GQ,ZY,W,C,S,
      *                  MSGLVL)
@@ -16834,6 +14111,7 @@ C
 C     End of  E04NCX. (LSBNDS)
 C
       END
+
       SUBROUTINE E04MFR(JOB,MSGLVL,N,NCLIN,NMOVED,ITER,NUMINF,ISTATE,
      *                  BIGBND,AX,BL,BU,FEATOL,FEATLU,X)
 C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
@@ -17006,21 +14284,11 @@ C
                IF (D.GT.TOLZ) NMOVED = NMOVED + 1
             END IF
    60    CONTINUE
-C
-         IF (NMOVED.GT.0) THEN
-C
-C           Some variables were moved onto their bounds.
-C
-            IF (MSGLVL.GT.0) THEN
-               WRITE (REC,FMT=99999) ITER, NMOVED
-               CALL X04BAF(IPRINT,REC)
-            END IF
-         END IF
+
       END IF
 C
 C     End of E04MFR.  (CMDGEN)
-C
-99999 FORMAT (' Itn',I6,' --',I7,'  variables moved to their bounds.')
+
       END
       SUBROUTINE E04NBZ(NERROR,MSGLVL,LCRASH,LIWORK,LWORK,LITOTL,LWTOTL,
      *                  N,NCLIN,NCNLN,ISTATE,KX,NAMED,NAMES,BIGBND,BL,
@@ -17169,9 +14437,7 @@ C     ------------------------------------------------------------------
             WRITE (REC,FMT=99998)
             CALL X04BAY(NERR,2,REC)
          END IF
-      ELSE IF (MSGLVL.GT.0) THEN
-         WRITE (REC,FMT=99999) LIWORK, LWORK, LITOTL, LWTOTL
-         CALL X04BAY(IPRINT,3,REC)
+
       END IF
 C
       IF (NERROR.EQ.0) THEN
@@ -17207,18 +14473,6 @@ C        ---------------------------------------------------------------
                         CALL X04BAY(NERR,3,REC)
                      END IF
                   END IF
-               ELSE
-                  IF (B1.EQ.B2) THEN
-                     IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) THEN
-                        WRITE (REC,FMT=99987) ID(L), K, J, J, B1, BIGBND
-                        CALL X04BAY(NERR,4,REC)
-                     END IF
-                  ELSE
-                     IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) THEN
-                        WRITE (REC,FMT=99986) ID(L), K, J, B1, J, B2
-                        CALL X04BAY(NERR,3,REC)
-                     END IF
-                  END IF
                END IF
             END IF
    20    CONTINUE
@@ -17232,10 +14486,6 @@ C        ---------------------------------------------------------------
                OK = IS .GE. (-2) .AND. IS .LE. 4
                IF ( .NOT. OK) THEN
                   NERROR = NERROR + 1
-                  IF (IFAIL.EQ.0 .OR. IFAIL.EQ.-1) THEN
-                     WRITE (REC,FMT=99985) J, J, IS
-                     CALL X04BAY(NERR,3,REC)
-                  END IF
                END IF
    40       CONTINUE
          END IF
@@ -17408,278 +14658,15 @@ C     An initial working set has now been selected.
 C     ------------------------------------------------------------------
       NLNACT = NACTIV - LINACT
       NZ = NFREE - NACTIV
-      IF (NPDBG .AND. INPDBG(1).GT.0) THEN
-         WRITE (REC,FMT=99999) NFIXED, LINACT, NLNACT
-         CALL X04BAY(IPRINT,4,REC)
-      END IF
-C
+
       RETURN
 C
 C
 C     End of  E04UCS. (NPCRSH)
-C
-99999 FORMAT (/' //E04UCS//  Working set selected....',/' //E04UCS// N',
-     *       'FIXED LINACT NLNACT     ',/' //E04UCS//',3I7)
       END
-      SUBROUTINE E04MFU(PRBTYP,HEADER,RSET,MSGLVL,ITER,ISDEL,JDEL,JADD,
-     *                  N,NCLIN,NACTIV,NFREE,NZ,NRZ,LDR,LDT,ISTATE,ALFA,
-     *                  CONDRZ,CONDT,DRZZ,GFNORM,GRZNRM,NUMINF,SUMINF,
-     *                  NOTOPT,OBJLP,TRUSML,AX,R,T,X,WORK)
-C     MARK 16 RELEASE. NAG COPYRIGHT 1992.
-C
-C     ==================================================================
-C     E04MFU  prints various levels of output for E04MFZ.
-C
-C           msg        cumulative result
-C           ---        -----------------
-C
-C       .le.  0        no output.
-C
-C       .eq.  1        nothing now (but full output later).
-C
-C       .eq.  5        one terse line of output.
-C
-C       .ge. 10        same as 5 (but full output later).
-C
-C       .ge. 20        constraint status,  x  and  Ax.
-C
-C       .ge. 30        diagonals of  T  and  R.
-C
-C
-C     Debug printing is controlled by the logical variable  LCDBG.
-C     LCDBG  is set true after  IDBG  iterations.  Then, the amount of
-C     output is determined by a string of binary digits of the form
-C     SVT  (stored in the integer array  ILCDBG).
-C
-C     S  set 'on'  gives information from the max step routine E04MFS.
-C     V  set 'on'  gives various vectors in E04MFZ  and its auxiliaries.
-C     T  set 'on'  gives a trace of which routine was called and an
-C                  indication of the progress of the run.
-C
-C     Based on a version of lcprt, written by PEG, 16-February-1987.
-C     This version of  E04MFU  dated  11-Nov-92.
-C     ==================================================================
-C
-C     .. Parameters ..
-      INTEGER           LDBG
-      PARAMETER         (LDBG=5)
-      DOUBLE PRECISION  ZERO
-      PARAMETER         (ZERO=0.0D+0)
-      INTEGER           MLINE1, MLINE2
-      PARAMETER         (MLINE1=50000,MLINE2=50000)
-C     .. Scalar Arguments ..
-      DOUBLE PRECISION  ALFA, CONDRZ, CONDT, DRZZ, GFNORM, GRZNRM,
-     *                  OBJLP, SUMINF, TRUSML
-      INTEGER           ISDEL, ITER, JADD, JDEL, LDR, LDT, MSGLVL, N,
-     *                  NACTIV, NCLIN, NFREE, NOTOPT, NRZ, NUMINF, NZ
-      LOGICAL           HEADER, RSET
-      CHARACTER*2       PRBTYP
-C     .. Array Arguments ..
-      DOUBLE PRECISION  AX(*), R(LDR,*), T(LDT,*), WORK(N), X(N)
-      INTEGER           ISTATE(*)
-C     .. Scalars in Common ..
-      INTEGER           IPRINT, ISUMM, LINES1, LINES2, NOUT
-      LOGICAL           LCDBG
-C     .. Arrays in Common ..
-      INTEGER           ILCDBG(LDBG)
-C     .. Local Scalars ..
-      DOUBLE PRECISION  OBJ
-      INTEGER           ITN, J, JJ, K, KADD, KDEL, KK, NDF
-      LOGICAL           NEWSET, PRTHDR
-      CHARACTER*2       LADD, LDEL
-      CHARACTER*15      LMCHAR
-C     .. Local Arrays ..
-      CHARACTER*2       LSTATE(0:5)
-      CHARACTER*120     REC(5)
-C     .. External Subroutines ..
-      EXTERNAL          DCOPY, X04BAF, X04BAY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MIN, MOD
-C     .. Common blocks ..
-      COMMON            /AE04NB/NOUT, IPRINT, ISUMM, LINES1, LINES2
-      COMMON            /EE04MF/ILCDBG, LCDBG
-C     .. Data statements ..
-      DATA              LSTATE(0), LSTATE(1), LSTATE(2)/'  ', 'L ',
-     *                  'U '/
-      DATA              LSTATE(3), LSTATE(4), LSTATE(5)/'E ', 'F ',
-     *                  'A '/
-C     .. Executable Statements ..
-C
-      IF (MSGLVL.GE.15) THEN
-         IF (ISUMM.GE.0) THEN
-            WRITE (REC,FMT=99999) PRBTYP, ITER
-            CALL X04BAY(ISUMM,5,REC)
-         END IF
-      END IF
-C
-      IF (MSGLVL.GE.5) THEN
-C        ---------------------------------------------------------------
-C        Some printing required.  Set up information for the terse line.
-C        ---------------------------------------------------------------
-         ITN = MOD(ITER,10000)
-         NDF = MOD(NRZ,10000)
-C
-         IF (JDEL.NE.0) THEN
-            IF (NOTOPT.GT.0) THEN
-               WRITE (LMCHAR,FMT='( I5, 1P,D10.2 )') NOTOPT, TRUSML
-            ELSE
-               WRITE (LMCHAR,FMT='( 5X, 1P,D10.2 )') TRUSML
-            END IF
-C
-            IF (JDEL.GT.0) THEN
-               KDEL = ISDEL
-C
-            ELSE IF (JDEL.LT.0) THEN
-               JDEL = NZ - NRZ + 1
-               KDEL = 5
-            END IF
-         ELSE
-            JDEL = 0
-            KDEL = 0
-            LMCHAR = '               '
-         END IF
-C
-         IF (JADD.GT.0) THEN
-            KADD = ISTATE(JADD)
-         ELSE
-            KADD = 0
-         END IF
-C
-         LDEL = LSTATE(KDEL)
-         LADD = LSTATE(KADD)
-C
-         IF (NUMINF.GT.0) THEN
-            OBJ = SUMINF
-         ELSE
-            OBJ = OBJLP
-         END IF
-C
-C        ---------------------------------------------------------------
-C        If necessary, print a header.
-C        Print a single line of information.
-C        ---------------------------------------------------------------
-         IF (ISUMM.GE.0) THEN
-C           -----------------------------------
-C           Terse line for the Monitoring file.
-C           -----------------------------------
-            NEWSET = LINES1 .GE. MLINE1
-            PRTHDR = MSGLVL .GE. 15 .OR. HEADER .OR. NEWSET
-C
-            IF (PRTHDR) THEN
-               WRITE (REC,FMT=99997)
-               CALL X04BAY(ISUMM,3,REC)
-               LINES1 = 0
-            END IF
-C
-            WRITE (REC,FMT=99995) ITN, JDEL, LDEL, JADD, LADD, ALFA,
-     *        NUMINF, OBJ, N - NFREE, NACTIV, NZ - NRZ, NDF, GRZNRM,
-     *        LMCHAR, CONDT
-            CALL X04BAF(ISUMM,REC(1))
-            LINES1 = LINES1 + 1
-         END IF
-C
-         IF (IPRINT.GE.0 .AND. ISUMM.NE.IPRINT) THEN
-C           ------------------------------
-C           Terse line for the Print file.
-C           ------------------------------
-            NEWSET = LINES2 .GE. MLINE2
-            PRTHDR = HEADER .OR. NEWSET
-C
-            IF (PRTHDR) THEN
-               WRITE (REC,FMT=99998)
-               CALL X04BAY(IPRINT,3,REC)
-               LINES2 = 0
-            END IF
-C
-            WRITE (REC,FMT=99996) ITN, ALFA, NUMINF, OBJ, GRZNRM
-            CALL X04BAF(IPRINT,REC(1))
-            LINES2 = LINES2 + 1
-         END IF
-C
-         IF (MSGLVL.GE.20) THEN
-            IF (ISUMM.GE.0) THEN
-               WRITE (REC,FMT=99994) PRBTYP
-               CALL X04BAY(ISUMM,3,REC)
-               WRITE (REC,FMT=99993)
-               CALL X04BAY(ISUMM,2,REC)
-               DO 20 J = 1, N, 5
-                  WRITE (REC,FMT=99992) (X(JJ),ISTATE(JJ),JJ=J,
-     *              MIN(J+4,N))
-                  CALL X04BAF(ISUMM,REC(1))
-   20          CONTINUE
-               IF (NCLIN.GT.0) THEN
-                  WRITE (REC,FMT=99991)
-                  CALL X04BAY(ISUMM,2,REC)
-                  DO 40 K = 1, NCLIN, 5
-                     WRITE (REC,FMT=99992) (AX(KK),ISTATE(N+KK),KK=K,
-     *                 MIN(K+4,NCLIN))
-                     CALL X04BAF(ISUMM,REC(1))
-   40             CONTINUE
-               END IF
-C
-               IF (MSGLVL.GE.30) THEN
-C                 ------------------------------------------------------
-C                 Print the diagonals of  T  and  R.
-C                 ------------------------------------------------------
-                  IF (NACTIV.GT.0) THEN
-                     CALL DCOPY(NACTIV,T(1,NZ+1),LDT+1,WORK,1)
-                     WRITE (REC,FMT=99990) PRBTYP
-                     CALL X04BAY(ISUMM,2,REC)
-                     DO 60 J = 1, NACTIV, 5
-                        WRITE (REC,FMT=99989) (WORK(JJ),JJ=J,
-     *                    MIN(J+4,NACTIV))
-                        CALL X04BAF(ISUMM,REC(1))
-   60                CONTINUE
-                  END IF
-                  IF (RSET .AND. NRZ.GT.0) THEN
-                     WRITE (REC,FMT=99988) PRBTYP
-                     CALL X04BAY(ISUMM,2,REC)
-                     DO 80 J = 1, NRZ, 5
-                        WRITE (REC,FMT=99989) (R(JJ,JJ),JJ=J,
-     *                    MIN(J+4,NRZ))
-                        CALL X04BAF(ISUMM,REC(1))
-   80                CONTINUE
-                  END IF
-               END IF
-               WRITE (REC,FMT=99987)
-               CALL X04BAY(ISUMM,4,REC)
-            END IF
-         END IF
-      END IF
-C
-      HEADER = .FALSE.
-      JDEL = 0
-      JADD = 0
-      ALFA = ZERO
-C
-C
-C     End of E04MFU.  (LPPRNT)
-C
-      RETURN
-C
-99999 FORMAT (///' ',A2,' iteration',I5,/' =================')
-99998 FORMAT (//'  Itn     Step Ninf Sinf/Objective  Norm Gz')
-99997 FORMAT (//'  Itn Jdel  Jadd      Step Ninf  Sinf/Objective  Bnd ',
-     *       ' Lin  Art   Zr  Norm Gz NOpt    Min Lm   Cond T')
-99996 FORMAT (I5,1P,D9.1,I5,D15.6,D9.1)
-99995 FORMAT (I5,I5,A1,I5,A1,1P,D9.1,I5,D16.8,4I5,D9.1,A15,D9.1)
-99994 FORMAT (/' Values and status of the ',A2,' constraints',/' -----',
-     *       '----------------------------------')
-99993 FORMAT (/' Variables...')
-99992 FORMAT (1X,5(1P,D15.6,I5))
-99991 FORMAT (/' General linear constraints...')
-99990 FORMAT (/' Diagonals of ',A2,' working set factor T')
-99989 FORMAT (1P,5D15.6)
-99988 FORMAT (/' Diagonals of ',A2,' triangle Rz        ')
-99987 FORMAT (///' ---------------------------------------------------',
-     *       '--------------------------------------------')
-      END
+
       SUBROUTINE E04UDR(UNITQ,N,NFREE,NZ,NQ,NROWR,IPERM,KX,GQ,R,ZY,WORK,
      *                  QRWORK)
-C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
-C     MARK 14 REVISED. IER-793 (DEC 1989).
-C     MARK 16 REVISED. IER-1094 (JUL 1993).
-C
 C     ******************************************************************
 C     E04UDR  bounds the condition estimator of the transformed Hessian.
 C     On exit, R is of the form
@@ -17691,10 +14678,6 @@ C     of the largest and smallest elements of DRz. The QR factorization
 C     with interchanges is used to give diagonals of DRz that are
 C     decreasing in modulus.
 C
-C     Systems Optimization Laboratory, Stanford University.
-C
-C     Original version of E04UDR dated  4-August-1986.
-C     This version dated  14-Sep-92.
 C     ******************************************************************
 C
 C     .. Parameters ..
@@ -17718,11 +14701,11 @@ C     .. Local Scalars ..
       DOUBLE PRECISION  DRGM, DRGS, GJMAX, SCLE, SUMSQ
       INTEGER           INFO, J, JMAX, JSAVE, NRANK
 C     .. External Functions ..
-      DOUBLE PRECISION  F06BMF
+      DOUBLE PRECISION  SNORM
       INTEGER           F06KLF
-      EXTERNAL          F06BMF, F06KLF
+      EXTERNAL          SNORM, F06KLF
 C     .. External Subroutines ..
-      EXTERNAL          DSWAP, F01QFF, F06FBF, F06FJF
+      EXTERNAL          DSWAP, SGEQRP, SLOAD, F06FJF
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, DBLE, SQRT
 C     .. Common blocks ..
@@ -17739,10 +14722,10 @@ C        Refactorize Rz.  Interchanges are used to give diagonals
 C        of decreasing magnitude.
 C        ---------------------------------------------------------------
          DO 20 J = 1, NZ - 1
-            CALL F06FBF(NZ-J,ZERO,R(J+1,J),1)
+            CALL SLOAD(NZ-J,ZERO,R(J+1,J),1)
    20    CONTINUE
 C
-         CALL F01QFF('Column iterchanges',NZ,NZ,R,NROWR,WORK,IPERM,
+         CALL SGEQRP('Column iterchanges',NZ,NZ,R,NROWR,WORK,IPERM,
      *               QRWORK,INFO)
 C
          DO 40 J = 1, NZ
@@ -17772,9 +14755,9 @@ C
 C
          IF (NZ.GT.NRANK) THEN
             DO 60 J = NRANK + 1, NZ
-               CALL F06FBF(J-1,ZERO,R(1,J),1)
+               CALL SLOAD(J-1,ZERO,R(1,J),1)
    60       CONTINUE
-            CALL F06FBF(NZ-NRANK,DRGS,R(NRANK+1,NRANK+1),NROWR+1)
+            CALL SLOAD(NZ-NRANK,DRGS,R(NRANK+1,NRANK+1),NROWR+1)
          END IF
       END IF
 C
@@ -17783,9 +14766,9 @@ C     Reset the range-space partition of the Hessian.
 C     ------------------------------------------------------------------
       IF (NZ.LT.N) THEN
          DO 80 J = NZ + 1, N
-            CALL F06FBF(J,ZERO,R(1,J),1)
+            CALL SLOAD(J,ZERO,R(1,J),1)
    80    CONTINUE
-         CALL F06FBF(N-NZ,DRGM,R(NZ+1,NZ+1),NROWR+1)
+         CALL SLOAD(N-NZ,DRGM,R(NZ+1,NZ+1),NROWR+1)
       END IF
 C
 C     Recompute the Frobenius norm of R.
@@ -17795,13 +14778,14 @@ C
       DO 100 J = 1, NZ
          CALL F06FJF(J,R(1,J),1,SCLE,SUMSQ)
   100 CONTINUE
-      RFROBN = F06BMF(SCLE,SUMSQ)
+      RFROBN = SNORM(SCLE,SUMSQ)
 C
       RETURN
 C
 C     End of  E04UDR. (NPRSET)
 C
       END
+
       SUBROUTINE E04MFT(START,VERTEX,NCLIN,NCTOTL,NACTIV,NARTIF,NFREE,N,
      *                  LDA,ISTATE,KACTIV,KX,BIGBND,TOLACT,A,AX,BL,BU,
      *                  FEATOL,X,WX,WORK)
@@ -17832,8 +14816,6 @@ C
 C        - 2         - 1         0           1          2         3
 C     a'x lt bl   a'x gt bu   a'x free   a'x = bl   a'x = bu   bl = bu
 C
-C     Original version written by  PEG, 31-October-1984.
-C     This version of  E04MFT  dated 14-May-1992.
 C     ******************************************************************
 C
 C     .. Parameters ..
@@ -17865,7 +14847,7 @@ C     .. External Functions ..
       DOUBLE PRECISION  DDOT
       EXTERNAL          DDOT
 C     .. External Subroutines ..
-      EXTERNAL          DCOPY, E04MFN, X04BAY
+      EXTERNAL          DCOPY, X04BAY
 C     .. Intrinsic Functions ..
       INTRINSIC         ABS, MIN
 C     .. Common blocks ..
@@ -17899,15 +14881,7 @@ C
    20 CONTINUE
 C
       CALL DCOPY(N,X,1,WX,1)
-C
-      IF (CMDBG) THEN
-         IF (ICMDBG(1).GT.0) THEN
-            WRITE (REC,FMT=99999) START, NCLIN, NCTOTL
-            CALL X04BAY(IPRINT,3,REC)
-         END IF
-         IF (ICMDBG(2).GT.0) CALL E04MFN('E04MFT',
-     *                            'variables before crash',WX,N)
-      END IF
+
 C
       NFREE = N
       NACTIV = 0
@@ -18099,15 +15073,8 @@ C
             JFIX = JFIX + 1
          END IF
   280 CONTINUE
-C
-      IF (CMDBG) THEN
-         IF (ICMDBG(1).GT.0) THEN
-            WRITE (REC,FMT=99998) N - NFREE, NACTIV, NARTIF
-            CALL X04BAY(IPRINT,4,REC)
-         END IF
-         IF (ICMDBG(2).GT.0) CALL E04MFN('E04MFT',
-     *                            'variables after  crash',WX,N)
-      END IF
+
+
       RETURN
 C
 C     End of  E04MFT.  (CMCRSH)
@@ -18118,17 +15085,13 @@ C
      *       'NFIXED NACTIV NARTIF      ',/' //E04MFT// ',I6,2I7)
       END
 
-      SUBROUTINE F06PFF( UPLO, TRANS, DIAG, N, A, LDA, X, INCX )
-C     MARK 13 RE-ISSUE. NAG COPYRIGHT 1988.
-C     .. Entry Points ..
-      ENTRY      DTRMV ( UPLO, TRANS, DIAG, N, A, LDA, X, INCX )
-C     .. Scalar Arguments ..
+      SUBROUTINE DTRMV ( UPLO, TRANS, DIAG, N, A, LDA, X, INCX )
+
       INTEGER            INCX, LDA, N
       CHARACTER*1        DIAG, TRANS, UPLO
 C     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * ), X( * )
-C     ..
-C
+
 C  Purpose
 C  =======
 C
@@ -18213,13 +15176,6 @@ C
 C
 C  Level 2 Blas routine.
 C
-C  -- Written on 22-October-1986.
-C     Jack Dongarra, Argonne National Lab.
-C     Jeremy Du Croz, Nag Central Office.
-C     Sven Hammarling, Nag Central Office.
-C     Richard Hanson, Sandia National Labs.
-C
-C
 C     .. Parameters ..
       DOUBLE PRECISION   ZERO
       PARAMETER        ( ZERO = 0.0D+0 )
@@ -18227,37 +15183,8 @@ C     .. Local Scalars ..
       DOUBLE PRECISION   TEMP
       INTEGER            I, INFO, IX, J, JX, KX
       LOGICAL            NOUNIT
-C     .. External Subroutines ..
-      EXTERNAL           F06AAZ
-C     .. Intrinsic Functions ..
-      INTRINSIC          MAX
-C     ..
-C     .. Executable Statements ..
-C
-C     Test the input parameters.
-C
-      INFO = 0
-      IF     ( .NOT.(UPLO .EQ.'U' .OR. UPLO .EQ.'u').AND.
-     $         .NOT.(UPLO .EQ.'L' .OR. UPLO .EQ.'l')      )THEN
-         INFO = 1
-      ELSE IF( .NOT.(TRANS.EQ.'N' .OR. TRANS.EQ.'n').AND.
-     $         .NOT.(TRANS.EQ.'T' .OR. TRANS.EQ.'t').AND.
-     $         .NOT.(TRANS.EQ.'C' .OR. TRANS.EQ.'c')      )THEN
-         INFO = 2
-      ELSE IF( .NOT.(DIAG .EQ.'U' .OR. DIAG .EQ.'u').AND.
-     $         .NOT.(DIAG .EQ.'N' .OR. DIAG .EQ.'n')      )THEN
-         INFO = 3
-      ELSE IF( N.LT.0 )THEN
-         INFO = 4
-      ELSE IF( LDA.LT.MAX( 1, N ) )THEN
-         INFO = 6
-      ELSE IF( INCX.EQ.0 )THEN
-         INFO = 8
-      END IF
-      IF( INFO.NE.0 )THEN
-         CALL F06AAZ( 'F06PFF/DTRMV ', INFO )
-         RETURN
-      END IF
+
+
 C
 C     Quick return if possible.
 C
@@ -18401,34 +15328,22 @@ C
 C
       RETURN
 C
-C     End of F06PFF (DTRMV ).
+C     End of DTRMV.
 C
       END
 
-      INTEGER FUNCTION F06JLF( N, X, INCX )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      INTEGER          IDAMAX
-      ENTRY            IDAMAX( N, X, INCX )
+      INTEGER FUNCTION IDAMAX( N, X, INCX )
+
 C     .. Scalar Arguments ..
       INTEGER                  INCX, N
 C     .. Array Arguments ..
       DOUBLE PRECISION         X( * )
 C     ..
 C
-C  F06JLF returns the smallest value of i such that
+C  IDAMAX returns the smallest value of i such that
 C
 C     abs( x( i ) ) = max( abs( x( j ) ) )
-C                      j
-C
-C
-C  Nag Fortran 77 version of the Blas routine IDAMAX.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 31-May-1983.
-C     Sven Hammarling, Nag Central Office.
-C
-C
+C                      
 C     .. Local Scalars ..
       DOUBLE PRECISION         XMAX
       INTEGER                  I, IMAX, IX
@@ -18453,16 +15368,15 @@ C     .. Executable Statements ..
          IMAX = 0
       END IF
 C
-      F06JLF = IMAX
+      IDAMAX = IMAX
       RETURN
 C
-C     End of F06JLF. ( IDAMAX )
+C     End of IDAMAX
 C
       END
-      SUBROUTINE F06ECF( N, ALPHA, X, INCX, Y, INCY )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      ENTRY      DAXPY ( N, ALPHA, X, INCX, Y, INCY )
+
+      SUBROUTINE DAXPY ( N, ALPHA, X, INCX, Y, INCY )
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION   ALPHA
       INTEGER            INCX, INCY, N
@@ -18470,19 +15384,11 @@ C     .. Array Arguments ..
       DOUBLE PRECISION   X( * ), Y( * )
 C     ..
 C
-C  F06ECF performs the operation
+C  DAXPY  performs the operation
 C
 C     y := alpha*x + y
 C
-C
-C  Nag Fortran 77 version of the Blas routine DAXPY.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 3-September-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION   ZERO
       PARAMETER        ( ZERO = 0.0D+0 )
 C     .. Local Scalars ..
@@ -18520,81 +15426,13 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06ECF. ( DAXPY )
+C     End of DAXPY
 C
       END
 
-
-
-      SUBROUTINE F06AAZ ( SRNAME, INFO )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     MARK 15 REVISED. IER-915 (APR 1991).
-C     .. Scalar Arguments ..
-      INTEGER            INFO
-      CHARACTER*13       SRNAME
-C     ..
-C
-C  Purpose
-C  =======
-C
-C  F06AAZ  is an error handler for the Level 2 BLAS routines.
-C
-C  It is called by the Level 2 BLAS routines if an input parameter is
-C  invalid.
-C
-C  Parameters
-C  ==========
-C
-C  SRNAME - CHARACTER*13.
-C           On entry, SRNAME specifies the name of the routine which
-C           called F06AAZ.
-C
-C  INFO   - INTEGER.
-C           On entry, INFO specifies the position of the invalid
-C           parameter in the parameter-list of the calling routine.
-C
-C
-C  Auxiliary routine for Level 2 Blas.
-C
-C  Written on 20-July-1986.
-C
-C     .. Local Scalars ..
-      INTEGER            IERR, IFAIL
-      CHARACTER*4        VARBNM
-C     .. Local Arrays ..
-      CHARACTER*80       REC (1)
-C     .. External Functions ..
-      INTEGER            P01ACF
-      EXTERNAL           P01ACF
-C     ..
-C     .. Executable Statements ..
-      WRITE (REC (1),99999) SRNAME, INFO
-      IF (SRNAME(1:3).EQ.'F06') THEN
-         IERR = -1
-         VARBNM = '    '
-      ELSE
-         IERR = -INFO
-         VARBNM = 'INFO'
-      END IF
-      IFAIL = 0
-      IFAIL = P01ACF (IFAIL, IERR, SRNAME(1:6), VARBNM, 1, REC)
-C
-      RETURN
-C
-99999 FORMAT ( ' ** On entry to ', A13, ' parameter number ', I2,
-     $         ' had an illegal value' )
-C
-C     End of F06AAZ.
-C
-      END
-
-      SUBROUTINE F06PAF( TRANS, M, N, ALPHA, A, LDA, X, INCX,
+      SUBROUTINE DGEMV ( TRANS, M, N, ALPHA, A, LDA, X, INCX,
      $                   BETA, Y, INCY )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     AXP4 VERSION FOR VECTOR MACHINES
-C     .. Entry Points ..
-      ENTRY      DGEMV ( TRANS, M, N, ALPHA, A, LDA, X, INCX,
-     $                   BETA, Y, INCY )
+
 C     .. Scalar Arguments ..
       DOUBLE PRECISION   ALPHA, BETA
       INTEGER            INCX, INCY, LDA, M, N
@@ -18686,51 +15524,13 @@ C           Unchanged on exit.
 C
 C
 C  Level 2 Blas routine.
-C
-C  -- Written on 22-October-1986.
-C     Jack Dongarra, Argonne National Lab.
-C     Jeremy Du Croz, Nag Central Office.
-C     Sven Hammarling, Nag Central Office.
-C     Richard Hanson, Sandia National Labs.
-C  -- DO-loops unrolled on 20-November-1986.
-C     Peter Mayes, Nag Central Office.
-C
-C
+
 C     .. Parameters ..
       DOUBLE PRECISION   ONE         , ZERO
       PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )
 C     .. Local Scalars ..
       DOUBLE PRECISION   TEMP, TEMP1, TEMP2, TEMP3, TEMP4
       INTEGER            I, INFO, IY, J, JX, KX, KY, LENX, LENY, M4, N4
-C     .. External Subroutines ..
-      EXTERNAL           F06AAZ
-C     .. Intrinsic Functions ..
-      INTRINSIC          MAX
-C     ..
-C     .. Executable Statements ..
-C
-C     Test the input parameters.
-C
-      INFO = 0
-      IF     ( .NOT.(TRANS.EQ.'N' .OR. TRANS.EQ.'n').AND.
-     $         .NOT.(TRANS.EQ.'T' .OR. TRANS.EQ.'t').AND.
-     $         .NOT.(TRANS.EQ.'C' .OR. TRANS.EQ.'c')      )THEN
-         INFO = 1
-      ELSE IF( M.LT.0 )THEN
-         INFO = 2
-      ELSE IF( N.LT.0 )THEN
-         INFO = 3
-      ELSE IF( LDA.LT.MAX( 1, M ) )THEN
-         INFO = 6
-      ELSE IF( INCX.EQ.0 )THEN
-         INFO = 8
-      ELSE IF( INCY.EQ.0 )THEN
-         INFO = 11
-      END IF
-      IF( INFO.NE.0 )THEN
-         CALL F06AAZ( 'F06PAF/DGEMV ', INFO )
-         RETURN
-      END IF
 C
 C     Quick return if possible.
 C
@@ -18931,14 +15731,12 @@ C**** Clean-up loop ****************************************************
 C
       RETURN
 C
-C     End of F06PAF (DGEMV ).
+C     End of DGEMV.
 C
       END
 
-      SUBROUTINE F06PJF( UPLO, TRANS, DIAG, N, A, LDA, X, INCX )
-C     MARK 13 RE-ISSUE. NAG COPYRIGHT 1988.
-C     .. Entry Points ..
-      ENTRY      DTRSV ( UPLO, TRANS, DIAG, N, A, LDA, X, INCX )
+      SUBROUTINE DTRSV ( UPLO, TRANS, DIAG, N, A, LDA, X, INCX )
+
 C     .. Scalar Arguments ..
       INTEGER            INCX, LDA, N
       CHARACTER*1        DIAG, TRANS, UPLO
@@ -19033,51 +15831,13 @@ C
 C
 C  Level 2 Blas routine.
 C
-C  -- Written on 22-October-1986.
-C     Jack Dongarra, Argonne National Lab.
-C     Jeremy Du Croz, Nag Central Office.
-C     Sven Hammarling, Nag Central Office.
-C     Richard Hanson, Sandia National Labs.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION   ZERO
       PARAMETER        ( ZERO = 0.0D+0 )
 C     .. Local Scalars ..
       DOUBLE PRECISION   TEMP
       INTEGER            I, INFO, IX, J, JX, KX
       LOGICAL            NOUNIT
-C     .. External Subroutines ..
-      EXTERNAL           F06AAZ
-C     .. Intrinsic Functions ..
-      INTRINSIC          MAX
-C     ..
-C     .. Executable Statements ..
-C
-C     Test the input parameters.
-C
-      INFO = 0
-      IF     ( .NOT.(UPLO .EQ.'U' .OR. UPLO .EQ.'u').AND.
-     $         .NOT.(UPLO .EQ.'L' .OR. UPLO .EQ.'l')      )THEN
-         INFO = 1
-      ELSE IF( .NOT.(TRANS.EQ.'N' .OR. TRANS.EQ.'n').AND.
-     $         .NOT.(TRANS.EQ.'T' .OR. TRANS.EQ.'t').AND.
-     $         .NOT.(TRANS.EQ.'C' .OR. TRANS.EQ.'c')      )THEN
-         INFO = 2
-      ELSE IF( .NOT.(DIAG .EQ.'U' .OR. DIAG .EQ.'u').AND.
-     $         .NOT.(DIAG .EQ.'N' .OR. DIAG .EQ.'n')      )THEN
-         INFO = 3
-      ELSE IF( N.LT.0 )THEN
-         INFO = 4
-      ELSE IF( LDA.LT.MAX( 1, N ) )THEN
-         INFO = 6
-      ELSE IF( INCX.EQ.0 )THEN
-         INFO = 8
-      END IF
-      IF( INFO.NE.0 )THEN
-         CALL F06AAZ( 'F06PJF/DTRSV ', INFO )
-         RETURN
-      END IF
 C
 C     Quick return if possible.
 C
@@ -19221,32 +15981,22 @@ C
 C
       RETURN
 C
-C     End of F06PJF (DTRSV ).
+C     End of DTRSV.
 C
       END
-      SUBROUTINE F06EGF( N, X, INCX, Y, INCY )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      ENTRY      DSWAP ( N, X, INCX, Y, INCY )
+
+      SUBROUTINE DSWAP ( N, X, INCX, Y, INCY )
+
 C     .. Scalar Arguments ..
       INTEGER            INCX, INCY, N
 C     .. Array Arguments ..
       DOUBLE PRECISION   X( * ), Y( * )
 C     ..
 C
-C  F06EGF performs the operations
+C DSWAP performs the operations
 C
 C     temp := x,   x := y,   y := temp.
-C
-C
-C  Nag Fortran 77 version of the Blas routine DSWAP.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 26-November-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Local Scalars ..
+
       DOUBLE PRECISION   TEMP
       INTEGER            I, IX, IY
 C     ..
@@ -19286,32 +16036,20 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06EGF. ( DSWAP )
+C     End of DSWAP
 C
       END
-      DOUBLE PRECISION FUNCTION F06EAF( N, X, INCX, Y, INCY )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      DOUBLE PRECISION          DDOT
-      ENTRY                     DDOT  ( N, X, INCX, Y, INCY )
+
+      DOUBLE PRECISION FUNCTION DDOT ( N, X, INCX, Y, INCY )
 C     .. Scalar Arguments ..
       INTEGER                           INCX, INCY, N
 C     .. Array Arguments ..
       DOUBLE PRECISION                  X( * ), Y( * )
 C     ..
 C
-C  F06EAF returns the value
+C  DDOT returns the value
 C
-C     F06EAF = x'y
-C
-C
-C  Nag Fortran 77 version of the Blas routine DDOT.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 21-September-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
+C     DDOT = x'y
 C     .. Parameters ..
       DOUBLE PRECISION      ZERO
       PARAMETER           ( ZERO = 0.0D+0 )
@@ -19348,18 +16086,15 @@ C     .. Executable Statements ..
          END IF
       END IF
 C
-      F06EAF = SUM
+      DDOT = SUM
       RETURN
 C
-C     End of F06EAF. ( DDOT )
+C     End of DDOT
 C
       END
 
-      SUBROUTINE F06PMF( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-C     MARK 13 RE-ISSUE. NAG COPYRIGHT 1988.
-C     .. Entry Points ..
-      ENTRY      DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-C     .. Scalar Arguments ..
+      SUBROUTINE DGER ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+
       DOUBLE PRECISION   ALPHA
       INTEGER            INCX, INCY, LDA, M, N
 C     .. Array Arguments ..
@@ -19442,31 +16177,6 @@ C     .. Parameters ..
 C     .. Local Scalars ..
       DOUBLE PRECISION   TEMP
       INTEGER            I, INFO, IX, J, JY, KX
-C     .. External Subroutines ..
-      EXTERNAL           F06AAZ
-C     .. Intrinsic Functions ..
-      INTRINSIC          MAX
-C     ..
-C     .. Executable Statements ..
-C
-C     Test the input parameters.
-C
-      INFO = 0
-      IF     ( M.LT.0 )THEN
-         INFO = 1
-      ELSE IF( N.LT.0 )THEN
-         INFO = 2
-      ELSE IF( INCX.EQ.0 )THEN
-         INFO = 5
-      ELSE IF( INCY.EQ.0 )THEN
-         INFO = 7
-      ELSE IF( LDA.LT.MAX( 1, M ) )THEN
-         INFO = 9
-      END IF
-      IF( INFO.NE.0 )THEN
-         CALL F06AAZ( 'F06PMF/DGER  ', INFO )
-         RETURN
-      END IF
 C
 C     Quick return if possible.
 C
@@ -19512,35 +16222,21 @@ C
 C
       RETURN
 C
-C     End of F06PMF (DGER  ).
+C     End of DGER.
 C
       END
 
+      SUBROUTINE DCOPY ( N, X, INCX, Y, INCY )
 
-
-      SUBROUTINE F06EFF( N, X, INCX, Y, INCY )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      ENTRY      DCOPY ( N, X, INCX, Y, INCY )
-C     .. Scalar Arguments ..
       INTEGER            INCX, INCY, N
 C     .. Array Arguments ..
       DOUBLE PRECISION   X( * ), Y( * )
 C     ..
 C
-C  F06EFF performs the operation
+C  DCOPY performs the operation
 C
 C     y := x
 C
-C
-C  Nag Fortran 77 version of the Blas routine DCOPY.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 26-November-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Local Scalars ..
       INTEGER            I, IX, IY
 C     ..
 C     .. Executable Statements ..
@@ -19573,43 +16269,31 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06EFF. ( DCOPY )
+C     End of DCOPY
 C
       END
 
 
-      DOUBLE PRECISION FUNCTION F06EJF( N, X, INCX )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      DOUBLE PRECISION          DNRM2
-      ENTRY                     DNRM2 ( N, X, INCX )
+      DOUBLE PRECISION FUNCTION DNRM2 ( N, X, INCX )
+
 C     .. Scalar Arguments ..
       INTEGER                           INCX, N
 C     .. Array Arguments ..
       DOUBLE PRECISION                  X( * )
 C     ..
 C
-C  F06EJF returns the euclidean norm of a vector via the function
+C  DNRM2 returns the euclidean norm of a vector via the function
 C  name, so that
 C
-C     F06EJF := sqrt( x'*x )
-C
-C
-C  Nag Fortran 77 version of the Blas routine DNRM2.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 25-October-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Parameters ..
+C     DNRM2  := sqrt( x'*x )
+
       DOUBLE PRECISION      ONE         , ZERO
       PARAMETER           ( ONE = 1.0D+0, ZERO = 0.0D+0 )
 C     .. Local Scalars ..
       DOUBLE PRECISION      NORM, SCALE, SSQ
 C     .. External Functions ..
-      DOUBLE PRECISION      F06BMF
-      EXTERNAL              F06BMF
+      DOUBLE PRECISION      SNORM
+      EXTERNAL              SNORM
 C     .. External Subroutines ..
       EXTERNAL              F06FJF
 C     .. Intrinsic Functions ..
@@ -19624,40 +16308,28 @@ C     .. Executable Statements ..
          SCALE = ZERO
          SSQ   = ONE
          CALL F06FJF( N, X, INCX, SCALE, SSQ )
-         NORM  = F06BMF( SCALE, SSQ )
+         NORM  = SNORM( SCALE, SSQ )
       END IF
 C
-      F06EJF = NORM
+      DNRM2  = NORM
       RETURN
 C
-C     End of F06EJF. ( DNRM2 )
+C     End of DNRM2
 C
       END
 
-      SUBROUTINE F06EDF( N, ALPHA, X, INCX )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Entry Points ..
-      ENTRY      DSCAL ( N, ALPHA, X, INCX )
-C     .. Scalar Arguments ..
+      SUBROUTINE DSCAL ( N, ALPHA, X, INCX )
+
       DOUBLE PRECISION   ALPHA
       INTEGER            INCX, N
 C     .. Array Arguments ..
       DOUBLE PRECISION   X( * )
 C     ..
 C
-C  F06EDF performs the operation
+C  DSCAL performs the operation
 C
 C     x := alpha*x
-C
-C
-C  Nag Fortran 77 version of the Blas routine DSCAL.
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 26-November-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION   ONE         , ZERO
       PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )
 C     .. Local Scalars ..
@@ -19682,17 +16354,16 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06EDF. ( DSCAL )
+C     End of DSCAL
 C
       END
 
-      SUBROUTINE F01QFF(PIVOT,M,N,A,LDA,ZETA,PERM,WORK,IFAIL)
-C     MARK 14 RELEASE. NAG COPYRIGHT 1989.
-C
+      SUBROUTINE SGEQRP(PIVOT,M,N,A,LDA,ZETA,PERM,WORK,IFAIL)
+
 C  1. Purpose
 C     =======
 C
-C  F01QFF  finds  a  QR factorization  of  the  real  m by n  matrix  A,
+C  SGEQRP  finds  a  QR factorization  of  the  real  m by n  matrix  A,
 C  incorporating  column interchanges,  so that  A  is reduced to  upper
 C  triangular form  by means of  orthogonal transformations  and  column
 C  permutations.
@@ -19857,96 +16528,11 @@ C        M     .lt. 0
 C        N     .lt. 0
 C        LDA   .lt. M
 C
-C  If  on  entry,  IFAIL  was either  -1 or 0  then  further  diagnostic
-C  information  will  be  output  on  the  error message  channel. ( See
-C  routine  X04AAF. )
-C
-C  5. Further information
-C     ===================
-C
-C  Following the use of this routine the operations
-C
-C        B := Q*B   and   B := Q'*B,
-C
-C  where  B  is an  m by k  matrix, can  be  performed  by calls to  the
-C  auxiliary linear algebra routine  F01QDF. The operation  B := Q*B can
-C  be obtained by the call:
-C
-C     IFAIL = 0
-C     CALL F01QDF( 'No transpose', 'Separate', M, MIN( M, N ), A, LDA,
-C    $             ZETA, K, B, LDB, WORK, IFAIL )
-C
-C  and  B := Q'*B  can be obtained by the call:
-C
-C     IFAIL = 0
-C     CALL F01QDF( 'Transpose', 'Separate', M, MIN( M, N ), A, LDA,
-C    $             ZETA, K, B, LDB, WORK, IFAIL )
-C
-C  In  both  cases  WORK  must be  a  k  element array  that is used  as
-C  workspace. If B is a one-dimensional array ( single column ) then the
-C  parameter  LDB  can be replaced by  M. See routine F01QDF for further
-C  details.
-C
-C  Also following the use of this routine the operations
-C
-C     B := P'*B   and   B := P*B,
-C
-C  where B is an n by k matrix, and the operations
-C
-C     B := B*P    and   B := B*P',
-C
-C  where  B is a k by n  matrix, can  be performed by calls to the basic
-C  linear  algebra  routine  F06QJF.  The  operation  B := P'*B  can  be
-C  obtained by the call:
-C
-C     CALL F06QJF( 'Left', 'Transpose', N, MIN( M, N ), PERM,
-C    $             K, B, LDB )
-C
-C  the operation  B := P*B  can be obtained by the call:
-C
-C     CALL F06QJF( 'Left', 'No transpose', N, MIN( M, N ), PERM,
-C    $             K, B, LDB )
-C
-C  If  B is a one-dimensional array ( single column ) then the parameter
-C  LDB  can be  replaced  by  N  in the above  two calls.  The operation
-C  B := B*P  can be obtained by the call:
-C
-C     CALL F06QJF( 'Right', 'No transpose', K, MIN( M, N ), PERM,
-C    $             M, B, LDB )
-C
-C  and  B := B*P'  can be obtained by the call:
-C
-C     CALL F06QJF( 'Right', 'Transpose', K, MIN( M, N ), PERM,
-C    $             M, B, LDB )
-C
-C  If  B is a one-dimensional array ( single column ) then the parameter
-C  LDB  can be replaced by  K  in the above two calls.
-C  See routine F06QJF for further details.
-C
-C  Operations involving  the matrix  R  can readily be performed by  the
-C  Level 2 BLAS  routines  DTRSV  and DTRMV . Note that no test for near
-C  singularity of R is incorporated in this routine or in routine DTRSV.
-C  If  R is nearly singular then the  NAG library routine  F02WUF can be
-C  used to determine the singular value decomposition of  R.  Operations
-C  involving  the matrix  X  can also be  performed by the  Level 2 BLAS
-C  routines.  Matrices  of  the  form  ( R  X )  can  be  factorized  as
-C
-C     ( R  X ) = ( T  0 )*S',
-C
-C  where  T  is  upper triangular and  S  is orthogonal,  using the  NAG
-C  Library routine  F01QGF.
 C
 C
-C  Nag Fortran 77 Auxiliary linear algebra routine.
-C
-C  -- Written on 21-March-1985.
-C     Sven Hammarling, Nag Central Office.
-C
-C     .. Parameters ..
       DOUBLE PRECISION  LAMDA, ONE, ZERO
       PARAMETER         (LAMDA=1.0D-2,ONE=1.0D+0,ZERO=0.0D+0)
-      CHARACTER*6       SRNAME
-      PARAMETER         (SRNAME='F01QFF')
+
 C     .. Scalar Arguments ..
       INTEGER           IFAIL, LDA, M, N
       CHARACTER*1       PIVOT
@@ -19963,39 +16549,23 @@ C     .. External Functions ..
       INTEGER           P01ABF
       EXTERNAL          DNRM2, X02AJF, P01ABF
 C     .. External Subroutines ..
-      EXTERNAL          DGEMV, DGER, DSWAP, F06FRF, P01ABW, P01ABY
+      EXTERNAL          DGEMV, DGER, DSWAP, SGRFG
 
       double precision wmach
       common/ cstmch /wmach(10)
-C
-C     Check the input parameters.
-C
-      IERR = 0
-      IF ((PIVOT.NE.'C') .AND. (PIVOT.NE.'c') .AND. (PIVOT.NE.'S')
-     *    .AND. (PIVOT.NE.'s')) CALL P01ABW(PIVOT,'PIVOT',IFAIL,IERR,
-     *                               SRNAME)
-      IF (M.LT.0) CALL P01ABY(M,'M',IFAIL,IERR,SRNAME)
-      IF (N.LT.0) CALL P01ABY(N,'N',IFAIL,IERR,SRNAME)
-      IF (LDA.LT.M) CALL P01ABY(LDA,'LDA',IFAIL,IERR,SRNAME)
-      IF (IERR.GT.0) THEN
-         WRITE (REC,FMT=99999) IERR
-         IFAIL = P01ABF(IFAIL,-1,SRNAME,1,REC)
-         RETURN
-      END IF
+
 C
 C     Compute eps and the initial column norms.
 C
-      IF (MIN(M,N).EQ.0) THEN
-         IFAIL = P01ABF(IFAIL,0,SRNAME,0,REC)
-         RETURN
-      END IF
+      IF (MIN(M,N).EQ.0) call errdbg ('SGEQRP')
+
       EPS = wmach(3)
       DO 20 J = 1, N
          WORK(J) = DNRM2(M,A(1,J),1)
          WORK(J+N) = WORK(J)
    20 CONTINUE
 C
-C     Perform the factorization. TOL is the tolerance for F06FRF.
+C     Perform the factorization. TOL is the tolerance for SGRFG.
 C
       LA = LDA
       DO 120 K = 1, MIN(M,N)
@@ -20039,7 +16609,7 @@ C
 C           Use a Householder reflection to zero the kth column of A.
 C           First set up the reflection.
 C
-            CALL F06FRF(M-K,A(K,K),A(K+1,K),1,TOL,ZETA(K))
+            CALL SGRFG (M-K,A(K,K),A(K+1,K),1,TOL,ZETA(K))
             IF (K.LT.N) THEN
                IF (ZETA(K).GT.ZERO) THEN
                   IF ((K+1).EQ.N) LA = M - K + 1
@@ -20095,15 +16665,11 @@ C
 C     Set the final  ZETA  when  m.le.n.
 C
       IF (M.LE.N) ZETA(M) = ZERO
-C
-      IFAIL = P01ABF(IFAIL,0,SRNAME,0,REC)
-      RETURN
-C
-C
-C     End of F01QFF. ( SGEQRP )
-C
-99999 FORMAT ('    The input parameters contained ',I2,' error(s)')
+
+C     End of SGEQRP
+
       END
+
       SUBROUTINE F06FDF( N, ALPHA, X, INCX, Y, INCY )
 C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
 C     .. Scalar Arguments ..
@@ -20130,14 +16696,14 @@ C     .. Parameters ..
 C     .. Local Scalars ..
       INTEGER            I, IX, IY
 C     .. External Subroutines ..
-      EXTERNAL           F06FBF
+      EXTERNAL           SLOAD
 C     .. Intrinsic Functions ..
       INTRINSIC          ABS
 C     ..
 C     .. Executable Statements ..
       IF( N.GT.0 )THEN
          IF( ( ALPHA.EQ.ZERO ).AND.( INCY.NE.0 ) )THEN
-            CALL F06FBF( N, ZERO, Y, ABS( INCY ) )
+            CALL SLOAD( N, ZERO, Y, ABS( INCY ) )
          ELSE
             IF( ( INCX.EQ.INCY ).AND.( INCX.GT.0 ) )THEN
                DO 10, IX = 1, 1 + ( N - 1 )*INCX, INCX
@@ -20172,13 +16738,13 @@ C     End of F06FDF. ( SSCMV )
 C
       END
 
-      SUBROUTINE F01QCF(M,N,A,LDA,ZETA,IFAIL)
+      SUBROUTINE SGEQR (M,N,A,LDA,ZETA,IFAIL)
 C     MARK 14 RELEASE. NAG COPYRIGHT 1989.
 C
 C  1. Purpose
 C     =======
 C
-C  F01QCF  finds  the  QR factorization  of the real  m by n,  m .ge. n,
+C  SGEQR   finds  the  QR factorization  of the real  m by n,  m .ge. n,
 C  matrix A,  so that  A is reduced to upper triangular form by means of
 C  orthogonal transformations.
 C
@@ -20345,7 +16911,7 @@ C     .. Parameters ..
       DOUBLE PRECISION  ONE, ZERO
       PARAMETER         (ONE=1.0D+0,ZERO=0.0D+0)
       CHARACTER*6       SRNAME
-      PARAMETER         (SRNAME='F01QCF')
+      PARAMETER         (SRNAME='SGEQR ')
 C     .. Scalar Arguments ..
       INTEGER           IFAIL, LDA, M, N
 C     .. Array Arguments ..
@@ -20359,36 +16925,19 @@ C     .. External Functions ..
       INTEGER           P01ABF
       EXTERNAL          P01ABF
 C     .. External Subroutines ..
-      EXTERNAL          DGEMV, DGER, F06FRF, P01ABY
-C     .. Intrinsic Functions ..
-      INTRINSIC         MIN
-C     .. Executable Statements ..
-C
-C     Check the input parameters.
-C
-      IERR = 0
-      IF (M.LT.N) CALL P01ABY(M,'M',IFAIL,IERR,SRNAME)
-      IF (N.LT.0) CALL P01ABY(N,'N',IFAIL,IERR,SRNAME)
-      IF (LDA.LT.M) CALL P01ABY(LDA,'LDA',IFAIL,IERR,SRNAME)
-      IF (IERR.GT.0) THEN
-         WRITE (REC,FMT=99999) IERR
-         IFAIL = P01ABF(IFAIL,-1,SRNAME,1,REC)
-         RETURN
-      END IF
+      EXTERNAL          DGEMV, DGER, SGRFG
 C
 C     Perform the factorization.
 C
-      IF (N.EQ.0) THEN
-         IFAIL = P01ABF(IFAIL,0,SRNAME,0,REC)
-         RETURN
-      END IF
+      IF (N.EQ.0) call errdbg ('SGEQR')
+
       LA = LDA
       DO 20 K = 1, MIN(M-1,N)
 C
 C        Use a  Householder reflection  to  zero the  kth column  of  A.
 C        First set up the reflection.
 C
-         CALL F06FRF(M-K,A(K,K),A(K+1,K),1,ZERO,ZETA(K))
+         CALL SGRFG(M-K,A(K,K),A(K+1,K),1,ZERO,ZETA(K))
          IF ((ZETA(K).GT.ZERO) .AND. (K.LT.N)) THEN
             IF ((K+1).EQ.N) LA = M - K + 1
 C
@@ -20421,20 +16970,13 @@ C
 C     Set the final  ZETA  when  m.eq.n.
 C
       IF (M.EQ.N) ZETA(N) = ZERO
-C
-      IFAIL = P01ABF(IFAIL,0,SRNAME,0,REC)
-      RETURN
-C
-C
-C     End of F01QCF. ( SGEQR )
-C
-99999 FORMAT ('    The input parameters contained ',I2,' error(s)')
+
+C     End of SGEQR
+
       END
-      DOUBLE PRECISION FUNCTION F06RJF(NORM,UPLO,DIAG,M,N,A,LDA,WORK)
-C     MARK 15 RELEASE. NAG COPYRIGHT 1991.
-C     REAL                 DLANTR
-C     ENTRY                DLANTR(NORM,UPLO,DIAG,M,N,A,LDA,WORK)
-C
+
+      DOUBLE PRECISION FUNCTION DLANTR(NORM,UPLO,DIAG,M,N,A,LDA,WORK)
+
 C  Purpose
 C  =======
 C
@@ -20505,11 +17047,8 @@ C          where LWORK >= M when NORM = 'I'; otherwise, WORK is not
 C          referenced.
 C
 C
-C  -- LAPACK auxiliary routine (adapted for NAG Library)
-C     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-C     Courant Institute, Argonne National Lab, and Rice University
-C
-C     .. Parameters ..
+C  -- LAPACK auxiliary routine
+
       DOUBLE PRECISION                 ONE, ZERO
       PARAMETER                        (ONE=1.0D+0,ZERO=0.0D+0)
 C     .. Scalar Arguments ..
@@ -20690,16 +17229,14 @@ C
          VALUE = SCALE*SQRT(SUM)
       END IF
 C
-      F06RJF = VALUE
-      RETURN
-C
-C     End of F06RJF (DLANTR)
+      DLANTR = VALUE
+
+C     End of DLANTR
 C
       END
+
       SUBROUTINE F06BCF( T, C, S )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     MARK 13 REVISED. IER-602 (MAR 1988).
-C     .. Scalar Arguments ..
+
       DOUBLE PRECISION   C, S, T
 C     ..
 C
@@ -21920,24 +18457,18 @@ C
 C     End of F06QXF. ( SGESRC )
 C
       END
-      SUBROUTINE F06DFF( N, X, INCX, Y, INCY )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Scalar Arguments ..
+
+      SUBROUTINE ICOPY ( N, X, INCX, Y, INCY )
+
       INTEGER            INCX, INCY, N
 C     .. Array Arguments ..
       INTEGER            X( * ), Y( * )
 C     ..
 C
-C  F06DFF performs the operation
+C  ICOPY  performs the operation
 C
 C     y := x
-C
-C
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 10-February-1986.
-C     Sven Hammarling, Nag Central Office.
-C
+
 C
 C     .. Local Scalars ..
       INTEGER            I, IX, IY
@@ -21972,31 +18503,23 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06DFF. ( ICOPY )
+C     End of ICOPY . ( ICOPY )
 C
       END
-      DOUBLE PRECISION FUNCTION F06BMF( SCALE, SSQ )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Scalar Arguments ..
+
+      DOUBLE PRECISION FUNCTION SNORM( SCALE, SSQ )
+
       DOUBLE PRECISION                  SCALE, SSQ
 C     ..
 C
-C  F06BMF returns the value norm given by
+C  SNORM returns the value norm given by
 C
 C     norm = ( scale*sqrt( ssq ), scale*sqrt( ssq ) .lt. flmax
 C            (
 C            ( flmax,             scale*sqrt( ssq ) .ge. flmax
 C
 C  via the function name.
-C
-C
-C  Nag Fortran 77 O( 1 ) basic linear algebra routine.
-C
-C  -- Written on 22-October-1982.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Local Scalars ..
+
       DOUBLE PRECISION      FLMAX, FLMIN, NORM, SQT
       LOGICAL               FIRST
 
@@ -22021,13 +18544,14 @@ C
          NORM = FLMAX
       END IF
 C
-      F06BMF = NORM
-      RETURN
+      SNORM = NORM
+
 C
-C     End of F06BMF. ( SNORM )
+C     End of SNORM.
 C
       END
-      SUBROUTINE F06QVF( SIDE, N, K1, K2, C, S, A, LDA )
+
+      SUBROUTINE SUTSRH( SIDE, N, K1, K2, C, S, A, LDA )
 C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
 C     .. Scalar Arguments ..
       INTEGER            K1, K2, LDA, N
@@ -22036,7 +18560,7 @@ C     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * ), C( * ), S( * )
 C     ..
 C
-C  F06QVF applies a  given sequence  of  plane rotations  to either  the
+C  SUTSRH applies a  given sequence  of  plane rotations  to either  the
 C  left,  or the right,  of the  n by n  upper triangular matrix  U,  to
 C  transform U to an  upper Hessenberg matrix. The rotations are applied
 C  in planes k1 up to k2.
@@ -22074,15 +18598,7 @@ C  elements s( k ),  k = k1, k1 + 1, ..., k2 - 1.
 C
 C  If n or k1 are less than unity,  or k1 is not less than k2,  or k2 is
 C  greater than n then an immediate return is effected.
-C
-C
-C  Nag Fortran 77 O( n**2 ) basic linear algebra routine.
-C
-C  -- Written on 13-January-1986.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION   ONE, ZERO
       PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
 C     .. Local Scalars ..
@@ -22139,12 +18655,12 @@ C
 C
       RETURN
 C
-C     End of F06QVF. ( SUTSRH )
+C     End of SUTSRH.
 C
       END
-      SUBROUTINE F06QKF( SIDE, TRANS, N, PERM, K, B, LDB )
-C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
-C     .. Scalar Arguments ..
+
+      SUBROUTINE SGEAPR( SIDE, TRANS, N, PERM, K, B, LDB )
+
       INTEGER            K, LDB, N
       CHARACTER*1        SIDE, TRANS
 C     .. Array Arguments ..
@@ -22154,7 +18670,7 @@ C
 C  Purpose
 C  =======
 C
-C  F06QKF performs one of the transformations
+C  SGEAPR performs one of the transformations
 C
 C     B := P'*B   or   B := P*B,   where B is an m by k matrix,
 C
@@ -22324,13 +18840,13 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06QKF. ( SGEAPR )
+C     End of SGEAPR.
 C
       END
-      SUBROUTINE F06QNZ(SIDE,N,K1,K2,S,A,LDA)
-C     MARK 14 RELEASE. NAG COPYRIGHT 1989.
-C
-C  F06QNZ applies a  sequence  of  pairwise interchanges to either  the
+
+      SUBROUTINE SUTSR1 (SIDE,N,K1,K2,S,A,LDA)
+
+C  SUTSR1 applies a  sequence  of  pairwise interchanges to either  the
 C  left,  or the right,  of the  n by n  upper triangular matrix  U,  to
 C  transform U to an  upper Hessenberg matrix. The interchanges are
 C  applied in planes k1 up to k2.
@@ -22367,14 +18883,7 @@ C  elements s( k ),  k = k1, k1 + 1, ..., k2 - 1.
 C
 C  If n or k1 are less than unity,  or k1 is not less than k2,  or k2 is
 C  greater than n then an immediate return is effected.
-C
-C
-C  Nag Fortran 77 O( n**2 ) basic linear algebra routine.
-C
-C  -- Written on 16-May-1988.
-C     Sven Hammarling, Nag Central Office.
-C
-C
+
 C     .. Parameters ..
       DOUBLE PRECISION  ZERO
       PARAMETER         (ZERO=0.0D+0)
@@ -22431,19 +18940,19 @@ C
 C
       RETURN
 C
-C     End of F06QNZ. ( SUTSRH )
+C     End of SUTSRH.
 C
       END
-      SUBROUTINE F06FRF( N, ALPHA, X, INCX, TOL, ZETA )
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C     .. Scalar Arguments ..
+
+      SUBROUTINE SGRFG( N, ALPHA, X, INCX, TOL, ZETA )
+
       DOUBLE PRECISION   ALPHA, TOL, ZETA
       INTEGER            INCX, N
 C     .. Array Arguments ..
       DOUBLE PRECISION   X( * )
 C     ..
 C
-C  F06FRF generates details of a generalized Householder reflection such
+C  SGRFG generates details of a generalized Householder reflection such
 C  that
 C
 C     P*( alpha ) = ( beta ),   P'*P = I.
@@ -22469,16 +18978,7 @@ C
 C  beta is overwritten on alpha and z is overwritten on x.
 C  the routine may be called with  n = 0  and advantage is taken of the
 C  case where  n = 1.
-C
-C
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 30-August-1984.
-C     Sven Hammarling, Nag Central Office.
-C     This version dated 28-September-1984.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION   ONE         , ZERO
       PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )
 C     .. Local Scalars ..
@@ -22571,9 +19071,10 @@ C
 C
       RETURN
 C
-C     End of F06FRF. ( SGRFG )
+C     End of SGRFG
 C
       END
+
       SUBROUTINE F06QZZ(HESS,N,K1,K2,C,S,A,LDA)
 C     MARK 14 RELEASE. NAG COPYRIGHT 1989.
 C
@@ -22649,16 +19150,7 @@ C         ( 0  0  X  X  X  X  X )        ( 0  X  X  X  X  X  X )
 C         ( 0  X  X  X  X  X  X )        ( 0  X  X  X  X  X  X )
 C         ( X  X  X  X  X  X  X )        ( X  X  X  X  X  X  X )
 C
-C
-C  This routine  is  principally intended  for use  with the  non-linear
-C  optimization routines such as E04UCF, in order to help vectorization.
-C  Nag Fortran 77 O( n**2 ) basic linear algebra routine.
-C
-C  -- Written on 10-May-1988.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION  ONE, ZERO
       PARAMETER         (ONE=1.0D+0,ZERO=0.0D+0)
 C     .. Scalar Arguments ..
@@ -22737,16 +19229,16 @@ C
 C     End of F06QZZ.
 C
       END
-      SUBROUTINE F06QWF( SIDE, N, K1, K2, C, S, A, LDA )
-C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
-C     .. Scalar Arguments ..
+
+      SUBROUTINE SUTSRS( SIDE, N, K1, K2, C, S, A, LDA )
+
       INTEGER            K1, K2, LDA, N
       CHARACTER*1        SIDE
 C     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * ), C( * ), S( * )
 C     ..
 C
-C  F06QWF applies a  given sequence  of  plane rotations  to either  the
+C  SUTSRS applies a  given sequence  of  plane rotations  to either  the
 C  left,  or the right,  of the  n by n  upper triangular  matrix  U  to
 C  transform  U  to an upper spiked matrix. The rotations are applied in
 C  planes k1 up to k2.
@@ -22862,12 +19354,12 @@ C
 C
       RETURN
 C
-C     End of F06QWF. ( SUTSRS )
+C     End of SUTSRS
 C
       END
-      SUBROUTINE F06QHF( MATRIX, M, N, CONST, DIAG, A, LDA )
-C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
-C     .. Scalar Arguments ..
+
+      SUBROUTINE SMLOAD( MATRIX, M, N, CONST, DIAG, A, LDA )
+
       CHARACTER*1        MATRIX
       DOUBLE PRECISION   CONST, DIAG
       INTEGER            LDA, M, N
@@ -22875,7 +19367,7 @@ C     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * )
 C     ..
 C
-C  F06QHF forms the m by n matrix A given by
+C  SMLOAD forms the m by n matrix A given by
 C
 C     a( i, j ) = (  diag  i.eq.j,
 C                 (
@@ -22888,20 +19380,10 @@ C                             referenced,
 C  if   MATRIX = 'L' or 'l'   then  A  is regarded  as lower triangular,
 C                             and only  elements  for which  i.ge.j  are
 C                             referenced.
-C
-C
-C  Nag Fortran 77 O( n**2 ) basic linear algebra routine.
-C
-C  -- Written on 21-November-1986.
-C     Sven Hammarling, Nag Central Office.
-C
-C
+
 C     .. Local Scalars ..
       INTEGER            I, J
-C     .. Intrinsic Functions ..
-      INTRINSIC          MIN
-C     ..
-C     .. Executable Statements ..
+
       IF( ( MATRIX.EQ.'G' ).OR.( MATRIX.EQ.'g' ) )THEN
          DO 20 J = 1, N
             DO 10 I = 1, M
@@ -22939,19 +19421,19 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06QHF. ( SMLOAD )
+C     End of SMLOAD
 C
       END
-      SUBROUTINE F06QRF( SIDE, N, K1, K2, C, S, A, LDA )
-C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
-C     .. Scalar Arguments ..
+
+      SUBROUTINE SUHQR( SIDE, N, K1, K2, C, S, A, LDA )
+
       INTEGER            K1, K2, LDA, N
       CHARACTER*1        SIDE
 C     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * ), C( * ), S( * )
 C     ..
 C
-C  F06QRF restores an upper Hessenberg matrix H to upper triangular form
+C  SUHQR restores an upper Hessenberg matrix H to upper triangular form
 C  by  applying a sequence of  plane rotations  from either the left, or
 C  the right.  The matrix  H  is assumed to have  non-zero  sub-diagonal
 C  elements  in  positions  h( k + 1, k ),  k = k1, k1 + 1, ..., k2 - 1,
@@ -22987,15 +19469,7 @@ C  the upper triangular matrix R.
 C
 C  If n or k1 are less than unity,  or k1 is not less than k2,  or k2 is
 C  greater than n then an immediate return is effected.
-C
-C
-C  Nag Fortran 77 O( n**2 ) basic linear algebra routine.
-C
-C  -- Written on 13-January-1986.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Parameters ..
+
       DOUBLE PRECISION   ONE, ZERO
       PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
 C     .. Local Scalars ..
@@ -23076,18 +19550,17 @@ C
 C
       RETURN
 C
-C     End of F06QRF. ( SUHQR )
+C     End of SUHQR.
 C
       END
+
       SUBROUTINE F06QFF( MATRIX, M, N, A, LDA, B, LDB )
-C     MARK 13 RELEASE. NAG COPYRIGHT 1988.
-C     .. Scalar Arguments ..
+
       CHARACTER*1        MATRIX
       INTEGER            M, N, LDA, LDB
 C     .. Array Arguments ..
       DOUBLE PRECISION   A( LDA, * ), B( LDB, * )
-C     ..
-C
+
 C  F06QFF  copies  the  m by n  matrix  A  into  the  m by n  matrix  B.
 C
 C  If   MATRIX = 'G' or 'g'   then  A  and  B  are  regarded as  general
@@ -23098,18 +19571,9 @@ C                             i.le.j  are referenced,
 C  if   MATRIX = 'L' or 'l'   then  A  and  B  are  regarded  as   lower
 C                             triangular,  and only  elements  for which
 C                             i.ge.j  are referenced.
-C
-C
-C  Nag Fortran 77 O( n**2 ) basic linear algebra routine.
-C
-C  -- Written on 21-November-1986.
-C     Sven Hammarling, Nag Central Office.
-C
-C
-C     .. Local Scalars ..
+
       INTEGER            I, J
-C     .. Intrinsic Functions ..
-      INTRINSIC          MIN
+
 C     ..
 C     .. Executable Statements ..
       IF( ( MATRIX.EQ.'G' ).OR.( MATRIX.EQ.'g' ) )THEN
@@ -23137,6 +19601,7 @@ C
 C     End of F06QFF. ( SMCOPY )
 C
       END
+
       SUBROUTINE F06BAF( A, B, C, S )
 C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
 C     .. Scalar Arguments ..
@@ -23170,12 +19635,6 @@ C  c and s  can be reconstructed from the tangent,  t,  by a call to the
 C  Nag basic linear algebra routine F06BCF.
 C
 C
-C  Nag Fortran 77 O( 1 ) basic linear algebra routine.
-C
-C  -- Written on 3-January-1986.
-C     Sven Hammarling, Nag Central Office.
-C
-C
 C     .. Parameters ..
       DOUBLE PRECISION   ONE         , ZERO
       PARAMETER        ( ONE = 1.0D+0, ZERO = 0.0D+0 )
@@ -23204,7 +19663,8 @@ C
 C     End of F06BAF. ( SROTGC )
 C
       END
-      SUBROUTINE F06FBF( N, CONST, X, INCX )
+
+      SUBROUTINE SLOAD( N, CONST, X, INCX )
 C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
 C     .. Scalar Arguments ..
       DOUBLE PRECISION   CONST
@@ -23213,17 +19673,10 @@ C     .. Array Arguments ..
       DOUBLE PRECISION   X( * )
 C     ..
 C
-C  F06FBF performs the operation
+C  SLOAD performs the operation
 C
 C     x = const*e,   e' = ( 1  1 ... 1 ).
-C
-C
-C  Nag Fortran 77 O( n ) basic linear algebra routine.
-C
-C  -- Written on 22-September-1983.
-C     Sven Hammarling, Nag Central Office.
-C
-C
+
 C     .. Parameters ..
       DOUBLE PRECISION   ZERO
       PARAMETER        ( ZERO = 0.0D+0 )
@@ -23245,359 +19698,12 @@ C     .. Executable Statements ..
 C
       RETURN
 C
-C     End of F06FBF. ( SLOAD )
+C     End of SLOAD
 C
-      END
-
-      SUBROUTINE P01ABY(N,NAME,INFORM,IERR,SRNAME)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     P01ABY increases the value of IERR by 1 and, if
-C
-C        ( mod( INFORM, 10 ).ne.1 ).or.( mod( INFORM/10, 10 ).ne.0 )
-C
-C     writes a message on the current error message channel giving the
-C     value of N, a message to say that N is invalid and the strings
-C     NAME and SRNAME.
-C
-C     NAME must be the name of the actual argument for N and SRNAME must
-C     be the name of the calling routine.
-C
-C     This routine is intended for use when N is an invalid input
-C     parameter to routine SRNAME. For example
-C
-C        IERR = 0
-C        IF( N.LT.1 )CALL P01ABY( N, 'N', IDIAG, IERR, SRNAME )
-C
-C  -- Written on 23-February-1984.  Sven.
-C
-C     .. Scalar Arguments ..
-      INTEGER           IERR, INFORM, N
-      CHARACTER*(*)     NAME, SRNAME
-C     .. Local Scalars ..
-      INTEGER           NERR
-C     .. Local Arrays ..
-      CHARACTER*65      REC(2)
-C     .. External Subroutines ..
-      EXTERNAL          X04AAF, X04BAF
-C     .. Intrinsic Functions ..
-      INTRINSIC         MOD
-C     .. Executable Statements ..
-      IERR = IERR + 1
-      IF ((MOD(INFORM,10).NE.1) .OR. (MOD(INFORM/10,10).NE.0)) THEN
-         CALL X04AAF(0,NERR)
-         WRITE (REC,FMT=99999) NAME, SRNAME, N
-         CALL X04BAF(NERR,' ')
-         CALL X04BAF(NERR,REC(1))
-         CALL X04BAF(NERR,REC(2))
-      END IF
-      RETURN
-C
-C
-C     End of P01ABY.
-C
-99999 FORMAT (' *****  Parameter  ',A,'  is invalid in routine  ',A,
-     *  '  ***** ',/8X,'Value supplied is ',I6)
-      END
-
-
-      SUBROUTINE P01ABZ
-C     MARK 11.5(F77) RELEASE. NAG COPYRIGHT 1986.
-C
-C     Terminates execution when a hard failure occurs.
-C
-C     ******************** IMPLEMENTATION NOTE ********************
-C     The following STOP statement may be replaced by a call to an
-C     implementation-dependent routine to display a message and/or
-C     to abort the program.
-C     *************************************************************
-C     .. Executable Statements ..
-c     STOP
-      END
-
-      INTEGER FUNCTION P01ABF(IFAIL,IERROR,SRNAME,NREC,REC)
-C     MARK 11.5(F77) RELEASE. NAG COPYRIGHT 1986.
-C     MARK 13 REVISED. IER-621 (APR 1988).
-C     MARK 13B REVISED. IER-668 (AUG 1988).
-C
-C     P01ABF is the error-handling routine for the NAG Library.
-C
-C     P01ABF either returns the value of IERROR through the routine
-C     name (soft failure), or terminates execution of the program
-C     (hard failure). Diagnostic messages may be output.
-C
-C     If IERROR = 0 (successful exit from the calling routine),
-C     the value 0 is returned through the routine name, and no
-C     message is output
-C
-C     If IERROR is non-zero (abnormal exit from the calling routine),
-C     the action taken depends on the value of IFAIL.
-C
-C     IFAIL =  1: soft failure, silent exit (i.e. no messages are
-C                 output)
-C     IFAIL = -1: soft failure, noisy exit (i.e. messages are output)
-C     IFAIL =-13: soft failure, noisy exit but standard messages from
-C                 P01ABF are suppressed
-C     IFAIL =  0: hard failure, noisy exit
-C
-C     For compatibility with certain routines included before Mark 12
-C     P01ABF also allows an alternative specification of IFAIL in which
-C     it is regarded as a decimal integer with least significant digits
-C     cba. Then
-C
-C     a = 0: hard failure  a = 1: soft failure
-C     b = 0: silent exit   b = 1: noisy exit
-C
-C     except that hard failure now always implies a noisy exit.
-C
-C     S.Hammarling, M.P.Hooper and J.J.du Croz, NAG Central Office.
-C
-C     .. Scalar Arguments ..
-      INTEGER                 IERROR, IFAIL, NREC
-      CHARACTER*(*)           SRNAME
-C     .. Array Arguments ..
-      CHARACTER*(*)           REC(*)
-C     .. Local Scalars ..
-      INTEGER                 I, NERR
-      CHARACTER*72            MESS
-C     .. External Subroutines ..
-      EXTERNAL                P01ABZ, X04AAF, X04BAF
-C     .. Intrinsic Functions ..
-      INTRINSIC               ABS, MOD
-C     .. Executable Statements ..
-      IF (IERROR.NE.0) THEN
-C        Abnormal exit from calling routine
-         IF (IFAIL.EQ.-1 .OR. IFAIL.EQ.0 .OR. IFAIL.EQ.-13 .OR.
-     *       (IFAIL.GT.0 .AND. MOD(IFAIL/10,10).NE.0)) THEN
-C           Noisy exit
-            CALL X04AAF(0,NERR)
-            DO 20 I = 1, NREC
-               CALL X04BAF(NERR,REC(I))
-   20       CONTINUE
-            IF (IFAIL.NE.-13) THEN
-               WRITE (MESS,FMT=99999) SRNAME, IERROR
-               CALL X04BAF(NERR,MESS)
-               IF (ABS(MOD(IFAIL,10)).NE.1) THEN
-C                 Hard failure
-                  CALL X04BAF(NERR,
-     *                     ' ** NAG hard failure - execution terminated'
-     *                        )
-                  CALL P01ABZ
-               ELSE
-C                 Soft failure
-                  CALL X04BAF(NERR,
-     *                        ' ** NAG soft failure - control returned')
-               END IF
-            END IF
-         END IF
-      END IF
-      P01ABF = IERROR
-      RETURN
-C
-99999 FORMAT (' ** ABNORMAL EXIT from NAG Library routine ',A,': IFAIL',
-     *  ' =',I6)
-      END
-      INTEGER FUNCTION P01ACF(IFAIL,IERROR,SRNAME,VARBNM,NREC,REC)
-C     MARK 15 RELEASE. NAG COPYRIGHT 1991.
-C
-C     P01ACF is the error-handling routine for the F06 AND F07
-C     Chapters of the NAG Fortran Library. It is a slightly modified
-C     version of P01ABF.
-C
-C     P01ACF either returns the value of IERROR through the routine
-C     name (soft failure), or terminates execution of the program
-C     (hard failure). Diagnostic messages may be output.
-C
-C     If IERROR = 0 (successful exit from the calling routine),
-C     the value 0 is returned through the routine name, and no
-C     message is output
-C
-C     If IERROR is non-zero (abnormal exit from the calling routine),
-C     the action taken depends on the value of IFAIL.
-C
-C     IFAIL =  1: soft failure, silent exit (i.e. no messages are
-C                 output)
-C     IFAIL = -1: soft failure, noisy exit (i.e. messages are output)
-C     IFAIL =-13: soft failure, noisy exit but standard messages from
-C                 P01ACF are suppressed
-C     IFAIL =  0: hard failure, noisy exit
-C
-C     For compatibility with certain routines included before Mark 12
-C     P01ACF also allows an alternative specification of IFAIL in which
-C     it is regarded as a decimal integer with least significant digits
-C     cba. Then
-C
-C     a = 0: hard failure  a = 1: soft failure
-C     b = 0: silent exit   b = 1: noisy exit
-C
-C     except that hard failure now always implies a noisy exit.
-C
-C     S.Hammarling, M.P.Hooper and J.J.du Croz, NAG Central Office.
-C
-C     .. Scalar Arguments ..
-      INTEGER                 IERROR, IFAIL, NREC
-      CHARACTER*(*)           SRNAME, VARBNM
-C     .. Array Arguments ..
-      CHARACTER*(*)           REC(*)
-C     .. Local Scalars ..
-      INTEGER                 I, NERR, VARLEN
-      CHARACTER*72            MESS
-C     .. External Subroutines ..
-      EXTERNAL                P01ABZ, X04AAF, X04BAF
-C     .. Intrinsic Functions ..
-      INTRINSIC               ABS, LEN, MOD
-C     .. Executable Statements ..
-      IF (IERROR.NE.0) THEN
-         VARLEN = 0
-         DO 20 I = LEN(VARBNM), 1, -1
-            IF (VARBNM(I:I).NE.' ') THEN
-               VARLEN = I
-               GO TO 40
-            END IF
-   20    CONTINUE
-   40    CONTINUE
-C        Abnormal exit from calling routine
-         IF (IFAIL.EQ.-1 .OR. IFAIL.EQ.0 .OR. IFAIL.EQ.-13 .OR.
-     *       (IFAIL.GT.0 .AND. MOD(IFAIL/10,10).NE.0)) THEN
-C           Noisy exit
-            CALL X04AAF(0,NERR)
-            DO 60 I = 1, NREC
-               CALL X04BAF(NERR,REC(I))
-   60       CONTINUE
-            IF (IFAIL.NE.-13) THEN
-               IF (VARLEN.NE.0) THEN
-                  WRITE (MESS,FMT=99999) SRNAME, VARBNM(1:VARLEN),
-     *              IERROR
-               ELSE
-                  WRITE (MESS,FMT=99998) SRNAME
-               END IF
-               CALL X04BAF(NERR,MESS)
-               IF (ABS(MOD(IFAIL,10)).NE.1) THEN
-C                 Hard failure
-                  CALL X04BAF(NERR,
-     *                     ' ** NAG hard failure - execution terminated'
-     *                        )
-                  CALL P01ABZ
-               ELSE
-C                 Soft failure
-                  CALL X04BAF(NERR,
-     *                        ' ** NAG soft failure - control returned')
-               END IF
-            END IF
-         END IF
-      END IF
-      P01ACF = IERROR
-      RETURN
-C
-99999 FORMAT (' ** ABNORMAL EXIT from NAG Library routine ',A,': ',A,
-     *       ' =',I6)
-99998 FORMAT (' ** ABNORMAL EXIT from NAG Library routine ',A)
-      END
-      SUBROUTINE P01ABW(N,NAME,INFORM,IERR,SRNAME)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
-C     P01ABW increases the value of IERR by 1 and, if
-C
-C        ( mod( INFORM, 10 ).ne.1 ).or.( mod( INFORM/10, 10 ).ne.0 )
-C
-C     writes a message on the current error message channel giving the
-C     value of N, a message to say that N is invalid and the strings
-C     NAME and SRNAME.
-C
-C     NAME must be the name of the actual argument for N and SRNAME must
-C     be the name of the calling routine.
-C
-C     This routine is intended for use when N is an invalid input
-C     parameter to routine SRNAME. For example
-C
-C        IERR = 0
-C        IF( N.NE.'Valid value' )
-C     $     CALL P01ABW( N, 'N', IDIAG, IERR, SRNAME )
-C
-C  -- Written on 15-November-1984.
-C     Sven Hammarling, Nag Central Office.
-C
-C     .. Scalar Arguments ..
-      INTEGER           IERR, INFORM
-      CHARACTER*(*)     N
-      CHARACTER*(*)     NAME, SRNAME
-C     .. Local Scalars ..
-      INTEGER           NERR
-C     .. Local Arrays ..
-      CHARACTER*65      REC(3)
-C     .. External Subroutines ..
-      EXTERNAL          X04AAF, X04BAF
-C     .. Intrinsic Functions ..
-      INTRINSIC         MOD
-C     .. Executable Statements ..
-      IERR = IERR + 1
-      IF ((MOD(INFORM,10).NE.1) .OR. (MOD(INFORM/10,10).NE.0)) THEN
-         CALL X04AAF(0,NERR)
-         WRITE (REC,FMT=99999) NAME, SRNAME, N
-         CALL X04BAF(NERR,' ')
-         CALL X04BAF(NERR,REC(1))
-         CALL X04BAF(NERR,REC(2))
-         CALL X04BAF(NERR,REC(3))
-      END IF
-      RETURN
-C
-C
-C     End of P01ABW.
-C
-99999 FORMAT (' *****  Parameter  ',A,'  is invalid in routine  ',A,
-     *  '  ***** ',/8X,'Value supplied is',/8X,A)
-      END
-
-      SUBROUTINE X04ABF(I,NADV)
-C     MARK 7 RELEASE. NAG COPYRIGHT 1978
-C     MARK 7C REVISED IER-190 (MAY 1979)
-C     MARK 11.5(F77) REVISED. (SEPT 1985.)
-C     MARK 14 REVISED. IER-830 (DEC 1989).
-C      IF I = 0, SETS NADV TO CURRENT ADVISORY MESSAGE UNIT NUMBER
-C     (STORED IN NADV1).
-C     IF I = 1, CHANGES CURRENT ADVISORY MESSAGE UNIT NUMBER TO
-C     VALUE SPECIFIED BY NADV.
-C
-C     .. Scalar Arguments ..
-      INTEGER           I, NADV
-C     .. Local Scalars ..
-      INTEGER           NADV1
-C     .. Save statement ..
-      SAVE              NADV1
-C     .. Data statements ..
-      DATA              NADV1/6/
-C     .. Executable Statements ..
-      IF (I.EQ.0) NADV = NADV1
-      IF (I.EQ.1) NADV1 = NADV
-      RETURN
-      END
-      SUBROUTINE X04AAF(I,NERR)
-C     MARK 7 RELEASE. NAG COPYRIGHT 1978
-C     MARK 7C REVISED IER-190 (MAY 1979)
-C     MARK 11.5(F77) REVISED. (SEPT 1985.)
-C     MARK 14 REVISED. IER-829 (DEC 1989).
-C     IF I = 0, SETS NERR TO CURRENT ERROR MESSAGE UNIT NUMBER
-C     (STORED IN NERR1).
-C     IF I = 1, CHANGES CURRENT ERROR MESSAGE UNIT NUMBER TO
-C     VALUE SPECIFIED BY NERR.
-C
-C     .. Scalar Arguments ..
-      INTEGER           I, NERR
-C     .. Local Scalars ..
-      INTEGER           NERR1
-C     .. Save statement ..
-      SAVE              NERR1
-C     .. Data statements ..
-      DATA              NERR1/0/
-C     .. Executable Statements ..
-      IF (I.EQ.0) NERR = NERR1
-      IF (I.EQ.1) NERR1 = NERR
-      RETURN
       END
 
       SUBROUTINE X04BAY(NOUT,NREC,REC)
-C     MARK 12 RELEASE. NAG COPYRIGHT 1986.
-C
+
 C     X04BAY outputs NREC records on device NOUT, by calling X04BAF.
 C     If NREC is 0 then no records are output.
 C
@@ -23648,182 +19754,3 @@ C        Write record to external file
 C
 99999 FORMAT (A)
       END
-
-      SUBROUTINE X02ZAZ
-C     MARK 16 REVISED. IER-1046 (JUN 1993).
-C
-C***********************************************************************
-C
-C     NAG version of the Stanford routine MCHPAR.
-C     Sven Hammarling, NAG Central Office.
-C
-C     X02ZAZ sets machine parameters as follows:
-C
-C     WMACH(  1 ) = nbase  = base of floating-point arithmetic.
-C     WMACH(  2 ) = ndigit = no. of base ( nbase ) digits in the
-C                            mantissa
-C     WMACH(  3 ) = eps    = relative machine accuracy. (X02AJF.)
-C     WMACH(  4 ) = rteps  = sqrt( eps ).
-C     WMACH(  5 ) = rmin   = small positive floating-point number whose
-C                             reciprocal does not overflow.
-C     WMACH(  6 ) = rtrmin = sqrt( rmin ).
-C     WMACH(  7 ) = rmax   = 1/rmin
-C     WMACH(  8 ) = rtrmax = sqrt( rmax ).
-C     WMACH(  9 ) = undflw = 0 if underflow is not fatal, +ve otherwise.
-C     WMACH( 10 ) = nin    = input  stream unit number. ( 5.)
-C     WMACH( 11 ) = nout   = output stream unit number.
-C                          = advisory message unit number. ( X04ABF.)
-C     WMACH( 12 ) = nerr   = error    message unit number. ( X04AAF.)
-C     WMACH( 13 )
-C     WMACH( 14 )   Not currently used.
-C     WMACH( 15 )
-C
-C     Note that constants that represent integers may hold a number just
-C     less than the integer, so that the integer should be recovered by
-C     adding, say, 0.25. e.g.
-C
-C     IBASE = WMACH( 1 ) + 0.25
-C
-C***********************************************************************
-
-      END
-
-      subroutine e04uef(string)
-c----------------------------------------------------------------------
-c     e04uef  loads the option supplied in string into the relevant
-c     element of iprmls, rprmls, iprmnp or rprmnp.
-
-      character*(*)     string
-c     .. scalars in common ..
-      logical           newopt
-
-      double precision wmach
-      common/ cstmch /wmach(10)
-
-      integer           nout
-      logical           first, prnt
-      character*16      key
-      character*72      buffer
-c     .. local arrays ..
-      character*80      rec(5)
-c     .. common blocks ..
-      common            /ee04uc/newopt
-c     .. save statement ..
-      save prnt
-      save              /ee04uc/
-c     .. data statements ..
-      data              first/.true./
-c----------------------------------------------------------------------
-c     if first time in, set nout.
-c     newopt is true first time into e04udf or e04uef
-c     and just after a call to an optimization routine.
-c     prnt is set to true whenever newopt is true.
-
-      if (first) then
-         first = .false.
-         newopt = .true.
-      end if
-
-      nout = 6
-      buffer = string
-
-c     call e04ucq to decode the option and set the parameter value.
-c     if newopt is true, reset prnt and test specially for nolist.
-
-      if (newopt) then
-         newopt = .false.
-         prnt = .true.
-         call e04ucq(nout,buffer,key)
-
-         if (key.eq.'nolist') then
-            prnt = .false.
-         else
-            write (rec,fmt='(// a / a /)') ' calls to e04uef',
-     *        ' ---------------'
-            call x04bay(nout,5,rec)
-            write (rec,fmt='( 6x, a )') buffer
-            call x04baf(nout,rec(1))
-         end if
-      else
-         if (prnt) then
-            write (rec,fmt='( 6x, a )') buffer
-            call x04baf(nout,rec(1))
-         end if
-         call e04ucq(nout,buffer,key)
-
-         if (key.eq.'list') prnt = .true.
-         if (key.eq.'nolist') prnt = .false.
-      end if
-
-c     end of  e04uef. (npoptn)
-
-      end
-
-      subroutine e04mhf(string)
-c----------------------------------------------------------------------
-c     e04mhf  loads the option supplied in  string  into the relevant
-c     element of  iprmlc  or  rprmlc.
-
-      character*(*)     string
-c     .. scalars in common ..
-      logical           newopt
-c     .. local scalars ..
-      integer           nout
-      logical           first, prnt
-      character*16      key
-      character*72      buffer
-c     .. local arrays ..
-      character*80      rec(5)
-c     .. common blocks ..
-      double precision wmach
-      common/ cstmch /wmach(10)
-
-      common            /be04mf/newopt
-c     .. save statement ..
-      save              /be04mf/, first, nout, prnt
-c     .. data statements ..
-      data              first/.true./
-c----------------------------------------------------------------------
-c     if first time in, set  nout.
-c     newopt  is true first time into  e04mgf  or  e04mhf
-c     and just after a call to the main routine (e.g. e04mff).
-c     prnt  is set to  true  whenever  newopt  is true.
-
-      if (first) then
-         first = .false.
-         newopt = .true.
-         nout = 6
-      end if
-      buffer = string
-
-c     call  e04mfx   to decode the option and set the parameter value.
-c     if  newopt  is true, reset  prnt  and test specially for nolist.
-
-      if (newopt) then
-         newopt = .false.
-         prnt = .true.
-         call e04mfx(nout,buffer,key)
-c
-         if (key.eq.'nolist') then
-            prnt = .false.
-         else
-            write (rec,fmt='(// a / a /)') ' calls to e04mhf',
-     *        ' ---------------'
-            call x04bay(nout,5,rec)
-            write (rec,fmt='( 6x, a )') buffer
-            call x04baf(nout,rec(1))
-         end if
-      else
-         if (prnt) then
-            write (rec,fmt='( 6x, a )') buffer
-            call x04baf(nout,rec(1))
-         end if
-         call e04mfx(nout,buffer,key)
-
-         if (key.eq.'list') prnt = .true.
-         if (key.eq.'nolist') prnt = .false.
-      end if
-
-c     end of  e04mhf.  (lpprm)
-
-      end
