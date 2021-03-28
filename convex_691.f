@@ -2397,9 +2397,11 @@ c                                 change in G due to delt
 
       do i = 1, 2
          v(i) = v(i) + delt(i)
+         call incdep (i)
          call grxn (gval)   
          dv(i) = (og - gval) / delt(i)
-         v(i) = v(i) - delt(i) 
+         v(i) = v(i) - delt(i)
+         call incdep (i)
       end do 
 c                                 get deltas on mobile comps
       if (jmct.gt.0) then

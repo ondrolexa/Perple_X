@@ -24,8 +24,6 @@ c-----------------------------------------------------------------------
 
       integer i, nvar, iter, iwork(m22), itic,
      *        ivars(13), istate(m21), idead, nclin, ntot
-c DEBUG691
-     *        ,iprint,mode
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
@@ -33,7 +31,6 @@ c DEBUG691
 c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),yt(m4),
      *                 zsite(m10,m11), sum
-
 
       character ctol*20
 
@@ -122,8 +119,6 @@ c                                 closure for molecular models
       end if
 
       itic = 0
-
-      iprint = 0
 
 10    idead = -1
 c                                 EPSRF, function precision
@@ -222,6 +217,10 @@ c                                 threshold is reduced to zero (sqrt(eps)).
       call makepp (rids)
 c                                 if logical arg = T use implicit ordering
       gfinal = gsol1 (rids,.false.)
+
+      if (rsum.eq.0d0) then 
+         return
+      end if
 c                                 increment the counter
       call savrpc (gfinal,zero,jphct)
 c---------------

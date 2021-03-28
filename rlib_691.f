@@ -1362,10 +1362,10 @@ c---------------------------------------------------------------------
          call incdep (iv(i))
          call grxn (gval)
          dg(i) = (gval-gr)/delt(iv(i))
-c                                 note the possibility exists here
+c                                 the possibility exists here
 c                                 for the value of an intensive
 c                                 parameter to excede allowed
-c                                 limits.  although this is very
+c                                 limits.  although this is
 c                                 unlikely a limit test like the
 c                                 one done in 'univeq' could be
 c                                 used.
@@ -3598,7 +3598,7 @@ c                                 scan for blanks:
 
       end
 
-      subroutine sattst (ifer,good)
+      subroutine sattst (ifer,make,good)
 c----------------------------------------------------------------------
 c sorts phases into the appropriate saturated phase list called by
 c input2. returns good if data is valid
@@ -3609,7 +3609,7 @@ c----------------------------------------------------------------------
 
       integer j,ifer,idc
 
-      logical good
+      logical good, make
 
       character name*8
       common/ csta6 /name
@@ -3672,7 +3672,7 @@ c                               the saturated component idc:
                if (iphct.gt.k1) call error (72,1d0,k1,
      *                            'SATTST increase parameter k1')
                ids(j,isct(j)) = iphct
-               call loadit (iphct,.false.,.true.)
+               call loadit (iphct,make,.true.)
                good = .true.
                return
             end if
@@ -11670,6 +11670,8 @@ c                                 WERAMI/MEEMUM console output
 
             k = ind(i)
 
+            if (mo(k).eq.0d0) cycle
+
             if (jdaq.eq.20) then
 c                                 compare to forward speciation:
 c                                 check if the species is the solution model
@@ -17669,7 +17671,7 @@ c                                 entities:
  
          call chkphi (0,name,good)
 
-         if (good) call sattst (ifer,good)
+         if (good) call sattst (ifer,.false.,good)
 
       end do 
 c                                 loop to load made saturated entities
@@ -17689,7 +17691,7 @@ c
 c                                 set eos flag
          ieos = meos(i)
 
-         call sattst (ifer,good)
+         call sattst (ifer,.true.,good)
 
          if (.not.good) call error (57,comp(1),iphct,name)
 

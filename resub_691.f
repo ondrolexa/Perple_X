@@ -2058,7 +2058,7 @@ c                                 coordinates (and solution ids).
 c----------------------------------------------------------------------
       npt = 0
 
-      if (jphct.gt.jpoint) call errdbg ('jphct>jpoint, yclos0')
+c     if (jphct.gt.jpoint) call errdbg ('jphct>jpoint, yclos0')
 
       do i = 1, jphct
 

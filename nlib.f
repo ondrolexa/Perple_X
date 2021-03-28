@@ -773,7 +773,6 @@ c        with its (1,1) element in position  (it,jt)  of the array  t.
 
       common            /de04nb/asize, dtmax, dtmin
 
-
       rtmax = wmach(8)
 
       jt = nz + 1

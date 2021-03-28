@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated February 26, 2021.',
+     *     'Perple_X version 6.9.0, source updated March 28, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -6426,10 +6426,12 @@ c                                allow +/- or -/+
 
       end do 
 c                                 special cases:
-      if (chars(nchar).eq.'*'.and.chars(nchar-1).eq.' '.and.
-     *    chars(nchar-2).eq.',') then
-          chars(nchar-2) = '*'
-          chars(nchar) = ' '
+      if (nchars.gt.2) then
+         if (chars(nchar).eq.'*'.and.chars(nchar-1).eq.' '.and.
+     *                               chars(nchar-2).eq.',') then
+             chars(nchar-2) = '*'
+             chars(nchar) = ' '
+         end if
       end if 
 
       if (strip) then 
