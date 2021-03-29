@@ -6426,7 +6426,7 @@ c                                allow +/- or -/+
 
       end do 
 c                                 special cases:
-      if (nchars.gt.2) then
+      if (nchar.gt.2) then
          if (chars(nchar).eq.'*'.and.chars(nchar-1).eq.' '.and.
      *                               chars(nchar-2).eq.',') then
              chars(nchar-2) = '*'
