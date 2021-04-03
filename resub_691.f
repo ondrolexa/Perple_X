@@ -105,10 +105,13 @@ c     if (lopt(28)) call endtim (1,.true.,'Static GALL ')
       do k = 1, jphct
          c(k) = g(k+inc)/ctot(k+inc)
       end do
-c                                load the adaptive refinement cpd g's
+c                                 load the adaptive refinement cpd g's
       do k = 1, jpoint
          g2(k) = c(k)
       end do 
+c                                 load the bulk into the constraint array
+      bl(jphct+1:jphct+icp) = b(1:icp)
+      bu(jphct+1:jphct+icp) = b(1:icp)
 c                                 idead = -1 tells lpnag to save parameters
 c                                 for subsequent warm starts
       idead = -1

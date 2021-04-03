@@ -176,13 +176,13 @@ c---------------------------------------------------------------------
 
       logical proj
 
-      double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr,
+      double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr, dg,
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
-     *                 gterm2, km, kmk, lnfpur, gaq, ghkf
+     *                 gterm2, km, kmk, lnfpur, gaq, ghkf, lamla2
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz,
-     *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf
+     *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf, lamla2
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -233,6 +233,22 @@ c                                 sixtrude 05 JGR EoS
       else if (eos(id).eq.6) then
 c                                 stixrude JGI '05 Eos
          gval = gstxgi (id)
+c                                 landau O/D
+         if (ltyp(id).eq.4) then 
+c                                 in the 2011 data this is only qtz, 
+c                                 but neglects the effect of the clapeyron 
+c                                 slope on the transition T.            
+            call lamla1 (dg,0d0,lmda(id))
+            gval = gval + dg
+
+         else if (ltyp(id).eq.7) then 
+c                                 in the 2021 relative to the low T phase,
+c                                 used pointlessly for magnetic entropy of
+c                                 almost all Fe-bearing endmembers. 
+            gval = gval + lamla2(lmda(id))
+
+         end if
+
          goto 999
 
       else if (eos(id).eq.11) then
@@ -468,12 +484,12 @@ c                                 gottschalk.
 
       gval = gval + vdp
 
-c                                 check for transitions:
+c                                 check for transitions and Landau O/D:
       if (ltyp(id).ne.0) call mtrans (gval,vdp,id)
-
-c                                 check for temperature dependent
+c                                 check for BERMAN temperature dependent
 c                                 order/disorder:
       if (idis(id).ne.0) call disord (gval,idis(id))
+
 c                                 fluids in the saturated
 c                                 or thermodynamic composition space, these
 c                                 are not used for mixture props.
@@ -930,8 +946,10 @@ c                                 n+1
 c                                 f
             therlm(8,1,lamin) = tm(5,1)/(tm(5,1) + 1d0)
 
-         else if (jlam.eq.4) then
+         else if (jlam.eq.4.or.jlam.eq.7) then
 c                                 holland and powell, landau model:
+c                                 4 - relative to the high T phase
+c                                 7 - relative to the low T phase (stixrude 2021).
             do j = 1, ilam
 
                smax = tm(2,j)
@@ -20893,11 +20911,13 @@ c                                 supcrt q/coe lambda transition
          else if (ltyp(id).eq.4) then
 
             if (eos(id).ne.8.and.eos(id).ne.9) then
-c                                 putnis landau model as implemented in hp98
+c                                 putnis landau model as implemented incorrectly
+c                                 in hp98 (ds5)
                call lamla0 (dg,vdp,lmda(id))
 
             else
-
+c                                 putnis landau model as implemented correctly
+c                                 in hp11 (ds6)
                call lamla1 (dg,vdp,lmda(id))
 
             end if
