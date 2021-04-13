@@ -83,7 +83,6 @@ c----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       integer length,com
       character chars*1
@@ -105,7 +104,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -1034,7 +1032,7 @@ c-----------------------------------------------------------------------
       integer k, id, jd
 
       integer spct
-      double precision ysp, sum
+      double precision ysp
       character spnams*8
       common/ cxt34 /ysp(l10,k5),spct(h9),spnams(l10,h9)
 
@@ -1044,7 +1042,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       character specie*4
       integer isp, ins
@@ -1075,17 +1072,8 @@ c                                 hardwired binary/pseudo-binary (0)
          end do
 
       else
-c DEBUG691
-         sum = 0d0
 
-         do k = 1, spct(id)
-            sum = sum + pa(k)
-            ysp(k,jd) = pa(k)
-         end do
-
-         if (sum.lt.one.or.sum.gt.1d0+zero) then 
-            write (*,*) 'bad sum'
-         end if 
+         ysp(1:spct(id),jd) = pa(1:spct(id))
 
       end if
 
@@ -1212,7 +1200,6 @@ c-----------------------------------------------------------------------
       integer make
       common / cst335 /make(k10)
 c-----------------------------------------------------------------------
-
       jd = make(id)
 
       mu = 0d0
@@ -1263,7 +1250,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-      save / cxt23 /
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -1501,7 +1487,6 @@ c----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       double precision vrt
       integer irt
@@ -2554,7 +2539,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 
       save iwarn
       data iwarn/0/

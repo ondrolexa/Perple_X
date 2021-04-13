@@ -21,6 +21,20 @@
 | See http://www.perplex.ethz.ch/perplex_thermodynamic_data_file.html
 | for details on the Perple_X implementation of this data base.
 
+| Stixrude's endmember notation indicates the following endmembers should have configurational
+| entropy. However, the phase relations in the 2011 paper are
+| only reproduced if the Opx and Pl solution models neglect tetrahedral disorder. 
+
+| endmember  S_Conf     Solution    S_Conf in solution model
+
+| sp          yes          Sp         yes
+| herc        yes          Sp         yes
+| cts         yes          Cpx        yes   11.52565
+| namj        yes          Gt         yes   3*(2/3*ln(2/3)+1/3*ln(1/3)) = 1.909542505 EU, 15.87593639 J/K
+| ab          yes          Pl         NO    4*(3/4*ln(3/4)+1/4*ln(1/4)) = 2.249340578 EU, 18.70101757 J/K
+| an          yes          Pl         NO    4*(1/2*ln(1/2)+1/2*ln(1/2)) = 2.772588722 EU, 23.05130263 J/K
+| ts          yes          Opx        NO    11.52565
+      
 | This data base should be used with the solution models (in 
 | solution model file stx11_solution_model.dat):                                                                           
                                                                                                                                             
@@ -69,7 +83,7 @@ ab       EoS = 6 | Na_1Al_1Si_3O_8
 NA2O(.5)AL2O3(.5)SIO2(3)
 G0 = -3718799. S0 = -13 V0 = -10.0452  
 c1 = 597616.2 c2 = 4 c3 = 713.7824 c4 = .56704 c5 = 1 c6 = 1.04208  
-c7 = 4.78358
+| c7 = 4.78358
 m0 = 360000 m1 = 1.3855  
 end
 
@@ -95,7 +109,7 @@ an       EoS = 6 | Ca_1Al_2Si_2O_8
 AL2O3(1)SIO2(2)CAO(1)
 G0 = -4014619. S0 = -13 V0 = -10.061  
 c1 = 840891.5 c2 = 4 c3 = 752.3911 c4 = .39241 c5 = 1 c6 = 1.6254  
-c7 = 23.05130
+| c7 = 23.05130
 m0 = 399000 m1 = 1.09134  
 end
 
@@ -374,7 +388,7 @@ ts       EoS = 6 | Mg_1Al_1Si_1Al_1O_6
 MGO(1)AL2O3(1)SIO2(1)
 G0 = -3002470. S0 = -10 V0 = -5.914  
 c1 = 1070768. c2 = 7.02751 c3 = 783.8404 c4 = .78479 c5 = 3.43846 c6 = 2.49099  
-c7 = 11.52565
+ | c7 = 11.52565
 m0 = 959508.6 m1 = 1.54596  
 end
 

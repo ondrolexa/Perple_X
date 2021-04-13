@@ -2673,9 +2673,9 @@ c----------------------------------------------------------------------
 
          do i = 1, 3
             v = a4 * dcos(a6 + dphi) - a5
-            if ( v.gt.vmax ) vmax = v
-            if ( v.lt.vmin ) vmin = v
-            if ( v.le.0d0  ) then 
+            if (v.gt.vmax ) vmax = v
+            if (v.lt.vmin ) vmin = v
+            if (v.le.0d0  ) then 
                ineg = ineg + 1
             else 
                ipos = i
@@ -4719,7 +4719,7 @@ c                                 mass balance => sio2:
  
          end do 
 
-         if ( dabs(oldy-y(icon)).lt.nopt(50)) exit  
+         if (dabs(oldy-y(icon)).lt.nopt(50)) exit  
 c                                 get new gamma's
          call mrkmix (ins, isp, iavg)
 
@@ -4990,7 +4990,7 @@ c                                 renormalize, this helps!
          nsi = y(14) + y(13) + y(15)
          no  = 2d0*(y(7)+y(14)) + y(13) + y(12) 
 
-         if ( dabs(nymax-oymax).lt.nopt(50).and.
+         if (dabs(nymax-oymax).lt.nopt(50).and.
      *        dabs(nymin-oymin).lt.nopt(50).and.
      *        dabs(xc-nsi/(nsi+no)).lt.nopt(50) ) then
 
@@ -5542,7 +5542,7 @@ c                                 renormalize, this helps!
          nsi = y(14) + y(13) + y(15)
          no  = 2d0*(y(7)+y(14)) + y(13) + y(12) 
 
-         if ( dabs(nymax-oymax).lt.nopt(50).and.
+         if (dabs(nymax-oymax).lt.nopt(50).and.
      *        dabs(nymin-oymin).lt.nopt(50).and.
      *        dabs(xc-nsi/(nsi+no)).lt.nopt(50) ) then 
 
@@ -6235,7 +6235,7 @@ c                                 closure => sio2:
 
             end do 
         
-            if ( bad .or. dabs(oldy-y(icon)).lt.nopt(50)) exit
+            if (bad .or. dabs(oldy-y(icon)).lt.nopt(50)) exit
 c                                 get new gamma's
             call mrkmix (ins, 5, 1)
 
@@ -6511,7 +6511,7 @@ c                                iterate for non-ideality
          y(i3) = (a1-g(i4))/a0
          if (y(i3).gt.1d0.or.y(i3).lt.0d0) y(i3) = -(a1+g(i4))/a0
          y(i4) = 1d0 - y(i3)
-         if ( dabs(oldy-y(i3)).lt.nopt(50)) exit  
+         if (dabs(oldy-y(i3)).lt.nopt(50)) exit  
 c                                 get new gamma's
          call mrkmix (ins, 2, iavg)
 
@@ -6674,7 +6674,7 @@ c                                 convergence
 
          end do
 
-         if ( dabs(nymax-oymax).lt.nopt(50).and.
+         if (dabs(nymax-oymax).lt.nopt(50).and.
      *        dabs(nymin-oymin).lt.nopt(50).and.
      *        dabs(xc-nsi/(nsi+no)).lt.nopt(50).and.
      *        dabs(nsi+y(7)-1d0).lt.nopt(50) ) then

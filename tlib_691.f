@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated April 3, 2021.',
+     *     'Perple_X version 6.9.1, source updated April 13, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -56,7 +56,8 @@ c----------------------------------------------------------------------
       else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *         new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'690') then 
+     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'690'.or.
+     *         new.eq.'691') then 
 
          chksol = .true.
 
@@ -3512,7 +3513,7 @@ c                                 find next blank
 c                                 initialize to be safe:
       name = ' '
 
-      if ( iend - ibeg.le.7) then
+      if (iend - ibeg.le.7) then
 
          write (name,'(20a)') chars(ibeg:iend)
 

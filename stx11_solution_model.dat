@@ -102,6 +102,10 @@ end_excess_function
 1                                 | 1 site molecular model:
 2 1.                       
 z(Na) = 1 ab
+
+|2 4.
+|z(Al) = 1/4 + 1/4 an
+
 end_of_model               
                       --------------------------------------------------------
 begin_model                

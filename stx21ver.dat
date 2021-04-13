@@ -24,20 +24,22 @@ FEO     71.8440
 O2      31.9990     
 end_components         
 
-| from what i can discern the following endmembers are disordered 
+| Stixrude's endmember notation indicates the following endmembers should have configurational
+| entropy. However, the phase relations in the 2011 paper are
+| only reproduced if the Opx and Pl solution models neglect tetrahedral disorder. 
 
 | endmember  S_Conf     Solution    S_Conf in solution model
 
 | sp          yes          Sp         yes
 | herc        yes          Sp         yes
 | cts         yes          Cpx        yes   11.52565
-| namj        yes          Gt         yes   3*(2/3*ln(2/3)+1/3*ln(1/3)) = ln(4/3) + ln(1/3) =  6.74207
-| ab          yes          Pl         yes   4*(3/4*ln(3/4)+1/4*ln(1/4)) = ln(9/4) + ln(1/4)  = 4.78358 
-| an          yes          Pl         yes   4*(1/2*ln(1/2)+1/2*ln(1/2)) = ln(1/16) = 23.05130
-| ts          yes          Opx        yes   11.52565
-| mnal        yes          NaAl       yes   2.70337
-| fnal        yes          NaAl       yes   2.70337
-| nnal        yes          NaAl       yes   4.15888
+| namj        yes          Gt         yes   3*(2/3*ln(2/3)+1/3*ln(1/3)) = 1.909542505 EU, 15.87593639 J/K
+| ab          yes          Pl         NO    4*(3/4*ln(3/4)+1/4*ln(1/4)) = 2.249340578 EU, 18.70101757 J/K
+| an          yes          Pl         NO    4*(1/2*ln(1/2)+1/2*ln(1/2)) = 2.772588722 EU, 23.05130263 J/K
+| ts          yes          Opx        NO    11.52565
+| mnal        yes          NaAl       yes   2.70337 EU, 22.47579535 J/K
+| fnal        yes          NaAl       yes   2.70337 EU, 22.47579535 J/K
+| nnal        yes          NaAl       yes   4.15888 EU, 34.57695396 J/K
                                                                                                      
 end                                                                                                                                         
  
@@ -46,7 +48,7 @@ ab       EoS = 6 | Na_1Al_1Si_3O_8        Albite
 NA2O(.5)AL2O3(.5)SIO2(3)
 G0 = -3720169.23 S0 = -13 V0 = -10.0452
 c1 = 597526.8 c2 = 2.77841 c3 = 720.09031 c4 = 0.57886 c5 = 1 c6 = 1.02981
-c7 = 4.78358
+|c7 = 18.70101
 m0 = 360000 m1 = 1.38571
 end
 
@@ -72,7 +74,7 @@ an       EoS = 6 | Ca_1Al_2Si_2O_8        Anorthite
 AL2O3(1)SIO2(2)CAO(1)
 G0 = -4013197.57 S0 = -13 V0 = -10.0610
 c1 = 840933.1 c2 = 6.73404 c3 = 752.34537 c4 = 0.38497 c5 = 1 c6 = 1.63323 
-c7 = 23.05130
+|c7 = 23.05130263
 m0 = 399000 m1 = 1.09129
 end
 
@@ -166,7 +168,7 @@ m0 = 768000 m1 = 1.54596
 end
 
 
-enL      EoS = 6 | Mg_1Si_1O_3            MgSiO3 Liquid                                 
+enL      EoS = 11 | Mg_1Si_1O_3            MgSiO3 Liquid                                 
 MGO(1)SIO2(1)
 G0 = -1735148.59 S0 = -5 V0 = -3.8880
 c1 = 226263.1 c2 = 5.51723 c3 = 305.71098 c4 = 1.70882 c5 = -.14314
@@ -291,7 +293,7 @@ fnal     EoS = 6 | Na_1Fe_2(Al_5Si_1)O_12 Fe-NAL
 NA2O(0.5)FEO(2)SIO2(1)AL2O3(2.5)
 G0 = -5476584.31 S0 = -21 V0 = -11.2045
 c1 = 2039925.5 c2 = 4.31904 c3 = 797.67742 c4 = 1.42934 c5 = 1 c6 = 2.66335
-c7 = 2.70337
+c7 = 22.47579
 m0 = 1495937.7 m1 = 1.74231
 transition = 1 type = 7  t1 = 5 t2 = 26.76270 
 end
@@ -461,7 +463,7 @@ m0 = 1320000 m1 = 1.81493
 end
 
 
-mgoL      EoS = 6 | Mg_1O_1                MgO_liquid                                    
+mgoL      EoS = 11 | Mg_1O_1                MgO_liquid                                    
 MGO(1)
 G0 = -853192.26 S0 = -2 V0 = -1.7340
 c1 = 243173.6 c2 = 5.15120 c3 = 181.47552 c4 = 3.37891 c5 = -.30643
@@ -496,7 +498,7 @@ ts      EoS = 6 | Mg_1Al_1Si_1O_6Al_1  aka mgts  Mg-Tschermak's
 MGO(1)AL2O3(1)SIO2(1)
 G0 = -3002561.31 S0 = -10 V0 = -5.9140
 c1 = 1070768.1 c2 = 7.02751 c3 = 784.39079 c4 = 0.78477 c5 = 3.43847 c6 = 2.39362 
-c7 = 11.52565
+|c7 = 11.52565
 m0 = 934714.6 m1 = 1.54596
 end
 
@@ -513,7 +515,7 @@ mnal     EoS = 6 | Na_1Mg_2(Al_5Si_1)O_12     Mg-NAL
 NA2O(.5)MGO(2)AL2O3(2.5)SIO2(1)
 G0 = -6165156.71 S0 = -21 V0 = -10.9883
 c1 = 2039925.5 c2 = 4.31904 c3 = 857.05595 c4 = 1.42934 c5 = 1 c6 = 1.92909
-c7 = 2.70337
+c7 = 22.47579
 m0 = 1290000 m1 = 1.74231
 end
 
@@ -535,10 +537,10 @@ end
 
 
 namj     EoS = 6 | (Na_2Mg_1)Si_1Si_1Si_3 Na-Majorite                             
-NA2O(1)MGO(1)SIO2(4)
+NA2O(1)MGO(1)SIO2(5)
 G0 = -5411406.46 S0 = -20 V0 = -11.0842
 c1 = 1721006.6 c2 = 5.19230 c3 = 930.46036 c4 = 1.26741 c5 = 0.09592 c6 = 2.55101
-c7 = 6.74207
+c7 = 15.87593
 m0 = 1147000 m1 = 1.35756
 end
 
@@ -556,7 +558,7 @@ nnal     EoS = 6 | Na_1Na_2(Al_3Si_3)O_12 Na-NAL
 NA2O(1.5)AL2O3(1.5)SIO2(3)
 G0 = -5567172.76 S0 = -21 V0 = -10.9401
 c1 = 2039925.5 c2 = 4.31904 c3 = 850.30588 c4 = 1.42934 c5 = 1 c6 = 2.42753
-c7 = 4.15888
+c7 = 34.57695
 m0 = 1444510.2 m1 = 1.74231
 end
 
@@ -570,7 +572,7 @@ end
 
 
 per       EoS = 6 | Mg_2Mg_2O_4    aka pe        Periclase                               
-MGO(1)
+MGO(4)
 G0 = -2278109.92 S0 = -8 V0 = -4.4976
 c1 = 1611439.3 c2 = 3.90838 c3 = 770.90151 c4 = 1.45033 c5 = 1.54870 c6 = 2.56123
 m0 = 1309000 m1 = 2.14668
@@ -594,7 +596,7 @@ transition = 1 type = 7  t1 = 847 t2 = 5.760 t3 = 0.1359
 end
 
 
-sio2L    EoS = 6 | Si_1O_2       aka sil         SiO2     liquid                               
+sio2L    EoS = 11 | Si_1O_2       aka sil         SiO2     liquid                               
 SIO2(1)
 G0 = -999818.77 S0 = -3 V0 = -2.7510
 c1 = 58128.2 c2 = 8.25125 c3 = 174.04570 c4 = -.03393 c5 = -.02615 
