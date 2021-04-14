@@ -2017,9 +2017,6 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,com,chars(lchar)
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       integer indq,idqf
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
@@ -2083,6 +2080,10 @@ c                              read dqf data:
          else if (key.eq.'refine_endmembers') then
 
             norf = .false.
+
+         else if (key.eq.'unbounded_composition') then 
+
+c           for 691 compatability
 
          else
 
@@ -3710,9 +3711,6 @@ c---------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i,j,itic,iwas(mst)
-
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -3766,11 +3764,11 @@ c                                 reset the species pointers (jmsol)
 
       if (isimp(1).eq.1) recip = .false.
 
-      if (order) then
+      if (ordmod) then
 
          if (isimp(1).eq.1) jsmod = 6
 
-      else if (depend) then
+      else if (depmod) then
 
          jsmod = 7
 
@@ -3801,9 +3799,6 @@ c                                 dqf variables
       integer indq,idqf
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
-
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -3889,7 +3884,7 @@ c                              now shift subdivision ranges
 
       kdep = 0
 
-      if (depend) then
+      if (depmod) then
 c                                create an array which gives the
 c                                original locations of the dependent
 c                                endmembers, need this to be able to
@@ -3913,7 +3908,7 @@ c                                 be killed are flagged by kdsol = -3.
 c                                 now check the ordered species
       morder = 0
 
-      if (order) then
+      if (ordmod) then
 c                                 first check if the ordered endmember
 c                                 may be stable
          do k = 1, norder
@@ -4159,15 +4154,15 @@ c                                 increment the species counter
       end do
 c                                 ---------------------------------------
 c                                 ordered species:
-      if (order) then
+      if (ordmod) then
 
          norder = morder
 
          if (morder.eq.0) then
 c                                 there are no ordered species left
-            order = .false.
+            ordmod = .false.
 
-            if (depend) then
+            if (depmod) then
 
                jsmod = 7
 
@@ -4203,7 +4198,7 @@ c                                 species.
       end if
 c                                 --------------------------------------
 c                                 dependent endmember properties, the
-      if (depend) then
+      if (depmod) then
 c                                 dependent endmembers have been reordered
 c                                 in redep, but are still expressed in
 c                                 terms of the old indices, so reset the
@@ -4417,9 +4412,6 @@ c---------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       integer nq,nn,ns
       common/ cxt337 /nq,nn,ns
 c----------------------------------------------------------------------
@@ -4632,9 +4624,6 @@ c----------------------------------------------------------------------
 
       integer i,j,l,ldep,k,jkill
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
@@ -4652,7 +4641,7 @@ c----------------------------------------------------------------------
      *                idep(m15,j4),ndph(m15)
 c----------------------------------------------------------------------
 c                                check for dependent endmembers, necessary?
-      if (depend) then
+      if (depmod) then
 
          ldep = 0
 
@@ -4700,7 +4689,7 @@ c                                dependent endmember is ok
 
          mdep = ldep
 
-         if (mdep.eq.0) depend = .false.
+         if (mdep.eq.0) depmod = .false.
 
       end if
 
@@ -4748,9 +4737,6 @@ c---------------------------------------------------------------------
      *      isub(m1,m2),insp(m4),
      *      rkord(m1),iterm,iord,istot,jstot,kstot
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
@@ -4775,10 +4761,8 @@ c----------------------------------------------------------------------
          kdsol(i) = 0
       end do
 c                               set logical variables
-      macro = .false.
-      order = .false.
-      depend = .false.
-      fluid = .false.
+      ordmod = .false.
+      depmod = .false.
       recip = .false.
 
       do
@@ -4840,11 +4824,9 @@ c                                 arrays
 c                                 check for disabled model types
       if (jsmod.eq.1.or.jsmod.eq.3.or.jsmod.eq.5)
      *                        call error (68,enth(1),jsmod,tname)
-
-      if (jsmod.eq.0) fluid = .true.
       if (jsmod.eq.6.or.jsmod.eq.8.or.jsmod.eq.9.or.
-     *                                jsmod.eq.27) order = .true.
-      if (jsmod.ge.7.and.jsmod.le.10) depend = .true.
+     *                                jsmod.eq.27) ordmod = .true.
+      if (jsmod.ge.7.and.jsmod.le.10) depmod = .true.
       if (jsmod.ge.7.and.jsmod.le.10) recip = .true.
 c                                 assign non-default props to
 c                                 special models:
@@ -4878,7 +4860,7 @@ c                               and starting index
 c                               read endmember names:
       call readn (i,idim,tname)
 c                               compound formation models
-      if (order) then
+      if (ordmod) then
 c                               get the number of ordered species
          call readda (rnums,1,tname)
          norder = idint(rnums(1))
@@ -4914,7 +4896,7 @@ c                               amount of the ordered endmembers
 
       end if
 c                               read dependent endmembers
-      if (depend) then
+      if (depmod) then
 c                               number of dependent endmembers
          call readda (rnums,1,tname)
          mdep = idint(rnums(1))
@@ -5172,9 +5154,6 @@ c---------------------------------------------------------------------
 
       integer itic,i,j,k
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       integer iend,isub,insp,iterm,iord,istot,jstot,kstot,rkord
       double precision wg,wk
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
@@ -5207,7 +5186,7 @@ c                                 iy2p points from an endmember in the y
 c                                 array (1..istot+norder) to the endmember
 c                                 in the p array (1..kstot+norder)
 
-      if (depend) then
+      if (depmod) then
 
          itic = 0
 
@@ -5248,7 +5227,7 @@ c                                are no dependent endmembers then
 
       end if
 
-      if (depend) then
+      if (depmod) then
 c                                 make y2p array
          do i = 1, kstot + norder
 
@@ -6382,9 +6361,6 @@ c---------------------------------------------------------------------
 
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
-
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 GLOBAL SOLUTION PARAMETERS:
 
 c                                 configurational entropy variables:
@@ -6760,7 +6736,7 @@ c                                 bw summation
       extyp(im) = xtyp
 
       if (jsmod.eq.2.or.(jsmod.eq.688.or.jsmod.eq.7).and.
-     *                 .not.order) simple(im) = .true.
+     *                 .not.ordmod) simple(im) = .true.
 
       if (jsmod.eq.31.or.jsmod.eq.32) specil(im) = .true.
 
@@ -6785,7 +6761,7 @@ c    *          /'not anticipated for non-equimolar ordering: '//tname)
          end if
       end if
 
-      if (order) lorder(im) = .true.
+      if (ordmod) lorder(im) = .true.
 c                                 the ksmod(im) test is made because
 c                                 reform may dump the dependent endmembers
 c                                 setting depend = .false., while retaining
@@ -6795,7 +6771,7 @@ c                                 models to single site models.
 c                                 a non-reciprocal model (ksmod=5) with
 c                                 dependent endmembers is also classified
 c                                 as lrecip.
-      if (recip.or.depend) then
+      if (recip.or.depmod) then
 
          lrecip(im) = .true.
          if (dnu(im).ne.0d0) call error (72,r,i,'prismatic composition'/
@@ -6967,7 +6943,7 @@ c                                 entropy calculation (done by snorm).
 
       end do
 c                                 -------------------------------------
-      if (depend) then
+      if (depmod) then
 c                                 march, 2017: deleted y2p4z routine that converted
 c                                 z(y) expressions to z(p), i.e., by simply
 c                                 eliminating dependent endmembers.
@@ -8901,9 +8877,6 @@ c--------------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       double precision pa, p0a, zp, w, y, z, wl, pp
       common/ cxt7 /y(m4),zp(m4),pa(m4),p0a(m4),z(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -9107,7 +9080,7 @@ c                                 not worth the effort
          exces(i,phct) = 0d0
       end do
 
-      if (.not.order) then 
+      if (.not.ordmod) then 
 c                                 configurational negentropy:
          if (msite(im).ne.0) exces(2,phct) = -omega(im,pa)
 c                                 load excess terms, if not Laar or ordered:
@@ -9155,7 +9128,7 @@ c                              or a dependent endmember
          if (kdsol(knsp(index,im)).lt.0)
      *                       call error (227,exces(1,1),index,tname)
 
-         if (depend) then
+         if (depmod) then
             do j = 1, m3
                exces(j,phct) = exces(j,phct) + pp(index)*dqfg(j,i,im)
             end do
@@ -14392,9 +14365,6 @@ c---------------------------------------------------------------------
      *      isub(m1,m2),insp(m4),
      *      rkord(m1),iterm,iord,istot,jstot,kstot
 
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
-
       integer iorig,jnsp,iy2p
       common / cst159 /iorig(m4),jnsp(m4),iy2p(m4)
 
@@ -14554,7 +14524,7 @@ c                               on input nreact = -1 signals ordering reaction
 
                else
 
-                  order = .true.
+                  ordmod = .true.
                   norder = norder + 1
 
                   if (istot+norder.gt.m4) call error (1,rnums(1),
@@ -14591,7 +14561,7 @@ c                               nreact is returned by readr
 
                else
 
-                  depend = .true.
+                  depmod = .true.
                   recip = .true.
                   mdep = mdep + 1
                   if (mdep.gt.m15) call error (1,enth(1),mdep,'m15')
@@ -14795,9 +14765,6 @@ c---------------------------------------------------------------------
       common/ cst108 /wg(m1,m3),wk(m16,m17,m18),iend(m4),
      *      isub(m1,m2),insp(m4),
      *      rkord(m1),iterm,iord,istot,jstot,kstot
-
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
 c----------------------------------------------------------------------
 
       do ii = 1, poly(h0)
@@ -15097,9 +15064,6 @@ c                                 dqf variables
       integer indq,idqf
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
-
-      logical depend,laar,order,fluid,macro,recip
-      common/ cst160 /depend,laar,order,fluid,macro,recip
 c                                 local input variables
       integer iddeps,norder,nr
       double precision depnu,denth
@@ -15170,7 +15134,7 @@ c                                the endmembers to be eliminated are in the rang
 c                                pvptr(pkill,1):pvptr(pkill,2)
       kdep = 0
 
-      if (depend) then
+      if (depmod) then
 c                                create an array which gives the
 c                                original locations of the dependent
 c                                endmembers, need this to be able to
@@ -15462,13 +15426,13 @@ c                                 temkin
       end do
 c                                 ---------------------------------------
 c                                 ordered species:
-      if (order) then
+      if (ordmod) then
 
          norder = morder
 
          if (morder.eq.0) then
 c                                 there are no ordered species left
-            order = .false.
+            ordmod = .false.
 
          else
 c                                 shift the ordered species pointers
@@ -15496,7 +15460,7 @@ c                                 species.
       end if
 c                                 --------------------------------------
 c                                 dependent endmember properties, the
-      if (depend) then
+      if (depmod) then
 c                                 dependent endmembers have been reordered
 c                                 in redep, but are still expressed in
 c                                 terms of the old indices, so reset the

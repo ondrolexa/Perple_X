@@ -2,7 +2,7 @@ c----------------------------------------------------------------------
 
 c TLIB - a library of subprograms called by the PERPLEX programs.
 
-c Copyright (C) 2018 James A D Connolly
+c Copyright (C) 1986-2021 James A D Connolly
 
 c This file is part of Perple_X.
 
@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated March 28, 2021.',
+     *     'Perple_X version 6.9.0, source updated April 14, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -56,8 +56,8 @@ c----------------------------------------------------------------------
       else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *         new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'690') then 
-
+     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'690'.or.
+     *         new.eq.'691') then 
          chksol = .true.
 
       else 
@@ -1135,6 +1135,25 @@ c                                 reserved values for debugging, etc
             read (strg,*) nopt(29) 
          else if (key.eq.'nop_30') then
             read (strg,*) nopt(30) 
+c                                691 options read for compatability
+
+         else if (key.eq.'replicate_threshold'.or.
+     *            key.eq.'rep_dynamic_threshold'.or.       
+     *            key.eq.'MINFRC_diff_increment'.or.       
+     *            key.eq.'speciation_precision'.or.       
+     *            key.eq.'optimization_precision'.or.       
+     *            key.eq.'optimization_max_it'.or.       
+     *            key.eq.'scatter-points'.or.      
+     *            key.eq.'scatter-increment'.or.      
+     *            key.eq.'re-refine'.or.      
+     *            key.eq.'warning_ver017'.or.      
+     *            key.eq.'warning_ver013'.or.      
+     *            key.eq.'intermediate_savrpc'.or.      
+     *            key.eq.'intermediate_savdyn'.or.      
+     *            key.eq.'keep_all_rpcs') then
+
+             write (1170,*) key
+
          else if (key.ne.'|') then
 
             call error (72,nopt(1),iopt(1),key//' is not a valid Perpl'
@@ -1448,6 +1467,10 @@ c                                 consequent value for k1
 1180  format (/,'Error: value ',a,' is invalid for Perple_X option ',
      *        'keyword ',a,/,'see www.perplex.ch/perplex_options.html ',
      *        'for a list of valid values',/)
+1190  format (/,'**warning ver019** ',a,' is a Perple_X 691+ option it',
+     *       ' has no function in this version',/,
+     *       'see www.perplex.ch/perplex_options.html ',
+     *       'for a list of valid values',/)
       end 
 
       subroutine outopt (n)

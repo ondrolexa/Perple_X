@@ -1,23 +1,15 @@
 #
-# makefile for Perple_X 6.9.1
+# makefile for Perple_X 6.9.1+/-
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
 # your system. Then type the command
 #
-#                             make <target>
+#                             make -f makefile
 #
-# where target can be one or more of the programs you want compiled, e.g.,
-# "make actcor build fluids ctransf frendly meemum pstable pspts psvdraw pssect pt2curv vertex werami"
-# will make the most commonly used programs. 
+# where makefile is the name of this file, e.g., LINUX_makefile.
 #
-#
-# NOTE: file conversion from windows to unix may result in a missing carraige
-# return/line feed at the end of Perple_X source files. some compilers  
-# report this as an error, in which case edit the source file and add a blank line
-# at the end of the file.
-#
-# JADC, Feb 18, 2012    
+# JADC, April 14, 2021    
 # 
 ##################### COMPILER VARIABLES ####################################  
 #                   
@@ -61,84 +53,91 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = convex690 vertex690 meemum690 pssect690 build690 werami actcor build fluids ctransf frendly meemum unsplt convex pstable pspts psvdraw pssect pt2curv vertex werami htog
+MYOBJ = vertex690 meemum690 pssect690 werami690 unsplt690 actcor build fluids ctransf frendly meemum convex pstable pspts psvdraw pssect pt2curv vertex werami
 all: $(MYOBJ)
+
+LIBRARY_690 = pscom.o pslib.o rlib.o tlib.o flib.o olib.o resub.o nlib.o blaslib.o
+
+LIBRARY_691 = pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o
+
+LIBRARY_PS  = cont_lib.o pscom.o pslib.o tlib_691.o
 
 clean: 
 	rm -f *.o $(MYOBJ)
-###################### TARGETS FOR FORTRAN PROGRAMS #########################   
+###################### TARGETS FOR 690- PROGRAMS #########################   
 # 
-actcor: actcor.o tlib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o  -o $@
+# These 690- version programs have different file structure and must be used 
+# together. All other 690- programs are compatible with 690+
+#
+meemum690: meemum.o $(LIBRARY_690)
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o $(LIBRARY_690) -o meemum690
 
-build690: build.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib.o rlib.o flib.o -o build690
+pssect690: psect.o $(LIBRARY_690) 
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY_690) -o pssect690
 
-build: build.o tlib_691.o rlib_691.o flib.o blas2lib.o minime_blas.o
-	$(COMP77) $(FFLAGS) $(FLINK) build.o tlib_691.o rlib_691.o flib.o blas2lib.o minime_blas.o -o build
+vertex690: vertex.o $(LIBRARY_690)
+	$(COMP77) $(FFLAGS) $(FLINK) vertex.o $(LIBRARY_690) -o vertex690
 
-fluids: fluids.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o flib.o -o $@
+werami690: werami.o $(LIBRARY_690)
+	$(COMP77) $(FFLAGS) $(FLINK) werami.o $(LIBRARY_690) -o werami690
 
-ctransf: ctransf.o tlib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
+unsplt690: unsplt.o $(LIBRARY_690)
+	$(COMP77) $(FFLAGS) $(FLINK) unsplt.o $(LIBRARY_690) -o unsplt690
 
-DEW_2_ver: DEW_2_ver.o tlib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
+###################### TARGETS FOR 691+ PROGRAMS ######################### 
+#  
+# These 691+ targets, the 690- versions can be made by swapping in LIBRARY_690
+#
+convex: convex_691.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o $(LIBRARY_691) -o $@
 
-frendly: frendly.o tlib.o rlib.o flib.o olib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o olib.o -o $@
+meemum: meemum_691.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o $(LIBRARY_691) -o $@
+
+vertex: vertex_691.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o $(LIBRARY_691) -o $@
+
+werami: werami.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+
+pssect: psect.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY_691) -o $@
+
+pstable: pstable.o $(LIBRARY_PS)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+
+pspts: pspts.o $(LIBRARY_PS) 
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+
+psvdraw: psvdraw.o $(LIBRARY_PS)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+
+pt2curv: pt2curv.o $(LIBRARY_PS)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+
+actcor: actcor.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+
+build: build.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+
+fluids: fluids.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+
+ctransf: ctransf.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+
+DEW_2_ver: DEW_2_ver.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+
+frendly: frendly.o $(LIBRARY_691)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
 
 #hptover: hptover.o
 #	$(COMP77) $(FFLAGS) $@.o -o $@
 
-htog: htog.o
-	$(COMP77) $(FFLAGS) $@.o -o $@
-
-meemum690: meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o -o meemum690
-
-pstable: pstable.o pslib.o pscom.o  tlib.o cont_lib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o pscom.o  tlib.o cont_lib.o -o $@
-
-pspts: pspts.o pslib.o tlib.o pscom.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
-
-psvdraw: psvdraw.o pslib.o tlib.o pscom.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o pslib.o tlib.o pscom.o -o $@
-
-pssect690: psect.o pscom.o pslib.o tlib.o rlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o tlib.o rlib.o flib.o -o pssect690
-
-pt2curv: pt2curv.o tlib.o
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o tlib.o -o $@
-
-vertex690: vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o  olib.o
-	$(COMP77) $(FFLAGS) $(FLINK) vertex.o rlib.o tlib.o flib.o resub.o nlib.o BLASlib.o olib.o -o vertex690
-
-werami690: werami.o rlib.o tlib.o flib.o olib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) werami.o  rlib.o tlib.o flib.o olib.o  -o werami690
-
-unsplt: unsplt.o rlib.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o rlib.o tlib.o flib.o -o $@
-
-convex690: convex.o rlib.o tlib.o flib.o 
-	$(COMP77) $(FFLAGS) $(FLINK) convex.o rlib.o tlib.o flib.o -o convex690
-
-convex: convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o blas2lib.o olib_691.o
-	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o rlib_691.o tlib_691.o flib.o minime_blas.o blas2lib.o olib_691.o -o convex
-
-meemum: meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o
-	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o -o meemum
-
-vertex: vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o
-	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o -o vertex
-
-werami: werami.o rlib_691.o tlib_691.o flib.o olib_691.o  minime_blas.o blas2lib.o
-	$(COMP77) $(FFLAGS) $(FLINK) werami.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o blas2lib.o -o werami
-
-pssect: psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o minime_blas.o blas2lib.o -o pssect
+#htog: htog.o
+#	$(COMP77) $(FFLAGS) $@.o -o $@
 
 # targets missing from '07:
 #rk: rk.o flib.o tlib.o
@@ -173,12 +172,12 @@ ctransf.o: ctransf.f
 	$(COMP77) $(FFLAGS) -c ctransf.f
 frendly.o: frendly.f
 	$(COMP77) $(FFLAGS) -c frendly.f
-ge0pt.o: ge0pt.f
-	$(COMP77) $(FFLAGS) -c ge0pt.f
+#ge0pt.o: ge0pt.f
+#	$(COMP77) $(FFLAGS) -c ge0pt.f
 #hptover.o: hptover.f
 #	$(COMP77) $(FFLAGS) -c hptover.f
-htog.o: htog.f
-	$(COMP77) $(FFLAGS) -c htog.f
+#htog.o: htog.f
+#	$(COMP77) $(FFLAGS) -c htog.f
 psect.o: psect.f
 	$(COMP77) $(FFLAGS) -c psect.f
 psvdraw.o: psvdraw.f
@@ -196,8 +195,6 @@ pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f
 resub.o: resub.f
 	$(COMP77) $(FFLAGS) -c resub.f
-nlp.o: nlp.f
-	$(COMP77) $(FFLAGS) -c nlp.f
 meemum.o: meemum.f
 	$(COMP77) $(FFLAGS) -c meemum.f
 unsplt.o: unsplt.f
@@ -230,12 +227,10 @@ olib_691.o: olib_691.f
 	$(COMP77) $(FFLAGS) -c olib_691.f
 rlib_691.o: rlib_691.f
 	$(COMP77) $(FFLAGS) -c rlib_691.f
-BLASlib.o: BLASlib.f
-	$(COMP77) $(FFLAGS) -c BLASlib.f
+blaslib.o: blaslib.f
+	$(COMP77) $(FFLAGS) -c blaslib.f
 blas2lib.o: blas2lib.f
 	$(COMP77) $(FFLAGS) -c blas2lib.f
-edinag.o: edinag.f
-	$(COMP77) $(FFLAGS) -c edinag.f
 minime_blas.o: minime_blas.f
 	$(COMP77) $(FFLAGS) -c minime_blas.f
 
