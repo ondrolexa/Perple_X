@@ -96,11 +96,11 @@ c                                logarithmic_p option
 c                                t_stop option
       if (t.lt.nopt(12)) t = nopt(12)
 
-c     if (lopt(28)) call begtim (1)
+      if (lopt(61)) call begtim (1)
 
       call gall
 
-c     if (lopt(28)) call endtim (1,.true.,'Static GALL ')
+      if (lopt(61)) call endtim (1,.false.,'Static GALL ')
 
       do k = 1, jphct
          c(k) = g(k+inc)/ctot(k+inc)
@@ -119,13 +119,12 @@ c                                 for subsequent warm starts
       lpprob = 2
       tol = wmach(4)
 
-c     if (lopt(28)) call begtim (2)
+      if (lopt(61)) call begtim (13)
 
       call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,
-     *            clamda,iw,liw,w,lw,idead,
-     *            iprint,istart,l6,tol,lpprob)
+     *            clamda,iw,liw,w,lw,idead,istart,tol,lpprob)
 
-c     if (lopt(28)) call endtim (2,.true.,'Static optimization ')
+      if (lopt(61)) call endtim (13,.false.,'Static optimization ')
 
       if (idead.gt.0) then
 c                                 look for severe errors                                            
@@ -312,14 +311,13 @@ c                                 overwriting warm start parameters
          bl(jphct+1:jphct+icp) = b(1:icp)
          bu(jphct+1:jphct+icp) = b(1:icp)
 
-         call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,jter,gtot,ax,
-     *               clamda,iw,liw,w,lw,idead,
-     *               iprint,jstart,l6,tol,lpprob)
+         if (lopt(61)) call begtim (14)
 
-c        if (lopt(28)) then 
-c           call endtim (8,.true.,'Dynamic optimization N ')
-c           write (666,'(a,i6)') 'jphct = ',jphct
-c        end if 
+         call lpsol (jphct,icp,cp2,k5,bl,bu,g2,is,x,jter,gtot,ax,
+     *               clamda,iw,liw,w,lw,idead,jstart,tol,lpprob)
+
+         if (lopt(61)) call endtim (14,.false.,'dynamic optimization ')
+
 c                                 warn if severe error
          if (idead.gt.0) then
 
@@ -563,11 +561,11 @@ c                                 refinement point was the same solution.
 
          if (nstot(ids).gt.1) then 
 
-c           if (lopt(28)) call begtim (9)
+            if (lopt(61)) call begtim (15)
 c                                  normal solution
             call minfrc
 
-c           if (lopt(28)) call endtim (9,.true.,'minfrc')
+            if (lopt(61)) call endtim (15,.false.,'minfrc')
 
          else 
 c                                  lagged speciation pure solvent

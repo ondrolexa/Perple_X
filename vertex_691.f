@@ -100,13 +100,10 @@ c                                    iam = 15 - convex
       iam = 1
 c                                 initialization
       call iniprp
+c                                 start the total timer (30)
+      if (lopt(61)) call begtim (30)
 
       if (.not.refine) then
-c DEBUG
-         call mertxt (tfname,prject,'.tim',0)
-         open (993,file=tfname)
-         write (993,*) 'touch'
-         close (993)
 c                                 two-stage calculation,
 c                                 inform user of 1st stage
          write (*,1000) 'exploratory'
@@ -173,9 +170,75 @@ c                                 clean up intermediate results
 
       end if
 
-1000  format (/,'** Starting ',a,' computational stage **',/)
+      if (lopt(61)) call cumtim
+
+1000  format ('** Starting ',a,' computational stage **',/)
 
       end
+
+      subroutine cumtim
+c----------------------------------------------------------------------
+c output cumulative time for:
+
+c           static LP optimization (timer 13)
+c           dynamic LP optimization (timer 14)
+c           successive QP optimization (timer 15)
+c           total time (timer 30)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer n
+
+      double precision tt
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+c----------------------------------------------------------------------
+c                                 the total time is in etime(30)
+      call CPU_TIME(etime(30))
+
+      call mertxt (tfname,prject,'.tim',0)
+
+      open (993,file=tfname)
+
+      n = 6
+
+      tt = (times(1) + times(13) + times(14) + times(15))
+
+      do
+
+         write (n,1000)
+
+         write (n,1010) 'Static G calculation ',
+     *                  times(1)/60,times(1)/etime(30)*1d2
+         write (n,1010) 'Dynamic G calculation',
+     *                  times(2)/60.,times(2)/etime(30)*1d2
+         write (n,1010) 'Static LP            ',
+     *                  times(13)/60.,times(13)/etime(30)*1d2
+         write (n,1010) 'Dynamic LP           ',
+     *                  times(14)/60.,times(14)/etime(30)*1d2
+         write (n,1010) 'Succesive QP         ',
+     *                  times(15)/60.,(times(15)-times(2))/etime(30)*1d2
+         write (n,1010) 'Total of above       ',
+     *                  tt/60.,tt/etime(30)*1d2
+         write (n,1010) 'Total elapsed time   ',
+     *                  etime(30)/60.,1d2
+         write (n,1020)
+
+         if (n.eq.993) exit
+
+         n = 993
+
+      end do
+
+1000  format (80('-')/,5x,'Timing',20x,'min.',9x,'% of total',/)
+1010  format (2x,a21,3x,g14.5,4x,f5.1)
+1020  format (80('-'),/)
+
+      end 
+
 
       subroutine docalc
 c----------------------------------------------------------------------

@@ -56,11 +56,11 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 MYOBJ = vertex690 meemum690 pssect690 werami690 unsplt690 actcor build fluids ctransf frendly meemum convex pstable pspts psvdraw pssect pt2curv vertex werami
 all: $(MYOBJ)
 
-LIBRARY_690 = pscom.o pslib.o rlib.o tlib.o flib.o olib.o resub.o nlib.o blaslib.o
+LIBRARY_690 = pscom.o pslib.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
 
 LIBRARY_691 = pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o
 
-LIBRARY_PS  = cont_lib.o pscom.o pslib.o tlib_691.o
+LIBRARY_PS = cont_lib.o pscom.o pslib.o tlib_691.o
 
 clean: 
 	rm -f *.o $(MYOBJ)
@@ -227,8 +227,8 @@ olib_691.o: olib_691.f
 	$(COMP77) $(FFLAGS) -c olib_691.f
 rlib_691.o: rlib_691.f
 	$(COMP77) $(FFLAGS) -c rlib_691.f
-blaslib.o: blaslib.f
-	$(COMP77) $(FFLAGS) -c blaslib.f
+BLASlib.o: BLASlib.f
+	$(COMP77) $(FFLAGS) -c BLASlib.f
 blas2lib.o: blas2lib.f
 	$(COMP77) $(FFLAGS) -c blas2lib.f
 minime_blas.o: minime_blas.f

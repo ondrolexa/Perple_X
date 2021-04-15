@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated April 13, 2021.',
+     *     'Perple_X version 6.9.1, source updated April 15, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -117,6 +117,9 @@ c----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
+      double precision epspt3, epspt5, epspt8, epspt9
+      common/ ngg006 /epspt3, epspt5, epspt8, epspt9
+
       integer iam
       common/ cst4 /iam
 
@@ -133,6 +136,27 @@ c----------------------------------------------------------------------
 
       double precision wmach
       common/ cstmch /wmach(10)
+
+      integer itnfix, kdegen, ndegen, nfix
+      double precision tolinc, tolx0
+      common/ ngg005 /tolx0, tolinc, kdegen, ndegen, itnfix, nfix(2)
+
+      integer itmax1, itmax2, kchk, kcycle, lcrash, lprob, 
+     *        maxact, mxfree, maxnz, mm, nn, nnclin
+      common/ ngg010 /itmax1, itmax2, kchk, kcycle, lcrash, lprob, 
+     *                maxact, mxfree, maxnz, mm, nn, nnclin
+
+      double precision bigbnd, bigdx, bndlow, bndupp, tolact, tolfea, 
+     *                 tolrnk
+      common/ ngg011 /bigbnd, bigdx, bndlow, bndupp,
+     *                tolact, tolfea, tolrnk
+
+      logical incrun
+      double precision rhomax, rhonrm, rhodmp, scale
+      common/ ngg017 /rhomax, rhonrm, rhodmp, scale, incrun
+
+      double precision big1, big2, bnd3, bnd4, tol5, tol6, tol7
+      common/ ngg019 /big1, big2, bnd3, bnd4, tol5, tol6, tol7
 c----------------------------------------------------------------------
 c                                 periodic fractions
       r13 = 1d0/3d0
@@ -158,17 +182,24 @@ c                                 for nag)
      *                         'starting precision for r1 < zero')
 c                                 wmach(1-2,5,9) do not have the 
 c                                 standard BLAS values, additionally
-c                                 BLAS routines may assume a dimension
+c                                 BLAS routines a dimension
 c                                 of 15 for wmach.
 c                                 as currently set wmach(1,2) are
+
 c                                 function precision 
       wmach(1) = r2**0.9d0
 c                                 optimality tolerance.
       wmach(2) = r2**0.8d0
-c                                 precision (eps)
+c                                 precision (epsmch)
       wmach(3) = r2
 c                                 feasibility tolerance (often used as numeric zero)
       wmach(4) = dsqrt(r2)
+
+      epspt3 = r2**0.33d0
+      epspt5 = wmach(4)
+      epspt8 = wmach(2)
+      epspt9 = wmach(1)
+
       wmach(9) = dmax1(1d0/wmach(4),1d2)
 
       nopt(51) = wmach(2)
@@ -193,6 +224,24 @@ c                                 solution composition zero and one
       zero = dsqrt(r2)
       r1 = 1d0 + zero
       one = 1d0 - zero
+c                                 -------------------------------------
+c                                 set permanent parameters for lpsol
+c                                 common blocks ngg010, ng011, ngg005
+      itmax2 = l6
+      kchk = 50
+      kcycle = 10000
+      kdegen = kcycle
+      tolact = 1d-2
+      bigbnd = 0.99999d20
+      bigdx = bigbnd
+c                                 -------------------------------------
+c                                 set permanent parameters for nlpsol
+c                                 common blocks ngg017, ng019. 
+c                                 NOTE common block variable names are local
+      rhomax = 1d0/wmach(3)
+      tol5 = 1d-2
+      big1 = 0.99999d20
+      big2 = big1
 c                                 -------------------------------------
 c                                 default option values:
 c                                 reserved for temporary use:
@@ -460,6 +509,8 @@ c                                 keep_all_rpcs
       lopt(59) = .true.
 c                                 warning_ver013, negative composition
       lopt(60) = .true.
+c                                 timing
+      lopt(61) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -789,6 +840,10 @@ c                                 warn with pause for equipartition models
          else if (key.eq.'warning_ver013') then
 c                                 warn and reject negative component phases
             if (val.eq.'F') lopt(60) = .false.
+
+         else if (key.eq.'timing') then
+c                                 timing for VERTEX
+            if (val.eq.'T') lopt(61) = .true.
 
          else if (key.eq.'intermediate_savrpc') then
 c                                 use all g's generated by minfrc
@@ -6659,7 +6714,7 @@ c----------------------------------------------------------------------
 
       subroutine endtim (itime,output,chars)
 c----------------------------------------------------------------------
-c begin timer itime
+c end timer itime with optional output
 c----------------------------------------------------------------------
       implicit none
 

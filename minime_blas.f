@@ -289,6 +289,8 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 c-----------------------------------------------------------------------
+      if (lopt(61)) call begtim (2)
+
       sum1 = 0d0
 
       do i = 1, nvar
@@ -353,6 +355,8 @@ c                                 save the composition
          call savrpc (g,nopt(37),jphct)
 
       end if
+
+      if (lopt(61)) call endtim (2,.false.,'Dynamic G')
 
       end
 
@@ -717,8 +721,7 @@ c                                 feasible point
 c     if (lopt(28)) call begtim (9)
 
       call lpsol (nvar,ncon,a,mcon,bl,bu,c,is,y,jter,gopt,ax,
-     *            clamda,iw,liw,wrk,lw,idead,
-     *            iprint,istart,l6,tol,lpprob)
+     *            clamda,iw,liw,wrk,lw,idead,istart,tol,lpprob)
 
 c     if (lopt(28)) call endtim (9,.true.,'p2y inversion')
 

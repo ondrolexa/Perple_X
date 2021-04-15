@@ -10105,9 +10105,6 @@ c---------------------------------------------------------------------
       integer jphct,istart
       common/ cst111 /jphct,istart
 
-      integer lennam,ldt,ncolt,ldq
-      common/ be04nb /lennam,ldt,ncolt,ldq
-
       integer npt,jdv
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
@@ -10150,9 +10147,6 @@ c                                 arrays
       end do
 c                                 stability flag for static compositions
       ststbl = .false.
-
-      ldt = icp + 1
-      ldq = icp + 1
 c                                 cold start istart = 0
       istart = 0
 
