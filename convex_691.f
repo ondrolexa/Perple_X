@@ -213,7 +213,7 @@ c                                 output compositions for autorefine
 
       end do 
 
-1000  format (/,'** Starting ',a,' computational stage **',/)
+1000  format ('** Starting ',a,' computational stage **',/)
 
       end
 

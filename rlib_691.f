@@ -9476,7 +9476,7 @@ c                              close pseudocompound list
 c                              close solution model file
       close (n9)
 
-      write (*,'(80(''-''),/,a)')
+      write (*,'(80(''-''))')
 
       first = .false.
 

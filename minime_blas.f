@@ -221,8 +221,8 @@ c                                 if logical arg = T use implicit ordering
       if (rsum.eq.0d0) then 
          return
       end if
-c                                 increment the counter
-      call savrpc (gfinal,zero,jphct)
+c                                 save the final QP result
+      call savrpc (gfinal,nopt(22),jphct,.true.)
 c---------------
       if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
@@ -241,7 +241,7 @@ c                                 scatter in only for nstot-1 gradients
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,jphct)
+            call savrpc (gfinal,nopt(48)/2d0,jphct,.false.)
 
          end do
 
@@ -352,7 +352,7 @@ c                                 if logical arg = T use implicit ordering
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
-         call savrpc (g,nopt(37),jphct)
+         call savrpc (g,nopt(37),jphct,.false.)
 
       end if
 
@@ -360,13 +360,15 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,phct)
+      subroutine savrpc (g,tol,phct,finqp)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      logical finqp, swap
 
       integer phct, i, j, ntot
 
@@ -384,6 +386,8 @@ c-----------------------------------------------------------------------
       common/ cst6  /icomp,istct,iphct,icp
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
+
+      swap = .false.
 c                                 check if duplicate
       do i = 1, phct
 
@@ -395,31 +399,50 @@ c                                 check if duplicate
                diff = diff + dabs(pa(j) - zco(icoz(i)+j))
             end do 
 
-            if (diff.lt.tol) return
+            if (diff.lt.tol) then
+               if (.not.finqp) then
+                  return
+               else 
+                  swap = .true.
+                  return
+                  exit
+               end if
+            end if
 
          end if
 
       end do
+
+      if (.not.swap) then
 c                                 increment the counter
-      phct = phct + 1
+         phct = phct + 1
+         i = phct
+
+      else
+
+         do j = 1, ntot
+            zco(icoz(i)+j) = pa(j)
+         end do 
+
+      end if
 c                                 lagged speciation quack flag
-      quack(phct) = rkwak
+      quack(i) = rkwak
 c                                 normalize and save the composition
-      cp2(1:icomp,phct) = rcp(1:icomp)/rsum
+      cp2(1:icomp,i) = rcp(1:icomp)/rsum
 c                                 the solution model pointer
-      jkp(phct) = rids
+      jkp(i) = rids
 c                                 the refinement point pointer
-      hkp(phct) = rkds
+      hkp(i) = rkds
 c                                 save the normalized g
-      g2(phct) = g/rsum
+      g2(i) = g/rsum
 c                                 sum scp(1:icp)
       if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then
 c                                 this will renormalize the bulk to a 
 c                                 mole of solvent, it's no longer clear to 
 c                                 me why this is desireable.
-         c2tot(phct) = rsum/rsmo
+         c2tot(i) = rsum/rsmo
       else
-         c2tot(phct) = rsum
+         c2tot(i) = rsum
       end if
 
 1000  format (i5,1x,g12.6,12(1x,f7.4))

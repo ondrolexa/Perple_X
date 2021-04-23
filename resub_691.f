@@ -574,8 +574,11 @@ c                                  lagged speciation pure solvent
             if (.not.bad) then 
 
                rkwak = .true.
-c                                 save the composition
-               call savrpc (g,nopt(37),jphct)
+c                                 save the composition, was 
+c                                 nopt(37) during testing, but
+c                                 since this is the only composition
+c                                 changed to zero/nopt(22). 4/23/21
+               call savrpc (g,nopt(22),jphct,.true.)
 
             end if
 

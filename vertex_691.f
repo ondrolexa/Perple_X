@@ -234,7 +234,7 @@ c                                 the total time is in etime(30)
       end do
 
 1000  format (80('-')/,5x,'Timing',20x,'min.',9x,'% of total',/)
-1010  format (2x,a21,3x,g14.5,4x,f5.1)
+1010  format (2x,a21,3x,g14.5,7x,f5.1)
 1020  format (80('-'),/)
 
       end 
@@ -1547,8 +1547,6 @@ c                               first level:
       loopy = klow * 2**(jlev-1) + 1 
 
       loopx = (loopx-1) * 2**(jlev-1) + 1 
-
-      write (*,'(/)')
 
       if (loopy.gt.l7) then
          call warn (92,v(iv1),loopy,'y_node')

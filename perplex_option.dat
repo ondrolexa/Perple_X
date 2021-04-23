@@ -23,7 +23,23 @@
         | x_nodes 20 60 ...
 
 |----------------------------------------------------------------------
+| 691+ options:
+timing                       T    | [F] output CPU time information to my_project.tim
+optimization_max_it       default | [40] maximum number of sucessive LP optimizations
+optimization_precision     1d-2 default | [1d-4 energy units] absolute precision for succesive LP optimization
+compositional_precision   default | [1d-7 mol]
+replicate_threshold       default | [1d-2] effective initial resolution for auto-refine stage , nopt(35) 
+rep_dynamic_threshold     default | [1d-3] threshold for saving compositions during dynamic optimization, nopt(37) 
+intermediate_savrpc       T       | [F] save intermediate compositions during dynamic optiomization, lopt(57)
+intermediate_savdyn       T       | [F] save intermediate dynamic compositions as auto-refine static compositions, lopt(58)
+MINFRC_diff_increment     default | [1d-7 mol] finite difference increment for QP
+scatter-increment         default | [1d-2 mol]
+scatter-points            default | [T] lopt(54)
+keep_all_rpcs             default | [T] lopt(59)
 
+
+|----------------------------------------------------------------------
+| 690- options:
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
@@ -59,13 +75,13 @@ finite_difference_p       default | [1d4 1d-2] threshold and fraction for 1st or
 fractionation_hi_limit    default | [0.] 0-1, upper fractionation threshold, mass fraction
 fractionation_lo_limit    default | [0.] 0-1, lower fractionation threshold, mass fraction
 global_reach_increment    default | [0] >= 0, overridden by reach_factor specified in solution model file
-grid_levels               1 3 default | [1 4] exploratory and auto-refine (grid parameters keyword group)
+grid_levels               default | [1 4] exploratory and auto-refine (grid parameters keyword group)
 hard_limits               default | [off] on or off; on => strictly impose compositional limits specified in solution model
 hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 4 - PSEoS, 5 - Haar, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
-initial_resolution        1/8 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
+initial_resolution        default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 linear_model              default | [on] on or off, relevant for 2d gridded minimization

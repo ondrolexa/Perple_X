@@ -299,6 +299,8 @@ c                                 T_melt cutoff
       nopt(20) = 873d0
 c                                 optimization_precision, absolute
       nopt(21) = 1d-4
+c                                 compositional_precision, absolute
+      nopt(22) = zero
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -782,6 +784,10 @@ c                                 bad number key
          else if (key.eq.'optimization_precision') then 
 
             read (strg,*) nopt(21)
+
+         else if (key.eq.'compositional_precision') then 
+
+            read (strg,*) nopt(22)
 
          else if (key.eq.'optimization_max_it') then 
 
