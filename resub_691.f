@@ -452,7 +452,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical kterat, bad
+      logical kterat, bad, swap
 
       integer i, ids, lds, id, kd, iter
 
@@ -474,10 +474,6 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
-
       character tname*10
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
@@ -490,11 +486,11 @@ c                                 reset refinement point flags
          hkp(i) = 0
       end do
 
-      if (.not.lopt(59)) then
+c     if (.not.lopt(59)) then
 c                                 if ~keep_all_rpcs, then reset counters
-         jphct = jpoint
-         zcoct = 0
-      end if
+c        jphct = jpoint
+c        zcoct = 0
+c     end if
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
@@ -578,7 +574,7 @@ c                                 save the composition, was
 c                                 nopt(37) during testing, but
 c                                 since this is the only composition
 c                                 changed to zero/nopt(22). 4/23/21
-               call savrpc (g,nopt(22),jphct,.true.)
+               call savrpc (g,nopt(22),.true.,swap)
 
             end if
 
@@ -587,8 +583,6 @@ c                                 changed to zero/nopt(22). 4/23/21
          lds = ids
 
       end do
-c DEBUG691
-      if (jphct.gt.50000) write (*,*) jpoint, jphct, zcoct
 
       end
 

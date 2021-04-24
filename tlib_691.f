@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated April 15, 2021.',
+     *     'Perple_X version 6.9.1, source updated April 24, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -226,8 +226,9 @@ c                                 solution composition zero and one
       one = 1d0 - zero
 c                                 -------------------------------------
 c                                 set permanent parameters for lpsol
-c                                 common blocks ngg010, ng011, ngg005
-      itmax2 = l6
+c                                 common blocks ngg010, ng011, ngg005,
+c                                 itmax2 may be reset below as iopt(7)
+      itmax2 = 500
       kchk = 50
       kcycle = 10000
       kdegen = kcycle
@@ -299,8 +300,8 @@ c                                 T_melt cutoff
       nopt(20) = 873d0
 c                                 optimization_precision, absolute
       nopt(21) = 1d-4
-c                                 compositional_precision, absolute
-      nopt(22) = zero
+c                                 replicate_threshold_II, absolute
+      nopt(22) = 0d0
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -335,6 +336,11 @@ c                                 interpolation keyword
 c                                 autorefine, 2 - automatic, 1 - manual, 0 - no
       iopt(6) = 2
       valu(6) = 'aut'
+c                                 LP_max_it (formerly L6), the max number of iterations
+c                                 allowed during an LP optimization, theoretically
+c                                 5*(phct+icp) iterations may be required, generally
+c                                 the actual number of iterations is < 100. 
+      iopt(7) = itmax2
 c                                 subdivision_override, 0 - solution model choice
 c                                 1 - all cartesian, 2 - all stretch
       iopt(13) = 0 
@@ -785,9 +791,14 @@ c                                 bad number key
 
             read (strg,*) nopt(21)
 
-         else if (key.eq.'compositional_precision') then 
+         else if (key.eq.'replicate_threshold_II') then 
 
             read (strg,*) nopt(22)
+
+         else if (key.eq.'LP_max_it') then 
+
+            read (strg,*) iopt(7)
+            itmax2 = iopt(7)
 
          else if (key.eq.'optimization_max_it') then 
 
@@ -1598,7 +1609,7 @@ c                                 solvus tolerance text
          end if 
 
          if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6), nopt(35),
-     *              nopt(37), lopt(55), lopt(57), lopt(58), lopt(59)
+     *    nopt(22), nopt(37), lopt(55), lopt(57), lopt(58), lopt(59)
 c                                 only vertex:
 c                                 context specific parameters:
          if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
@@ -1686,8 +1697,8 @@ c                                 MEEMUM input/output options
          write (n,1231) lopt(25),iopt(32),l9,valu(26),valu(27),
      *                  lopt(14),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(51),
-     *                  lopt(21),
-     *                  lopt(24),valu(14),lopt(19),lopt(20)
+     *                  lopt(21),lopt(24),valu(14),lopt(19),
+     *                  lopt(20),lopt(61)
          write (n,1234) lopt(5)
 
       else if (iam.eq.5) then 
@@ -1775,6 +1786,8 @@ c                                 generic thermo options
      *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
      *        4x,'replicate_threshold    ',g7.1E1,4x,
      *           '[1e-2]; static opt; <0 => no replica test',/,
+     *        4x,'replicate_threshold_II ',g7.1E1,4x,
+     *           '[0]; < rep_dynamic_threshold',/,
      *        4x,'rep_dynamic_threshold  ',g7.1E1,4x,
      *           '[1d-3]; dynamic opt; <0 => no replica test',/,
      *        4x,'re-refine               ',l1,9x,'[F] T',/,
@@ -1893,7 +1906,8 @@ c                                 thermo options for frendly
      *        4x,'endmember_Gs            ',l1,9x,'[F] T',/,
      *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
      *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
-     *        4x,'poisson_test            ',l1,9x,'[F] T')
+     *        4x,'poisson_test            ',l1,9x,'[F] T',/,
+     *        4x,'timing                  ',l1,9x,'[F] T')
 1232  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet             ',l1,9x,'[F] T',/,
      *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
@@ -3042,8 +3056,6 @@ c                                 generic warning, also 99
          write (*,176) char, iopt(21)
       else if (ier.eq.177) then
          write (*,177) nopt(5)
-      else if (ier.eq.190) then
-         write (*,190) int
       else if (ier.eq.205) then
          write (*,205) int
          write (*,900)
@@ -3307,13 +3319,14 @@ c    *          8x,'increase speciation_max_it.',/,
 89    format (//,'**warning ver089** BUILD you did not request',
      *        'plot file output.',/,' You will not be able to process',
      *        ' the results of the requested calculation.',//)
-90    format (/,'**warning ver090** optimization failed. ',
-     *        'Most probably, the possible ',
-     *        'phases do not span',/,'the systems composition.',
-     *        'In this case, add phases or modify the bulk ',
-     *        'composition.',/,'Less ',
-     *        'probably, increasing parameter L6 in perplex_',
-     *        'parameters.h may permit convergence.',/)
+90    format (/,'**warning ver090** an optimization failed. This may i',
+     *        'ndicate an infeasible bulk',/,'composition or that the ',
+     *        'LP_max_iteration option value is too small.',//,
+     *        'In the former case optimization will fail for the bulk ',
+     *        'composition at all physical',/,'conditions and the prob',
+     *        'lem can only be remedied by increasing the range of',/,
+     *        'compositions spanned by the possible phases of the ',
+     *        'system.')
 91    format (/,'**warning ver091** optimization failed. Change ',
      *        'minimnization method',/)
 92    format (/,'**warning ver092** you have requested ',i4,
@@ -3363,14 +3376,6 @@ c    *          8x,'increase speciation_max_it.',/,
 177   format (/,'**warning ver177** Invalid fluid speciation. ',
      *          'Reducing speciation tolerance (',g14.6,') in ',
      *          'perplex_option.dat',/,'may resolve this problem',/)
-190   format (/,'**warning ver190** SMPLX failed to converge within ',
-     *        i6,' iterations.',/,3x,'Probable cause: the possible ',
-     *        'phases do not span the systems composition',/,3x,
-     *        'To avoid this problem add phases or modify the bulk ',
-     *        'composition.',/,3x,'Alternatively, although less ',
-     *        'probably, increasing parameter L6 in perplex_',
-     *        'parameters.h',/,3x,
-     *        'and recompiling VERTEX permit SMPLEX to converge.',/)
 205   format (/,'**warning ver205** too many new phase assemblages, ',
      *        'found by routine newhld',/,'increase dimension j9 (',
      *        i8,')',/)

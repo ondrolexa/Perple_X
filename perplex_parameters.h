@@ -157,7 +157,8 @@ c----------------------------------------------------------------------
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
 !                                 l5 - max number of coordinates along a univariant curve
-!                                 l6 - max number of iterations in lp optimization, in 
+!                                 l6 - OBSOLETE 691+ (replaced by LP_max_it)
+!                                      max number of iterations in lp optimization, in 
 !                                      theory this may be up to ca 5*(k1+k5), generally
 !                                      convergence occurs in less than 100 iterations.
 !                                 l7 - max number of grid points along an axis for
@@ -168,7 +169,7 @@ c----------------------------------------------------------------------
 !                                l10 - max number of parameters stored in caq for each phase.
 !                                nsp - max number of species in fluid speciation routines 
 
-      parameter (l2=5,l3=l2+2,l5=1000,l6=200,l7=2048,l8=10,l9=100,
+      parameter (l2=5,l3=l2+2,l5=1000,l6=500,l7=2048,l8=10,l9=100,
      *           nsp=17,l10=nsp+l9+4)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function

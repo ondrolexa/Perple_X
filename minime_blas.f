@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical tic, zbad
+      logical tic, zbad, swap
 
       integer i, nvar, iter, iwork(m22), itic,
      *        ivars(13), istate(m21), idead, nclin, ntot
@@ -56,10 +56,6 @@ c DEBUG691                    dummies for NCNLN > 0
 
       double precision wmach
       common/ cstmch /wmach(10)
-
-      integer jphct
-      double precision g2, cp2, c2tot
-      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
       data fac/1d-2/
 
@@ -222,9 +218,9 @@ c                                 if logical arg = T use implicit ordering
          return
       end if
 c                                 save the final QP result
-      call savrpc (gfinal,nopt(22),jphct,.true.)
+      call savrpc (gfinal,nopt(22),.true.,swap)
 c---------------
-      if (lopt(54)) then
+      if (lopt(54).and..not.swap) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
 
@@ -241,7 +237,7 @@ c                                 scatter in only for nstot-1 gradients
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,jphct,.false.)
+            call savrpc (gfinal,nopt(48)/2d0,.false.,swap)
 
          end do
 
@@ -259,7 +255,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical zbad
+      logical zbad, swap
 
       integer i, j, nvar, mode, ivars(*), istart
 
@@ -352,7 +348,7 @@ c                                 if logical arg = T use implicit ordering
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
-         call savrpc (g,nopt(37),jphct,.false.)
+         call savrpc (g,nopt(37),.false.,swap)
 
       end if
 
@@ -360,7 +356,7 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,phct,finqp)
+      subroutine savrpc (g,tol,finqp,swap)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -370,7 +366,7 @@ c-----------------------------------------------------------------------
 
       logical finqp, swap
 
-      integer phct, i, j, ntot
+      integer i, j, ntot
 
       double precision g, diff, tol
 
@@ -384,12 +380,15 @@ c-----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
 
       swap = .false.
 c                                 check if duplicate
-      do i = 1, phct
+      do i = 1, jphct
 
          if (jkp(i).eq.rids) then
 
@@ -400,11 +399,11 @@ c                                 check if duplicate
             end do 
 
             if (diff.lt.tol) then
-               if (.not.finqp) then
+               if (.not.finqp.or.diff.lt.zero) then
+c              if (.not.finqp) then
                   return
                else 
                   swap = .true.
-                  return
                   exit
                end if
             end if
@@ -414,15 +413,11 @@ c                                 check if duplicate
       end do
 
       if (.not.swap) then
-c                                 increment the counter
-         phct = phct + 1
-         i = phct
-
-      else
-
-         do j = 1, ntot
-            zco(icoz(i)+j) = pa(j)
-         end do 
+c                                 increment counters
+         jphct = jphct + 1
+         i = jphct
+         icoz(i) = zcoct
+         zcoct = zcoct + ntot
 
       end if
 c                                 lagged speciation quack flag
@@ -445,16 +440,9 @@ c                                 me why this is desireable.
          c2tot(i) = rsum
       end if
 
-1000  format (i5,1x,g12.6,12(1x,f7.4))
-1010  format (18x,12(1x,f7.4))
-
-      quack(phct) = rkwak
+      quack(i) = rkwak
 c                                 save the endmember fractions
-      icoz(phct) = zcoct
-
-      zco(zcoct+1:zcoct+ntot) = pa(1:ntot)
-
-      zcoct = zcoct + ntot
+      zco(icoz(i)+1:icoz(i)+ntot) = pa(1:ntot)
 
       end 
 

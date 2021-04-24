@@ -3004,8 +3004,6 @@ c                                 generic warning, also 99
          write (*,176) char, iopt(21)
       else if (ier.eq.177) then
          write (*,177) nopt(5)
-      else if (ier.eq.190) then
-         write (*,190) int
       else if (ier.eq.205) then
          write (*,205) int
          write (*,900)
@@ -3314,14 +3312,6 @@ c                                 generic warning, also 99
 177   format (/,'**warning ver177** Invalid fluid speciation. ',
      *          'Reducing speciation tolerance (',g14.6,') in ',
      *          'perplex_option.dat',/,'may resolve this problem',/)
-190   format (/,'**warning ver190** SMPLX failed to converge within ',
-     *        i6,' iterations.',/,3x,'Probable cause: the possible ',
-     *        'phases do not span the systems composition',/,3x,
-     *        'To avoid this problem add phases or modify the bulk ',
-     *        'composition.',/,3x,'Alternatively, although less ',
-     *        'probably, increasing parameter L6 in perplex_',
-     *        'parameters.h',/,3x,
-     *        'and recompiling VERTEX permit SMPLEX to converge.',/)
 205   format (/,'**warning ver205** too many new phase assemblages, ',
      *        'found by routine newhld',/,'increase dimension j9 (',
      *        i8,')',/)
@@ -7700,7 +7690,7 @@ c                                             probable cause no feasible
 c                                             solution.
          call warn (90,c,idead,char) 
          iwarn90 = iwarn90 + 1
-         if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
+         if (iwarn90.eq.6) call warn (49,c,90,'LPWARN')
 
       else if (iwarn58.lt.11.and.(idead.eq.58.or.idead.eq.59)) then 
 
