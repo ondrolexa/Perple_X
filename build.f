@@ -1038,42 +1038,31 @@ c----------------------------------------------------------------------
       if (jnd.eq.1.or.jnd.eq.2) then 
 c                                 pressure-temperauture
          if (value.le.0d0) then 
-            write (*,1020) vname(jnd)
+            call warn (57,value,jnd,vname(jnd))
             numbad = .true.
          end if 
 
       else if (jnd.eq.3) then 
 c                                 phase composition
          if (value.lt.0d0.or.value.gt.1d0) then
-            write (*,1030) vname(jnd)
+            call warn (44,value,jnd,vname(jnd))
             numbad = .true.
          end if 
  
       else 
 c                                 potential
-         if (imaf(jnd-3).gt.1.and.value.gt.0d0) then
-            write (*,1000) vname(jnd),vname(jnd)
+         if (imaf(jnd-3).eq.2.and.value.gt.0d0) then
+            call warn (43,value,jnd,vname(jnd))
             numbad = .true.
          end if 
 
       end if 
 
       if (numbad) then 
-         read (*,1010) y
+         read (*,'(a)') y
          if (y.ne.'y'.and.y.ne.'Y') numbad = .false.
       end if  
 
-1000  format (/,'**WARNING** ',a,' is the base 10 log of activity/',
-     *       'fugacity; therefore ',a,'> 0',/,'implies ',
-     *       'supersaturation with respect to the reference phase.',/,
-     *       'Specify new values (Y/N)?',/)
-1010  format (a)
-1020  format (/,'**WARNING** negative or zero values for: ',a,
-     *       ' may destabilize',/,
-     *       'calculations with some equations of state.',/,
-     *       'Specify new values (Y/N)?',/)
-1030  format (/,'**WARNING** ',a,'should be in the range 0-1.',/
-     *       'Specify new values (Y/N)?',/)
       end 
 
       subroutine chknam (igood,jcmpn,iflu,good,char5,qname,uname)
@@ -1666,13 +1655,13 @@ c                                 component pointers for chkphi
      *       'constrain O2 chemical potential to be consistent with ',
      *       'C-O-H fluid speciation',/,'treat O2 as a saturated ',
      *       'component. Refer to the Perple_X Tutorial for details.',/)
-1070  format ('Ok, but dont say i didnt warn you.')
+1070  format ('Ok, but don''t say i didn''t warn you.')
 1080  format ('Wise move, choose another component.')
 1190  format (/,'**warning ver064** in general it is wise to exclude ',
      *        'the unused phases from',/,'the above list from your ',
-     *        'calcultion. NOTE: you will not be prompted for these',/,
+     *        'calcultion. NOTE: you will not be prompted for these ',/,
      *        'phases if you select the automatic phase exclusion ',
-     *        'prompt. to exclude unused',/,'reference phases either',
+     *        'prompt. To exclude unused',/,'reference phases either',
      *        'do not select the prompt option or edit the problem',/,
      *        'definition after running BUILD',/)
 2021  format ('Enter names, 1 per line, press <enter> to finish:')

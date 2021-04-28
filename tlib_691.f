@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated April 24, 2021.',
+     *     'Perple_X version 6.9.1, source updated April 28, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -2939,7 +2939,11 @@ c----------------------------------------------------------------------
          write (*,41) char, int
          call prtptx
       else if (ier.eq.42) then
-         write (*,42)     
+         write (*,42)
+      else if (ier.eq.43) then
+         write (*,43) char
+      else if (ier.eq.44) then
+         write (*,44) char
       else if (ier.eq.45) then
          write (*,45) char
       else if (ier.eq.46) then 
@@ -2964,6 +2968,8 @@ c----------------------------------------------------------------------
          write (*,55) char
       else if (ier.eq.56) then 
          write (*,56) char
+      else if (ier.eq.57) then
+         write (*,57) char
       else if (ier.eq.58) then
 
          write (*,58)
@@ -3223,6 +3229,12 @@ c    *          8x,'increase speciation_max_it.',/,
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',
      *          'change the bulk composition or add phases.',/)
+43    format (/,'**warning ver043** ',a,' is the base 10 log of the',
+     *       'activity, values > 0 imply',/
+     *       'supersaturation with respect to the reference species.',/,
+     *       'Specify a different value (Y/N)?')
+44    format (/,'**warning ver044** ordinarily ',a,' should be in the ',
+     *        'range [0,1].'/,'Specify a different value (Y/N)?')
 45    format (/,'**warning ver045** ',a,' involves a nonlinear EoS.',/,
      *          ' Output properties are stoichiometric averages.',/)
 46    format (/,'**warning ver046** temperature (',g12.6,' K) is out',
@@ -3267,6 +3279,9 @@ c    *          8x,'increase speciation_max_it.',/,
      *        'ecified in the problem definition file. To prevent this',
      *      /,'behavior delete the special_component section from the ',
      *        'header of the',/,'thermodynamic data file.',/)
+57    format (/,'**warning ver044** ordinarily ',a,' should > 0, value',
+     *          's <= 0 may cause numerical',/,
+     *          'instability. Specify a different value (Y/N)?')
 589   format (/,'**warning ver589** wway, the equilibrium of the '
      *         ,'following reaction',/,'is inconsistent with the ',
      *          'invariant equilibrium.',/)
