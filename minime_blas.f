@@ -32,8 +32,6 @@ c DEBUG691                    dummies for NCNLN > 0
      *                 ,c(1),cjac(1,1),yt(m4),
      *                 zsite(m10,m11), sum
 
-      character ctol*20
-
       external gsol2, gsol1, dummy
 
       integer nz
@@ -119,16 +117,10 @@ c                                 closure for molecular models
 10    idead = -1
 c                                 EPSRF, function precision
       rvars(1) = (wmach(3)*fac)**(0.9)
-      write (ctol,'(d16.10)') rvars(1)
-      read (ctol,*) rvars(1)
 c                                 FTOL, optimality tolerance
       rvars(2) = (wmach(3)*fac)**(0.8)
-      write (ctol,'(d16.10)') rvars(2)
-      read (ctol,*) rvars(2)
 c                                 CTOL,feasibility tolerance
       rvars(3) = zero
-      write (ctol,'(d16.10)') rvars(3)
-      read (ctol,*) rvars(3)
 c                                 DXLIM, step limit < nopt(5) leads to bad results
       rvars(4) = 0.5d0
 c                                 ETA, linesearch tolerance, low values -> more accurate search 
@@ -220,7 +212,7 @@ c                                 if logical arg = T use implicit ordering
 c                                 save the final QP result
       call savrpc (gfinal,zero,saved)
 c---------------
-      if (lopt(54).and.saved) then
+      if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
 

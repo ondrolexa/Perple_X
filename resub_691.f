@@ -133,7 +133,7 @@ c                                 on severe error do a cold start.
 c                                 necessary?
          istart = 0
 
-      else if (hcp.eq.1.or.isoct.eq.0) then 
+      else if (isoct.eq.0) then 
 c                                 no refinement, find the answer
          call yclos0 (x,is,jphct) 
 c                                 final processing, .true. indicates static
