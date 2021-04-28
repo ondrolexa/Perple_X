@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical tic, zbad, swap
+      logical tic, zbad, saved
 
       integer i, nvar, iter, iwork(m22), itic,
      *        ivars(13), istate(m21), idead, nclin, ntot
@@ -218,9 +218,9 @@ c                                 if logical arg = T use implicit ordering
          return
       end if
 c                                 save the final QP result
-      call savrpc (gfinal,nopt(22),.true.,swap)
+      call savrpc (gfinal,zero,saved)
 c---------------
-      if (lopt(54).and..not.swap) then
+      if (lopt(54).and.saved) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
 
@@ -237,7 +237,7 @@ c                                 scatter in only for nstot-1 gradients
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,.false.,swap)
+            call savrpc (gfinal,nopt(48)/2d0,saved)
 
          end do
 
@@ -255,7 +255,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical zbad, swap
+      logical zbad, saved
 
       integer i, j, nvar, mode, ivars(*), istart
 
@@ -348,7 +348,7 @@ c                                 if logical arg = T use implicit ordering
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
-         call savrpc (g,nopt(37),.false.,swap)
+         call savrpc (g,nopt(37),saved)
 
       end if
 
@@ -356,7 +356,7 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,finqp,swap)
+      subroutine savrpc (g,tol,saved)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -364,7 +364,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical finqp, swap
+      logical saved
 
       integer i, j, ntot
 
@@ -386,7 +386,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
 
-      swap = .false.
+      saved = .false.
 c                                 check if duplicate
       do i = 1, jphct
 
@@ -398,28 +398,17 @@ c                                 check if duplicate
                diff = diff + dabs(pa(j) - zco(icoz(i)+j))
             end do 
 
-            if (diff.lt.tol) then
-               if (.not.finqp.or.diff.lt.zero) then
-c              if (.not.finqp) then
-                  return
-               else 
-                  swap = .true.
-                  exit
-               end if
-            end if
+            if (diff.lt.tol) return
 
          end if
 
       end do
-
-      if (.not.swap) then
+c
+      saved = .true.
 c                                 increment counters
-         jphct = jphct + 1
-         i = jphct
-         icoz(i) = zcoct
-         zcoct = zcoct + ntot
-
-      end if
+      jphct = jphct + 1
+      icoz(i) = zcoct
+      zcoct = zcoct + ntot
 c                                 lagged speciation quack flag
       quack(i) = rkwak
 c                                 normalize and save the composition

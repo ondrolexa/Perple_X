@@ -300,8 +300,6 @@ c                                 T_melt cutoff
       nopt(20) = 873d0
 c                                 optimization_precision, absolute
       nopt(21) = 1d-4
-c                                 replicate_threshold_II, absolute
-      nopt(22) = 0d0
 c                                 finite_difference_p threshold for finite difference estimates
       nopt(26) = 1d4
 c                                 finite_difference_p fraction for first order difference estimates
@@ -790,10 +788,6 @@ c                                 bad number key
          else if (key.eq.'optimization_precision') then 
 
             read (strg,*) nopt(21)
-
-         else if (key.eq.'replicate_threshold_II') then 
-
-            read (strg,*) nopt(22)
 
          else if (key.eq.'LP_max_it') then 
 
@@ -1609,7 +1603,7 @@ c                                 solvus tolerance text
          end if 
 
          if (iam.eq.1.or.iam.eq.15) write (n,1015) valu(6), nopt(35),
-     *    nopt(22), nopt(37), lopt(55), lopt(57), lopt(58), lopt(59)
+     *    nopt(37), lopt(55), lopt(57), lopt(58), lopt(59)
 c                                 only vertex:
 c                                 context specific parameters:
          if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
@@ -1786,8 +1780,6 @@ c                                 generic thermo options
      *        4x,'auto_refine             ',a3,7x,'[auto] manual off',/,
      *        4x,'replicate_threshold    ',g7.1E1,4x,
      *           '[1e-2]; static opt; <0 => no replica test',/,
-     *        4x,'replicate_threshold_II ',g7.1E1,4x,
-     *           '[0]; < rep_dynamic_threshold',/,
      *        4x,'rep_dynamic_threshold  ',g7.1E1,4x,
      *           '[1d-3]; dynamic opt; <0 => no replica test',/,
      *        4x,'re-refine               ',l1,9x,'[F] T',/,

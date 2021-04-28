@@ -24,11 +24,10 @@
 
 |----------------------------------------------------------------------
 | 691+ options:
-timing                       T    | [F] output CPU time information to my_project.tim
+|timing                       T    | [F] output CPU time information to my_project.tim
 optimization_max_it       default | [40] maximum number of sucessive LP optimizations
 optimization_precision    default | [1d-4 energy units] absolute precision for succesive LP optimization
 replicate_threshold       default | [1d-2] effective initial resolution for auto-refine stage , nopt(35) 
-replicate_threshold_II    1d-7    | [1d-4 mol]
 rep_dynamic_threshold     default | [1d-3] threshold for saving compositions during dynamic optimization, nopt(37) 
 intermediate_savrpc       T       | [F] save intermediate compositions during dynamic optiomization, lopt(57)
 intermediate_savdyn       T       | [F] save intermediate dynamic compositions as auto-refine static compositions, lopt(58)

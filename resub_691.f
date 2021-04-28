@@ -478,6 +478,9 @@ c----------------------------------------------------------------------
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 c----------------------------------------------------------------------
@@ -574,7 +577,7 @@ c                                 save the composition, was
 c                                 nopt(37) during testing, but
 c                                 since this is the only composition
 c                                 changed to zero/nopt(22). 4/23/21
-               call savrpc (g,nopt(22),.true.,swap)
+               call savrpc (g,zero,swap)
 
             end if
 
