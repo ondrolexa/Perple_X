@@ -4804,7 +4804,7 @@ c                                missing endmember warnings:
       end if
 
 1000  format (/,'**warning ver114** the following endmembers',
-     *          ' are missing for ',a,//,4(8(2x,a),/))
+     *          ' are missing for ',a,//,4(8(2x,a)))
 
       end
 
@@ -20911,7 +20911,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical rplica, xplica, isend
+      logical rplica, isend
 
       integer ids
 
@@ -20925,12 +20925,12 @@ c----------------------------------------------------------------------
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
 
-      external rplica, xplica
+      external rplica
 c----------------------------------------------------------------------
       if (refine.and..not.lopt(55)) return
 
       if (tol.gt.0d0) then
-         if (xplica(ids)) return
+         if (rplica(ids)) return
       end if
 
       if (isend(ids)) return
@@ -20982,7 +20982,7 @@ c-----------------------------------------------------------------------
       end
 
 
-      logical function xplica (id)
+      logical function rplica (id)
 c-----------------------------------------------------------------------
       implicit none
 
@@ -21008,49 +21008,7 @@ c                                 simple model
             end do 
 
             if (diff.lt.nopt(35)) then
-               xplica = .true.
-               return
-            end if
-
-         end do
-
-      xplica = .false.
-
-      end
-
-      logical function rplica (id)
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      logical ok
-
-      integer id, i, j
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-c-----------------------------------------------------------------------
-c                                 simple model
-         do i = 1, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            ok = .false.
-
-            do j = 1, nstot(id)
-               if (dabs(pa(j) - txco(itxp(i)+j)).gt.nopt(35)) then
-                  ok = .true.
-                  exit
-               end if
-            end do 
-
-            if (.not.ok) then
-               rplica = ok
+               rplica = .true.
                return
             end if
 

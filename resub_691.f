@@ -331,12 +331,7 @@ c                                  the logic here, is that the composition
 c                                  can't really be bad since we got through the 
 c                                  initial minimization. do a mass balance check
 c                                  just in case:
-            if (idead1.eq.3.and.idead.eq.3) write (*,'(/,a,/)') 
-     *           'idead1 = idead = 3, this is a waste of time'
-
-            do i = 1, icp 
-               tot(i) = b(i)
-            end do 
+            tot(1:icp) = b(1:icp)
 
             do i = 1, jphct
 
@@ -350,19 +345,19 @@ c                                  just in case:
 
             do i = 1, icp
 
-               if (dabs(tot(i)).gt.zero) then 
+               if (dabs(tot(i)).gt.dsqrt(zero)) then
+
+                  idead1 = 1
+
+                  exit
+
+               else if (dabs(tot(i)).gt.zero) then 
 
 c                  write (*,'(/,a,/)') '**warning ver333** '//
 c     *                   'You''ve got to ask yourself one '//
 c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
                   idead1 = 3
-
-               else if (dabs(tot(i)).gt.dsqrt(zero)) then
-
-                  idead1 = 1
-
-                  exit
 
                end if
 
@@ -576,8 +571,8 @@ c                                  lagged speciation pure solvent
 c                                 save the composition, was 
 c                                 nopt(37) during testing, but
 c                                 since this is the only composition
-c                                 changed to zero/nopt(22). 4/23/21
-               call savrpc (g,zero,swap)
+c                                 changed to 0. 4/23/21
+               call savrpc (g,0d0,swap)
 
             end if
 

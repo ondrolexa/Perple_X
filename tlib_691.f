@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated April 28, 2021.',
+     *     'Perple_X version 6.9.1, source updated May 1, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -1506,7 +1506,7 @@ c                                 consequent value for k1
 
       end if
 
-1000  format ('Context specific options are echoed in: ',a,/)
+1000  format ('Context specific options are echoed in: ',a)
 1010  format (/,'ERROR: reading option file: ',a50,/,
      *          'most likely you are using a pre-6.8.6 option',
      *          ' file with only one',/,'initial_resolution value. Corr'

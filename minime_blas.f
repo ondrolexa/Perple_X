@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical tic, zbad, saved
+      logical tic, zbad, swap
 
       integer i, nvar, iter, iwork(m22), itic,
      *        ivars(13), istate(m21), idead, nclin, ntot
@@ -133,8 +133,6 @@ c                                 ivars(1:10) reserved for flags, counters used 
 c                                 ---------------------------------------------
 c                                 obj call counter
       ivars(3) = 0
-c                                 MSGNP, print level, default off, may be reset.
-      ivars(12) = 0
 c                                 LVLDER, derivative level, default all derivatives available
       ivars(13) = 3
 
@@ -210,9 +208,10 @@ c                                 if logical arg = T use implicit ordering
          return
       end if
 c                                 save the final QP result
-      call savrpc (gfinal,zero,saved)
+      call savrpc (gfinal,0d0,swap)
 c---------------
-      if (lopt(54)) then
+      if (lopt(54).and..not.swap) then
+c     if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
 
@@ -229,7 +228,7 @@ c                                 scatter in only for nstot-1 gradients
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,saved)
+            call savrpc (gfinal,nopt(48)/2d0,swap)
 
          end do
 
@@ -348,7 +347,7 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,saved)
+      subroutine savrpc (g,tol,swap)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -356,7 +355,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical saved
+      logical swap, swapit
 
       integer i, j, ntot
 
@@ -373,12 +372,21 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      double precision wmach
+      common/ cstmch /wmach(10)
+
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
       ntot = nstot(rids)
 
-      saved = .false.
+      if (tol.eq.0d0) then
+         swapit = .true.
+      else
+         swapit = .false.
+      end if
+
+      swap = .false.
 c                                 check if duplicate
       do i = 1, jphct
 
@@ -388,19 +396,41 @@ c                                 check if duplicate
 
             do j = 1, ntot
                diff = diff + dabs(pa(j) - zco(icoz(i)+j))
-            end do 
+            end do
 
-            if (diff.lt.tol) return
+            if (diff.eq.0d0) then 
+c                                 swap if lower g
+               swap = .true.
+
+               if (g2(i).gt.g/rsum) then
+                  exit
+               else
+                  return
+               end if
+
+            end if
+
+            if (.not.swapit) then
+
+               if (diff.lt.tol) return
+
+            else
+
+              if (diff.lt.zero) return
+
+            end if
 
          end if
 
       end do
-c
-      saved = .true.
+
+      if (.not.swap) then
 c                                 increment counters
-      jphct = jphct + 1
-      icoz(i) = zcoct
-      zcoct = zcoct + ntot
+         jphct = jphct + 1
+         icoz(i) = zcoct
+         zcoct = zcoct + ntot
+
+      end if
 c                                 lagged speciation quack flag
       quack(i) = rkwak
 c                                 normalize and save the composition
@@ -1062,8 +1092,6 @@ c                                 FDINT, finite difference interval, forward.
 c                                 ---------------------------------------------
 c                                 ivars(1:10) reserved for flags, counters used by GSOL2
 c                                 ---------------------------------------------
-c                                 MSGNP, print level, default off, may be reset.
-      ivars(12) = 0
 c                                 LVLDER, derivative level, default all derivatives available
       ivars(13) = 3
 
