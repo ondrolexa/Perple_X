@@ -353,7 +353,7 @@ c                                site names are in znames(id,1:nsite, 0)
       common/ cxt1n /zcoef(0:m0,m11,m10,h0),zmult(h0,m10),
      *               msite(h0),zsp(h0,m10)
 
-      character*60 zuffix
+      character zuffix*60
       integer zsp1
       logical zform
       double precision tzmult

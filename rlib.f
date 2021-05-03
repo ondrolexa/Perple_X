@@ -17258,7 +17258,7 @@ c                              a name is associated with each subdivision range
 
          end do
 
-         if (ier.ne.0) call error (99,k,0d0,'error while reading polyto'
+         if (ier.ne.0) call error (99,0d0,k,'error while reading polyto'
      *                     //'pe/subdivision data for solution '//tname)
 
       else
