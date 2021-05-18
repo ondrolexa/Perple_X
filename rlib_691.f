@@ -5545,7 +5545,7 @@ c-----------------------------------------------------------------------
 
       integer id, iwarn
 
-      logical minfx, order, bad
+      logical order, bad
 
       double precision gg
 
@@ -5602,14 +5602,7 @@ c                                 macroscopic formulation for normal solutions.
 c                                 get the speciation, excess and entropy effects.
          if (.not.noder(id)) then
 
-            call specis (gg,id,minfx)
-
-            if (minfx) then 
-c                                 degenerated speciation
-               pa(1:nstot(id)) = p0a(1:nstot(id))
-               call minfxc (gg,id,.false.)
-
-            end if
+            call specis (gg,id)
 
          else
 
@@ -7651,7 +7644,7 @@ c                                 zero ordered pp's
 
       end
 
-      subroutine specis (g,id,minfx)
+      subroutine specis (g,id)
 c----------------------------------------------------------------------
 c subroutine to compute speciation of a solution with initial speciation
 c p0a. the speciated composition is returned in array pa.
@@ -7667,7 +7660,7 @@ c----------------------------------------------------------------------
 
       logical minfx, error
 
-      double precision g, g0, gordp0
+      double precision g, oldg, oldp(m14), g0, gordp0
 
       external gordp0
 
@@ -7694,6 +7687,41 @@ c                                 for single species models:
          if (nord(id).gt.1) then
 
             call speci2 (g,id,minfx)
+c                                 if minfx try bail out solution
+            if (minfx) then
+
+               oldp(1:nstot(id)) = pa(1:nstot(id))
+               oldg = g
+
+               call minfxc (g,id,.false.)
+
+               if (oldg-g.lt.-1d-5) then 
+c                                   the speci2 result was better, revert
+                   write (*,*) 'minfx nfg',oldg-g,oldg,id
+
+                   g = oldg
+                   pa(1:nstot(id)) = oldp(1:nstot(id))
+
+               end if
+
+            else if (lopt(62)) then
+c                                   order_check option
+               oldp(1:nstot(id)) = pa(1:nstot(id))
+               oldg = g
+
+               call minfxc (g,id,.false.)
+
+               if (oldg-g.gt.1d-5) then 
+c                                 even though speci2 converged, minfxc is better
+                   write (*,*) 'spec2 nfg',oldg-g,oldg,id
+               else if (oldg.lt.g) then 
+c                                 restore the old result
+                   g = oldg
+                   pa(1:nstot(id)) = oldp(1:nstot(id))
+
+               end if
+
+            end if
 
          else
 
@@ -8339,23 +8367,26 @@ c                                 use the last increment
 
             else if (dp.eq.xdp) then 
 
-               write (*,*) 'wroink!',g-gold
+               write (*,*) 'wroink!',g-gold,id
 
             else
 c                                 apply the increment
                call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
+
+               if (itic.gt.iopt(21)) then
+c                                 failed to converge. exit
+                  write (*,*) 'wroink2!',g-gold,id
+                  error = .true.
+                  badc(1) = badc(1) + 1d0
+                  goodc(2) = goodc(2) + dfloat(itic)
+
+                  exit
+
+               end if
+
                xdp = dp
                gold = g
                itic = itic + 1
-
-               if (itic.le.iopt(21)) cycle
-c                                 failed to converge. exit
-               write (*,*) 'wroink2!',g-gold
-               error = .true.
-               badc(1) = badc(1) + 1d0
-               goodc(2) = goodc(2) + dfloat(itic)
-
-               exit
 
             end if
 
@@ -8441,6 +8472,7 @@ c                                 species are necessary to describe the ordering
          itic = 0
          gold = 0d0
          xtdp = 0d0
+         minfx = .false.
 
          do
 
@@ -8457,7 +8489,11 @@ c                                 species are necessary to describe the ordering
 
                if (.not.pin(k)) cycle
 
-               call pinc (dp(k),k,id)
+               call pinc (dp(k),k,id,minfx)
+
+               if (minfx) then 
+                  return
+               end if
 
                tdp = tdp + dabs(dp(k))
 
@@ -8534,7 +8570,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine pinc (dp,k,id)
+      subroutine pinc (dp,k,id,minfx)
 c----------------------------------------------------------------------
 c subroutine to increment the k'th species of solution id, if the increment
 c violates a stoichiometric limit, it's set to half it's maximum value.
@@ -8544,6 +8580,8 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer k, id, jd
+
+      logical minfx
 
       double precision dp,pmx,pmn
 
@@ -8557,10 +8595,15 @@ c                                 stoichiometric constraints
 
       call plimit (pmn,pmx,k,id)
 
-      if (pa(jd)+dp.gt.pmx-nopt(50)) then
-         dp = pmx - pa(jd) - nopt(50)
-      else if (pa(jd)+dp.lt.pmn+nopt(50)) then
-         dp = pmn - pa(jd) + nopt(50)
+      if (pa(jd)+dp.gt.pmx) then
+         dp = pmx - pa(jd)
+      else if (pa(jd)+dp.lt.pmn) then
+         dp = pmn - pa(jd)
+      end if
+c                                 if dp is zero a constraint as been hit
+c                                 and newton-raphson is ill-advised.
+      if (pa(jd).eq.pmx.or.pa(jd).eq.pmn) then 
+         minfx = .true.
       end if
 c                                 adjust the composition by the increment
       call dpinc (dp,k,id,jd)
@@ -12392,7 +12435,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, minfx
+      logical bad
 
       integer id, ids
 
@@ -12441,14 +12484,7 @@ c                                 evaluate enthalpies of ordering
 
          if (.not.noder(ids)) then
 
-            call specis (gph,ids,minfx)
-
-            if (minfx) then
-c                                 degenerated, minfx only set for equimolar speciation.
-               pa(1:nstot(ids)) = p0a(1:nstot(ids))
-               call minfxc (gph,ids,.false.)
-
-            end if
+            call specis (gph,ids)
 
          else
 c                                 no derivatives
@@ -12757,7 +12793,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad, minfx
+      logical bad
 
       integer i, j, k, id, tic
 
@@ -12870,12 +12906,7 @@ c                                 only for minfxc
 
                if (.not.noder(i)) then
 
-                  call specis (dg,i,minfx)
-
-                  if (minfx) then
-                     pa(1:nstot(i)) = p0a(1:nstot(i))
-                     call minfxc (dg,i,.false.)
-                  end if
+                  call specis (dg,i)
 
                else
 
@@ -14623,8 +14654,6 @@ c-----------------------------------------------------------------------
 
       integer i, k, id, ntot
 
-      logical minfx
-
       double precision omega, gfluid, gzero, aqact, gmchpt, gmech0,
      *                 gex, gfesi, gcpd, gerk, gfecr1, ghybrid,
      *                 gfes, gfesic, g, gso(nsp), gamm0, gdqf
@@ -14693,14 +14722,7 @@ c                                 to the p0a values
 
             if (.not.noder(id)) then 
 c                                 get the speciation, excess and entropy effects.
-               call specis (g,id,minfx)
-
-               if (minfx) then
-c                                 degenerated speciation
-                  pa(1:ntot) = p0a(1:ntot)
-                  call minfxc (g,id,.false.)
-
-               end if
+               call specis (g,id)
 
             else 
 c                                 derivative free speciation
