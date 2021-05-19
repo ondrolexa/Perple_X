@@ -7691,11 +7691,13 @@ c                                 if minfx try bail out solution
             if (minfx) then
 
                oldp(1:nstot(id)) = pa(1:nstot(id))
+c                                 this is necessary for pinc0
+               pa(1:nstot(id)) = p0a(1:nstot(id))
                oldg = g
 
                call minfxc (g,id,.false.)
 
-               if (oldg-g.lt.-1d-5) then 
+               if (oldg-g.lt.-1d-7) then 
 c                                   the speci2 result was better, revert
                    write (*,*) 'minfx nfg',oldg-g,oldg,id
 
@@ -7707,11 +7709,13 @@ c                                   the speci2 result was better, revert
             else if (lopt(62)) then
 c                                   order_check option
                oldp(1:nstot(id)) = pa(1:nstot(id))
+c                                 this is necessary for pinc0
+               pa(1:nstot(id)) = p0a(1:nstot(id))
                oldg = g
 
                call minfxc (g,id,.false.)
 
-               if (oldg-g.gt.1d-5) then 
+               if (oldg-g.gt.1d-7) then 
 c                                 even though speci2 converged, minfxc is better
                    write (*,*) 'spec2 nfg',oldg-g,oldg,id
                else if (oldg.lt.g) then 
@@ -8491,8 +8495,12 @@ c                                 species are necessary to describe the ordering
 
                call pinc (dp(k),k,id,minfx)
 
-               if (minfx) then 
-                  return
+               if (dp(k).eq.0d0) then 
+                  if (icase(id).eq.0) then 
+                     pin(k) = .false.
+                  else 
+                     return
+                  end if
                end if
 
                tdp = tdp + dabs(dp(k))
@@ -8644,7 +8652,7 @@ c                                 adjust the composition by the increment
       subroutine pinc0 (id,lord)
 c----------------------------------------------------------------------
 c subroutine set initial species concentrations to half their
-c stoichiometric limit.
+c stoichiometric limit. this requires that pa = p0a on entry!
 c----------------------------------------------------------------------
       implicit none
 
