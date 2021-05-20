@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated May 19, 2021.',
+     *     'Perple_X version 6.9.1, source updated May 20, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -269,17 +269,17 @@ c                                 be zero during fractionation
       nopt(11) = 1d-6
 c                                 quench temperature (K)
       nopt(12) = 0d0
-c                                 initial resolution for adaptive 
-c                                 refinement
+c                                 initial resolution, solvus_tolerance (output)
       if (iam.eq.15) then 
 c                                 convex
          nopt(13) = 1d0/16d0
-      else 
+         nopt(8) = 1.5*nopt(13)
+      else
+c                                 meemum, vertex
          nopt(13) = 0.25d0
+         nopt(8) = 1d-2
       end if
-c                                 solvus_tolerance
-      nopt(8) = 1.5*nopt(13)
-c                                 solvus_tolerance_II
+c                                 solvus_tolerance_II (computational)
       nopt(25) = 1d0/16d0
 c                                 compositional resolution for conformal
 c                                 subdivision
