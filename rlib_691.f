@@ -7697,10 +7697,10 @@ c                                 this is necessary for pinc0
 
                call minfxc (g,id,.false.)
 
-               if (oldg-g.lt.-nopt(53)) then 
+               if (oldg.lt.g) then 
 c                                   the speci2 result was better, revert
-                   if (dabs((oldg-g)/oldg).gt.1d-3) 
-     *                write (*,*) 'minfx nfg',oldg-g,oldg,id
+c                  if (dabs((oldg-g)/oldg).gt.1d-3) 
+c    *                write (*,*) 'minfx nfg',oldg-g,oldg,id
 
                    g = oldg
                    pa(1:nstot(id)) = oldp(1:nstot(id))
@@ -8500,9 +8500,9 @@ c                                 species are necessary to describe the ordering
 
                if (dp(k).eq.0d0) then 
                   if (icase(id).eq.0) then 
-                     pin(k) = .false.
+c                    pin(k) = .false.
                   else 
-                     return
+c                    return
                   end if
                end if
 
