@@ -220,7 +220,8 @@ c                                 the total time is in etime(30)
          write (n,1010) 'Dynamic LP           ',
      *                  times(14)/60.,times(14)/etime(30)*1d2
          write (n,1010) 'Succesive QP         ',
-     *                  times(15)/60.,(times(15)-times(2))/etime(30)*1d2
+     *                  (times(15)-times(2)/60.,
+     *                  (times(15)-times(2))/etime(30)*1d2
          write (n,1010) 'Total of above       ',
      *                  tt/60.,tt/etime(30)*1d2
          write (n,1010) 'Total elapsed time   ',
