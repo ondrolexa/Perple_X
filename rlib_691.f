@@ -7697,9 +7697,10 @@ c                                 this is necessary for pinc0
 
                call minfxc (g,id,.false.)
 
-               if (oldg-g.lt.-1d-7) then 
+               if (oldg-g.lt.-nopt(53)) then 
 c                                   the speci2 result was better, revert
-                   write (*,*) 'minfx nfg',oldg-g,oldg,id
+                   if (dabs((oldg-g)/oldg).gt.1d-3) 
+     *                write (*,*) 'minfx nfg',oldg-g,oldg,id
 
                    g = oldg
                    pa(1:nstot(id)) = oldp(1:nstot(id))
@@ -7715,9 +7716,11 @@ c                                 this is necessary for pinc0
 
                call minfxc (g,id,.false.)
 
-               if (oldg-g.gt.1d-7) then 
+               if (oldg-g.gt.nopt(53)) then 
 c                                 even though speci2 converged, minfxc is better
-                   write (*,*) 'spec2 nfg',oldg-g,oldg,id
+                  if (dabs((oldg-g)/oldg).gt.1d-3) 
+     *                write (*,*) 'spec2 nfg',oldg-g,oldg,id
+
                else if (oldg.lt.g) then 
 c                                 restore the old result
                    g = oldg
