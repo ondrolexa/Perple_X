@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated May 22, 2021.',
+     *     'Perple_X version 6.9.1, source updated May 24, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -391,6 +391,13 @@ c                                 aq_lagged_iterations
 c                                 interim_results, 1 - auto, 0 - off, 2 - man
       iopt(34) = 1
       valu(34) = 'aut'
+c                                 minfxc_solver
+c                                 -1 - use minfxc as default optimizer
+c                                  0 - only use minfx when speci2 sets minfx, do not set minfx when on a constraint
+c                                  1 - set minfx on any constraint, but allow speci2 to continue
+c                                  2 - set minfx on any constraint, only continue for icase = 0
+c                                  3 - set minfx on any constraint, continue for all cases.
+      iopt(37) = 0
 c                                 keep_max
       iopt(52) = 20000
 c                                 -------------------------------------
@@ -832,6 +839,16 @@ c                                  output interim results (VERTEX/PSSECT/WERAMI)
             end if
 
             valu(34) = val
+
+         else if (key.eq.'minfxc_solver') then
+c                                 mnfxc_solver
+c                                 -1 - use minfxc as default optimizer
+c                                  0 - only use minfx when speci2 sets minfx, do not set minfx when on a constraint
+c                                  1 - set minfx on any constraint, but allow speci2 to continue
+c                                  2 - set minfx on any constraint, only continue for icase = 0
+c                                  3 - set minfx on any constraint, continue for all cases.
+c                                  4 - 3 + but don't use minfxc
+            read (strg,*) iopt(37)
 
          else if (key.eq.'scatter-points') then
 c                                 generate points scattered about refinement

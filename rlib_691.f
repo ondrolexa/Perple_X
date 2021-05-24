@@ -7684,11 +7684,15 @@ c                                 as most models are single species and
 c                                 there is so much overhead in computing
 c                                 multiple speciation, use a special routine
 c                                 for single species models:
-         if (nord(id).gt.1) then
+         if (iopt(37).lt.0) then
+c                                 minfxc has been made the default solver:
+            call minfxc (g,id,.false.)
+
+         else if (nord(id).gt.1) then
 
             call speci2 (g,id,minfx)
 c                                 if minfx try bail out solution
-            if (minfx) then
+            if (minfx.and.iopt(37).ne.5) then
 
                oldp(1:nstot(id)) = pa(1:nstot(id))
 c                                 this is necessary for pinc0
@@ -7697,15 +7701,16 @@ c                                 this is necessary for pinc0
 
                call minfxc (g,id,.false.)
 
-               if (oldg.lt.g) then 
+c              if (oldg-g.lt.-nopt(53)) then 
 c                                   the speci2 result was better, revert
-c                  if (dabs((oldg-g)/oldg).gt.1d-3) 
-c    *                write (*,*) 'minfx nfg',oldg-g,oldg,id
+c                  if (dabs((oldg-g)/oldg).gt.1d-3) then
+c                     write (*,*) 'minfx nfg',oldg-g,oldg,id
+c                  end if
 
-                   g = oldg
-                   pa(1:nstot(id)) = oldp(1:nstot(id))
+c                  g = oldg
+c                  pa(1:nstot(id)) = oldp(1:nstot(id))
 
-               end if
+c              end if
 
             else if (lopt(62)) then
 c                                   order_check option
@@ -8498,12 +8503,36 @@ c                                 species are necessary to describe the ordering
 
                call pinc (dp(k),k,id,minfx)
 
-               if (dp(k).eq.0d0) then 
-                  if (icase(id).eq.0) then 
-c                    pin(k) = .false.
-                  else 
-c                    return
+               if (dp(k).eq.0d0) then
+c                                 search has hit a constraint this should be 
+c                                 bad news for newton-raphson, decide what to
+c                                 to on the basis of iopt(37) - minfxc_solver:
+                  if (iopt(37).eq.0) then
+c                                 don't flag as a bad result and continue 
+c                                 search
+                     minfx = .false.
+
+                  else if (iopt(37).eq.1) then
+c                                  just continue, minfx set T by pinc.
+                  else if (iopt(37).eq.2) then
+
+                     if (icase(id).eq.0) then 
+                        pin(k) = .false.
+                     else 
+                        return
+                     end if
+
+                  else if (iopt(37).eq.3) then
+
+                     pin(k) = .false.
+
+                  else if (iopt(37).ge.4) then
+
+                     if (icase(id).eq.0) pin(k) = .false.
+                     minfx = .false.
+
                   end if
+
                end if
 
                tdp = tdp + dabs(dp(k))

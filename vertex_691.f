@@ -171,8 +171,11 @@ c                                 clean up intermediate results
       end if
 
       if (lopt(61)) call cumtim
+c                                 end of job msg
+      write (*,1020) prject
 
 1000  format ('** Starting ',a,' computational stage **',/)
+1020  format (80('-'),//,'End of job: ',a,//,80('-'),/)
 
       end
 
@@ -226,7 +229,7 @@ c                                 the total time is in etime(30)
      *                  tt/60.,tt/etime(30)*1d2
          write (n,1010) 'Total elapsed time   ',
      *                  etime(30)/60.,1d2
-         write (n,1020)
+         if (n.ne.6) write (n,1020)
 
          if (n.eq.993) exit
 
