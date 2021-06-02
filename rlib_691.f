@@ -7701,16 +7701,16 @@ c                                 this is necessary for pinc0
 
                call minfxc (g,id,.false.)
 
-c              if (oldg-g.lt.-nopt(53)) then 
+               if (oldg-g.lt.-nopt(53)) then 
 c                                   the speci2 result was better, revert
-c                  if (dabs((oldg-g)/oldg).gt.1d-3) then
-c                     write (*,*) 'minfx nfg',oldg-g,oldg,id
-c                  end if
+                   if (dabs((oldg-g)/oldg).gt.1d-3) then
+                      write (*,*) 'minfx nfg',oldg-g,oldg,id
+                   end if
 
-c                  g = oldg
-c                  pa(1:nstot(id)) = oldp(1:nstot(id))
+                   g = oldg
+                   pa(1:nstot(id)) = oldp(1:nstot(id))
 
-c              end if
+               end if
 
             else if (lopt(62)) then
 c                                   order_check option
@@ -7723,8 +7723,9 @@ c                                 this is necessary for pinc0
 
                if (oldg-g.gt.nopt(53)) then 
 c                                 even though speci2 converged, minfxc is better
-                  if (dabs((oldg-g)/oldg).gt.1d-3) 
-     *                write (*,*) 'spec2 nfg',oldg-g,oldg,id
+                  if (dabs((oldg-g)/oldg).gt.1d-3) then
+                     write (*,*) 'spec2 nfg',oldg-g,oldg,id
+                  end if
 
                else if (oldg.lt.g) then 
 c                                 restore the old result
@@ -8321,6 +8322,7 @@ c                                 the root must lie at p > pmax - nopt(50).
 c                                 get starting point for the search
 c                                 first try the maximum
       dp = pmax - p0a(jd)
+
       call pincs (dp,dy,ind,jd,nr)
 
       call gderi1 (k,id,dp,g)
@@ -8348,7 +8350,9 @@ c                                 the case is set to max order here:
 c                                 increment and check p
          call pcheck (pa(jd),pmin,pmax,dp,done)
 
-         if (done) write (*,*) 'oink33'
+         if (done) then 
+            write (*,*) 'oink33'
+         end if
 c                                 set speciation
          call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 c                                 iteration counter
@@ -8441,10 +8445,13 @@ c----------------------------------------------------------------------
 
       integer i,k,id,lord,itic
 
-      double precision g,dp(j3),tdp,gold,xtdp
+      double precision g,dp(j3),tdp,gold,xtdp,scp(k5),scptot
 
       logical pin
       common/ cyt2 /pin(j3)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -8463,7 +8470,7 @@ c                                 get initial p values
          call pinc0 (id,lord)
       end if 
 c                                 lord is the number of possible species
-      if (lord.lt.nord(id).and.icase(id).eq.1) then
+      if (lord.lt.nord(id).and.icase(id).ne.0) then
 c                                 most likely the model had degenerated
 c                                 to ordering across two sites, but because
 c                                 the ordered species are made of the same
@@ -8481,6 +8488,27 @@ c                                 species are necessary to describe the ordering
 
       else if (lord.gt.1) then
 
+        if (icase(id).eq.2) then
+c                                 compoisitional degeneracy can have the consequence
+c                                 that the order parameters are dependent. get the
+c                                 composition
+            call getscp (scp,scptot,id,1)
+c                                 look for degeneracy, this may not work 
+c                                 for non-elemental components:
+            do i = 1, icp 
+               if (scp(i).eq.0d0) then 
+                  do k = 1, nord(id)
+                     if (.not.pin(k)) cycle
+                     if (endc(id,lstot(id)+k,i).ne.0d0) then
+                        minfx = .true.
+                        return
+                     end if
+                  end do
+               end if
+            end do
+         end if
+c                                 check if an odered species contains the
+c                                 degenerate component:
          itic = 0
          gold = 0d0
          xtdp = 0d0
@@ -17346,7 +17374,7 @@ c                                 note normalization is to the total amount of
 c                                 thermodynamic components.
       do i = 1, icp
 
-         if (scp(i).lt.0d0.and.scp(i).gt.-nopt(50)) scp(i) = 0d0
+         if (dabs(scp(i)).lt.nopt(50)) scp(i) = 0d0
          scptot = scptot + scp(i)
 
       end do
@@ -17368,15 +17396,15 @@ c----------------------------------------------------------------------
       double precision twt(k5),tsel(k5),tcox(k5),cst
  
       integer i, j, k, l, im, ict, ifer,inames, jphct, imak(k16), iox
- 
-      logical eof, good, first
+
+      logical eof, good, first, tpro(k5)
 
       integer iwt
       common/ cst209 /iwt
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-     
+
       character zname*5
       common/ cst209a /zname
 
@@ -17548,6 +17576,7 @@ c                               initialize icout(i) = 0
                twt(i) = atwt(j)
                tsel(i) = sel(j)
                tcox(i) = cox(j)
+               tpro(i) = dispro(j)
 
                ic(i) = j
                icout(j) = 1
@@ -17595,6 +17624,7 @@ c                                 load atwts, sel in updated order
          atwt(i) = twt(i)
          sel(i)  = tsel(i)
          cox(i)  = tcox(i)
+         dispro(i) = tpro(i)
          if (cox(i).lt.0d0) iox = i 
       end do 
 c                                 convert weight to molar amounts
@@ -20975,7 +21005,7 @@ c----------------------------------------------------------------------
 
       logical rplica, isend
 
-      integer ids
+      integer ids, j
 
       double precision tol
 
@@ -20993,6 +21023,21 @@ c----------------------------------------------------------------------
 
       if (tol.gt.0d0) then
          if (rplica(ids)) return
+      end if
+
+      if (idegen.gt.0) then
+
+         call getscp (rcp,rsum,ids,1)
+
+         do j = 1, idegen
+            if (rcp(idg(j)).gt.0d0.and..not.dispro(idg(j))) then
+               if (rcp(idg(j)).lt.1d-8) then
+                  write (*,*) 'wonka ',rcp(idg(j))
+               end if
+               return
+            end if
+         end do
+
       end if
 
       if (isend(ids)) return

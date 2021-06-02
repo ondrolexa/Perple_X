@@ -742,7 +742,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision x, y, wt(3), px(3), py(3), div, dst(4), x0, x1
+      double precision x, y, wt(3), px(3), py(3), div, dst(4), x0, x1, 
+     *                 dist
 
       integer jloc, iloc, j, i, k, l, jmax, np, jd, j0, linc,
      *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, getqud,
@@ -750,7 +751,7 @@ c----------------------------------------------------------------------
 
       logical rinsid, isok, warned, left, solvs3, ongrid, jok
 
-      external getqud, isok, rinsid, solvs3, jok 
+      external getqud, isok, rinsid, solvs3, jok, dist
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -996,6 +997,13 @@ c                                 in a different quadrant than the first:
 
                   end if
 
+                  if (ijpt.eq.2) then
+c                                 reset the 3rd point for isok
+                     itri(3) = 0
+                     jtri(3) = 0
+
+                  end if
+
                else if (ijpt.eq.3) then
 c                                 four permutations are possible
 c                                 check all 
@@ -1075,7 +1083,7 @@ c                                 on a line between the iterpolation points:
          jtri(3) = jloc
 c                                 check if on line of previous
 c                                 points
-         if (jok(itri,jtri)) then 
+         if (dist(x,y,iloc,jloc).lt.1d-6) then 
 c                                 1d iterpolation coefficients
             wt(2) = dsqrt(   ((x - px(1))**2 + (y - py(1))**2)
      *                     / ((px(2) - px(1))**2 + (py(2) - py(1))**2) )

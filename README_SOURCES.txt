@@ -1,0 +1,1 @@
+Do not use the data files included in this archive! They are copies of whatever files are in my working directory and may not function as advertized. Once you have compiled Perple_X download the current data files from the most recent data file (e.g., Perple_X_6.9._data_files.zip) at www.perplex.ethz.ch/perplex/ibm_and_mac_archives/.

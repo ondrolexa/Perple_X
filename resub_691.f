@@ -60,9 +60,6 @@ c-----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
@@ -75,15 +72,15 @@ c-----------------------------------------------------------------------
       save ax, x, clamda, w, iw
 c-----------------------------------------------------------------------
       idegen = 0
-      jcp = 0
+      jdegen = 0
 c                                 degeneracy test
       do k = 1, icp 
          if (b(k).eq.0d0) then 
             idegen = idegen + 1
             idg(idegen) = k
          else 
-            jcp = jcp + 1
-            jin(jcp) = k
+            jdegen = jdegen + 1
+            jdg(jdegen) = k
          end if
       end do
 
@@ -1663,6 +1660,10 @@ c----------------------------------------------------------------------
          if (is(i).ne.1) then
 c                                 make a list of found phases:
             id = i + jiinc
+
+            if (idegen.gt.0) then 
+               if (degen(id,1)) cycle
+            end if
 c                                 currently endmember compositions are not 
 c                                 refined (this is probably a mistake, but 
 c                                 seems to work fine), so use id > ipoint
@@ -2108,9 +2109,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical solvus
+      logical solvus, degen
 
-      external ffirst, solvus
+      external ffirst, solvus, degen
 
       integer i, id, is(*), jmin(k19), opt, kpt, mpt, iter, tic, 
      *        idead, j, k
@@ -2202,6 +2203,13 @@ c                                 is = 2 upper bound
 c                                 is = 3 input constraint
 c                                 is = 4 temporary constraint (weak solution)
          if (is(i).ne.1) then
+
+            if (idegen.gt.0) then 
+               if (degen(i,2)) then 
+                  write (*,*) 'blip1'
+                  cycle
+               end if
+            end if
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -2248,7 +2256,14 @@ c                                 dump iteration details
 
             end if 
 
-         else if (id.gt.0) then 
+         else if (id.gt.0) then
+
+            if (idegen.gt.0) then 
+               if (degen(i,2)) then
+                  write (*,*) 'blip2'
+                  cycle
+               end if
+            end if
 c                                 a metastable solution cpd
             if (clamda(i).lt.clam(id)) then
 c DEBUG DEBUG DEBUG               this is a cheap way of eliminating
@@ -2801,9 +2816,6 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
@@ -2987,13 +2999,13 @@ c                                 load the phase
 
             inp(kcp) = i
 
-            comp(kcp,1:jcp) = lc(i,jin(1:jcp))
+            comp(kcp,1:jdegen) = lc(i,jdg(1:jdegen))
 
             mu(kcp) = lg(i)
 
          end do
 
-         if (kcp.gt.jcp) then
+         if (kcp.gt.jdegen) then
 c                                 over-determined, try eliminating
 c                                 phases present in zero amount
             lcp = 0
@@ -3006,13 +3018,13 @@ c                                 phases present in zero amount
 
                mu(lcp) = mu(i)
 
-               comp(lcp,1:jcp) =  comp(i,1:jcp)
+               comp(lcp,1:jdegen) =  comp(i,1:jdegen)
 
             end do
 
-            if (lcp.ne.jcp) ier = 2
+            if (lcp.ne.jdegen) ier = 2
 
-         else if (kcp.lt.jcp) then
+         else if (kcp.lt.jdegen) then
 
             ier = 3
 
@@ -3020,19 +3032,22 @@ c                                 phases present in zero amount
 
          if (ier.eq.0) then 
 
-            call factor (comp,k19,jcp,ipvt,error)
+            call factor (comp,k8,jdegen,ipvt,error)
 
-            if (.not.error) call subst (comp,k19,ipvt,jcp,mu,error)
+            if (.not.error) call subst (comp,k8,ipvt,jdegen,mu,error)
 
             if (.not.error) then 
 c                                 load the chemical potentials 
 c                                 into their correct positions
-               do i = jcp, 1, -1
-                  mu(jin(i)) = mu(i)
+               do i = jdegen, 1, -1
+                  mu(jdg(i)) = mu(i)
                end do 
 c                                 and NaN the missing values
+c                                 in 691 for degenerate cases set
+c                                 to a large positive number, this 
+c                                 introduces a scale dependence
                do i = 1, idegen
-                  mu(idg(i)) = nopt(7)
+                  mu(idg(i)) = -1d3
                end do
 
             end if
@@ -3257,9 +3272,6 @@ c----------------------------------------------------------------------
       integer is
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
-
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin 
 
       integer jphct
       double precision g2, cp2, c2tot

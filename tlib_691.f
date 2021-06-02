@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated May 24, 2021.',
+     *     'Perple_X version 6.9.1, source updated June 2, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -523,7 +523,7 @@ c                                 keep_all_rpcs
 c                                 warning_ver013, negative composition
       lopt(60) = .true.
 c                                 timing
-      lopt(61) = .false.
+      lopt(61) = .true.
 c                                 order_check
       lopt(62) = .false.
 c                                 initialize mus flag lagged speciation
@@ -840,7 +840,7 @@ c                                  output interim results (VERTEX/PSSECT/WERAMI)
 
             valu(34) = val
 
-         else if (key.eq.'minfxc_solver') then
+         else if (key.eq.'minfxc_solver'.or.key.eq.'MINFXC_solver') then
 c                                 mnfxc_solver
 c                                 -1 - use minfxc as default optimizer
 c                                  0 - only use minfx when speci2 sets minfx, do not set minfx when on a constraint
@@ -873,7 +873,7 @@ c                                 warn and reject negative component phases
 
          else if (key.eq.'timing') then
 c                                 timing for VERTEX
-            if (val.eq.'T') lopt(61) = .true.
+            if (val.eq.'F') lopt(61) = .false.
 
          else if (key.eq.'order_check') then
 c                                 check multi-species o/d by QP
@@ -5783,18 +5783,39 @@ c                                 look for optional HSC_conversion key
          if (key.eq.'end_components') exit
 
          icmpn = icmpn + 1
-
-         read (key,'(a5)') cmpnt(icmpn)
 c                                 get component string length
          cl(icmpn) = iscan(1,length,' ') - 1
 
          if (hscon.and.oxchg) then
-            read (values,*) atwt(icmpn), sel(icmpn), cox(icmpn)
-         else if (hscon) then 
-            read (values,*) atwt(icmpn), sel(icmpn)
-         else 
-            read (values,*) atwt(icmpn)
-         end if 
+
+            read (strg,*,iostat=ier) cmpnt(icmpn), atwt(icmpn), 
+     *                   sel(icmpn), cox(icmpn), dispro(icmpn)
+            if (ier.ne.0) then
+               dispro(icmpn) = .false.
+               read (strg,*) cmpnt(icmpn), atwt(icmpn), sel(icmpn), 
+     *                       cox(icmpn)
+            end if
+
+         else if (hscon) then
+
+            read (strg,*,iostat=ier) cmpnt(icmpn), atwt(icmpn), 
+     *                               sel(icmpn), dispro(icmpn)
+            if (ier.ne.0) then
+               dispro(icmpn) = .false.
+               read (strg,*) cmpnt(icmpn), atwt(icmpn), sel(icmpn)
+            end if
+
+         else
+
+            read (strg,*,iostat=ier) cmpnt(icmpn), atwt(icmpn), 
+     *                               dispro(icmpn)
+
+            if (ier.ne.0) then
+               dispro(icmpn) = .false.
+               read (strg,*) cmpnt(icmpn), atwt(icmpn)
+            end if
+
+         end if
 
       end do
 c                                 save old names for component transformations

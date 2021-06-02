@@ -20,9 +20,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical tic, zbad, swap
+      logical tic, zbad, swap, quit
 
-      integer i, nvar, iter, iwork(m22), itic,
+      integer i, j, nvar, iter, iwork(m22), itic,
      *        ivars(13), istate(m21), idead, nclin, ntot
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
@@ -223,8 +223,25 @@ c                                 scatter in only for nstot-1 gradients
 
             if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
      *                                                            cycle 
-
             call makepp (rids)
+c                                 if the system is chemically degenerate do
+c                                 not allow non-degenerate scatter points
+            if (idegen.gt.0) then
+
+               call getscp (rcp,rsum,rids,1)
+
+               quit = .false.
+
+               do j = 1, idegen
+                  if (rcp(idg(j)).ne.0d0) then
+                     quit = .true.
+                     exit
+                  end if
+               end do
+
+               if (quit) cycle
+
+            end if
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
@@ -387,6 +404,16 @@ c-----------------------------------------------------------------------
       end if
 
       swap = .false.
+c                                 degenerate bulk, only 
+c                                 save degenerate results:
+      do j = 1, idegen
+         if (rcp(idg(j)).gt.0d0.and..not.dispro(idg(j))) then
+            if (rcp(idg(j)).lt.zero) then 
+               write (*,*) 'wonka ',rcp(idg(j))
+            end if
+            return
+         end if
+      end do
 c                                 check if duplicate
       do i = 1, jphct
 

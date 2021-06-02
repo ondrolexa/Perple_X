@@ -470,3 +470,7 @@ c                                 flag for near stable static compositions
 c                                 local solution model logical variables
       logical depmod,laar,ordmod,recip,lres,unbd
       common/ cst160 /depmod,laar,ordmod,recip,lres,unbd
+c                                 compenent degeneracy flags/counters
+      logical dispro
+      integer idegen, idg, jdegen, jdg
+      common/ cst315 /idegen, idg(k5), jdegen, jdg(k5), dispro(k0)
