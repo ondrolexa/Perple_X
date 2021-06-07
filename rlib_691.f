@@ -6004,19 +6004,15 @@ c                                 for each term:
 
                end do
 
-               bad = badz(z(i,j))
-
-               if (bad) exit 
+               if (badz(z(i,j))) bad = .true.
 
                zt = zt + z(i,j)
 
             end do
 
-            if (bad) exit
-
             z(i,j) = 1d0 - zt
 
-            bad = badz(z(i,j))
+            if (badz(z(i,j))) bad = .true.
 
          else if (zsp1(ids,i).gt.1) then
 c                                 temkin or 688 model format, all species fractions are available
@@ -6036,7 +6032,7 @@ c                                 non-temkin (688)
                   if (endtst) then
 
                      write (*,1000) text1,z(i,j),text
-c DEBUG691
+
                      call warn (72,zt,i,' z('//
      *                       znames(ids,i,j)//') on '//znames(ids,i,0)//
      *                       ' in '//text//' is invalid.')
@@ -6045,17 +6041,11 @@ c DEBUG691
 
                   bad = .true.
 
-                  exit
-
                end if
-
-               if (bad) exit
 
                zt = zt + z(i,j)
 
             end do
-
-            if (bad) exit
 
             if (ksmod(ids).eq.688.and.zmult(ids,i).gt.0d0) then 
 c                                 non-temkin, fractions must sum to 1
@@ -6073,9 +6063,7 @@ c                 write (*,'(/,a,g14.6)') 'site fraction sum = ',zt
 c                                 temkin, if site exists, check fractions
                do j = 1, zsp(ids,i)
 
-                  bad = badz(z(i,j)/zt)
-
-                  if (bad) exit
+                  if (badz(z(i,j)/zt)) bad = .true.
 
                end do
 
@@ -6086,8 +6074,6 @@ c                                 negative site?
             end if
 
          end if
-
-         if (bad) exit 
 
       end do
 
@@ -8463,6 +8449,25 @@ c----------------------------------------------------------------------
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
 c----------------------------------------------------------------------
+
+
+
+      if (idegen.gt.1000.and.nord(id).gt.1.and.icase(id).ne.0) then
+c                                 compositional degeneracy can have the consequence
+c                                 that the order parameters are dependent. get the
+c                                 composition
+         call getscp (scp,scptot,id,1)
+c                                 look for degeneracy, this may not work 
+c                                 for non-elemental components:
+         do i = 1, idegen
+            do k = 1, nord(id)
+               if (endc(id,lstot(id)+k,idg(i)).ne.0d0) then
+                  minfx = .true.
+                  return
+               end if
+            end do
+         end do
+      end if
 c                                 get initial p values
       if (refine) then 
          call nopinc (id,lord)
@@ -8489,22 +8494,19 @@ c                                 species are necessary to describe the ordering
       else if (lord.gt.1) then
 
         if (icase(id).eq.2) then
-c                                 compoisitional degeneracy can have the consequence
+c                                 compositional degeneracy can have the consequence
 c                                 that the order parameters are dependent. get the
 c                                 composition
             call getscp (scp,scptot,id,1)
 c                                 look for degeneracy, this may not work 
 c                                 for non-elemental components:
-            do i = 1, icp 
-               if (scp(i).eq.0d0) then 
-                  do k = 1, nord(id)
-                     if (.not.pin(k)) cycle
-                     if (endc(id,lstot(id)+k,i).ne.0d0) then
-                        minfx = .true.
-                        return
-                     end if
-                  end do
-               end if
+            do i = 1, idegen
+               do k = 1, nord(id)
+                  if (endc(id,lstot(id)+k,idg(i)).ne.0d0) then
+                     minfx = .true.
+                     return
+                  end if
+               end do
             end do
          end if
 c                                 check if an odered species contains the
@@ -8718,8 +8720,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical degpin
+
+      external degpin
+
       integer i,k,id,jd,lord,iout
-c,ibad(m4)
 
       double precision dp,pmn,pmx,dpp(j3),dinc,tinc
 c                                 working arrays
@@ -8745,7 +8750,7 @@ c                                 case 1: fully correlated
 
             call plimit (pmn,pmx,k,id)
 
-            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)) then
+            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50).or.degpin(k,id)) then
                pin(k) = .false.
                cycle
             else
@@ -8782,7 +8787,8 @@ c                                 case 0: no correlation/iteration
 
                if (i.eq.1) then
 
-                  if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)) then
+                  if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)
+     *                                         .or.degpin(k,id)) then
                      pin(k) = .false.
                      cycle
                   else
@@ -8873,6 +8879,29 @@ c                                 check for degenerate compositions
 
       end
 
+
+      logical function degpin (k,id)
+c----------------------------------------------------------------------
+c check if ordered species k contains a component that the system is 
+c degneratue in
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, k, id
+c----------------------------------------------------------------------
+      degpin = .false.
+
+      do i = 1, idegen
+         if (endc(id,lstot(id)+k,idg(i)).ne.0d0) then
+            degpin = .true.
+            return
+         end if
+      end do
+
+      end
+
       subroutine nopinc (id,lord)
 c----------------------------------------------------------------------
 c subroutine to set lord during refinement
@@ -8880,6 +8909,10 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      logical degpin
+
+      external degpin
 
       integer k,id,lord
 
@@ -8895,7 +8928,7 @@ c----------------------------------------------------------------------
 
             call plimit (pmn,pmx,k,id)
 
-            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50)) then
+            if (pmn.ge.pmx.or.pmx-pmn.lt.nopt(50).or.degpin(k,id)) then
                pin(k) = .false.
                cycle
             else
@@ -21025,7 +21058,7 @@ c----------------------------------------------------------------------
          if (rplica(ids)) return
       end if
 
-      if (idegen.gt.0) then
+      if (idegen.gt.1000) then
 
          call getscp (rcp,rsum,ids,1)
 

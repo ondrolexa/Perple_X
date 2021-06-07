@@ -1661,9 +1661,9 @@ c----------------------------------------------------------------------
 c                                 make a list of found phases:
             id = i + jiinc
 
-            if (idegen.gt.0) then 
-               if (degen(id,1)) cycle
-            end if
+c           if (idegen.gt.0) then 
+c              if (degen(id,1)) cycle
+c           end if
 c                                 currently endmember compositions are not 
 c                                 refined (this is probably a mistake, but 
 c                                 seems to work fine), so use id > ipoint
@@ -1757,7 +1757,7 @@ c being allowed, see ldsol code); restored again april 2017. removed sep 2018.
 
          if (is(i).ne.1) cycle
 
-         if (degen(i,1)) cycle
+c        if (degen(i,1)) cycle
 
          id = i + jiinc 
          iam = ikp(id)
@@ -2204,12 +2204,12 @@ c                                 is = 3 input constraint
 c                                 is = 4 temporary constraint (weak solution)
          if (is(i).ne.1) then
 
-            if (idegen.gt.0) then 
-               if (degen(i,2)) then 
-                  write (*,*) 'blip1'
-                  cycle
-               end if
-            end if
+c           if (idegen.gt.0) then 
+c              if (degen(i,2)) then 
+c                 write (*,*) 'blip1'
+c                 cycle
+c              end if
+c           end if
 c                                 a stable point, add to list
             npt = npt + 1
             jdv(npt) = i
@@ -2258,12 +2258,12 @@ c                                 dump iteration details
 
          else if (id.gt.0) then
 
-            if (idegen.gt.0) then 
-               if (degen(i,2)) then
-                  write (*,*) 'blip2'
-                  cycle
-               end if
-            end if
+c           if (idegen.gt.0) then 
+c              if (degen(i,2)) then
+c                 write (*,*) 'blip2'
+c                 cycle
+c              end if
+c           end if
 c                                 a metastable solution cpd
             if (clamda(i).lt.clam(id)) then
 c DEBUG DEBUG DEBUG               this is a cheap way of eliminating
@@ -2478,7 +2478,7 @@ c----------------------------------------------------------------------
 
       logical solvnt(*)
 
-      integer i, id, is(*), kpt, icrit
+      integer i, id, is(*), kpt, icrit, rej
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -2495,10 +2495,9 @@ c----------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       kpt = 0
+      rej = 0
 
       do i = 1, npt
-
-         id = jdv(i)
 
          if (icrit.eq.1.and.amt(i).lt.0d0.or.
      *       icrit.eq.2.and.amt(i).lt.zero.or.
@@ -2507,12 +2506,25 @@ c----------------------------------------------------------------------
 c            write (*,'(a,i2,1x,g14.7,5(1x,i3))') 'rejecting ',
 c    *                         icrit,amt(i),is(id),npt,npt-icp
 
-             if (kpt.eq.icp) exit
+             rej = rej + 1
+
+             if (npt-rej.eq.icp) then
+
+                do id = i + 1, npt
+                   kpt = kpt + 1
+                   jdv(kpt) = jdv(id)
+                   amt(kpt) = amt(id)
+                   solvnt(kpt) = solvnt(id)
+                end do
+
+                exit
+
+            end if
 
          else
 
             kpt = kpt + 1
-            jdv(kpt) = id
+            jdv(kpt) = jdv(i)
             amt(kpt) = amt(i)
             solvnt(kpt) = solvnt(i)
 
@@ -3047,7 +3059,7 @@ c                                 in 691 for degenerate cases set
 c                                 to a large positive number, this 
 c                                 introduces a scale dependence
                do i = 1, idegen
-                  mu(idg(i)) = -1d3
+                  mu(idg(i)) = nopt(7)
                end do
 
             end if

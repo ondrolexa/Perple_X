@@ -24,15 +24,16 @@
 
 |----------------------------------------------------------------------
 | 691+ options:
+|GFSM                         T    | [F] allow GFSM/disable saturated-phase constraints
 LP_max_it                 default | [500] max number of iterations for a single LP optimization
 timing                       T    | [F] output CPU time information to my_project.tim
 optimization_max_it       default | [40] maximum number of sucessive LP optimizations
 optimization_precision    default | [1d-4 energy units] absolute precision for succesive LP optimization
-order_check                  T    | [F]
+order_check                  F   | [F]
 replicate_threshold       default | [1d-2] effective initial resolution for auto-refine stage , nopt(35) 
 rep_dynamic_threshold     default | [1d-3] threshold for saving compositions during dynamic optimization, nopt(37) 
-intermediate_savrpc      default T       | [F] save intermediate compositions during dynamic optiomization, lopt(57)
-intermediate_savdyn      default T       | [F] save intermediate dynamic compositions as auto-refine static compositions, lopt(58)
+intermediate_savrpc      T       | [F] save intermediate compositions during dynamic optiomization, lopt(57)
+intermediate_savdyn      T       | [F] save intermediate dynamic compositions as auto-refine static compositions, lopt(58)
 MINFRC_diff_increment     default | [1d-7 mol] finite difference increment for QP
 scatter-increment         default | [1d-2 mol]
 scatter-points           default | [T] lopt(54)
@@ -85,7 +86,7 @@ hybrid_EoS_H2O            default | [4] 0-2, 4-5 => 0 - MRK, 1 HSMRK, 2 - CORK, 
 hybrid_EoS_CO2            default | [4] 0-4 => 0 - MRK, 1 HSMRK, 2 - CORK, 3- Bottinga, 4 - PSEoS, 6 - Zhang & Duan 05, 7 - Zhang & Duan 09
 hybrid_EoS_CH4            default | [1] 0-1  => 0 - MRK, 1 HSMRK, 7 - Zhang & Duan 09
 increment                 default | [0.1 0.025] >0, < 1, fractional independent variable increments [exploratory and auto-refine], only relevant for CONVEX
-initial_resolution        default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
+initial_resolution        1/10 1/48 default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
@@ -95,8 +96,8 @@ non_linear_switch         default | VERTEX/MEEMUM [F], CONVEX [T], toggles wheth
 null_phase                default | [F] include null phases in convexhull optimization with mobile components
 option_list_files         default | [F] T => echo run-time options to my_project_PROGRAM_options.txt
 order_check               default | [on] on => compare order-disorder solutions with fully ordered and disordered states
-output_iteration_details  T default | [F] T => output intermediate adaptive optimization information
-output_iteration_G        T default | [F] T => print iteration G to monitor convergence during optimization
+output_iteration_details  default | [F] T => output intermediate adaptive optimization information
+output_iteration_G        default | [F] T => print iteration G to monitor convergence during optimization
 pause_on_error            default | [T] T => wait for user response after errors
 pc_perturbation           default | [5d-3] pseudo-compound composition perturbation; only relevant for CONVEX
 poisson_ratio             default | [on 0.35] value 1: on, off or all; value 2: 0->0.5; controls use of poisson ratio estimates for shear moduli

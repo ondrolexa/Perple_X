@@ -209,7 +209,7 @@ c----------------------------------------------------------------------
      *           m24 = 10*60*60*k5, m25 = m24*m14)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
-      parameter (nx=500,ny=500)
+      parameter (nx=1000,ny=1000)
 !                                 lchar - maximum length of character strings
       parameter (lchar=400)
 !                                 frac2d parameters:

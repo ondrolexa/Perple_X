@@ -226,7 +226,7 @@ c                                 scatter in only for nstot-1 gradients
             call makepp (rids)
 c                                 if the system is chemically degenerate do
 c                                 not allow non-degenerate scatter points
-            if (idegen.gt.0) then
+            if (idegen.gt.1000) then
 
                call getscp (rcp,rsum,rids,1)
 
@@ -406,6 +406,7 @@ c-----------------------------------------------------------------------
       swap = .false.
 c                                 degenerate bulk, only 
 c                                 save degenerate results:
+      if (idegen.gt.1000) then 
       do j = 1, idegen
          if (rcp(idg(j)).gt.0d0.and..not.dispro(idg(j))) then
             if (rcp(idg(j)).lt.zero) then 
@@ -414,6 +415,7 @@ c                                 save degenerate results:
             return
          end if
       end do
+      end if
 c                                 check if duplicate
       do i = 1, jphct
 

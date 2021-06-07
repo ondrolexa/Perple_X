@@ -11,13 +11,6 @@ c FRENDLY - a thermodynamic calculator for petrologic problems.
  
 c------------------------------------------------------------------------
 
-c      include 'clib.f'
-c      include 'dlib.f'
-c      include 'olib.f'
-c      include 'rlib.f'
-c      include 'tlib.f'
-c      include 'flib.f' 
-
       program FRNDLY
  
       implicit none
