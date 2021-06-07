@@ -7690,7 +7690,7 @@ c                                 this is necessary for pinc0
                if (oldg-g.lt.-nopt(53)) then 
 c                                   the speci2 result was better, revert
                    if (dabs((oldg-g)/oldg).gt.1d-3) then
-                      write (*,*) 'minfx nfg',oldg-g,oldg,id
+c                     write (*,*) 'minfx nfg',oldg-g,oldg,id
                    end if
 
                    g = oldg
@@ -7710,7 +7710,7 @@ c                                 this is necessary for pinc0
                if (oldg-g.gt.nopt(53)) then 
 c                                 even though speci2 converged, minfxc is better
                   if (dabs((oldg-g)/oldg).gt.1d-3) then
-                     write (*,*) 'spec2 nfg',oldg-g,oldg,id
+c                    write (*,*) 'spec2 nfg',oldg-g,oldg,id
                   end if
 
                else if (oldg.lt.g) then 
