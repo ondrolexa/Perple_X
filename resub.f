@@ -55,24 +55,21 @@ c-----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin
-
       logical abort1
       common/ cstabo /abort1
 
       save ax, x, clamda, w, is, iw
 c-----------------------------------------------------------------------
       idegen = 0
-      jcp = 0
+      jdegen = 0
 c                                 degeneracy test
       do k = 1, icp 
          if (b(k).eq.0d0) then 
             idegen = idegen + 1
             idg(idegen) = k
          else 
-            jcp = jcp + 1
-            jin(jcp) = k
+            jdegen = jdegen + 1
+            jdg(jdegen) = k
          end if
       end do
 
@@ -2833,9 +2830,6 @@ c----------------------------------------------------------------------
       integer jtest,jpot
       common/ debug /jtest,jpot
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
@@ -2930,7 +2924,7 @@ c                                try filtering out zero mode phases
 
                mu(lcp) = mu(i)
 
-               do j = 1, jcp 
+               do j = 1, jdegen
                   comp(lcp,j) = comp(i,j)
                end do 
 
@@ -2968,15 +2962,15 @@ c                                 load the phase
 
             inp(kcp) = i
 
-            do j = 1, jcp 
-               comp(kcp,j) = lc(i,jin(j))
+            do j = 1, jdegen
+               comp(kcp,j) = lc(i,jdg(j))
             end do 
 
             mu(kcp) = lg(i)
 
          end do
 
-         if (kcp.gt.jcp) then
+         if (kcp.gt.jdegen) then
 c                                 over-determined, try eliminating
 c                                 phases present in zero amount
             lcp = 0
@@ -2989,15 +2983,15 @@ c                                 phases present in zero amount
 
                mu(lcp) = mu(i)
 
-               do j = 1, jcp 
+               do j = 1, jdegen 
                   comp(lcp,j) =  comp(i,j)
                end do 
 
             end do
 
-            if (lcp.ne.jcp) ier = 2
+            if (lcp.ne.jdegen) ier = 2
 
-         else if (kcp.lt.jcp) then
+         else if (kcp.lt.jdegen) then
 
             ier = 3
 
@@ -3005,15 +2999,15 @@ c                                 phases present in zero amount
 
          if (ier.eq.0) then 
 
-            call factor (comp,jcp,ipvt,ier)
+            call factor (comp,jdegen,ipvt,ier)
 
-            if (ier.eq.0) call subst (comp,ipvt,jcp,mu,ier)
+            if (ier.eq.0) call subst (comp,ipvt,jdegen,mu,ier)
 
             if (ier.eq.0) then 
 c                                 load the chemical potentials 
 c                                 into their correct positions
-               do i = jcp, 1, -1
-                  mu(jin(i)) = mu(i)
+               do i = jdegen, 1, -1
+                  mu(jdg(i)) = mu(i)
                end do 
 c                                 and NaN the missing values
                do i = 1, idegen
@@ -3315,14 +3309,10 @@ c----------------------------------------------------------------------
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1)
 
-      integer idegen, idg(k5), jcp, jin(k5)
-      common/ cst315 /idegen, idg, jcp, jin 
-
       integer jphct
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 c----------------------------------------------------------------------
-
       degen = .false.
 c                                 turn test off if aq_oxide_components, 
 c                                 in principle this would allow disproportionation

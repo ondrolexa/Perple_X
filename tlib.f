@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated May 30, 2021.',
+     *     'Perple_X version 6.9.0, source updated June 8, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -1152,9 +1152,10 @@ c                                691 options read for compatability
      *            key.eq.'intermediate_savdyn'.or.      
      *            key.eq.'keep_all_rpcs'.or.
      *            key.eq.'timing'.or.
-     *            key.eq.'MINFXC_solver') then
+     *            key.eq.'MINFXC_solver'.or.
+     *            key.eq.'GFSM') then
 
-             write (1170,*) key
+             write (1190,*) key
 
          else if (key.ne.'|') then
 

@@ -1008,57 +1008,6 @@ c     accessed sequentially with one pass through a.
 
       end
 
-
-
-      integer function errmsg (ifail,ierror,srname,varbnm,nrec,rec)
-c----------------------------------------------------------------------
-c----------------------------------------------------------------------
-      implicit none
-
-      integer    ierror, ifail, nrec
-      character*(*)           srname, varbnm
-      character*(*)           rec(*)
-      integer    i, nerr, varlen
-      character*72            mess
-
-      if (ierror.ne.0) then
-         varlen = 0
-         do 20 i = len(varbnm), 1, -1
-            if (varbnm(i:i).ne.' ') then
-               varlen = i
-               go to 40
-            end if
-   20    continue
-   40    continue
-c        abnormal exit from calling routine
-
-
-            do 60 i = 1, nrec
-               call x04baf(nerr,rec(i))
-   60       continue
-
-               if (varlen.ne.0) then
-                  write (mess,fmt=99999) srname, varbnm(1:varlen),
-     *              ierror
-               else
-                  write (mess,fmt=99998) srname
-               end if
-
-               call x04baf(nerr,mess)
-
-c                 hard failure
-                  call x04baf(nerr,
-     *                     ' ** execution terminated')
-
-      end if
-
-      errmsg = ierror
-
-99999 format (' ** abnormal exit from routine ',a,': ',a,
-     *       ' =',i6)
-99998 format (' ** abnormal exit from routine ',a)
-      end
-
       subroutine dtrmv (uplo, trans, diag, n, a, lda, x, incx)
 c----------------------------------------------------------------------
 c  dtrmv  does one of the matrix-vector operations
@@ -3371,28 +3320,12 @@ c  information  will  be  output  on  the  error message  channel.
       double precision a(lda,*), work(*), zeta(*)
       integer perm(*)
       double precision eps, maxnrm, norm, temp, tol
-      integer ierr, j, jmax, k, la
-      character*46      rec(1)
+      integer j, jmax, k, la
       double precision dnrm2
-      integer errmsg
       external          dnrm2
 
       double precision wmach
       common/ cstmch /wmach(10)
-
-c     check the input parameters.
-
-      ierr = 0
-      if ((pivot.ne.'c').and.(pivot.ne.'s'))
-     *   call p01abw(pivot,'pivot',ifail,ierr,srname)
-      if (m.lt.0) call p01aby(m,'m',ifail,ierr,srname)
-      if (n.lt.0) call p01aby(n,'n',ifail,ierr,srname)
-      if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
-      if (ierr.gt.0) then
-         write (rec,fmt=99999) ierr
-         ifail = errmsg(ifail,-1,srname,' ',1,rec)
-         return
-      end if
 
 c     compute eps and the initial column norms.
 
@@ -3607,102 +3540,6 @@ c
 
       end
 
-      subroutine p01abw(n,name,inform,ierr,srname)
-
-c     p01abw increases the value of ierr by 1 and, if
-c
-c        (mod(inform, 10).ne.1).or.(mod(inform/10, 10).ne.0)
-c
-c     writes a message on the current error message channel giving the
-c     value of n, a message to say that n is invalid and the strings
-c     name and srname.
-c
-c     name must be the name of the actual argument for n and srname must
-c     be the name of the calling routine.
-c
-c     this routine is intended for use when n is an invalid input
-c     parameter to routine srname. 
-
-      implicit none 
-
-      integer ierr, inform
-      character*(*)     n
-      character*(*)     name, srname
-      integer nerr
-      character*65      rec(3)
-
-      ierr = ierr + 1
-      if ((mod(inform,10).ne.1).or.(mod(inform/10,10).ne.0)) then
-
-         write (rec,fmt=99999) name, srname, n
-         call x04baf(nerr,' ')
-         call x04baf(nerr,rec(1))
-         call x04baf(nerr,rec(2))
-         call x04baf(nerr,rec(3))
-      end if
-
-99999 format (' *****  parameter  ',a,'  is invalid in routine  ',a,
-     *  '  ***** ',/8x,'value supplied is',/8x,a)
-      end
-
-      subroutine x04baf(nout,rec)
-
-c     trailing blanks are not output, except that if rec is entirely
-c     blank, a single blank character is output.
-c     if nout.lt.0, i.e. if nout is not a valid fortran unit identifier,
-c     then no output occurs.
-      integer nout
-      character*(*)     rec
-      integer i
-
-      if (nout.ge.0) then
-c        remove trailing blanks
-         do 20 i = len(rec), 2, -1
-            if (rec(i:i).ne.' ') go to 40
-   20    continue
-c        write record to external file
-   40    write (*,fmt=99999) rec(1:i)
-      end if
-
-99999 format (a)
-      end
-
-
-      subroutine p01aby (n,name,inform,ierr,srname)
-
-c     p01aby increases the value of ierr by 1 and, if
-c
-c        (mod(inform, 10).ne.1).or.(mod(inform/10, 10).ne.0)
-c
-c     writes a message on the current error message channel giving the
-c     value of n, a message to say that n is invalid and the strings
-c     name and srname.
-c
-c     name must be the name of the actual argument for n and srname must
-c     be the name of the calling routine.
-c
-c     this routine is intended for use when n is an invalid input
-c     parameter to routine srname. 
-
-      integer ierr, inform, n
-      character*(*)     name, srname
-      integer nerr
-
-      character*65      rec(2)
-
-      ierr = ierr + 1
-      if ((mod(inform,10).ne.1).or.(mod(inform/10,10).ne.0)) then
-
-         write (rec,fmt=99999) name, srname, n
-         call x04baf(nerr,' ')
-         call x04baf(nerr,rec(1))
-         call x04baf(nerr,rec(2))
-      end if
-
-99999 format (' *****  parameter  ',a,'  is invalid in routine  ',a,
-     *  '  ***** ',/8x,'value supplied is ',i6)
-      end
-
       subroutine smcopy (matrix, m, n, a, lda, b, ldb)
 c  smcopy  copies  the  m by n  matrix  a  into  the  m by n  matrix  b.
 c
@@ -3784,7 +3621,6 @@ c     y := x
       end if
 
       end
-
 
       subroutine sgeqr(m,n,a,lda,zeta,ifail)
 
@@ -3899,24 +3735,7 @@ c  information  will  be  output  on  the  error message  channel.
       double precision a(lda,*), zeta(*)
 
       double precision temp
-      integer ierr, k, la
-
-      character*46 rec(1)
-
-      integer errmsg
-      external errmsg
-
-c     check the input parameters.
-
-      ierr = 0
-      if (m.lt.n) call p01aby(m,'m',ifail,ierr,srname)
-      if (n.lt.0) call p01aby(n,'n',ifail,ierr,srname)
-      if (lda.lt.m) call p01aby(lda,'lda',ifail,ierr,srname)
-      if (ierr.gt.0) then
-         write (rec,fmt=99999) ierr
-         ifail = errmsg (ifail,-1,srname,' ',1,rec)
-         return
-      end if
+      integer k, la
 
 c     do the factorization.
 
