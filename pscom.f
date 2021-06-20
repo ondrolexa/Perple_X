@@ -758,8 +758,8 @@ c                                 read data
          ix = inc(1)
          iy = inc(2)
 
-         if (ix.gt.nx) call error (1,dvr(1),nx,'NX, REDTAB')
-         if (iy.gt.ny) call error (1,dvr(2),ny,'NY, REDTAB')
+         if (ix.gt.nx) call error (1,dvr(1),ix,'NX, REDTAB')
+         if (iy.gt.ny) call error (1,dvr(2),iy,'NY, REDTAB')
 
          if (mvar.gt.1) then
 c                                 get dependent variable choice, single 
@@ -885,6 +885,8 @@ c                                 read data with eof and nan-check
             end do 
 
             iy = iy + 1
+
+            if (iy.gt.nx) call error (1,dvr(1),iy+100,'NX, REDTAB 2')
 
          end do
 c                                 select variables

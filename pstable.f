@@ -450,6 +450,8 @@ c                                 filter data
      *          z(j,i1).lt.ymin.or.z(j,i1).gt.ymax) cycle
 
             npts = npts + 1
+
+            if (npts.gt.l5) call error (1,x(1),iy,'L5')
             
             x(npts) = z(j,i0)
             y(npts) = z(j,i1)

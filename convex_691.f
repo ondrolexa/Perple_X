@@ -2000,7 +2000,7 @@ c                                 as iophi.
       iophi =idphi
 c                                 factor the concentration matrix:
       call pivots (bad)
-      if (bad) call error (69,v(1),1,'COFACE')
+      if (bad) call error (99,v(1),1,'COFACE, singular matrix')
 c                                 set the increment for the iv
       div = odiv
 c                                 initialize counters

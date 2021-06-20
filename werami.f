@@ -2828,7 +2828,8 @@ c                                   points from a data file:
 
             icoors = icoors + 1
 
-            if (icoors.gt.5*l5) call error (69,xx(1),i,'MODE4') 
+            if (icoors.gt.5*l5) call error (69,xx(1),icoors+100,
+     *                                     'L5 (MODE4)')
 
          end do 
                

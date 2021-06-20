@@ -209,6 +209,8 @@ c----------------------------------------------------------------------
      *           m24 = 10*60*60*k5, m25 = m24*m14)
 !                                 nx - number of x-grid nodes in a contour data grid
 !                                 ny - number of y-grid modes in a contour data grid
+!                                 NOTE: pstable requires that parameter L5 > max(NX,NY), i.e., if
+!                                 NX or NY is increased, then it may be necessary to increase L5.
       parameter (nx=1000,ny=1000)
 !                                 lchar - maximum length of character strings
       parameter (lchar=400)
