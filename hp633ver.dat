@@ -229,6 +229,9 @@ dilm = 1 ilm_nol
                                 | 1993  -2.1 0 => the TC DQF coeffecients, the values below are
                                 | oilm + {DH,R*ln(4),0} 
        DQF(J/mol) = 17043.57559 -13.11797099 .1836386612e-1
+dhem = 1 hem_nol
+       DQF(J/mol)   = 9.5228d3   -12.9377 T_K
+
                                 | Make definitions for Kelsey & Powell (JMG, 2011) Zr melting relations. JADC, 2/6/12
 zr8L = 2 zrc                    | Zr-melt endmember
        DQF(J/mol) = 69e3  
@@ -2159,6 +2162,13 @@ GH = -851478.3  S0 = 87.4  V0 = 3.027
 c1 = 163.9  c3 = -2257200  c5 = -657.6  
 b1 = .279E-4  b5 = 444.6488  b6 = 2230000  b7 = -.18E-5  b8 = 4.04  
 transition = 1  type = 4  t1 = 955  t2 = 15.6  
+end
+
+hem_nol   EoS = 8 | H=  -825420.0
+FeO(2)O2(.5)
+GH = -851478.3  S0 = 87.4  V0 = 3.027  
+c1 = 163.9  c3 = -2257200  c5 = -657.6  
+b1 = .279E-4  b5 = 444.6488  b6 = 2230000  b7 = -.18E-5  b8 = 4.04
 end
 
  

@@ -749,7 +749,7 @@ c----------------------------------------------------------------------
      *        itri(4), jtri(4), ijpt, iam, jam, kinc, jmin, getqud,
      *        imin, imax, ktri(4), ltri(4), ibest, quad(2), pi(4,4)
 
-      logical rinsid, isok, warned, left, solvs3, ongrid, jok
+      logical rinsid, isok, warned, left, solvs3, ongrid, jok, onalin
 
       external getqud, isok, rinsid, solvs3, jok, dist
 
@@ -1079,21 +1079,9 @@ c                                 z[3] coef
       else if (ijpt.eq.2) then
 c                                 check that the original point is
 c                                 on a line between the iterpolation points:
-         itri(3) = iloc
-         jtri(3) = jloc
-c                                 check if on line of previous
-c                                 points
-         if (dist(x,y,iloc,jloc).lt.1d-6) then 
-c                                 1d iterpolation coefficients
-            wt(2) = dsqrt(   ((x - px(1))**2 + (y - py(1))**2)
-     *                     / ((px(2) - px(1))**2 + (py(2) - py(1))**2) )
-            wt(1) = 1d0 - wt(2)
-
-         else
-
-            ijpt = 1
-
-         end if
+         call linchk (px(1),py(1),px(2),py(2),x,y,wt,onalin)
+c                                 not on a line:
+         if (.not.onalin) ijpt = 1
 
       end if
 
@@ -1163,8 +1151,11 @@ c                                2->3 join
 c----------------------------------------------------------------------
 c function to determine if points (x1,y1) (x2,y2) are on the same side
 c (or colinear with) the line (0,0)-(x3,y3) (if so true).
+c----------------------------------------------------------------------
+      implicit none
 
       double precision x1,y1,x2,y2,x3,y3
+c----------------------------------------------------------------------
 c                                 test the cross product, if 0 a point
 c                                 is on the line.
       if ((x1*y3 - y1*x3)*(x1*y2 - y1*x2).ge.0) then
@@ -1172,6 +1163,59 @@ c                                 is on the line.
       else
          rsmsid = .false.
       end if 
+
+      end
+
+      subroutine linchk (x1,y1,x2,y2,x3,y3,wt,onalin)
+c----------------------------------------------------------------------
+c function to determine if point (x3,y3) is on the line (x1,y1)-(x2,y2)
+c if so true.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical onalin
+
+      double precision x1,y1,x2,y2,x3,y3,wt(*)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c----------------------------------------------------------------------
+      onalin = .true.
+
+      if (dabs(x1-x2).lt.zero) then
+c                                 the line is vertical
+         if (dabs(x3-x1).gt.zero) then
+
+            onalin = .false.
+
+         else
+
+            wt(1) = 1d0 - (y1-y3)/(y1-y2)
+
+         end if
+
+      else 
+c                                 zero or finite slope
+         if ( dabs(y3 - ((y1-y2)*x3 + x1*y2-x2*y1)/(x1-x2)).gt.zero)
+     *                                                             then
+           onalin = .false.
+
+         else
+
+            wt(1) = 1d0 - (x1-x3)/(x1-x2)
+
+         end if
+
+      end if
+
+      if (wt(1).lt.-zero.or.wt(1).gt.r1) then 
+         wt(1) = 1d0
+         onalin = .false.
+      else 
+         wt(2) = 1d0 - wt(1)
+      end if
 
       end 
 
