@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated June 23, 2021.',
+     *     'Perple_X version 6.9.1, source updated July 11, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3138,20 +3138,16 @@ c                                 generic warning, also 99
      *          'finite difference',/,'increment delt(iv(1)) or delv',
      *          '(iv(2)), as defined on card 6 of',/,'the file on n2.',
      *          ' In routine:',a,/)
-11    format (/,'**warning ver011** ',a,' has > 1',
-     *          ' transition with dp/dT ne 0 and may not be treated ',/,
-     *          ' correctly')
+11    format (/,'**warning ver011** ',a,' has > 1 transition with dp/d',
+     *          'T ne 0 and may not be',/,'treated correctly.')
 12    format (/,'**warning ver012** ',a,' has a transition ',
      *          ' with dp/dT < 0 and may not be treated ',/,
-     *          ' correctly')
-13    format (/,'**warning ver013** the total amount of the thermodynam'
-     *         ,'ic components in: ',a,'is < 0,',/,'it will be rejected'
-     *         ,' from the thermodynamic composition space. If non-elem'
-     *         ,'ental (e.g., ',/,'oxide) ',
-     *          'components are in use this rejection criterion may be '
-     *         ,'incorrect. When this is',/,'the case redefine the ',
-     *          'data base components so that the total amount of the'/,
-     *          'thermodynamic components in ',a,' is > 0.',/)
+     *          ' correctly.')
+13    format (/,'**warning ver013** because the total amount of the '
+     *         ,'components in ',a,'is <= 0,',/,'it will be rejected '
+     *         ,'from this calculation. To prevent this rejection '
+     *         ,'transform the',/,'data base components so that the '
+     *         ,'total amount of the components in ',a,' is > 0.',/)
 14    format (/,'**warning ver014** You can not redefine the ',
      *          'saturated phase component:',a,/,'To circumvent this ',
      *          'restriction use CTRANSF to make a data base with the',/
@@ -11159,7 +11155,14 @@ c     *                                       call warn (13,tot,j,name)
 
       end do
 
-      if (tot.eq.0d0) goto 90
+      if (tot.eq.0d0) then
+
+         if (iam.eq.1.or.iam.eq.15.or.iam.eq.2) 
+     *                                      call warn (13,tot,j,name)
+
+         goto 90
+
+      end if
 c                               do a check to make sure that the phase does
 c                               not consist of just mobile components
       tot = 0d0

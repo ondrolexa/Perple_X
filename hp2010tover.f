@@ -256,16 +256,18 @@ c                             hp98 style eos
        b6 = k298*1d3
        b7 = kpp/1d3
 
-       if (aq) then 
-      
-       b5 = 0 
+       if (aq.or.v.eq.0d0) then 
+c                                    v .eq. 0 should catch gas species
+          b5 = 0
+
        else if (dkdt.ne.0d0) then 
 c                                    dkdt
-       b5 = dkdt*1000.
-       
+          b5 = dkdt*1000.
+
        else 
-c                                    debye T
-       b5 = 10636./(s/atoms+6.44)
+c                                    einstein T
+          b5 = 10636./(s/atoms+6.44)
+
        end if 
 c                                     type flag
 c                                      0 - old

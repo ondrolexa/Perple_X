@@ -2501,7 +2501,7 @@ c----------------------------------------------------------------------
 
          if (icrit.eq.1.and.amt(i).lt.0d0.or.
      *       icrit.eq.2.and.amt(i).lt.zero.or.
-     *       icrit.eq.3.and.is(id).eq.4) then 
+     *       icrit.eq.3.and.is(jdv(i)).eq.4) then 
 
 c            write (*,'(a,i2,1x,g14.7,5(1x,i3))') 'rejecting ',
 c    *                         icrit,amt(i),is(id),npt,npt-icp

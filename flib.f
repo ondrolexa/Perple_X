@@ -1622,7 +1622,7 @@ c                                 outer iteration loop:
          y(1) = xl
          xi = xl
 
-         do 10 i = 1, iopt(21)
+         do i = 1, iopt(21)
 c                                 inner iteration loop:
             h = a + (b + (c + d * y(1)) * y(1)) * y(1)
     
@@ -1636,7 +1636,9 @@ c                                 inner iteration loop:
  
             if (dabs(xi-y(1)).lt.nopt(50)) goto 20
             if (y(1).ge.1d0) y(1) = xi + (1d0-xi)/2d0
-10          xi = y(1)
+            xi = y(1)
+
+         end do
 
          call warn (176,y(1),i,'HOSRK5')
          stop 
@@ -1751,7 +1753,7 @@ c
          c14 = c10 * c13/2d0
          xi = xl
 
-         do 10 i = 1, iopt(21)
+         do i = 1, iopt(21)
 c                                 inner iteration loop:
             y(7) = xo + c10 * y(1)
 
@@ -1771,7 +1773,9 @@ c                                 inner iteration loop:
 
             if (dabs(xi-y(1)).lt.nopt(50)) goto 20
             if (y(1).ge.1d0) y(1) = xi + (1d0-xi)/2d0
-10          xi = y(1)
+            xi = y(1)
+
+         end do
 
          call warn (176,y(1),i,'HOMRK')
 
