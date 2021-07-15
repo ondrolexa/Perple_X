@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated July 11, 2021.',
+     *     'Perple_X version 6.9.1, source updated July 15, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3145,7 +3145,7 @@ c                                 generic warning, also 99
      *          ' correctly.')
 13    format (/,'**warning ver013** because the total amount of the '
      *         ,'components in ',a,'is <= 0,',/,'it will be rejected '
-     *         ,'from this calculation. To prevent this rejection '
+     *         ,'from this calculation. To prevent its rejection '
      *         ,'transform the',/,'data base components so that the '
      *         ,'total amount of the components in ',a,' is > 0.',/)
 14    format (/,'**warning ver014** You can not redefine the ',

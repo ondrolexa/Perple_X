@@ -6986,7 +6986,7 @@ c                                 initial guess, assume near binary
       x = 1d0 + xo 
       rat = xo/(1d0-xo) 
 
-      if (dabs(xo-r13).lt.nopt(50)) then 
+      if (dabs(xo-r13).lt.nopt(5)) then 
          y3 = 1d0/dsqrt(c4)
          y5 = y3 
       else if (xo.gt.r13) then

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, l, m, lu, id, inc, ct
 
-      double precision poiss, gcpd, zsite(m10,m11), zt
+      double precision poiss, gcpd, zsite(m10,m11), zt, gga(3,m14)
  
       external gcpd, zbad
 
@@ -436,56 +436,82 @@ c                                 site multiplicity
       end if
 
       if (lopt(24).and.np.gt.0) then 
-
-         write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
+c                                 ouput endmember molar g, partial molar g, and activities:
 c                                 electrolyte fluid is a special
 c                                 case because the electrolyte energies
 c                                 depend on the solvent properties
          if (ksmod(id).eq.20) call solut0 (id)
 
-         do i = 1, np 
+         do m = 1, 3
 
-            id = kkp(i)
+            if (m.eq.1) then
+               write (lu,'(/,a,/)') 
+     *               'species molar Gibbs energies*:'
+            else if (m.eq.2) then
+               write (lu,'(/,a,/)') 
+     *               'species partial molar Gibbs energies*:'
+            else
+               write (lu,'(/,a,/)') 'species activities*:'
+            end if
 
-            if (ksmod(id).eq.20.and.spct(id).gt.5) then
+            do i = 1, np
 
-               inc = 6
+               id = kkp(i)
 
-            else if (spct(id).gt.7) then 
+               if (ksmod(id).eq.20.and.spct(id).gt.5) then
 
-                inc = 7
+                  inc = 6
 
-            end if 
+               else if (spct(id).gt.7) then 
 
-            do k = 1, lstot(id), inc
+                  inc = 7
 
-               l = k + inc - 1
-               if (l.gt.lstot(id)) l = lstot(id)
+               end if
 
-               if (ksmod(id).ne.20) then 
+               do k = 1, lstot(id)
 
-                  write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
-     *                                           ', ', j = k, l)  
+                  if (m.eq.1) then
 
-               else
+                     if (ksmod(id).ne.20) then
 
-                  write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(aqg(j)),', ', j = k, l)
+                        gga(m,k) = gcpd(jend(id,2+k),.true.)
 
-               end if 
+                     else
 
-               call deblnk (text)
+                        gga(m,k) = aqg(k)
 
-               if (k.eq.1) then 
+                     end if
 
-                  write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        chars(1:length)
-               else 
+                  else if (m.eq.2) then
 
-                  write (lu,'(19x,400a)') chars(1:length)
+                  else
 
-               end if 
+                  end if
+
+               end do
+
+
+               do k = 1, lstot(id), inc
+
+                  l = k + inc - 1
+                  if (l.gt.lstot(id)) l = lstot(id)
+
+                  write (text,'(20(a,a,i10,a))') (spnams(j,id),': ',
+     *                                 int(gga(m,j)),', ', j = k, l)
+
+                  call deblnk (text)
+
+                  if (k.eq.1) then 
+
+                     write (lu,'(1x,a,4x,400a)') pname(i), 
+     *                                           chars(1:length)
+                  else 
+
+                     write (lu,'(19x,400a)') chars(1:length)
+
+                  end if 
+
+               end do
 
             end do
 
