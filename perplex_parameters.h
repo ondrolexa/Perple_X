@@ -439,7 +439,7 @@ c                                 local solution model variables:
       common/ lop28 /ophct,restrt,dead
 
       double precision pa3
-      common/ cstpa3 /pa3(k5,m14)
+      common/ cstpa3 /pa3(k19,m14)
 
       double precision deph,dydy,dnu
       common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)

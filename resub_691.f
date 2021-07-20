@@ -794,12 +794,11 @@ c----------------------------------------------------------------------
 
       logical check, bad, quit, notaq, abort
 
-      integer idsol(k5),ksol(k5,k5),ids,xidsol,xksol,irep,
-     *        i,j,jdsol(k5,k5),jd,k,l,nkp(k5),xjdsol(k5),kk
+      integer idsol(k19),ksol(k19,k19),ids,xidsol,xksol,irep,
+     *        i,j,jdsol(k19,k19),jd,k,l,nkp(k19),xjdsol(k19),kk
 
-      double precision bsol(k5,k5),cpnew(k5,k5),xx,xb(k5),msol,
-     *                 bnew(k5),pnew(k5,m14),ncaq(k5,l10),ximp
-     * , sum
+      double precision bsol(k19,k19),cpnew(k19,k19),xx,xb(k19),msol,
+     *                 bnew(k19),pnew(k19,m14),ncaq(k19,l10),ximp,sum
 
       logical solvs1, solvs4
       external solvs1, solvs4
