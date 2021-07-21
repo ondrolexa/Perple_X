@@ -178,9 +178,9 @@ c                                 in avrger
 
                end if 
 
-               if (abort1) then 
-
-                  idead = 104
+               if (lopt(32)) then 
+c                                 if lagged speciation
+                  if (abort1) idead = 104
 
                end if
 
