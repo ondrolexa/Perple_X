@@ -476,3 +476,7 @@ c                                 compenent degeneracy flags/counters
       logical dispro
       integer idegen, idg, jdegen, jdg
       common/ cst315 /idegen, idg(k5), jdegen, jdg(k5), dispro(k0)
+c
+      integer jndq, jdqf, iq
+      double precision dqfg, dq
+      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)

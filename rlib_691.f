@@ -4002,7 +4002,7 @@ c---------------------------------------------------------------------
       logical skip, bad
 
       integer jsp,jtic,morder,jend,
-     *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
+     *        i,j,ikill,jkill,kill,kdep,kdqf,ktic,jold,
      *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
      *        j2oj(msp),j2nj(msp),i2oi(m4),maxord
 c                                 dqf variables
@@ -4264,7 +4264,7 @@ c                                 dqf corrections, this is sloppy since
 c                                 uses istot instead of kstot
       if (idqf.gt.0) then
 
-         jdqf = 0
+         kdqf = 0
 c                                 check if a retained species has a dqf
 c                                 correction
          do j = 1, idqf
@@ -4273,8 +4273,8 @@ c                                 in case the values of indq are not sequential
             do i = 1, istot
                if (indq(j).eq.i2oi(i)) then
 c                                 found a dqf'd endmember
-                  jdqf = jdqf + 1
-                  indq(jdqf) = i
+                  kdqf = kdqf + 1
+                  indq(kdqf) = i
                   do k = 1, m3
                      dqf(k,jdqf) = dqf(k,j)
                   end do
@@ -4282,11 +4282,11 @@ c                                 found a dqf'd endmember
                end if
             end do
 
-            if (jdqf.eq.idqf) exit
+            if (kdqf.eq.idqf) exit
 
          end do
 
-         idqf = jdqf
+         idqf = kdqf
 
       end if
 c                                 --------------------------------------
@@ -6332,10 +6332,6 @@ c---------------------------------------------------------------------
 
       double precision t, p, xco2, u1, u2, tr, pr, r, ps
       common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 dqf corrections
-      integer jndq, jdqf, iq
-      double precision dqfg, dq
-      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 c----------------------------------------------------------------------
 
       do i = 1, jdqf(id)
@@ -6363,10 +6359,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer jndq, jdqf, iq
-      double precision dqfg, dq
-      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 c----------------------------------------------------------------------
       gdqf = 0d0 
 
@@ -6681,10 +6673,6 @@ c                                 dqf parameters
       integer idqf,indq
       double precision dqf
       common/ cst222 /dqf(m3,m4),indq(m4),idqf
-
-      integer jndq, jdqf, iq
-      double precision dqfg, dq
-      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 
       integer ln,lt,lid,jt,jid
       double precision lc, l0c, jc
@@ -9736,10 +9724,6 @@ c--------------------------------------------------------------------------
       double precision depnu,denth
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
      *                nr(j3)
-
-      integer jndq, jdqf, iq
-      double precision dqfg, dq
-      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -15090,7 +15074,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, qmax, qmin, q, q0, dq, rqmax, gold
+      double precision g, qmax, qmin, q, q0, dqq, rqmax, gold
 
       double precision omega, gex
       external omega, gex
@@ -15153,9 +15137,9 @@ c                                 the root must lie at p > pmax - nopt(50).
          qmax = rqmax - nopt(50)
          qmin = nopt(50)
 c                                 the p's are computed in gpderi
-         call gpder1 (id,qmax-q0,dq,g,.false.)
+         call gpder1 (id,qmax-q0,dqq,g,.false.)
 
-         if (dq.lt.0d0) then
+         if (dqq.lt.0d0) then
 c                                 at the maximum concentration, the
 c                                 first derivative is positive, if
 c                                 the second is also > 0 then we're
@@ -15164,9 +15148,9 @@ c                                 business
 
          else
 c                                 try the min
-            call gpder1 (id,qmin-q0,dq,g,.false.)
+            call gpder1 (id,qmin-q0,dqq,g,.false.)
 
-            if (dq.gt.0d0) then
+            if (dqq.gt.0d0) then
 c                                 ok
                q = qmin
 
@@ -15180,7 +15164,7 @@ c                                 limits.
             end if
          end if
 c                                 increment and check p
-         call pcheck (q,qmin,qmax,dq,done)
+         call pcheck (q,qmin,qmax,dqq,done)
 c                                 iteration counter to escape
 c                                 infinite loops
          itic = 0
@@ -15189,9 +15173,9 @@ c                                 infinite loops
 c                                 newton raphson iteration
          do
 
-            call gpder1 (id,q-q0,dq,g,.false.)
+            call gpder1 (id,q-q0,dqq,g,.false.)
 
-            call pcheck (q,qmin,qmax,dq,done)
+            call pcheck (q,qmin,qmax,dqq,done)
 c                                 done is just a flag to quit
             if (done.or.dabs((gold-g)).lt.nopt(53)) then
 
@@ -16244,7 +16228,7 @@ c---------------------------------------------------------------------
       logical skip, bad
 
       integer jsp,jtic,morder,pkill,ii,ivct,
-     *        i,j,ikill,jkill,kill,kdep,jdqf,ktic,jold,
+     *        i,j,ikill,jkill,kill,kdep,kdqf,ktic,jold,
      *        i2ni(m4),kwas(m4),k,l,itic,ijkill(m4),
      *        j2oj(msp),j2nj(msp),i2oi(m4)
 c                                 dqf variables
@@ -16508,7 +16492,7 @@ c                                 dqf corrections, this is sloppy since
 c                                 uses istot instead of kstot
       if (idqf.gt.0) then
 
-         jdqf = 0
+         kdqf = 0
 c                                 check if a retained species has a dqf
 c                                 correction
          do j = 1, idqf
@@ -16517,20 +16501,20 @@ c                                 in case the values of indq are not sequential
             do i = 1, istot
                if (indq(j).eq.i2oi(i)) then
 c                                 found a dqf'd endmember
-                  jdqf = jdqf + 1
-                  indq(jdqf) = i
+                  kdqf = kdqf + 1
+                  indq(kdqf) = i
                   do k = 1, m3
-                     dqf(k,jdqf) = dqf(k,j)
+                     dqf(k,kdqf) = dqf(k,j)
                   end do
                   exit
                end if
             end do
 
-            if (jdqf.eq.idqf) exit
+            if (kdqf.eq.idqf) exit
 
          end do
 
-         idqf = jdqf
+         idqf = kdqf
 
       end if
 c                                 --------------------------------------
@@ -19365,10 +19349,6 @@ c-----------------------------------------------------------------------
 
       double precision enth
       common/ cxt35 /enth(j3)
-
-      integer jndq, jdqf, iq
-      double precision dqfg, dq
-      common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)

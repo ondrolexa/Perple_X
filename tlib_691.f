@@ -1207,7 +1207,8 @@ c                                 assume linear boundaries within a cell during 
  
             if (val.ne.'F') lopt(20) = .true. 
 
-         else if (key.eq.'species_output') then
+         else if (key.eq.'species_output'.or.
+     *            key.eq.'output_species') then
  
             if (val.ne.'T') lopt(21) = .false. 
 
@@ -1222,7 +1223,8 @@ c                                 assume linear boundaries within a cell during 
                valu(21) = val
             end if
 
-         else if (key.eq.'species_Gibbs_energies') then
+         else if (key.eq.'species_Gibbs_energies'.or.
+     *            key.eq.'output_species_props') then
  
             if (val.ne.'F') lopt(24) = .true.
 
@@ -1909,8 +1911,8 @@ c                                 thermo options for frendly
      *        4x,'solution_names          ',a3,7x,'[model] ',
      *                                           'abbreviation full',/,
      *        4x,'structural_formulae     ',l1,9x,'[T] F',/,
-     *        4x,'species_output          ',l1,9x,'[T] F',/,
-     *        4x,'species_Gibbs_energies  ',l1,9x,'[F] T',/,
+     *        4x,'output_species          ',l1,9x,'[T] F',/,
+     *        4x,'output_species_props    ',l1,9x,'[F] T',/,
      *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
      *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
      *        4x,'poisson_test            ',l1,9x,'[F] T',/,

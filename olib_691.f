@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, l, m, lu, id, inc, ct
 
-      double precision poiss, gcpd, zsite(m10,m11), zt, gga(3,m14)
+      double precision poiss, gcpd, zsite(m10,m11), zt, gga(k5,3,m14)
  
       external gcpd, zbad
 
@@ -109,10 +109,23 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      double precision cp
+      common/ cst12 /cp(k5,k10)
+
       integer iam
       common/ cst4 /iam
-c---------------------------------------------------------------------- 
-
+c----------------------------------------------------------------------
+      mus = .false.
+c                                 test for non-NaN chemical potentials
+c                                 probably unnecessary?
+      mus = .false.
+      do i = 1, jbulk
+         if (.not.isnan(mu(i))) then
+            mus = .true.
+            exit 
+         end if 
+      end do 
+c                                 print standard potentials
       write (lu,1000)
 
       if (iam.eq.2) then 
@@ -446,12 +459,12 @@ c                                 depend on the solvent properties
 
             if (m.eq.1) then
                write (lu,'(/,a,/)') 
-     *               'species molar Gibbs energies*:'
+     *               'Species molar Gibbs energies*:'
             else if (m.eq.2) then
                write (lu,'(/,a,/)') 
-     *               'species partial molar Gibbs energies*:'
+     *               'Species partial molar Gibbs energies:'
             else
-               write (lu,'(/,a,/)') 'species activities*:'
+               write (lu,'(/,a,/)') 'Species activities:'
             end if
 
             do i = 1, np
@@ -467,37 +480,68 @@ c                                 depend on the solvent properties
                   inc = 7
 
                end if
+c                                 set internal dqf's
+               call setdqf(id)
 
                do k = 1, lstot(id)
 
                   if (m.eq.1) then
 
                      if (ksmod(id).ne.20) then
+c                                 molar gibbs energies
+                        gga(i,m,k) = gcpd(jend(id,2+k),.true.)
+c                                 add internal dqf's if present
+                        do l = 1, jdqf(id)
 
-                        gga(m,k) = gcpd(jend(id,2+k),.true.)
+                           if (iq(l).eq.k) then 
+                              gga(i,m,k) = gga(i,m,k) + dq(l)
+                              exit 
+                           end if
+
+                        end do
 
                      else
 
-                        gga(m,k) = aqg(k)
+                        gga(i,m,k) = aqg(k)
 
                      end if
 
                   else if (m.eq.2) then
+c                                 partial molar gibbs energy and activities
+                     if (mus) then
 
-                  else
+                        gga(i,m,k) = 0
+
+                        do l = 1, icomp
+                           gga(i,m,k) = gga(i,m,k) 
+     *                                + cp(l,jend(id,2+k)) * mu(l)
+                        end do
+
+                        gga(i,3,k) = dexp((gga(i,m,k) - gga(i,1,k))
+     *                                /r/v(2))
+
+                     else
+
+                        gga(i,2:3,k) = nopt(7)
+
+                     end if
 
                   end if
 
                end do
-
 
                do k = 1, lstot(id), inc
 
                   l = k + inc - 1
                   if (l.gt.lstot(id)) l = lstot(id)
 
-                  write (text,'(20(a,a,i10,a))') (spnams(j,id),': ',
-     *                                 int(gga(m,j)),', ', j = k, l)
+                  if (m.lt.3) then 
+                     write (text,'(20(a,a,i10,a))') (spnams(j,id),': ',
+     *                                   int(gga(i,m,j)),', ', j = k, l)
+                  else
+                     write (text,'(20(a,a,g14.6,a))') (spnams(j,id),': '
+     *                                       ,gga(i,m,j),', ', j = k, l)
+                  end if
 
                   call deblnk (text)
 
@@ -517,7 +561,7 @@ c                                 depend on the solvent properties
 
          end do
 
-         write (lu,'(/,a,/)') '*these do not include internal DQFs'
+         write (lu,'(/,a,/)') '*these include internal DQFs if relevant'
 
       end if 
 
@@ -683,14 +727,6 @@ c                                 chemical potentials variance
       write (lu,1130) (cname(i), i = 1, kbulk)
       write (lu,1140) (mu(i), i = 1, kbulk)
       write (lu,1070) 2, jbulk - ntot + 2 
-c                                 test for non-NaN chemical potentials
-      mus = .false.
-      do i = 1, jbulk
-         if (.not.isnan(mu(i))) then
-            mus = .true.
-            exit 
-         end if 
-      end do 
 
       if (laq.and.lopt(25)) then 
 
