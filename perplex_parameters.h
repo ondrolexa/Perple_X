@@ -152,7 +152,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=14)
       parameter (k7=k5+1,k8=k5+2,k17=8,k19=3*k5)
-      parameter (k9=35,k10=450,k14=18,k15=6,k16=120)
+      parameter (k9=35,k10=500,k14=18,k15=6,k16=120)
       parameter (k22=mdim*mst*h4*k19,k23=25)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
@@ -169,7 +169,7 @@ c----------------------------------------------------------------------
 !                                l10 - max number of parameters stored in caq for each phase.
 !                                nsp - max number of species in fluid speciation routines 
 
-      parameter (l2=5,l3=l2+2,l5=1000,l6=500,l7=2048,l8=10,l9=100,
+      parameter (l2=5,l3=l2+2,l5=1000,l6=500,l7=2048,l8=10,l9=150,
      *           nsp=17,l10=nsp+l9+4)
 !                                 m0 - max number of terms for a species site fraction?
 !                                 m1 - max number of terms in excess function

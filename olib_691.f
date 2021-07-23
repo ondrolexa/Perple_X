@@ -471,15 +471,12 @@ c                                 depend on the solvent properties
 
                id = kkp(i)
 
-               if (ksmod(id).eq.20.and.spct(id).gt.5) then
-
+               if (spct(id).gt.5) then 
                   inc = 6
-
-               else if (spct(id).gt.7) then 
-
-                  inc = 7
-
+               else 
+                  inc = spct(id)
                end if
+
 c                                 set internal dqf's
                call setdqf(id)
 
@@ -535,9 +532,9 @@ c                                 partial molar gibbs energy and activities
                   l = k + inc - 1
                   if (l.gt.lstot(id)) l = lstot(id)
 
-                  if (m.lt.3) then 
-                     write (text,'(20(a,a,i10,a))') (spnams(j,id),': ',
-     *                                   int(gga(i,m,j)),', ', j = k, l)
+                  if (m.lt.3) then
+                     write (text,'(20(a,a,f16.3,a))') (spnams(j,id),': '
+     *                                       ,gga(i,m,j),', ', j = k, l)
                   else
                      write (text,'(20(a,a,g14.6,a))') (spnams(j,id),': '
      *                                       ,gga(i,m,j),', ', j = k, l)
@@ -563,7 +560,13 @@ c                                 partial molar gibbs energy and activities
 
          write (lu,'(/,a,/)') '*these include internal DQFs if relevant'
 
-      end if 
+         write (lu,1161)
+c                                 excessive precision molar Gs:
+         do i = 1, ntot
+            write (lu,1171) pname(i),props(11,i)
+         end do
+
+      end if
 
       write (lu,1160)
 c                                 phase/system summary, normal thermo:
@@ -776,7 +779,9 @@ c                                 chemical potentials variance
      *        /,20x,'N(g)',10x,'G(J)',5x,'S(J/K)',5x,'V(J/bar)',6x,
      *         'Cp(J/K)',7x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',4x,
      *         'Density(kg/m3)')
+1161  format ('Excessive precision phase molar Gibbs energies (J):')
 1170  format (1x,a,1x,f9.2,3x,i12,1x,12(g12.5,1x),3x,f7.4)
+1171  format (1x,a,3x,f16.3)
 1190  format (/,'Seismic Properties:'
      *        /,17x,'Gruneisen_T',6x,'Ks(bar)',6x,'Mu(bar)',
      *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',3x,

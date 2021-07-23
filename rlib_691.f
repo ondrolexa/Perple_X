@@ -4276,7 +4276,7 @@ c                                 found a dqf'd endmember
                   kdqf = kdqf + 1
                   indq(kdqf) = i
                   do k = 1, m3
-                     dqf(k,jdqf) = dqf(k,j)
+                     dqf(k,kdqf) = dqf(k,j)
                   end do
                   exit
                end if
