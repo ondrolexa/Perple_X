@@ -480,3 +480,6 @@ c
       integer jndq, jdqf, iq
       double precision dqfg, dq
       common/ cxt9 /dqfg(m3,m4,h9),dq(m4),jndq(m4,h9),jdqf(h9),iq(m4)
+c                                 lagged chemical potentials:
+      double precision xmu
+      common/ cxt9 /xmu(k8)

@@ -1738,6 +1738,8 @@ c     js(1:npt) = is(jdv(1:npt))
       if (.not.mus) then
          call muwarn (quit,0)
          return
+      else
+         xmu(1:icp) = mu(1:icp)
       end if
 
       do i = 1, isoct
@@ -2328,6 +2330,11 @@ c                                 allows output of the result.
          else if (.not.mus) then 
 
             call muwarn (quit,iter)
+            mu(1:icp) = xmu(1:icp)
+
+         else
+
+            xmu(1:icp) = mu(1:icp)
 
          end if
 

@@ -2826,6 +2826,10 @@ begin_model
 
                                       entered by Pierre-Henri Trapy, May 16, 2016
 
+                                      reformulated as an implicit O/D model to eliminate 
+                                      need to adjust the enthalpy of ordering with each
+                                      revision of the TC data base. DEK/JADC, 8/10/2021.
+
                                                       M1      M3
                                                      _____________
 
@@ -2845,19 +2849,16 @@ full_name    epidote
 688                               | model type: 688 format standard model
 1                                 | number of polytopes
 1                                 | number of simplices
-2                                 | number of vertices on each simplex
-cz       fep                      | endmember names
+3                                 | number of vertices on each simplex
+cz       fep      ep              | endmember names
 
 0  1   .1  0                      | X(cz)
-
-begin_ordered_endmembers
-ep = 1/2 fep + 1/2 cz   Delta(enthalpy) = -12.5d3
-end_ordered_endmembers
+0  1   .1  0                      | X(fep)
 
 begin_excess_function
 w(cz fep) 3d3
 w(fep ep) 1d3
-w(cz ep) 1d3
+w(cz ep)  1d3
 end_excess_function
 
 2                                 | 2 site (M1, M3) configurational entropy model
@@ -2873,7 +2874,6 @@ z(Al,M3) = 1 cz
 z(Fe,M3) = 1 fep + 1 ep
 
 [Ca2Si3O12(OH)]                   | formula suffix, enter "none" for no suffix.
-
 
 end_of_model
                       --------------------------------------------------------
@@ -11214,9 +11214,9 @@ begin_model
                       NOTE: to use this the following endmembers must be specified with make
                       definitions in the thermodynamic data file
 
-                              mpa       = 1 parg - 1 tr +1 anth dqf(25d3)
-                              ged_dqf   = dqf(ged)   20000
-                              ogl_dqf   = dqf(gl)    15000
+                              mpa       = 1 parg - 1 tr +1 anth dqf(25d3) (recently modified to 3d3, JADC, 8/21)
+                              ged_dqf   = dqf(ged)   20000 (recently modified to 40d3, JADC, 8/21)
+                              ogl_dqf   = dqf(gl)    15000 (recently modified to 0, i.e., model could just use gl, JADC, 8/21)
                               fanth_dq  = dqf(fanth)  7000
                               omrb_dqf  = 1 gl -2 jd -2 acm dqf(33d3)
 
