@@ -1851,8 +1851,8 @@ c        the working set at its upper bound.
          if (is.eq.2) rlam = -rlam
          if (is.eq.3) rlam = abs(rlam)
          if (is.eq.4) rlam = -abs(rlam)
-
-         if (is.ne.3) then
+c DEBUG DEBUG
+         if (is.ne.3.and..not.isnan(rlam)) then
             scdlam = rlam*anormj
             if (scdlam.lt.smllst) then
                smllst = scdlam
@@ -1864,7 +1864,7 @@ c        the working set at its upper bound.
             end if
          end if
 
-         if (numinf.gt.0 .and. j.gt.jinf) then
+         if (numinf.gt.0 .and. j.gt.jinf.and..not.isnan(rlam)) then
             scdlam = rlam/wtinf(j)
             if (scdlam.gt.biggst) then
                biggst = scdlam
@@ -8283,7 +8283,12 @@ c     the qp.
          end if
 
          gltest = (1d0+abs(objf)+abs(cnorm))*epsrf/fdnorm
-         if (glnorm.le.gltest) then
+         if (isnan(gltest)) then 
+            goodgq = .false.
+            mjrmsg(3:3) = 'central differences'
+            lvldif = 2
+            newgq = .true.
+         else if (glnorm.le.gltest) then
             goodgq = .false.
             mjrmsg(3:3) = 'central differences'
             lvldif = 2
@@ -8308,6 +8313,10 @@ c     define small quantities that reflect the magnitude of objf and
 c     the norm of grad(free).
 
       objsiz = 1d0 + abs(objf)
+      if (isnan(objsiz)) objsiz = 1d0
+      if (isnan(gfnorm)) gfnorm = 1d0
+      if (isnan(gznorm)) gznorm = 1d0
+
       xsize = 1d0 + xnorm
       gtest = max(objsiz,gfnorm)
       dinky = rtftol*gtest
@@ -9543,6 +9552,11 @@ c        the condition number of  rz1.
          dinky = 0d0
       else
          objsiz = 1d0 + abs(ssq+ctx)
+c DEBUG DEBUG
+         if (isnan(ctx)) objsiz = 1d0
+         if (isnan(gfnorm)) gfnorm = 1d0
+         if (isnan(grznrm)) grznrm = 0d0
+
          wssize = 0d0
          if (nactiv.gt.0) wssize = dtmax
          dinky = epspt8*max(wssize,objsiz,gfnorm)

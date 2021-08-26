@@ -54,7 +54,7 @@ aq_output                 default | [T] output back-calculated solute chemistry 
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
-aq_lagged_speciation      default | [F] do lagged solute chemistry when electrolyte data is available
+aq_lagged_speciation      T default | [F] do lagged solute chemistry when electrolyte data is available
 aq_solute_composition     default | [m] y => mole fractions, m => molality
 aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solvent_solvus         default | [T] allow solvent phase separation without aq_bad_results error trigger

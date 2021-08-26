@@ -18258,6 +18258,7 @@ c                                v(iv1) on x, v(iv2) on y
       else if (icont.eq.2) then 
 c                               composition is on x, v(iv1) on y
          dvr(1) = 1d0/rloopx
+         cx(1) = 0d0
 
          dv(iv1) = (vmax(iv1) - vmin(iv1))/rloopy
          dvr(2) = dv(iv1)

@@ -563,8 +563,8 @@ c                                  lagged speciation pure solvent
             call gaqlgd (g,rcp,rsum,rsmo,i,bad,.false.)
 
             if (.not.bad) then 
-
-               rkwak = .true.
+c DEBUG rkwak
+               rkwak = .false.
 c                                 save the composition, was 
 c                                 nopt(37) during testing, but
 c                                 since this is the only composition
@@ -2661,7 +2661,8 @@ c                                 save endmember fractions
 c                                 get and save the composition
 c                                 getscp uses the jdv pointer
 c                                 only for lagged speciation
-            rkwak = .true.
+c DEBUG rkwak
+            rkwak = .false.
 
             call getscp (scp,cptot(i),jds,jdv(i))
 

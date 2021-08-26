@@ -1891,36 +1891,13 @@ c                                 ======================================
 c                                 for 1d calculations get the independent
 c                                 variable, currently composition is not
 c                                 allowed. 
-         if (ivct.gt.1) then
-
-            do
-
-               write (*,1210)
-               write (*,2140) (j,vname(iv(j)), j = 1, ivct) 
-               if (ifct.eq.1) write (*,7150) vname(3) 
-               read (*,*,iostat=ier) jc
-               if (ier.eq.0) exit
-               call rerr
-
-            end do
-
-         else 
-            jc = 1
-         end if 
-c                                 get the minimum and maximum values for 
-c                                 the path variable.                 
-         call redvar (jc,1)
+         call getxvr (ivct,jvct,icont,jc,oned,'the independent')
 c                                 get sectioning variables values:
          do j = 1, ivct
             if (j.eq.jc) cycle 
             call redvar (j,2)
             vmax(iv(j)) = vmin(iv(j))
          end do     
-c                                  put the independent variable in the 
-c                                  "x" position (pointer iv(1)).
-         ix = iv(1)
-         iv(1) = iv(jc)
-         iv(jc) = ix
 c                                  set the icopt flag to its final value
          if (icopt.eq.2) then
 c                                  1-d minimization
@@ -1937,55 +1914,16 @@ c                                  fractionation, also write the grid blurb
 c                                  1-d "gridded min" from a file, only allow p-t
          icont = 1
 
-         if (ivct.gt.1) then
-
-            do
-
-               write (*,1210)
-               write (*,2140) (j,vname(iv(j)), j = 1, ivct) 
-               if (ifct.eq.1) write (*,7150) vname(3) 
-               read (*,*,iostat=ier) jc
-               if (ier.eq.0) exit
-               call rerr
-
-            end do
-c                                  put the independent variable in the 
-c                                  "x" position (pointer iv(1)).
-            ix = iv(1)
-            iv(1) = iv(jc)
-            iv(jc) = ix
-
-         end if 
+         call getxvr (ivct,jvct,icont,jc,oned,
+     *                                'the independent path')
 
       else if (icopt.eq.9.or.icopt.eq.11) then
 c                                  2-d fractionation, only allow p and t
          ivct = 2
          icont = 0 
 c                                  choose the primary variable (IV(1)):
-         do
-
-            write (*,'(/,a)') 'Select the primary therodynamic variable'
-     *                      //' (usually pressure):'
- 
-            do 
-               write (*,2140) (j,vname(iv(j)), j = 1, ivct)
-               read (*,*,iostat=ier) jc
-                  if (ier.eq.0) exit
-                  call rerr
-            end do
- 
-            if (jc.gt.ivct.or.jc.lt.1) then
-               write (*,1150)
-               cycle
-            end if
-
-            exit 
-
-         end do 
- 
-         ix = iv(1)
-         iv(1) = iv(jc)
-         iv(jc) = ix
+         call getxvr (ivct,jvct,icont,jc,oned,
+     *                'the primary (usually pressure)')
 
       else if (icopt.eq.6) then 
 c                                  0-d infiltration/reaction/fractionation
@@ -2014,50 +1952,9 @@ c                                  gridded minimization:
          icopt = 5
          jvct = 0
          icont = 1
-
-         if (ivct.eq.1) then
-c                                  there is only one potential variable, the
-c                                  x variable must be composition, we assume
-c                                  the user is not so stupid as to assign a 
-c                                  potential dependency when he wants a composition 
-c                                  diagram.  
-            icont = 2
-
-         else 
 c                                  Select the x variable
-            do 
+         call getxvr (ivct,jvct,icont,jc,oned,'x-axis')
 
-               write (*,2111)
-
-               do 
-                  write (*,2140) (j,vname(iv(j)), j = 1, ivct)
-                  if (icp.gt.1) write (*,1470) j
-                  if (ifct.eq.1) write (*,7150) vname(3) 
-                  if (icp.gt.1) write (*,1570)
-                  read (*,*,iostat=ier) jc
-                  if (ier.eq.0) exit
-                  call rerr
-               end do
-
-
-               if (jc.gt.ivct+1.or.jc.lt.1) then
-                  write (*,1150)
-                  cycle
-               else if (jc.eq.ivct+1) then 
-                  icont = 2
-               else 
-                  jvct = 1
-                  ix = iv(1)
-                  iv(1) = iv(jc)
-                  iv(jc) = ix
-                  call redvar (1,1)
-               end if
-
-               exit 
-
-            end do 
-
-         end if
 
          if (ivct.eq.2.and.icont.eq.1) then 
 c                                 there is no C variable and there 
@@ -2159,33 +2056,8 @@ c                                  convert to internal values
 
          if (icopt.eq.1) then
 c                                  Select the x variable (IV(1)):
-            do
-
-               write (*,2111)
- 
-               do 
-                  write (*,2140) (j,vname(iv(j)), j = 1, ivct)
-                  if (ifct.eq.1) write (*,7150) vname(3) 
-                  read (*,*,iostat=ier) jc
-                  if (ier.eq.0) exit
-                  call rerr
-               end do
- 
-               if (jc.gt.ivct.or.jc.lt.1) then
-                  write (*,1150)
-                  cycle
-               end if
-
-               exit 
-
-            end do 
- 
-            ix = iv(1)
-            iv(1) = iv(jc)
-            iv(jc) = ix
- 
-            call redvar (1,1)
-c                                 select the y variable (iv(2)):
+            call getxvr (ivct,jvct,icont,jc,oned,'x-axis')
+c                                  select the y variable (iv(2)):
             if (ivct.gt.2) then
  
                do 
@@ -2220,46 +2092,22 @@ c                                 select the y variable (iv(2)):
             iv(jc) = ix
  
             call redvar (2,1)
-c                                 specify sectioning variables (iv(3)):
+c                                  specify sectioning variables (iv(3)):
             do j = 3, ivct
                call redvar (j,2) 
                vmax(iv(j)) = vmin(iv(j))
             end do 
 
          else if (icopt.eq.3) then
-c                                 select the y variable (iv(1)):
-            do
-
-               write (*,2210)
-
-               do
-                  write (*,2140) (j,vname(iv(j)), j = 1, ivct)
-                  if (ifct.eq.1) write (*,7150) vname(3) 
-                  read (*,*,iostat=ier) jc
-                  if (ier.eq.0) exit
-                  call rerr
-               end do
-
-               if (jc.gt.ivct.or.jc.lt.1) then
-                  write (*,1150)
-                  cycle
-               end if
-
-               exit
-
-            end do
- 
-            ix = iv(1)
-            iv(1) = iv(jc)
-            iv(jc) = ix
- 
-            call redvar (1,1)
-c                                 specify sectioning variable (iv(2)):
+c                                  select the y variable (iv(1)):
+            call getxvr (ivct,jvct,icont,jc,oned,'y-axis')
+c                                  specify sectioning variable (iv(2)):
             do j = 2, ivct
                call redvar (j,2) 
                vmax(iv(j)) = vmin(iv(j))
             end do 
          end if
+
       else if (icopt.eq.11) then 
          icont = 1
       end if
@@ -2417,7 +2265,7 @@ c                                 open c-space
      *        ' line, the coordinates are, in order:',4x,5(a,2x))
 1140  format (/,'File: ',a,/,'Does not exist, you must create it',
      *        ' before running VERTEX.',/)
-1150  format (/,'huh?',/)
+1150  format (/,'hunh?',/)
 1160  format (/,'Answer yes to specify a P-T path for phase ',
      *          'fractionation calculations.',/)
 1210  format ('Select the path variable for the calculation:',/)
@@ -2498,3 +2346,106 @@ c                                 open c-space
      *       'permits use of its compositional variable: ',a,'.',/) 
 
       end 
+
+
+      subroutine getxvr (ivct,jvct,icont,jc,oned,text)
+c----------------------------------------------------------------------
+c read primary variable 
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character text*(*)
+
+      logical oned
+
+      integer j,ivct, ier, ix, jc, icont, jvct, jcont
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      character*8 vname, xname
+      common/ csta2 /xname(k5),vname(l2)
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+c----------------------------------------------------------------------
+c                                 jcont = 0, no bulk composition allowed
+      jcont = 0
+
+      if (icopt.eq.1) then 
+c                                 2d projection, no bulk composition allowed
+      else if (icopt.eq.3) then 
+c                                 1d projection, no bulk composition allowed
+      else if (icopt.eq.9.or.icopt.eq.11) then 
+c                                 2-d fractionation
+      else if (icopt.eq.2.or.icopt.eq.10) then
+c                                 1d-gridded min file I/O
+      else if (icopt.eq.2.or.icopt.eq.5) then
+c                                 1d- & 2d-gridded min
+c                                 bulk composition allowed
+         if (icp.gt.1) jcont = 1
+      else 
+         call errdbg ('unanticipated icopt value in getxvr')
+      end if
+
+      do 
+
+         write (*,2111) text
+
+         do
+
+            write (*,2140) (j,vname(iv(j)), j = 1, ivct)
+c                                 bulk composition variable
+            if (jcont.eq.1) write (*,1470) j
+c                                 saturated phase composition explanation
+            if (ifct.eq.1) write (*,7150) vname(3)
+c                                 warn that the bulk composition
+c                                 variable can't be used on y
+            if (.not.oned.and.jcont.eq.1) write (*,1570)
+
+            read (*,*,iostat=ier) jc
+            if (ier.eq.0) exit
+            call rerr
+
+         end do
+
+         if (jcont.eq.1.and.jc.gt.ivct+1.or.
+     *       jcont.eq.0.and.jc.gt.ivct.or.
+     *                                         jc.lt.1) then
+            write (*,'(/,''hunh?'',/)')
+            cycle
+
+         else if (jc.eq.ivct+1) then 
+c                                 bulk composition variable, limits
+c                                 and position are automatic
+            icont = 2
+
+         else 
+c                                 normal variable, swap positions
+            jvct = 1
+            ix = iv(1)
+            iv(1) = iv(jc)
+            iv(jc) = ix
+c                                 read limits
+            call redvar (jc,1)
+
+         end if
+
+         exit 
+
+      end do
+
+1470  format (5x,i1,' - Composition X_C1* (user defined)')
+1570  format (/,'*X_C1 can not be selected as the y-axis variable',/)
+2111  format (/,'Select ',a,' variable:')
+2140  format (5x,I1,' - ',a)
+7150  format (/,'*Although only one component is specified for the ',a,
+     *       ' phase, its equation of state',/,
+     *       ' permits use of its compositional variable: ',a,'.',/)
+
+      end

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated August 23, 2021.',
+     *     'Perple_X version 6.9.1, source updated August 26, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -9093,7 +9093,7 @@ c                             variable iv(1):
             call error (112,r,i,'less than or equal')
 
          else if (vmin(iv(1)).eq.vmax(iv(1)).and.
-     *            icopt.eq.5.and.icont.lt.3) then
+     *            (icont.lt.3.or.oned.and.icont.eq.1)) then
 
             call error (112,r,i,'equal')
 
