@@ -16962,10 +16962,6 @@ c----------------------------------------------------------------------
 
       character text*(lchar)
 
-      logical plopt
-      integer piopt
-      common/ cst213 /piopt(5),plopt(5)
-
       integer igrd
       common/ cst311/igrd(l7,l7)
 
