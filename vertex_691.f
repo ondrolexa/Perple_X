@@ -138,13 +138,14 @@ c                                 set refine to indicate the stage
          call setau1
 c                                 set grid parameters
          call setau2
-c                                 suppress output to print file
-         io3 = 1
+c                                 suppress output to print file, why?
+c        io3 = 1
 c                                 close/open prt/plt/blk
          if (io3.eq.0) then
 c                                 prt output file
             call mertxt (tfname,prject,'.prn',0)
             call inqopn (n3,tfname)
+            call outtit
 
          end if
 c                                 plt output file

@@ -3955,16 +3955,12 @@ c                                 choose property
 
          if (iprop.eq.0) then 
             write (*,1050)
+            do i = 1, kprop
+               write (*,1060) i,propty(i)
+            end do 
          else 
             write (*,1051)
          end if
-
-         do i = 1, kprop
-
-            if (iprop.gt.0) cycle 
-            write (*,1060) i,propty(i)
-
-         end do 
 
          do 
 
@@ -4008,7 +4004,7 @@ c                                 write blurb about units
 
             kfl(1) = .false.
 
-            if (iprop.gt.1) then 
+            if (iprop.gt.0) then 
 c                                eject if other props already chosen:
                call warn (54,nopt(1),icx,'CHSPRP')
                cycle
@@ -4043,7 +4039,7 @@ c                                 identify the solvent
              
          else if (lop.eq.25) then 
 c                                eject if other props already chosen:
-            if (iprop.gt.1) then 
+            if (iprop.gt.0) then 
                call warn (54,nopt(1),icx,'CHSPRP')
                cycle
             end if 
@@ -4145,7 +4141,7 @@ c                                 get user defined composition:
 
          else if (lop.eq.36.or.lop.eq.38) then   
 c                                eject if other props already chosen:
-            if (iprop.gt.1) then 
+            if (iprop.gt.0) then 
                call warn (54,nopt(1),icx,'CHSPRP')
                cycle
             end if 

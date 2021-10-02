@@ -77,7 +77,10 @@ c                                 ask for options
 c                                 get user options and read
 c                                 rest of plot file, draw data
       call psdplt (jop0)
- 
+c                                 george's data plotting routine
+c                                 option "plot_extra_data" = T
+      if (plopt(4)) call psdat
+
       call psclos
  
       close (n4)
@@ -310,10 +313,6 @@ c----------------------------------------------------------------------
       double precision xfac, cscale, nscale, ascale, rlabel, width 
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
      *             spline,half,tenth,grid,fill,label
-
-      logical plopt
-      integer piopt
-      common/ cst213 /piopt(5),plopt(5)
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -810,10 +809,6 @@ c----------------------------------------------------------------------
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
 
-      logical plopt
-      integer piopt
-      common/ cst213 /piopt(5),plopt(5)
-
       logical spline, half, tenth, grid, fill, label
       integer ifont, bbox 
       double precision xfac, cscale, nscale, ascale, rlabel, width 
@@ -843,19 +838,6 @@ c                                 text field label
 
       end
 
-      integer function nblen(str)
-c--------------------------------------------------------------- 
-c george's function for psgrid, 
-c replicates a function already in perple_x
-c nblen - function to return nonblank length of a string
-      character str*(*)
-      integer i
-
-      do i=len(str),1,-1
-         if (str(i:i) .ne. ' ') exit
-      end do
-      nblen = i
-      end
 
       subroutine iasadd(m,n,tab)
 c----------------------------------------------------------------------

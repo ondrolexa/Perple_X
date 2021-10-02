@@ -1195,8 +1195,10 @@ z(Ca,M4)   = 1 ts + 1 parg + 1 kprg + 1 tts + 1 tr
 
 T1                                  | site name
 2 1 4                               | number of species, effective multiplicity, true multiplicity
-z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg
-z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b + 1 cumm
+                                    | for some reason tts was "Al-free" here, but not in cAmph(G)_I
+                                    | corrected, DEK 22/9/21
+z(Al,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts
+z(Si,T1)   = 1/2 ts + 1/2 parg + 1/2 kprg + 1/2 tts + 1 gl + 1 mrbG + 1 tr + 1 grun + 1 a + 1 b + 1 cumm
 
 OH                                  | site name
 2 2 2                               | number of species, effective multiplicity, true multiplicity
@@ -3842,13 +3844,14 @@ end_dqf_corrections
 
 end_of_model
                       --------------------------------------------------------
+
 begin_model
-                             Ti-Fe-Fe3-Mg-Mn Staurolite, White et al., JMG 32:261-286, 2014.
+
+                             688-type Ti-Fe-Fe3-Mg-Mn Staurolite, White et al., JMG 32:261-286, 2014.
 
                              This model requires the make definitions:
 
-
-                             mnst = 1 mnst                           | comment added DEK 2nd June 2021
+                             mnst = 1 mnst                           | added DEK 2nd June 2021
                              -0.19d3
 
                              msto   = 1 andr  -1 gr  + 1 mst
@@ -3865,21 +3868,30 @@ begin_model
                              mnst added, vacancy on Al site disassociated
                              from Ti, by Felix Gervais.  JADC, 1/26/2014
 
+                             DEK 17th Sept 2021: reconfigured to 688 model type so as to allow
+                             calculation of structural formulae with activity output in meemum.
+
 St(W)
+
 abbreviation St
 full_name    staurolite
 
-2                                     model type: simplicial composition space
-5                                     5 endmembers
+688                                   | model type: 688 format standard model
 
-mstt   msto    fst    mnst   mst
+1                                     | number of polytopes
+1                                     | number of simplices
+5                                     | 5 independent end-members (or number of vertices on each simplex)
 
-0 0 0 0 0                    | endmember flags
+mstt   msto    mst    mnst   fst      | end-member names
 
-0. .1  .1   0                | range and resolution for X(Ti),  imod = 1 -> asymmetric transform subdivision
-0. .1  .1   0                | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
-0. 1   .1   0                | range and resolution for X(Fe),  imod = 0 -> cartesian subdivision
-0. 1   .1   0                | range and resolution for X(Mn),  imod = 0 -> cartesian subdivision
+| NAME, XMIN, XMAX, XINC, IMOD (IMOD = 0 is cartesian scheme; IMOD = 1 is non-linear scheme, See https://www.perplex.ethz.ch/perplex/datafiles/solution_model.dat)
+| If only one simplex no need to put NAME out front.
+
+0. .3  .1   1                | first simplex: range and resolution for X(Ti),  imod = 1 -> asymmetric transform subdivision
+0. .3  .1   1                | range and resolution for X(Fe3), imod = 1 -> asymmetric transform subdivision
+
+0. 1   .1   0                | range and resolution for X(Mg),  imod = 0 -> cartesian subdivision
+0. 6   .1   0                | range and resolution for X(Mn),  imod = 0 -> cartesian subdivision
 
 begin_excess_function
 W(mst fst)                16d3
@@ -3896,18 +3908,24 @@ end_excess_function
 
 2                                     2 site entropy model
 
-3 4.                                  3 species, site multiplicity of 4
-z(Fe) = 1 fst
-z(Mg) = 1 mst +1 mstt + 1 msto     | corrected from just 1 mst by Felix Gervais, 4/9/2015. JADC
+X
+3 4 4                                 3 species, effective site multiplicity of 4, true multiplicity
+z(Mg,X) = 1 mst + 1 mstt + 1 msto     | corrected from just 1 mst by Felix Gervais, 4/9/2015. JADC
+x(Mn,X) = 1 mnst
+z(Fe,X) = 1 fst
 
-4 2.                                  4 species, site multiplicity of 2, not clear if the vacancy is associated with Ti
-z(Ti)  = 3/4 mstt
-z(Fe3) =   1 msto
-z(vac) =   1/4 mstt
+Y
+4 2 2                                 4 species, effective site multiplicity of 2, true multiplicity (not clear if the vacancy is associated with Ti)
+z(Ti,Y)  = 3/4 mstt
+z(Fe3,Y) =   1 msto
+z(v,Y)  = 1/4 mstt
+z(Al,Y) = 1 mst + 1 fst + 1 mnst
+
+[Al16Si7.5O44(OH)4]                   | formula suffix, enter "none" for no suffix
 
 begin_dqf_corrections
 dqf(mst)  -8000
-dqf(mnst) -190                      | corrected from 0.19 by Felix Gervais, 4/9/2015. JADC
+dqf(mnst) -190                        | corrected from 0.19 by Felix Gervais, 4/9/2015. JADC
 end_dqf_corrections
 
 end_of_model
@@ -4078,7 +4096,9 @@ z(Mn)   = 1 mnopx
 z(Mg)   = 1 en + 1 mgts + 1 mots1
 
 T                                   | site name
-2 .25 2                             | number of species, effective multiplicity, true multiplicity
+                                    | effective site multiplicity increased from .25 to .5, DEK 22/9/2021
+                                    | the ".25" value is apparently a typo in the TC commentary.
+2 .5 2                              | number of species, effective multiplicity, true multiplicity
 z(Al,T)    = 1/2 mgts + 1/2 mots1
 z(Si,T)    = 1/2 mgts + 1/2 mots1 + 1 en + 1 fs + 1 opx + 1 di + 1 mnopx
 
@@ -4185,6 +4205,8 @@ X_MBio by difference
 begin_ordered_endmembers
                              | enthalpy corrected to -1d3 from -2d3, May 1, 2019. JADC
                              | uncorrected to -2d3 to be consistent with 12-12-2019 TC files.
+                             | -2d3 for older (WhiteEtAl14), -3d3 for newer/tc350 | changed from -1d3 DEK 02-JUN-2021. Different tc a-x files have ann vs annm as end-members. 
+                             | Depending on which a-x file version will determine what DQF_obi is. DEK
 obi = 2/3 phl + 1/3 ann   delta_g_of_ordering  = -2d3
 end_ordered_endmembers
 

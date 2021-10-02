@@ -483,3 +483,7 @@ c
 c                                 lagged chemical potentials:
       double precision xmu
       common/ cxt9 /xmu(k8)
+c                                 plot_option_file options
+      logical plopt
+      integer piopt
+      common/ cst213 /piopt(5),plopt(5)

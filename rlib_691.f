@@ -12403,6 +12403,9 @@ c-----------------------------------------------------------------------
 
       logical gflu,aflu,fluid,shear,lflu,volume,rxn
       common/ cxt20 /gflu,aflu,fluid(k5),shear,lflu,volume,rxn
+c                                 solution model names
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 c----------------------------------------------------------------------
       write (n3,1000)
 c                          title:
@@ -12486,10 +12489,16 @@ c                          excluded phases
          write (n3,1140)
          write (n3,'(7(1x,a,1x))') (exname(i), i = 1, ixct)
       end if
+c                          solution models
+      if (isoct.ne.0) then 
+         write (n3,1140)
+         write (n3,'(6(1x,a,1x))') (fname(i), i = 1, isoct)
+      end if
 
       write (n3,1000)
 
 1000  format (/,80('-'),/)
+1030  format (/,'Solution models considered:',/)
 1040  format (/,'Phases and (projected) mol fraction ',a,':',/)
 1070  format (/,'Independently constrained potentials:',//,3x,8(a,1x))
 1080  format (/,'Components with unconstrained potent'
@@ -18450,10 +18459,6 @@ c----------------------------------------------------------------------
       logical count, err
 
       character text*(lchar)
-
-      logical plopt
-      integer piopt
-      common/ cst213 /piopt(5),plopt(5)
 
       integer igrd
       common/ cst311/igrd(l7,l7)

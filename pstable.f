@@ -106,7 +106,9 @@ c                                 contour plotting
 c                                 x-y plotting
          call pstab1
 
-      end if 
+      end if
+
+      if (plopt(4)) call psdat
  
       call psclos
  
