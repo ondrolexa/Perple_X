@@ -931,8 +931,10 @@ c                                  write a text version for the title
       subroutine redvar (ind,iprompt)
 c----------------------------------------------------------------------
 c redvar interactively reads and checks values for the primary variable 
-c indexed by ind. if num = 1 it reads only the vmin(ind) value, else both
-c vmin(ind) and vmax(ind) are read.
+c indexed by ind.
+c
+c if iprompt = 1 reads vmin(ind) and vmax(ind) are read.
+c else reads just vmin(ind)
 c----------------------------------------------------------------------
       implicit none
  
@@ -2432,7 +2434,7 @@ c                                 normal variable, swap positions
             iv(1) = iv(jc)
             iv(jc) = ix
 c                                 read limits
-            call redvar (jc,1)
+            call redvar (1,1)
 
          end if
 
