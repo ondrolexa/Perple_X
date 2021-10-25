@@ -1902,6 +1902,8 @@ c data on one line of less than 240 characters, the expected format
 c        W(name-name-...) number number number
 
 c end_of_data is either a "|" or the end of the record.
+
+c iord - reinstated as the max order of an excess term, JADC, 10/25/2021.
 c----------------------------------------------------------------------
       implicit none
 
@@ -1933,6 +1935,7 @@ c----------------------------------------------------------------------
      *               e16st(13)
 c----------------------------------------------------------------------
       iterm = 0
+      iord = 0
       xtyp = 0
 
       call readcd (n9,ier,.true.)
@@ -2061,6 +2064,8 @@ c                                 assign data
             end do
 
          end if
+
+         if (rkord(iterm).gt.iord) iord = rkord(iterm)
 
       end do
 
@@ -6403,7 +6408,12 @@ c                                 bookkeeping variables
 c----------------------------------------------------------------------
       if (extyp(id).eq.1) then
 c                                 redlich kistler is a special case
-
+c                                     wk(1) = w0 cst
+c                                     wk(2) = wT coefficient on T
+c                                     wk(3) = wP some term in brosh's murnaghan-like excess term
+c                                     wk(4) = wP1 some term in brosh's murnaghan-like excess term
+c                                     wk(5) = wP2 some term in brosh's murnaghan-like excess term
+c                                     wk(6) = wP0 coefficient on P
          do i = 1, jterm(id)
             do j = 1, rko(i,id)
 
@@ -9974,10 +9984,24 @@ c                                 G Helffrich, 4/16
 
                   zpr = pa(jsub(1,i,im))*pa(jsub(2,i,im))
      *                * (pa(jsub(1,i,im)) - pa(jsub(2,i,im)))**(j-1)
+c                                 Sloppy fix for the linear P term
+c                                 being wkl(6), i.e., 'wP', wkl(3..5)
+c                                 wP0, wP1, wP2, are for brosh's murnaghan
+c                                 and are always identified as a special 
+c                                 case. This needs to be fixed, i.e., RK
+c                                 should be identified as a special case 
+c                                 like LAAR
+                  do l = 1, 3
 
-                  do l = 1, m3
+                     if (l.lt.3) then 
+                        h = l
+                     else 
+                        h = 6
+                     end if
+
                      exces(l,iphct) = exces(l,iphct)
      *                                + zpr * wkl(l,j,i,im)
+
                   end do
 
                end do
