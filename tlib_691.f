@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated October 25, 2021.',
+     *     'Perple_X version 6.9.1, source updated November 10, 2021.',
 
      *     'Copyright (C) 1986-2021 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3305,8 +3305,7 @@ c    *          8x,'increase speciation_max_it.',/,
 56    format (/,'**warning ver056** the EoS specified for ',a,' by the',
      *        ' hybrid_EoS option will be',/,'overridden by the EoS sp',
      *        'ecified in the problem definition file. To prevent this',
-     *      /,'behavior delete the special_component section from the ',
-     *        'header of the',/,'thermodynamic data file.',/)
+     *      /,'behavior set the GFSM option to True.',/)
 57    format (/,'**warning ver044** ordinarily ',a,' should > 0, value',
      *          's <= 0 may cause numerical',/,
      *          'instability. Specify a different value (Y/N)?')

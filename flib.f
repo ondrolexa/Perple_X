@@ -4577,7 +4577,9 @@ c-----------------------------------------------------------------------
       common/ cst11 /fh2o,fco2,funk
                   
       save whc
-      data whc/2525.86d0/
+      data whc/13000d0/ 
+c
+c 252.586d0 
 c----------------------------------------------------------------------
       if (xco2.eq.1d0) then
  
@@ -4597,12 +4599,16 @@ c----------------------------------------------------------------------
          xh2o = 1d0 - xco2
 c                                 whc = 2*ahc/R, where ahc is the h2o-co2
 c                                 interaction parameter estimated by H&P
-c                                 2003, 10.5 kJ/mol  
+c                                 2003, 10.5 kJ^2/kbar, the volumes coming
+c                                 out of are cm3 = 0.1 J/bar therefore 
+c                                 ahc' * vcm3 = (ahc * 0.1) * vcm3  = ahc * vjbar
+c                                 ahc' = 10500 * 0.1 => whc = .2*ahc/8.314 = 252.586
          w = whc/t/(xh2o*vh2o+xco2*vco2)**2
 c                                 ln(gamma) = w*v*x^2
+c                                 verified again, JADC, 11/2021
          fco2 = fco2 + w*vco2*xh2o**2 + dlog(xco2)
          fh2o = fh2o + w*vh2o*xco2**2 + dlog(xh2o)
- 
+
       end if
 
       end

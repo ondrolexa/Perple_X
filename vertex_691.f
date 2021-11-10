@@ -223,7 +223,7 @@ c                                 the total time is in etime(30)
      *                  times(13)/60.,times(13)/etime(30)*1d2
          write (n,1010) 'Dynamic LP           ',
      *                  times(14)/60.,times(14)/etime(30)*1d2
-         write (n,1010) 'Succesive QP         ',
+         write (n,1010) 'Successive QP        ',
      *                  (times(15)-times(2))/60.,
      *                  (times(15)-times(2))/etime(30)*1d2
          write (n,1010) 'Total of above       ',

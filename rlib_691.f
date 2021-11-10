@@ -7012,7 +7012,7 @@ c                                 bw summation
       if (jsmod.eq.2.or.(jsmod.eq.688.or.jsmod.eq.7).and.
      *                 .not.ordmod) simple(im) = .true.
 
-      if (jsmod.eq.31.or.jsmod.eq.32) specil(im) = .true.
+      if (jsmod.eq.30.or.jsmod.eq.31) specil(im) = .true.
 
 c                                 this looks like bad news, for laar/recip
 c                                 or laar/order, but appears to be overridden

@@ -2156,7 +2156,7 @@ c                                 check reaction stoichiometries
          end do 
 
          do l = 1,iphct
-            do k = 1, k5
+            do k = 1, k0
                cp0(k,jj) = cp0(k,jj) + vnu(l)*cp0(k,l)
             end do 
          end do 

@@ -12569,19 +12569,25 @@ abbreviation gas
 full_name    gas
 
 2                                   | model type
-6                                   | number of species
+9                                   | number of species
                                     | species
 O2(g)
 O(g)
+CO
+CO2
+SiO(g)
 Mg(g)
 Fe(g)
 FeO(g)
 MgO(g)
 
-0 0 0 0 0 0                         | endmember flags.
+0 0 0 0 0 0 0 0 0                         | endmember flags.
 
 0    1    .1 0                      | range and resolution of X(O2), 0 => cartesian subdivision/1
 0    1    .1 0                      | range and resolution of X(O)
+0    1    .1 0                      | range and resolution of X(Mg)
+0    1    .1 0                      | range and resolution of X(Fe)
+0    1    .1 0                      | range and resolution of X(MgO)
 0    1    .1 0                      | range and resolution of X(Mg)
 0    1    .1 0                      | range and resolution of X(Fe)
 0    1    .1 0                      | range and resolution of X(MgO)
@@ -12589,13 +12595,16 @@ MgO(g)
 ideal
 
   1                                 | molecular configurational entropy model
-6 1                                 | 6 species, multiplicity 1
+9 1                                 | 6 species, multiplicity 1
 
 z(O2)  = 1 O2(g)
 z(O)   = 1 O(g)
 z(Mg)  = 1 Mg(g)
 z(Fe)  = 1 Fe(g)
 z(FeO) = 1 FeO(g)
+z(CO)  = 1 CO
+z(CO2) = 1 CO2
+z(SiO) = 1 SiO(g)
 
 end_of_model
                                   --------------------------------------------------------

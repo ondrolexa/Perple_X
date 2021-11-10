@@ -1087,7 +1087,7 @@ c psipts - subprogram to output invariant points.
       double precision x(1),y(1),r,rline
  
       integer ipds(k8),k,iop1,iop3,iop4,iop5,iop6,iop7,iop9,i,j,ipct,
-     *        incts,ipid,ipvar,imatch,jop4
+     *        incts,ipid,ipvar,imatch,jop4,ier
 
       integer ixct,iex,jex,ict
       common/ excl1 /ixct(3),iex(50,3),jex(50,3),ict(3)
@@ -1114,7 +1114,18 @@ c----------------------------------------------------------------------
  
       do i = 1, ipct
  
-         read (n4,*) ipid,ipvar,(ipds(j), j=1,incts),(var(j), j=1,jvar)
+         read (n4,*,iostat=ier) ipid,ipvar,(ipds(j), j=1,incts),
+     *                          (var(j), j=1,jvar)
+
+         if (ier.ne.0) then
+c                                 who know's how this condition comes about,
+c                                 likely the user edited the file.
+            call warn (99,0d0,0,'the list of invariant points in the '
+     *             //'plt file is incomplete.')
+
+            exit
+
+         end if 
 
          x(1) = var(1)
          y(1) = var(2)
