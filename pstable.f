@@ -324,12 +324,6 @@ c---------------------------------------------------------------------
       integer inv
       character dname*14, title*162
       common/ cst76 /inv(i11),dname(i11),title
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
       if (iop0.eq.1) then 
 c                                 log transformations

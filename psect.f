@@ -308,12 +308,6 @@ c----------------------------------------------------------------------
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
 
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width 
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
-
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
@@ -808,12 +802,6 @@ c----------------------------------------------------------------------
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width 
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
 
       call pssctr (ifont,ascale,ascale, 0d0)
@@ -929,12 +917,6 @@ c psgrd1 - subprogram draw 1d gridded minimization diagrams.
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -1090,12 +1072,6 @@ c psax1d - subroutine to output (sloppy) 1d axes.
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
 
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
-
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
@@ -1149,7 +1125,7 @@ c                                  sectioning constraints
  
       end if
  
-1000  format (a,'=',g9.3)
+1000  format (a,'=',1pg9.3)
 1010  format (/,'Modify default axes (y/n)?')
 1030  format (/,'Enter the starting value and interval for',
      *          ' major tick marks on',/,'the ',a,'-axis (',
@@ -1288,12 +1264,6 @@ c a different phase assmblage.
 
       integer igrd
       common/ cst311/igrd(l7,l7)
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
 
       rline = 1d0
@@ -1365,12 +1335,6 @@ c a different phase assmblage.
 
       integer igrd
       common/ cst311/igrd(l7,l7)
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
 
       rline = 1d0

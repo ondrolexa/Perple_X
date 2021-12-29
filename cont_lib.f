@@ -44,12 +44,6 @@ C----------------------------------------------------------------
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------            
 c                                  contor interval
       j = 0

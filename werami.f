@@ -208,6 +208,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       node = .false. 
       dim = 2
+c     call begtim (1)
 c                                 select the property
       call chsprp
 c                                 set up coordinates etc
@@ -346,6 +347,10 @@ c                                 round off tests:
          end do
  
       end do 
+
+c     call endtim (1,.true.,'tot')
+c     call endtim (2,.true.,'stx')
+c     call endtim (3,.true.,'plg')
 c                                 wrap up the calculation
       call finprp (dim,n5name,n6name,node) 
 

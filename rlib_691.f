@@ -3282,6 +3282,7 @@ c-----------------------------------------------------------------------
       save izap
       data izap /0/
 c----------------------------------------------------------------------
+c     call begtim(2)
 c                                 assign local variables:
       v0     = -thermo(3,id)
       nr9    = thermo(11,id)
@@ -3401,7 +3402,7 @@ c                                 thermal part derivatives:
          if (itic.gt.iopt(21).or.dabs(f1).gt.1d40) then
             bad = .true.
             exit
-         else if (dabs(dv/v).lt.nopt(50)) then
+         else if (dabs(dv/(1d0+v)).lt.nopt(50)) then
             bad = .false.
             exit
          end if
@@ -3454,6 +3455,10 @@ c                                 adiabatic shear modulus
      *       ,' P=',f9.1,' bar',/,'Using Sixtrude GI EoS.',
      *        ' Phase ',a,' will be destabilized.',/)
 
+c     call endtim (1,.false.,'tot')
+c     call endtim (2,.false.,'stx')
+c     call begtim (1)
+
       end
 
       double precision function plg (t)
@@ -3466,10 +3471,11 @@ c-----------------------------------------------------------------------
 
       integer i
 
-      double precision t, p1, p2, p3, p4, dinc
+      double precision t, p0, p1, p2, p3, p4, dinc
 c-----------------------------------------------------------------------
-
-      p1 = dexp(-t)
+c     call begtim(3)
+      p0 = dexp(-t)
+      p1 = 1d0
       p2 = t*t
       p3 = 2d0*t
 
@@ -3478,13 +3484,18 @@ c-----------------------------------------------------------------------
       do i = 1, 100000
 
          p4 = dfloat(i)
-         dinc = (p2 + (p3 + 2d0/p4)/p4)*p1**i/p4/p4
+
+         p1 = p1 * p0
+
+         dinc = (p2 + (p3 + 2d0/p4)/p4)*p1/p4/p4
+
          plg = plg + dinc
 
-         if (dabs(dinc/plg).lt.nopt(50)) exit
+         if (dabs(dinc/(1d0+dabs(plg))).lt.nopt(50)) exit
 
       end do
 
+c     call endtim (3,.false.,'plg')
       end
 
       double precision function vdpbm3 (vt,k,kprime)

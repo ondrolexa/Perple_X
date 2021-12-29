@@ -396,12 +396,6 @@ c pschem - subroutine to output ternary chemographies.
  
       integer iphct
       common/ ln4 /iphct
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
       iflag = 0
 c                                  read header information 
@@ -819,12 +813,6 @@ c pscurv - subroutine to output curves.
 
       character*10 xnams
       common/ excl4 /xnams(50,3)
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
       iend = 0
 
@@ -1221,12 +1209,6 @@ c psmixd - subroutine to draw binary mixed variable diagrams
 
       integer iphct
       common/ ln4 /iphct
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 
       data idf,igo/4*0/
 c                                  start-of-header
@@ -1905,12 +1887,6 @@ c          name label.
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen 
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 c----------------------------------------------------------------------
  
       if (ivar.eq.1) then

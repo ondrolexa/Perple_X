@@ -1,6 +1,6 @@
 |----------------------------------------------------------------------
 
-        | Run-time Perple_X 6.8.8 options:
+        | Run-time Perple_X 6.9.0 options:
 
         | Comments must be preceeded by the "|" character.
 
@@ -23,28 +23,7 @@
         | x_nodes 20 60 ...
 
 |----------------------------------------------------------------------
-| 691+ options:
-GFSM                      default    F T    | [F] allow GFSM/disable saturated-phase constraints
-LP_max_it                 default | [500] max number of iterations for a single LP optimization
-timing                    default    T    | [F] output CPU time information to my_project.tim
-optimization_max_it       default | [40] maximum number of sucessive LP optimizations
-optimization_precision    default | [1d-4 energy units] absolute precision for successive LP optimization
-order_check               default    F   | [F]
-replicate_threshold       default | [1d-2] effective initial resolution for auto-refine stage , nopt(35) 
-rep_dynamic_threshold     default | [1d-3] threshold for saving compositions during dynamic optimization, nopt(37) 
-intermediate_savrpc      default T       | [F] save intermediate compositions during dynamic optiomization, lopt(57)
-intermediate_savdyn      default T       | [F] save intermediate dynamic compositions as auto-refine static compositions, lopt(58)
-MINFRC_diff_increment     default | [1d-7 mol] finite difference increment for QP
-scatter-increment         default | [1d-2 mol]
-scatter-points           default | [T] lopt(54)
-speciation_precision      default | only for implicit fluid speciation routines
-keep_all_rpcs             default | [T] lopt(59)
-MINFXC_solver             default   0    | [0] -1..5 <0 use MINFXC as default, >0 use SPECI2 with various bailout options
-warning_ver013            default 
-warning_ver017            default
 
-|----------------------------------------------------------------------
-| 690- options:
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
@@ -89,6 +68,8 @@ increment                 default | [0.1 0.025] >0, < 1, fractional independent 
 initial_resolution        default | [1/16 1/48]* >0, <1, resolution for static compositions. *for composition and mixed variable diagrams the default auto-refine value is 1/160.
 interim_results           default | [auto] auto, off or on
 interpolation             default | [on 2] value 1: on or off [on]; value 2, 1->99 [2]; only relevant for WERAMI
+keep_auto                 default | [T] F; automatically reduce # of compositions kept per refinement point if > keep_max
+keep_max                  default | [20000], > ~100, < ~k21/k5; maximum # of compositions kept per refinement point if keep_auto
 linear_model              default | [on] on or off, relevant for 2d gridded minimization
 logarithmic_p             default | [F] replace pressure variable with log(pressure)
 melt_is_fluid             default | [F] identify melt (liquid) as fluid in WERAMI output
@@ -113,10 +94,10 @@ refine_endmembers         default | [F] accept endmember compositions as refinem
 reject_negative_sites     default | [T] reject compositions with negative site populations
 resolution_factor         default | [2] >2, controls the change in resolution between iterations during adaptive optimization.
 sample_on_grid            default | [T] F => WERAMI (mode 2) samples on the computational grid used by VERTEX
-seismic_data_file         default | [T] summarize options used for endmembers and solutions
 seismic_output            default | [some] all, some, none
-short_print               default off | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
-solution_names            default abb default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
+seismic_data_file         default | [F] summarize options used for endmembers and solutions
+short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
+solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
 solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II       default | [0.2] 0->1 
 speciation_factor         default | [100] >1, speciation precision = final resolution/speciation factor

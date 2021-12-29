@@ -487,3 +487,9 @@ c                                 plot_option_file options
       logical plopt
       integer piopt
       common/ cst213 /piopt(5),plopt(5)
+
+      logical spline, half, tenth, lgrid, fill, label
+      integer ifont, bbox
+      double precision xfac, cscale, nscale, ascale, rlabel, width, tcont
+      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,tcont,bbox(4),
+     *             ifont,spline,half,tenth,lgrid,fill,label

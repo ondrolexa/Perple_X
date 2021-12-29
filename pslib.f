@@ -9,13 +9,14 @@ c Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
 c SWITZERLAND. All rights reserved.
  
 c----------------------------------------------------------------
-      subroutine pselip (xor,yor,dx,dy,rline,width,ifill,ifg,ibg)
+      subroutine pselip (xor,yor,dx,dy,rline,wide,ifill,ifg,ibg)
 
       implicit none
- 
+
 c pselip - subroutine to generate ellipse primitives.
 
-      double precision rline,xor,yor,dy,dx,width
+      double precision rline,xor,yor,dy,dx,wide
+
       integer ifill,ixor,iyor,ifg,ibg
 
       integer nps
@@ -24,8 +25,8 @@ c pselip - subroutine to generate ellipse primitives.
  
       write (nps,1030)
  
-      call psolin (rline,width)
-c      call psocfg (ifg,ibg)
+      call psolin (rline,wide)
+c     call psocfg (ifg,ibg)
       call psoclr
       call psofil (ifill)
       call psotrn
@@ -66,7 +67,7 @@ c psbspl - subroutine to generate open bsplines.
 1030  format (/,'Begin %I BSpl')
       end
 c----------------------------------------------------------------
-      subroutine psrpgn (x1,y1,rx,ry,npts,rline,width,ifill)
+      subroutine psrpgn (x1,y1,rx,ry,npts,rline,wide,ifill)
  
 c psrpgn - subroutine to generate closed polygons, rel. coordinates.
 
@@ -77,7 +78,7 @@ c psrpgn - subroutine to generate closed polygons, rel. coordinates.
       integer ifill,npts,i,jpts
  
       double precision x(l5),y(l5),rx(npts),ry(npts),
-     *                 x1,y1,rline,width
+     *                 x1,y1,rline,wide
  
       jpts = npts + 1
  
@@ -92,7 +93,7 @@ c psrpgn - subroutine to generate closed polygons, rel. coordinates.
       end do 
  
  
-      call pspygn (x,y,jpts,rline,width,ifill)
+      call pspygn (x,y,jpts,rline,wide,ifill)
  
       end
 c----------------------------------------------------------------
@@ -634,18 +635,14 @@ c psprol - subroutine to write (EPS) postscript prolog.
 
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer i,nps
 
       character props(191)*63
 
       character font*40
       common/ myfont /font
-
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
 
       data (props(i),i=1,95)/
      *'%!PS-Adobe-2.0 EPSF-1.2',
@@ -1038,6 +1035,8 @@ c          to be concatenated with the transformation set by psstrn
 
       implicit none
 
+      include 'perplex_parameters.h'
+
       double precision x,y,xs,ys,theta,c0,s0,rad
 
       integer kfont
@@ -1046,12 +1045,6 @@ c          to be concatenated with the transformation set by psstrn
       double precision a,b,c,d
       common / chars /a,b,c,d,jfont
 
-      logical spline, half, tenth, grid, fill, label
-      integer ifont, bbox 
-      double precision xfac, cscale, nscale, ascale, rlabel, width      
-      common/ ops /xfac,cscale,nscale,ascale,rlabel,width,bbox(4),ifont,
-     *             spline,half,tenth,grid,fill,label
- 
       jfont = kfont
 
       rad = theta*0.01745329251994d0
