@@ -357,13 +357,13 @@ c psaxes - subroutine to output (sloppy) axes.
 
       implicit none
 
-      double precision x0,y0,dx,dy,xtic,ytic,xtic1,ytic1,
-     *                 xtic2,ytic2,tmin,x,y
-
-      integer jop0, i, nchar, in, ic(40), nblen
-
       include 'perplex_parameters.h'
- 
+
+      double precision x0,y0,dx,dy,xtic,ytic,xtic1,ytic1,
+     *                 xtic2,ytic2,tmin,x,y,vlo,vhi,fpoly
+
+      integer jop0, i, nchar, ic(40), nblen
+
       character*8 record*20, yes*1, nums(40)*12
 
       integer jvar
@@ -376,6 +376,12 @@ c psaxes - subroutine to output (sloppy) axes.
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
+
+      double precision vmax,vmin,dv
+      common/ cst9 /vmax(l2),vmin(l2),dv(l2)
+
+      character vname*8, xname*8
+      common/ csta2 /xname(k5),vname(l2)
 
       double precision xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
       common/ wsize /xmin,xmax,ymin,ymax,dcx,dcy,xlen,ylen
@@ -447,31 +453,24 @@ c                                       sectioning constraints
 
          do i = 3, jvar
 c                                       modfied GH, 12/23/21
-            if (i.eq.3 .and. idep.eq.1) thenc                                       print range of P(T)c                                       is there no simpler way to find T?
-               if (0.ne.index(vnm(1),'P')) then
-                  in = 1
-               else
-                  in = 2
-               end if
-               vlo = fpoly(vmn(in))
-               vhi = fpoly(vmx(in))
-               call psnum(vlo,vhi,vhi-vlo,ic,in,nums)
-               write(record,'(6a)') vnm(i),'= f(T) [',
-     *            nums(1)(1:nblen(nums(1))),'-',     *            nums(2)(1:nblen(nums(2))),']'
-            else if (i.eq.3 .and. idep.eq.2) then
-c                                       print range of T(P)
-c                                       is there no simpler way to find P?
-               if (0.ne.index(vnm(1),'T')) then
-                  in = 1
-               else
-                  in = 2
-               end if
-               vlo = fpoly(vmn(in))
-               vhi = fpoly(vmx(in))               call psnum(vlo,vhi,vhi-vlo,ic,in,nums)
-               write(record,'(6a)') vnm(i),'= f(P) [',     *            nums(1)(1:nblen(nums(1))),'-',     *            nums(2)(1:nblen(nums(2))),']'
-            else
-               write (record,1000) vnm(i),vmn(i)
-            end if
+            if (i.eq.3 .and. idep.gt.0) then
+
+               vlo = fpoly(vmin(iind)) 
+               vhi = fpoly(vmax(iind)) 
+
+               call psnum (vlo,vhi,vhi-vlo,ic,iind,nums)
+
+               write (record,'(6a)') 
+     *               vnm(i),'= f('//vname(iind)(1:1)//')',' [',
+     *               nums(1)(1:nblen(nums(1))),'-',
+     *               nums(2)(1:nblen(nums(2))),']'
+
+            else
+
+               write (record,1000) vnm(i),vmn(i)
+
+            end if
+
             nchar = nblen(record)
             call psublk (record,nchar)
             call pstext (xmin,y,record,nchar)
@@ -1418,7 +1417,7 @@ c                                 various plot symbols
 c           0: square
             xc = dcx*size*RADIUS
             yc = dcy*size*RADIUS
-            call psrect (x-xc, x+xc, y-yc, y+yc, rline, cwidth, fill)
+            call psrect (x-xc, x+xc, y-yc, y+yc, rline, cwidth, gfill)
          else if (symb.eq.1) then
 c           1: circle
             xc = RADIUS * dcx * size

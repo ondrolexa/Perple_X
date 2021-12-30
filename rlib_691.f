@@ -3539,7 +3539,7 @@ c                                 initial guess for volume:
       v = vt * (1d0 - kprime*p/k)**(dv/kprime)
       itic = 0
 
-      do while (dabs(dv/v).gt.nopt(50))
+      do while (dabs(dv/(1d0+v)).gt.nopt(50))
 
          itic = itic + 1
          rat = (vt/v)**r13
@@ -8198,7 +8198,7 @@ c                                 crossed the zero, flip the search
                odg = ndg
                dy = -dy/2d0
 
-            else if (dabs(dy).lt.nopt(50)) then
+            else if (dabs(dy/(1d0+y)).lt.nopt(50)) then
 c                                 refined to tolerance
                exit
 
@@ -8363,7 +8363,7 @@ c                                 newton raphson iteration
 c                                 done means the search hit a limit
 c                                 or dp < tolerance.
 
-            if (done.or.dabs((gold-g)).lt.nopt(53)) then
+            if (done.or.dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50)) then
 
 c              if (done.and.dabs((gold-g)/g).gt.nopt(53)) then 
 c                 write (*,*) 'oink1',gold-g,g,itic,id
@@ -8578,8 +8578,9 @@ c                                  just continue, minfx set T by pinc.
 
             end do
 
-            if ((tdp.lt.nopt(50).or.dabs((gold-g)).lt.nopt(53))
-     *          .and.itic.gt.1) then
+            if ((tdp.lt.nopt(50).or.
+     *          dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50))
+     *         .and.itic.gt.1) then
 
 c              if (tdp.lt.nopt(52).and.dabs((gold-g)/g).gt.nopt(53))
 c    *            then 
@@ -8999,7 +9000,7 @@ c                                 revise the increment
       x = x + dx
 c                                 check if dx has dropped below
 c                                 function precision
-      if (dabs(dx).lt.nopt(50)) quit = .true.
+      if (dabs(dx/(1d0+dabs(x))).lt.nopt(50)) quit = .true.
 
       end
 
@@ -12108,7 +12109,7 @@ c-----------------------------------------------------------------------
          if (x.le.0d0.or.x.gt.1d3.or.it.gt.iopt(21)) then
             bad = .true.
             exit
-         else if (dx.lt.nopt(50)) then
+         else if (dabs(dx)/(1d0+x).lt.nopt(50)) then
             bad = .false.
             exit
          end if
@@ -14599,7 +14600,7 @@ c                                  and ionic strength
 c                                 DH law activity coefficient factor (gamma = gamm0^(q^2))
             gamm0 = aqact(is)
 c                                 check for convergence
-            dix = dabs(xis-is)/is
+            dix = dabs(xis-is)/(1d0+is)
 
             if (dix.lt.nopt(50)) then
 c                                 converged
@@ -15221,7 +15222,7 @@ c                                 newton raphson iteration
 
             call pcheck (q,qmin,qmax,dqq,done)
 c                                 done is just a flag to quit
-            if (done.or.dabs((gold-g)).lt.nopt(53)) then
+            if (done.or.dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50)) then
 
 c              if (done.and.dabs((gold-g)/g).gt.nopt(53)) then 
 c                 write (*,*) 'oink3',gold-g,g,itic,id
