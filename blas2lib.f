@@ -4330,9 +4330,19 @@ c     make forward-difference approximation along  p.
       gdiff = (objf1-objf)/h
       error = abs(gdiff-gdx)/(abs(gdx)+1d0)
 
-      ok = error .le. oktol
+      if (isnan(error)) then
 
-      if (error.ge. 0.9d0) inform = 1
+         ok = .false.
+
+         inform = 1
+
+      else 
+
+         ok = error .le. oktol
+
+         if (error.ge. 0.9d0) inform = 1
+
+      end if
 
 c     element-wise check.
 
@@ -11400,6 +11410,8 @@ c----------------------------------------------------------------------
          norm  = 0d0
       else if (n.eq.1) then
          norm  = abs(x(1))
+      else if (isnan(x(1))) then 
+         norm = 0d0
       else
          scale = 0d0
          ssq   = 1d0
@@ -12100,6 +12112,8 @@ c                                 end of ssrotg
 
       double precision function sdiv (a, b, fail)
 c-----------------------------------------------------------------------
+c this is the perplex function adivb
+
 c  sdiv  returns the value div given by
 
 c     div = (a/b                 if a/b does not overflow,
@@ -12130,7 +12144,7 @@ c-----------------------------------------------------------------------
       save                  first, flmin, flmax
       data                  first/ .true. /
 c----------------------------------------------------------------------
-      if (a.eq.0d0) then
+      if (isnan(a).or.a.eq.0d0) then
          div = 0d0
          if (b.eq.0d0) then
             fail = .true.

@@ -8457,10 +8457,7 @@ c----------------------------------------------------------------------
       character tname*10
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
-c----------------------------------------------------------------------
-
-
-
+c---------------------------------------------------------------------
       if (idegen.gt.1000.and.nord(id).gt.1.and.icase(id).ne.0) then
 c                                 compositional degeneracy can have the consequence
 c                                 that the order parameters are dependent. get the

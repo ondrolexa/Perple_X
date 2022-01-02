@@ -333,10 +333,15 @@ c-----------------------------------------------------------------------
 c                                 get the bulk composition from pa
          call getscp (rcp,rsum,rids,rids)
 c                                 convert dgdp to dg'dp
-         do i = 1, nvar
-            do j = 1, icp
+
+         do j = 1, icp
+c                                 degenerate sys, mu undefined:
+            if (isnan(mu(j))) cycle
+
+            do i = 1, nvar
                dgdp(i) = dgdp(i) - dcdp(j,i,rids)*mu(j)
             end do
+
          end do
 
       else
