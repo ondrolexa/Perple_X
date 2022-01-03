@@ -1186,7 +1186,7 @@ c                                   values in ppp.
 c                                 need to call gsol1 here to get 
 c                                 total g, gsol4 is not computing 
 c                                 the mechanical component?
-         if (gfinal.gt.g0) then 
+         if (gfinal.gt.g0.or.iter.eq.0) then 
             gfinal = g0
             pa = p0a
          end if
