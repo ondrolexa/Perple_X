@@ -353,6 +353,7 @@ c                                 if logical arg = T use implicit ordering
       gval = g
 
       do i = 1, icp
+         if (isnan(mu(i))) cycle
          gval = gval - rcp(i)*mu(i)
       end do
 

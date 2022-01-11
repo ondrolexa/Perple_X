@@ -256,6 +256,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 initialize potentials
       call inipot
+c                                 initialize the bulk
+      call iniblk
 
       if (icopt.ge.0.and.icopt.le.4.or.icopt.eq.8) then
 

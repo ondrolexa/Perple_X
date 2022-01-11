@@ -14203,9 +14203,9 @@ c                                 moles/kg-solvent
 
       do i = 1, ns
 c                                 solvent bulk mole fraction:
-         caq(id,i) = slvmo(i)/smo
-         if (caq(id,i).le.0d0) cycle
-         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(caq(id,i)))
+         if (recalc) caq(id,i) = slvmo(i)/smo
+         if (slvmo(i).le.0d0) cycle
+         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(slvmo(i)/smo))
 
       end do
 c                                 bulk fluid composition
@@ -14456,13 +14456,16 @@ c-----------------------------------------------------------------------
       double precision aqg,qq,rt
       common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
 
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
+
       logical abort
       common/ cstabo /abort
 
       save iwarn
       data iwarn /0/
 c----------------------------------------------------------------------
-      if (epsln.lt.nopt(34).or.abort) then
+      if (epsln.lt.nopt(34).or.abort.or.yf(1).eq.0) then
 c                                  vapor, same as checking lnkw
          bad = .true.
          return
@@ -14596,6 +14599,7 @@ c                                  and ionic strength
             end if
 c                                 DH law activity coefficient factor (gamma = gamm0^(q^2))
             gamm0 = aqact(is)
+            if (gamm0.lt.nopt(50)) gamm0 = nopt(50)
 c                                 check for convergence
             dix = dabs(xis-is)/(1d0+is)
 
@@ -17695,11 +17699,9 @@ c                                 convert weight to molar amounts
                   dblk(j,i) = dblk(j,i)/atwt(i)
                end do 
             end do 
-         end if 
+         end if
 
-         do i = 1, jbulk
-            cblk(i) = dblk(1,i)
-         end do   
+         call iniblk
 
       end if 
 c                                 get composition vectors for entities
@@ -18217,7 +18219,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j
+      integer i
 
       double precision rloopy,rloopx
 
@@ -18314,19 +18316,34 @@ c                                compositions on both axes
 
       end if 
 c                                set the bulk composition:
-      do j = 1, jbulk
-         if (icont.ne.0) then 
-            cblk(j) = dblk(1,j)
-         else 
-            cblk(j) = 1d0
-         end if 
-      end do 
+      call iniblk
 
       end 
 
+      subroutine iniblk
+c---------------------------------------------------------------------
+c iniblk initializes the bulk composition (1st comp read by input2)
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i
+
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
+c----------------------------------------------------------------------
+
+      do i = 1, jbulk
+         cblk(i) = dblk(1,i)
+      end do
+
+      end
+
       subroutine inipot 
 c--------------------------------------------------------------------
-c setvar initializes the independent potential variables to their 
+c inipot initializes the independent potential variables to their 
 c minimum values
 c---------------------------------------------------------------------
       implicit none
