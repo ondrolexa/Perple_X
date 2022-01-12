@@ -229,13 +229,13 @@ c---------------------------------------------------------------------
 
       logical proj
 
-      double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr,
+      double precision ialpha, trv, pth, vdp, vdpbm3, gsixtr, a, b, c, 
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
-     *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
-     *                 gterm2, km, kmk, lnfpur, gaq, ghkf
+     *                 vt, gstxlq, glacaz, v1, v2, gmet, gmet2, gterm2,
+     *                 km, kmk, lnfpur, gaq, ghkf, lamla2, dg
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz,
-     *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf
+     *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf, lamla2
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -286,6 +286,21 @@ c                                 sixtrude 05 JGR EoS
       else if (eos(id).eq.6) then
 c                                 stixrude JGI '05 Eos
          gval = gstxgi (id)
+c                                 landau O/D
+         if (ltyp(id).eq.4) then 
+c                                 in the 2011 data this is only qtz, 
+c                                 but neglects the effect of the clapeyron 
+c                                 slope on the transition T.            
+            call lamla1 (dg,0d0,lmda(id))
+            gval = gval + dg
+
+         else if (ltyp(id).eq.7) then 
+c                                 in the 2021 relative to the low T phase,
+c                                 used pointlessly for magnetic entropy of
+c                                 almost all Fe-bearing endmembers. 
+            gval = gval + lamla2(lmda(id))
+
+         end if
          goto 999
 
       else if (eos(id).eq.11) then
@@ -982,8 +997,10 @@ c                                 n+1
 c                                 f
             therlm(8,1,lamin) = tm(5,1)/(tm(5,1) + 1d0)
 
-         else if (jlam.eq.4) then
+         else if (jlam.eq.4.or.jlam.eq.7) then
 c                                 holland and powell, landau model:
+c                                 4 - relative to the high T phase
+c                                 7 - relative to the low T phase (stixrude 2021).
             do j = 1, ilam
 
                smax = tm(2,j)

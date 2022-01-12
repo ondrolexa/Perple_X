@@ -31,9 +31,9 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated Oct 6, 2021.',
+     *     'Perple_X version 6.9.0, source updated Jan 13, 2022.',
 
-     *     'Copyright (C) 1986-2021 James A D Connolly '//
+     *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
 
       end
@@ -66,7 +66,51 @@ c----------------------------------------------------------------------
 
       end if 
 
-      end 
+      end
+
+      double precision function lamla2 (ld)
+c---------------------------------------------------------------------
+c     calculate the extra energy of a lamdba transition using the
+c     Putnis Landau O/D model as implemented by Stixrude 2021.
+
+c     in contrast to lamla0 and lamla1 the reference state is the
+c     low temperature phase.
+
+c                        ld = pointer to phase in therlm (lmda(id))
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ld
+
+      double precision tc,tc0,q2
+
+      double precision therdi,therlm
+      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+
+      tc0 = therlm(1,1,ld)
+      tc = tc0 + therlm(3,1,ld)*(p-pr)
+
+      if (t.lt.tc) then
+c                                 partially disordered:
+         q2 = dsqrt((tc-t)/tc0)
+
+      else
+
+         q2 = 0d0
+
+      end if
+
+      lamla2 = therlm(2,1,ld) * (
+     *         (t-tc)*(q2 - 1d0) + tc0*(q2**3 - 1d0)/3d0 )
+
+      end
+
 
       subroutine redop1 (output,opname)
 c----------------------------------------------------------------------
