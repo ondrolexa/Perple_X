@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated January 11, 2022.',
+     *     'Perple_X version 6.9.1, source updated January 14, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3315,7 +3315,7 @@ c    *          8x,'increase speciation_max_it.',/,
 59    format (/,'**warning ver059** endmember ',a,
      *        ' has invalid site populations.',/)
 60    format (/,'**warning ver060** Tait EoS conditions out of range ',
-     *          'for endmember/phase: ',a,'(at T=',g12.6,' K)')
+     *          'for endmember/phase: ',a,'(at T=',g14.6,' K)')
 601   format ('base v1 is negative, endmember/phase ',a,' will be ',
      *        'destabilized.',/)
 602   format ('base v2 will be zeroed on the assumption that it is ',

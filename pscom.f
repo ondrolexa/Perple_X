@@ -253,9 +253,9 @@ c psylbl - subroutine to put on y-axis labels.
 
       double precision rmin,rmax,dr,r,big,small
  
-      character*1 text(12), numbs(40)*12, next(12)
+      character*1 text(12), numbs(*)*12, next(12)
  
-      integer ic(40),i,k,i1,icase,int,j
+      integer ic(*),i,k,i1,icase,int,j
 
       i1 = 1 + int ((rmax - rmin) / dr)
 
@@ -362,9 +362,9 @@ c psaxes - subroutine to output (sloppy) axes.
       double precision x0,y0,dx,dy,xtic,ytic,xtic1,ytic1,
      *                 xtic2,ytic2,tmin,x,y,vlo,vhi,fpoly
 
-      integer jop0, i, nchar, ic(40), nblen
+      integer jop0, i, nchar, ic(2), nblen
 
-      character*8 record*20, yes*1, nums(40)*12
+      character*8 record*64, yes*1, nums(2)*12
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -458,12 +458,13 @@ c                                       modfied GH, 12/23/21
                vlo = fpoly(vmin(iind)) 
                vhi = fpoly(vmax(iind)) 
 
-               call psnum (vlo,vhi,vhi-vlo,ic,iind,nums)
+               call psnum (vlo,vhi,vhi-vlo,ic,nchar,nums)
 
-               write (record,'(6a)') 
-     *               vnm(i),'= f('//vname(iind)(1:1)//')',' [',
-     *               nums(1)(1:nblen(nums(1))),'-',
-     *               nums(2)(1:nblen(nums(2))),']'
+               write (record,'(a)') 
+     *               vnm(i)(1:nblen(vnm(i)))//
+     *               ' = f('//vname(iind)(1:1)//' = '//
+     *               nums(1)(1:nblen(nums(1)))//'-'//
+     *               nums(2)(1:nblen(nums(2)))//')'
 
             else
 

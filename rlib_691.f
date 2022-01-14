@@ -9418,7 +9418,8 @@ c                                 identify the fluid for aqrxdo
 
       end if
 c                                 open pseudocompund list file
-      if (outprt.and.lopt(10)) then
+      if ((iam.eq.1.or.outprt).and.lopt(10).and.
+     *    (iam.eq.1.or.iam.eq.15)) then
 
          call mertxt (tfname,prject,'_pseudocompound_list.txt',0)
          open (n8,file=tfname)
@@ -9623,7 +9624,7 @@ c                               reset ikp
 c                              identify the fluid for aqrxdo
       call aqidst
 c                              close pseudocompound list
-      if (outprt.and.lopt(10)) close (n8)
+      if ((iam.eq.1.or.outprt).and.lopt(10)) close (n8)
 c                              close solution model file
       close (n9)
 
@@ -9905,7 +9906,7 @@ c                                 get blanks out of name:
          call reblnk (names(iphct))
       end if
 c                                 -------------------------------------
-      if (outprt.and.lopt(10)) then
+      if ((iam.eq.1.or.outprt).and.lopt(10)) then
 
          if (lrecip(im)) then
             h = mstot(im)
