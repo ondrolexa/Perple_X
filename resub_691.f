@@ -3260,18 +3260,23 @@ c                                 allow reading of auto-refine data
 c                                 read data for solution phases on n9:
       call input9 (first)
 c                                 load static compositions for manual autorefine
-      if (refine) call reload (refine)
-c                                 seismic data summary file
-      if (lopt(50)) call outsei
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp
-c                                 unnecessary stuff for meemum
-      call setau2
+      if (refine) then
+         call reload (refine)
+      else
 c                                 initialize the counter for future auto-refine
 c                                 stage static compositions
-      tpct = 0
-      tcct = 0
+         tpct = 0
+         tcct = 0
+c                                 call initlp to initialize arrays 
+c                                 for optimization.
+         call initlp
+
+      end if
+c                                 seismic data summary file
+      if (lopt(50)) call outsei
+
+c                                 unnecessary stuff for meemum
+      call setau2
 
       end
 

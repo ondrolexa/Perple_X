@@ -7735,6 +7735,14 @@ c                                 restore the old result
 
             call speci1 (g,id,1)
 
+c           oldg = g
+
+c           call opeci1 (oldg,id,1)
+
+c           if (dabs(oldg-g).gt.1d-6) then 
+c              write (*,*) 'oink'
+c           end if 
+
          end if
 
       end if
@@ -8243,6 +8251,192 @@ c----------------------------------------------------------------------
 
       end
 
+      subroutine npeci1 (g,id,k)
+c----------------------------------------------------------------------
+c subroutine to speciation of a solution with a single ordering parameter
+c composition is returned in array pa.
+
+c    k  - the ordered species
+c    id - the solution.
+c    g  - the change in G for the stable speciation relative to a mechanical
+c         mixture of the endmembers.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, id, jd, k, itic, ind(m14), nr
+
+      logical error, done, maxok, minok, usemax
+
+      double precision g, pmax, pmin, dp, gord, dy(m14), gold, xdp,
+     *                    gmax, gmin, wt
+
+      external gord
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
+c----------------------------------------------------------------------
+c                                 number of reactants to form ordered species k
+      nr = nrct(k,id)
+
+      do i = 1, nr
+c                                 dependent disordered species
+         ind(i) = ideps(i,k,id)
+c                                 stoichiometric coefficients
+         dy(i) = dydy(ind(i),k,id)
+
+      end do 
+
+      jd = lstot(id) + k
+
+      error = .false.
+c                                 starting point
+      call plimit (pmin,pmax,k,id)
+c                                 necessary?
+      pin(k) = .true.
+c                                 a composition for which no O/D 
+c                                 is possible
+      if (pmax-pmin.lt.nopt(50)) return
+c                                 to avoid singularity set the initial
+c                                 composition to the max - nopt(50), at this
+c                                 condition the first derivative < 0,
+c                                 and the second derivative > 0 (otherwise
+c                                 the root must lie at p > pmax - nopt(50).
+      pmax = pmax - nopt(50)
+      pmin = pmin + nopt(50)
+c                                 test if concave, convex, or mixed
+c                                 at pmax
+      call pincs (pmax - p0a(jd),dy,ind,jd,nr)
+      call gderi1 (k,id,dp,gmax)
+
+      if (dp.lt.0d0) then 
+         maxok = .true.
+      else
+         maxok = .false.
+      end if 
+c                                 at pmin
+      call pincs (pmin - p0a(jd),dy,ind,jd,nr)
+      call gderi1 (k,id,dp,gmin)
+
+      if (dp.gt.0d0) then 
+         minok = .true.
+      else 
+         minok = .false.
+      end if
+c                                 decide where to start:
+      usemax = .false.
+
+      if (maxok.and.minok) then 
+c                                 convex at edges
+         if (gmax.le.gmin) usemax = .true.
+
+      else if (maxok) then
+c                                 convex at max
+          usemax = .true.
+
+      else if (.not.minok) then
+
+         error = .true.
+
+      end if
+
+      if (.not.error) then 
+c                                 initialize
+         wt = 0.01
+
+         if (usemax) then
+            dp = (1d0-wt)*pmax + wt*pmin - p0a(jd)
+         else
+            dp = (1d0-wt)*pmin + wt*pmax - p0a(jd)
+         end if
+c                                 set starting point
+         call pincs (dp,dy,ind,jd,nr)
+c                                 iteration counter
+         itic = 0
+         gold = 0
+         xdp = 0d0
+c                                 newton raphson iteration
+         do
+
+            call gderi1 (k,id,dp,g)
+
+            call pcheck (pa(jd),pmin,pmax,dp,done)
+c                                 done means the search hit a limit
+c                                 or dp < tolerance.
+            if (done.or.dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50)) then
+
+               goodc(1) = goodc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
+c                                 use the last increment
+               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
+
+               exit
+
+            else if (dp.eq.xdp) then 
+
+               write (*,*) 'wroink!',g-gold,id
+
+            else
+c                                 apply the increment
+               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
+
+               if (itic.gt.iopt(21)) then
+c                                 failed to converge. exit
+                  write (*,*) 'wroink2!',g-gold,id
+                  error = .true.
+                  badc(1) = badc(1) + 1d0
+                  goodc(2) = goodc(2) + dfloat(itic)
+
+                  exit
+
+               end if
+
+               xdp = dp
+               gold = g
+               itic = itic + 1
+
+            end if
+
+         end do
+
+      end if
+c                                 didn't converge or couldn't
+c                                 find a starting point, set
+c                                 ordered speciation, specis will
+c                                 compare this the disordered case.
+      if (error) then
+c                                 concave, bail
+         if (gmax.le.gmin) then 
+c                                 ordered
+            g = gmax
+            call pincs (pmax-p0a(jd),dy,ind,jd,nr)
+
+         else
+c                                 anti-ordered
+            g = gmin
+            call pincs (pmin-p0a(jd),dy,ind,jd,nr)
+
+         end if
+
+      end if
+
+      end
+
       subroutine speci1 (g,id,k)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
@@ -8440,7 +8634,7 @@ c----------------------------------------------------------------------
 
       integer i,k,id,lord,itic
 
-      double precision g,dp(j3),tdp,gold,xtdp,scp(k5),scptot
+      double precision g,dp(j3),tdp,gold,xtdp,scp(k5),scptot,oldg
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -8494,6 +8688,14 @@ c                                 species are necessary to describe the ordering
          do i = 1, nord(id)
             if (.not.pin(i)) cycle
             call speci1 (g,id,i)
+
+
+c           call opeci1 (oldg,id,i)
+
+c           if (dabs(oldg-g).gt.1d-6) then 
+c              write (*,*) 'oink',id,i,oldg-g,oldg,g
+c           end if 
+
             exit
          end do
 
@@ -10053,9 +10255,9 @@ c-----------------------------------------------------------------------
 
       logical bad, file
 
-      integer id, i, j, ntot, ids
+      integer id, i, j, ntot, ids, tmp, tco
 
-      character sname(h9)*10
+      character sname(h9)*10, tag*11
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -10101,15 +10303,15 @@ c                                 compositions from the arf file
 
             if (sname(i).ne.fname(i)) 
      *         call error (63,y(1),i,'RELOAD/sname')
-            tpct = jend(i,2)*nstot(i)
-            read (n10,*) txco(tcct+1:tcct+tpct)
+            tmp = jend(i,2)*nstot(i)
+            read (n10,*) txco(tcct+1:tcct+tmp)
 
-            tcct = tcct + tpct
+            tcct = tcct + tmp
 
          end do
 
-         iphct = ipoint
          tcct = 0
+         tpct = 0
 
          do i = 1, isoct
 
@@ -10117,40 +10319,81 @@ c                                 compositions from the arf file
 
             do j = 1, jend(i,2)
 
-               iphct = iphct + 1
-               itxp(iphct) = tcct
+               tpct = tpct + 1
+               itxp(tpct) = tcct
                tcct = tcct + ntot
 
             end do
 
          end do
 
+         iphct = ipoint + tpct
+
       else
 c                                 automatic, read the data from memory
          if (.not.refine) then
 c                                 load stable static compositions to 
 c                                 the list of dynamic compositions
-            do i = ipoint + jiinc + 1, iphct
-               if (ststbl(i)) then
+            do i = ipoint + 1, iphct
+               if (ststbl(i).or.lopt(30)) then
                   ids = ikp(i)
-                  call setxyp (ids,i,ststbl(i))
+                  call setxyp (ids,i,bad)
+                  if (bad) cycle
                   call savdyn (nopt(35),ids)
                end if
             end do
 
          else if (lopt(55)) then
+c                                 re-refine option:
 c                                 load the whole damn thing
             zcoct = 0
+            tmp = 0 
+c                                 at this point the static compositions
+c                                 are in the first iphct-ipoint positions
+c                                 in txco and the newly added compositions
+c                                 are at iphct-ipoint:tpct
 
+c                                 sort through the static compositions
+c                                 to see if any (or all should be added)
+c                                 to the future static array:
             do i = 1, isoct
                ntot = nstot(i)
                do j = 1, jend(i,2)
-                  pa(1:ntot) = txco(zcoct+1:zcoct+ntot)
-                  call savdyn (nopt(35),i)
-                  zcoct = zcoct + ntot
-                  if (tcct+ntot.gt.m25) call errdbg ('increase m25')
+                  tmp = tmp + 1
+                  if (ststbl(tmp).or.lopt(30)) then
+                     pa(1:ntot) = txco(itxp(tmp)+1:itxp(tmp)+ntot)
+                     call savdyn (nopt(35),i)
+                     zcoct = zcoct + ntot
+                     if (tcct+ntot.gt.m25) call errdbg ('increase m25')
+                  end if
                end do
             end do
+c                                 now shift the compositions for the future
+c                                 static array to occupy the first 1:tpct
+c                                 positions of txco and reset jend
+            jend(1:isoct,2) = 0
+            tmp = 0
+            tco = 0
+            zcoct = 0
+
+            do i = iphct + 1, tpct
+c                                 solution model pointer
+               ids = dkp(i)
+c                                 curent position
+               tco = itxp(i)
+c                                 shift composition
+               ntot = nstot(ids)
+               txco(zcoct+1:zcoct+ntot) = txco(tco+1:tco+ntot)
+c                                 counters, pointers:
+               tmp = tmp + 1
+               dkp(tmp) = ids
+               itxp(tmp) = zcoct
+               zcoct = zcoct + ntot
+c                                 static counter
+               jend(ids,2) = jend(ids,2) + 1
+            end do
+
+            tpct = tmp
 
          end if
 
@@ -10173,12 +10416,17 @@ c                                 load temporarily into the static compound
 c                                 a array
                is(id) = zcoct
                a(zcoct+1:zcoct+ntot) = txco(itxp(j)+1:itxp(j)+ntot)
+
+c DEBUG
+               pa(1:ntot) = a(zcoct+1:zcoct+ntot)
+               call chkpa (i)
+
                zcoct = zcoct + ntot
 
             end do
 
          end do
-
+c                                 sort results 
          zcoct = 0
          id = 0
 c                                 copy the sorted results back into txco
@@ -10191,7 +10439,10 @@ c                                 copy the sorted results back into txco
                id = id + 1
 
                txco(zcoct+1:zcoct+ntot) =  a(is(id)+1:is(id)+ntot)
-               itxp(ipoint+id) = zcoct
+c DEBUG
+               pa(1:ntot) = a(is(id)+1:is(id)+ntot)
+               call chkpa (i)
+               itxp(id) = zcoct
                zcoct = zcoct + ntot
 
             end do
@@ -10203,7 +10454,13 @@ c                                 reset iphct and reload static
       iphct = ipoint
       id = 0
 
-      write (*,'(80(''-''),/,''Exploratory stage generated:'',/)')
+      if (refine.and.lopt(55)) then
+         tag = 'Re-refine  '
+      else
+         tag = 'Exploratory'
+      end if
+
+      write (*,'(80(''-''),/,a,'' stage generated:'',/)') tag
 
       do i = 1, isoct
 
@@ -10217,9 +10474,13 @@ c                                 set tname for soload diagnostics
          do j = 1, jend(i,2)
 
             iphct = iphct + 1
+            tmp = itxp(iphct - ipoint)
+            dkp(iphct - ipoint) = i
 
-            pa(1:ntot) = txco(itxp(iphct) + 1:itxp(iphct) + ntot)
+            pa(1:ntot) = txco(tmp + 1:tmp + ntot)
             call makepp (i)
+c DEBUG
+               call chkpa (i)
 
             call soload (i,bad)
 
@@ -10229,13 +10490,39 @@ c                                 set tname for soload diagnostics
 c                                 reset counters, cold start, etc
       call initlp
 
-      write (*,1110) id
+      write (*,1110) tpct
+      write (*,'(80(''-''))')
 
 1100  format (i8,' compositions for: ',a)
 1110  format (/,'Total number of compositions:',i8)
 
       end
 
+      subroutine chkpa (ids)
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, ids
+
+      double precision sum
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c---------------------------------------------------------------------
+      sum = 0d0
+
+      do i = 1, nstot(ids)
+         sum = sum + pa(i)
+      end do
+
+      if (dabs(sum-1d0).gt.nopt(50)) then 
+         write (*,*) 'wowonka ',sum
+      end if
+
+      end
 
       subroutine initlp 
 c--------------------------------------------------------------------
@@ -13597,7 +13884,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i
+      integer i, tmp
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -13624,9 +13911,9 @@ c                                 output to arf
 
          do i = 1, isoct
 
-            tpct = jend(i,2)*nstot(i)
-            write (n10,*) txco(tcct+1:tcct+tpct)
-            tcct = tcct + tpct
+            tmp = jend(i,2)*nstot(i)
+            write (n10,*) txco(tcct+1:tcct+tmp)
+            tcct = tcct + tmp
 
          end do
 
@@ -16930,7 +17217,7 @@ c                                 figure out which index to increment
 
       subroutine setexs (ids,id)
 c-----------------------------------------------------------------------
-c recover the dstatic polytopic composition id of solution ids.
+c recover the static polytopic composition id of solution ids.
 c-----------------------------------------------------------------------
       implicit none
 
@@ -17103,7 +17390,7 @@ c-----------------------------------------------------------------------
 
       external zbad
 
-      integer ids, id
+      integer ids, id, tmp
 
       double precision zsite(m10,m11)
 
@@ -17118,12 +17405,18 @@ c-----------------------------------------------------------------------
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
 
+      integer ipoint,kphct,imyn
+      common/ cst60 /ipoint,kphct,imyn
+
       integer iam
       common/ cst4 /iam
 c-----------------------------------------------------------------------
+      bad = .false.
+
       if (refine.and.iam.ne.15) then
 c                                 auto-refine in vertex
-         pa(1:nstot(ids)) = txco(itxp(id) + 1:itxp(id) + nstot(ids))
+         tmp = itxp(id-ipoint)
+         pa(1:nstot(ids)) = txco(tmp + 1:tmp + nstot(ids))
          call makepp (ids)
 
          return
@@ -21089,6 +21382,8 @@ c----------------------------------------------------------------------
 
       external rplica
 c----------------------------------------------------------------------
+      call chkpa (ids)
+
       if (refine.and..not.lopt(55)) return
 
       if (tol.gt.0d0) then
@@ -21165,7 +21460,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, i, j
+      integer id, i, j, tmp
 
       double precision diff
 
@@ -21179,9 +21474,10 @@ c                                 simple model
             if (dkp(i).ne.id) cycle
 
             diff = 0d0
+            tmp = itxp(i)
 
             do j = 1, nstot(id)
-               diff = diff + dabs(pa(j) - txco(itxp(i)+j))
+               diff = diff + dabs(pa(j) - txco(tmp+j))
             end do 
 
             if (diff.lt.nopt(35)) then
