@@ -158,6 +158,10 @@ c                                 derivatives.
 
       end if
 
+c     if (mu(4).gt.1d7) then 
+c        return
+c     end if
+
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,ivars,rvars,idead)
@@ -176,10 +180,7 @@ c                                 error counter
 
       else
 
-         if (iter.eq.0) then
-            return
-            ppp(1:nvar) = yt(1:nvar)
-         end if
+         if (iter.eq.0) return
 
       end if
 c--------------------------
@@ -423,7 +424,7 @@ c                                 save degenerate results:
       end do
       end if
 c                                 check if duplicate
-      do i = 1, jphct
+      do i = jpoint + 1, jphct
 
          if (jkp(i).eq.rids) then
 
@@ -1167,11 +1168,7 @@ c                                   set pa to correspond to the final
 c                                   values in ppp.
          call ppp2pa (ppp,ids)
 
-      else if (iter.eq.0) then
-
-         pa = p0a
-
-      end if 
+      end if
 
       if (idead.eq.2) then 
          write (*,*) 'minfxc infeasible initial conditions'
@@ -1184,6 +1181,18 @@ c                                   values in ppp.
       end if
 
       if (.not.maxs) then
+
+         if (itic.gt.0) then 
+c                                   check for fuck-ups
+            ppp(1:nstot(ids)) = p0a(1:nstot(ids))
+
+            p0a(1:nstot(ids)) = pa(1:nstot(ids))
+
+            gfinal = gordp0(ids)
+
+            p0a(1:nstot(ids)) = ppp(1:nstot(ids))
+
+         end if
 c                                 need to call gsol1 here to get 
 c                                 total g, gsol4 is not computing 
 c                                 the mechanical component?
@@ -1192,7 +1201,7 @@ c                                 the mechanical component?
             pa = p0a
          end if
 
-      end if 
+      end if
 
       end
 

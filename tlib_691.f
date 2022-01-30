@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated January 14, 2022.',
+     *     'Perple_X version 6.9.1, source updated January 29, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -478,8 +478,6 @@ c                                 fractionation threshold, set by nopt(32)/nopt(
       lopt(35) = .false.
 c                                 aq_oxide_components
       lopt(36) = .false.
-c                                 allow null phases
-      lopt(37) = .false.
 c                                 non_linear_switch
       lopt(38) = .false.
 c                                 refine_endmembers
@@ -620,10 +618,6 @@ c                                 phase composition key
          else if (key.eq.'fancy_cumulative_modes') then 
 
              if (val.eq.'T') lopt(45) = .true.
-
-         else if (key.eq.'null_phase') then 
-
-            if (val.eq.'T') lopt(37) = .true.
 
          else if (key.eq.'non_linear_switch') then 
 
@@ -1321,8 +1315,6 @@ c                                 -------------------------------------
 c                                 automatic specification of metastable
 c                                 refinement points
       if (lopt(40)) iopt(31) = icp + 2
-c                                 always allow null phases if not CONVEX
-      if (iam.eq.15) lopt(37) = .true. 
 c                                 write and optional file choices
       if (iam.ne.14) then 
          if (jer.ne.0) then 
@@ -11241,10 +11233,6 @@ c                               reject phases such as H2 = O2/2 - H2O
 c                               reject a null phase if it contains only
 c                               saturated components, since these phases
 c                               are already saved in the sat list.
-
-c                               null phase option over-ride
-c         if (.not.lopt(37)) goto 90
-
          tot = 0d0
 
          do j = icp1, icp + isat + ifct + jmct

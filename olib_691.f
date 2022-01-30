@@ -565,6 +565,26 @@ c                                 excessive precision molar Gs:
          do i = 1, ntot
             write (lu,1171) pname(i),props(11,i)
          end do
+c                                 bulk g is from averaged compositions, 
+c                                 compare to chemical potentials, discrepancy
+c                                 should be due to averaging
+         write (lu,'(/,''mass balance errors (mole)''/)') 
+
+         zt = 0d0
+
+         do i = 1, kbulk
+
+            write (lu,'(a,1pd12.3)') cname(i), fbulk(i) - cblk(i)
+
+            if (isnan(mu(i))) cycle
+
+            zt = zt + cblk(i)*mu(i)
+
+         end do
+
+         write (lu,'(/,''G_system (J/mol) = '',1pf16.3)') psys(11)
+         write (lu,'(  ''mu_i*n_i (J/mol) = '',1pf16.3)') zt
+         write (lu,'(  ''      difference = '',1pd12.3)') psys(11) - zt
 
       end if
 

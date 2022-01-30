@@ -458,9 +458,9 @@ c                                 derivative of the bulk composition (component,
       double precision apc, endt, endc
       common/ cstp2c /apc(h9,k5,m14), endt(h9,m14), endc(h9,m14,k5)
 
-      integer tpct, tcct, itxp, dkp
+      integer tpct, tcct, itxp, dkp, stpct
       double precision txco
-      common/ csts2d /txco(m25), tpct, tcct, itxp(m24), dkp(m24)
+      common/ csts2d /txco(m25), tpct, tcct, itxp(m24), dkp(m24), stpct
 
       logical rkwak
       integer rids, rkds, rnpt

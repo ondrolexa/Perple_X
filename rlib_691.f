@@ -7698,9 +7698,9 @@ c                                 this is necessary for pinc0
 
                if (oldg-g.lt.-nopt(53)) then 
 c                                   the speci2 result was better, revert
-                   if (dabs((oldg-g)/oldg).gt.1d-3) then
+c                  if (dabs((oldg-g)/oldg).gt.1d-3) then
 c                     write (*,*) 'minfx nfg',oldg-g,oldg,id
-                   end if
+c                  end if
 
                    g = oldg
                    pa(1:nstot(id)) = oldp(1:nstot(id))
@@ -8251,7 +8251,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine npeci1 (g,id,k)
+      subroutine speci1 (g,id,k)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
 c composition is returned in array pa.
@@ -8437,7 +8437,7 @@ c                                 anti-ordered
 
       end
 
-      subroutine speci1 (g,id,k)
+      subroutine xpeci1 (g,id,k)
 c----------------------------------------------------------------------
 c subroutine to speciation of a solution with a single ordering parameter
 c composition is returned in array pa.
@@ -8634,7 +8634,7 @@ c----------------------------------------------------------------------
 
       integer i,k,id,lord,itic
 
-      double precision g,dp(j3),tdp,gold,xtdp,scp(k5),scptot,oldg
+      double precision g,dp(j3),tdp,gold,xtdp,scp(k5),scptot
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -8797,13 +8797,14 @@ c              end if
 
             else if (itic.gt.iopt(21)) then 
 
-c              write (*,*) 'div2 ',gold-g,id,itic,g,tdp
+               write (*,*) 'div2 ',gold-g,id,itic,g,tdp,tdp-xtdp
                minfx = .true. 
                exit
 
-            else if (tdp.eq.xtdp) then 
+            else if (itic.gt.5.and.tdp.eq.xtdp) then 
 
                minfx = .true. 
+               write (*,*) 'wroink67 ',dp(1),dp(2)
                exit
 
             end if
@@ -9289,8 +9290,14 @@ c                                 convert dg and d2g to the full derivative
       end if
 c                                 get the configurational entropy derivatives
       call sderi1 (k,id,s,ds,d2s)
+c                                 in case speci1 is being used for a degnerated
+c                                 o/d problem add the enthalpy looping over all
+c                                 ordered endmembers
+      do i1 = 1, nord(id)
+         g = g + pa(lstot(id)+i1)*enth(i1)
+      end do
 
-      g = g + pa(lstot(id)+k)*enth(k) - v(2)*s
+      g = g - v(2)*s
       dg  = dg + enth(k)  - v(2)*ds
       d2g = d2g - v(2)*d2s
 c                                 dg becomes the newton raphson increment
@@ -10332,6 +10339,7 @@ c                                 compositions from the arf file
       else
 c                                 automatic, read the data from memory
          if (.not.refine) then
+c                                 in the first loop:
 c                                 load stable static compositions to 
 c                                 the list of dynamic compositions
             do i = ipoint + 1, iphct
@@ -10348,6 +10356,12 @@ c                                 re-refine option:
 c                                 load the whole damn thing
             zcoct = 0
             tmp = 0 
+c                                 compare the initial 
+c                                 ipoint + 1: iphct 
+c                                 compositions to the 
+c                                 iphct - ipoint + 1 : tpct
+c                                 new compositions
+            stpct = iphct - ipoint + 1
 c                                 at this point the static compositions
 c                                 are in the first iphct-ipoint positions
 c                                 in txco and the newly added compositions
@@ -10360,8 +10374,10 @@ c                                 to the future static array:
                ntot = nstot(i)
                do j = 1, jend(i,2)
                   tmp = tmp + 1
-                  if (ststbl(tmp).or.lopt(30)) then
+                  if (ststbl(ipoint+tmp).or.lopt(30)) then
                      pa(1:ntot) = txco(itxp(tmp)+1:itxp(tmp)+ntot)
+c                                 negative tolerance means these
+c                                 will be saved no matter what.
                      call savdyn (nopt(35),i)
                      zcoct = zcoct + ntot
                      if (tcct+ntot.gt.m25) call errdbg ('increase m25')
@@ -10375,7 +10391,8 @@ c                                 positions of txco and reset jend
             tmp = 0
             tco = 0
             zcoct = 0
-
+c                                 iphct + 1 cause any old compounds
+c                                 to be user have been added...
             do i = iphct + 1, tpct
 c                                 solution model pointer
                ids = dkp(i)
@@ -10418,8 +10435,8 @@ c                                 a array
                a(zcoct+1:zcoct+ntot) = txco(itxp(j)+1:itxp(j)+ntot)
 
 c DEBUG
-               pa(1:ntot) = a(zcoct+1:zcoct+ntot)
-               call chkpa (i)
+c              pa(1:ntot) = a(zcoct+1:zcoct+ntot)
+c              call chkpa (i)
 
                zcoct = zcoct + ntot
 
@@ -10440,8 +10457,8 @@ c                                 copy the sorted results back into txco
 
                txco(zcoct+1:zcoct+ntot) =  a(is(id)+1:is(id)+ntot)
 c DEBUG
-               pa(1:ntot) = a(is(id)+1:is(id)+ntot)
-               call chkpa (i)
+c              pa(1:ntot) = a(is(id)+1:is(id)+ntot)
+c              call chkpa (i)
                itxp(id) = zcoct
                zcoct = zcoct + ntot
 
@@ -10480,7 +10497,7 @@ c                                 set tname for soload diagnostics
             pa(1:ntot) = txco(tmp + 1:tmp + ntot)
             call makepp (i)
 c DEBUG
-               call chkpa (i)
+c              call chkpa (i)
 
             call soload (i,bad)
 
@@ -10489,6 +10506,8 @@ c DEBUG
       end do
 c                                 reset counters, cold start, etc
       call initlp
+
+      stpct = tpct + 1
 
       write (*,1110) tpct
       write (*,'(80(''-''))')
@@ -13210,7 +13229,7 @@ c-----------------------------------------------------------------------
 
       logical bad
 
-      integer i, j, k, id, tic
+      integer i, j, k, id
 
       double precision gval, dg, g0(m14)
 
@@ -13312,8 +13331,6 @@ c                                 ordering, internal dqfs (last for minfxc)
             call ingsol (i)
 c                                 only for minfxc
             call ingend (i)
-
-            tic = 0 
 
             do j = 1, jend(i,2)
 
@@ -17716,8 +17733,8 @@ c                                 solvent species
          end do
 
       else
-c                                 solutions with no dependent endmembers:
-c                                 pa coordinates used to compute the composition
+c                                 normal solutions:
+c                                 pp coordinates used to compute the composition
          do i = 1, lstot(ids)
             do j = 1, icomp
                scp(j) = scp(j) + pp(i) * endc(ids,i,j)
@@ -21382,7 +21399,7 @@ c----------------------------------------------------------------------
 
       external rplica
 c----------------------------------------------------------------------
-      call chkpa (ids)
+c     call chkpa (ids)
 
       if (refine.and..not.lopt(55)) return
 
@@ -21460,7 +21477,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, i, j, tmp
+      logical all
+
+      integer id, i, j, tmp, start
 
       double precision diff
 
@@ -21469,7 +21488,7 @@ c-----------------------------------------------------------------------
      *              wl(m17,m18),pp(m4)
 c-----------------------------------------------------------------------
 c                                 simple model
-         do i = 1, tpct
+         do i = stpct, tpct
 
             if (dkp(i).ne.id) cycle
 

@@ -24,6 +24,11 @@
 
 |----------------------------------------------------------------------
 
+intermediate_savrpc        F | [F] lopt(57)
+intermediate_savdyn        F    | [F] lopt(58)
+re-refine T
+lop_30 T
+
 1d_path                   default | [40 150] exploratory and autorefine (grid parameters keyword group)
 absolute                  default | [F] WERAMI - output absolute component amounts
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
@@ -39,7 +44,7 @@ aq_solvent_composition    default | [y] y => mole fractions, m => molality
 aq_solvent_solvus         default | [T] allow solvent phase separation without aq_bad_results error trigger
 aq_vapor_epsilon          default | [1.] dielectric constant threshold used to identify vapor
 auto_exclude              default | [T] exclude phases or species with no associated P-V EoS
-auto_refine               default | [auto] auto, manual, or off (auto_refine keyword group)
+auto_refine               man default | [auto] auto, manual, or off (auto_refine keyword group)
 auto_refine_file          default | [T] echo exploratory stage auto-refine data to my_project_auto_refine.txt
 bad_number                default | [NaN] any number or NaN (not-a-number)
 bounds                    default | [VRH] VRH or HS; Voigt-Reuss-Hill or Hashin-Shtrikman, see vrh/hs_averaging
@@ -98,7 +103,7 @@ seismic_output            default | [some] all, some, none
 seismic_data_file         default | [F] summarize options used for endmembers and solutions
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
 solution_names            default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
-solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
+solvus_tolerance          .1 default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II       default | [0.2] 0->1 
 speciation_factor         default | [100] >1, speciation precision = final resolution/speciation factor
 speciation_max_it         default | [100] maximum number of iterations permitted in iterative calculations
@@ -114,5 +119,5 @@ variance                  default | [1 99] exploratory and auto-refine; maximum 
 vrh/hs_weighting          default | [0.5] 0->1, weighting factor for the stiff average in VRH/HS averaging (see bounds)
 warning_ver637            default | [T] F -> warn and cease interpolation in WERAMI when immiscible solutions are present
 x_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level x grid resolution 
-y_nodes                   default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
-zero_mode                 default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations
+y_nodes                  default | [40 40] exploratory and auto-refine (grid parameters keyword group), lowest-level y grid resolution
+zero_mode                default | [1e-6] 0->1, threshold below which the molar mode of a phase is set to 0; defaults to zero for fractionation calculations
