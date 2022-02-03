@@ -7312,12 +7312,15 @@ c                                 flag to fluid species indices
          do i = 1, j
             k = eos(kdsol(insp(i)))
             if (k.gt.200) then
-               write (*,1000) tname, mname(insp(i))
+               write (*,1000) tname, names(kdsol(insp(i)))
 
 1000  format (/,'**error ver888** a special component endmember cannot',
-     *' be used in solution model ',a,/,'delete ',a,' from the special',
-     *' component section in the header of the thermodynamic data file',
-     */,'or choose a different solution model.',/)
+     *' be used in solution model ',a,/,
+     *'This error can be corrected by any of the following actions:',/,
+     *'1) Setting the GFSM option to True in perplex_option.dat',/,
+     *'2) Deleting ',a,' from the special component section of the ',
+     *'thermodynamic data file',/,
+     *'3) Choosing a different solution model',/)
 
                call errpau
 
@@ -8804,7 +8807,7 @@ c              end if
             else if (itic.gt.5.and.tdp.eq.xtdp) then 
 
                minfx = .true. 
-               write (*,*) 'wroink67 ',dp(1),dp(2)
+c              write (*,*) 'wroink67 ',dp(1:lord),id,g
                exit
 
             end if

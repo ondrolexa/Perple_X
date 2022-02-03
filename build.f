@@ -2386,7 +2386,8 @@ c                                 1d projection, no bulk composition allowed
 c                                 2-d fractionation
       else if (icopt.eq.2.or.icopt.eq.10) then
 c                                 1d-gridded min file I/O
-      else if (icopt.eq.2.or.icopt.eq.5) then
+      else if (icopt.eq.4.or.icopt.eq.2.or.icopt.eq.5) then
+c                                 icopt = 4 -> 1d with P(T) or T(P)
 c                                 1d- & 2d-gridded min
 c                                 bulk composition allowed
          if (icp.gt.1) jcont = 1

@@ -24,6 +24,7 @@
 
 |----------------------------------------------------------------------
 
+GFSM F
 intermediate_savrpc        F | [F] lopt(57)
 intermediate_savdyn        F    | [F] lopt(58)
 re-refine T
