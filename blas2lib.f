@@ -5522,11 +5522,20 @@ c        an infeasible variable reaches its violated bound.
          hitlow = atp.gt.0d0
       end if
 
+c DEBUG DEBUG, seems to work
+
+      if (jhit.eq.0) then 
+         unbndd = .true.
+         if (unbndd) go to 60
+      end if 
+
+
       if (jhit.le.n) then
          atx = x(jhit)
       else
          atx = ax(jhit-n)
       end if
+
 
 c     try to step exactly onto bound, but make sure the exact step
 c     is sufficiently positive.  (exact will be alfaf or alfai.)

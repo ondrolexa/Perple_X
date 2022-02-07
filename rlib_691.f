@@ -8392,7 +8392,7 @@ c                                 use the last increment
 
             else if (dp.eq.xdp) then 
 
-               write (*,*) 'wroink!',g-gold,id
+               write (*,*) 'wroink! oscillating?',g-gold,id
 
             else
 c                                 apply the increment
@@ -8400,7 +8400,8 @@ c                                 apply the increment
 
                if (itic.gt.iopt(21)) then
 c                                 failed to converge. exit
-                  write (*,*) 'wroink2!',g-gold,id
+                  write (*,*) 'wroink2! failed, ',
+     *                        'increase speciation_max_it?',g-gold,id
                   error = .true.
                   badc(1) = badc(1) + 1d0
                   goodc(2) = goodc(2) + dfloat(itic)

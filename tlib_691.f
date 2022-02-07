@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated February 4, 2022.',
+     *     'Perple_X version 6.9.1, source updated February 7, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -3099,8 +3099,9 @@ c                                 generic warning, also 99
      *       ,' < 0, this indicates that',/,'the specified amount of a '
      *       ,'saturated component is inadequate to saturate the system'
      *       ,/)
-2     format (/,'**warning ver002** the amount of a phase is <',g12.3,
-     *        ' (-zero_mode) this may be',/,'indicative of numeric ',
+2     format (/,'**warning ver002** the molar amount of a phase is ',
+     *        g12.3,
+     *        ' (< -zero_mode) this may be',/,'indicative of numeric ',
      *        'instability',/)
 3     format (/,'**warning ver003** the solution model file is ',
      *         ' inconsistent with this',/,
