@@ -11849,6 +11849,57 @@ c                                 partially disordered:
 
       end
 
+      subroutine lamla4 (dg,ld)
+c---------------------------------------------------------------------
+c     calculate the extra energy of a lamdba transition using
+c     the Landau model as implemented by Stxrude & Lithgow-Bertelloni
+c     GJI 2005, THIS IS WRONG, likely why Stx 21 flipped the reference
+c     state, need to check this.
+
+c     input variables
+
+c                        t = temperature in k
+c                        p = pressure in bar
+c                        ld = pointer to phase in therlm
+
+c     returned - dg - difference in free energy due to the transition
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer ld
+
+      double precision dg,tc,tc0,q2,vlan
+
+      double precision therdi,therlm
+      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+c----------------------------------------------------------------------
+
+      tc0 =  therlm(1,1,ld)
+      tc = tc0 + therlm(3,1,ld)*(p-pr)
+
+      if (t.lt.tc) then
+c                                 partially disordered:
+         q2 = dsqrt((tc-t)/tc0)
+         vlan = therlm(2,1,ld) * therlm(3,1,ld) * 
+     *          ((t - tc0 - p * therlm(3,1,ld))/(tc0*q2) - q2)/2
+
+      else
+
+         q2 = 0d0
+         vlan = 0d0
+
+      end if
+
+      dg = therlm(2,1,ld) *
+     *     (therlm(7,1,ld) + t*(q2 - therlm(8,1,ld))
+     *                     - tc*q2 + tc0*q2**3/3d0) - p * vlan
+
+      end
 
       double precision function gfesi0 (y,x,gord,g2,g12,w0,w1,w2,rt)
 c-----------------------------------------------------------------------

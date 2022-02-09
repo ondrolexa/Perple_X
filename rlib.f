@@ -290,9 +290,15 @@ c                                 landau O/D
          if (ltyp(id).eq.4) then 
 c                                 in the 2011 data this is only qtz, 
 c                                 but neglects the effect of the clapeyron 
-c                                 slope on the transition T.            
-            call lamla1 (dg,0d0,lmda(id))
-            gval = gval + dg
+c                                 slope on the transition T. This gives 
+c                                 nonsensical results if extrapolated to high
+c                                 pressure, therefore the transition effect
+c                                 was commented out Feb 9, 2022. Apparently
+c                                 the effect was not accounted for from the 
+c                                 initial implementation in perple_X and was
+c                                 added April 3, 2021.
+c           call lamla1 (dg,0d0,lmda(id))
+c           gval = gval + dg
 
          else if (ltyp(id).eq.7) then 
 c                                 in the 2021 relative to the low T phase,
