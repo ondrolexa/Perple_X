@@ -8406,8 +8406,8 @@ c                                 apply the increment
 
                if (itic.gt.iopt(21)) then
 c                                 failed to converge. exit
-                  write (*,*) 'wroink2! failed, ',
-     *                        'increase speciation_max_it?',g-gold,id
+c                 write (*,*) 'wroink2! failed, ',
+c    *                        'increase speciation_max_it?',g-gold,id
                   error = .true.
                   badc(1) = badc(1) + 1d0
                   goodc(2) = goodc(2) + dfloat(itic)
@@ -8807,7 +8807,7 @@ c              end if
 
             else if (itic.gt.iopt(21)) then 
 
-               write (*,*) 'div2 ',gold-g,id,itic,g,tdp,tdp-xtdp
+c              write (*,*) 'div2 ',gold-g,id,itic,g,tdp,tdp-xtdp
                minfx = .true. 
                exit
 
@@ -16416,7 +16416,7 @@ c                                 has been identified.
 
                dedpol(ii) = .true.
 
-               if (first) call warn (100,0d0,101,
+               if (first.and.isimp(ii).gt.1) call warn (100,0d0,101,
      *             'eliminated subcomposition '
      *             //poname(h0,poly(h0)+1,1,ii)/
      *             /'during reformulation of '//tname//
@@ -16427,7 +16427,7 @@ c                                 has been identified.
 
          end do
 
-         if (ipvert(ii).gt.0.and.killed.and.first) 
+         if (ipvert(ii).gt.0.and.killed.and.first.and.isimp(ii).gt.1) 
      *      call warn (100,0d0,102,
      *          'reformulated subcomposition '
      *          //poname(h0,poly(h0)+1,1,ii)/

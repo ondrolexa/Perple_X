@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical tic, zbad, swap, quit
+      logical tic, zbad, swap, quit, xref
 
       integer i, j, nvar, iter, iwork(m22), itic,
      *        ivars(13), istate(m21), idead, nclin, ntot
@@ -48,6 +48,10 @@ c DEBUG691                    dummies for NCNLN > 0
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
+
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -158,10 +162,6 @@ c                                 derivatives.
 
       end if
 
-c     if (mu(4).gt.1d7) then 
-c        return
-c     end if
-
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
      *            m23,ivars,rvars,idead)
@@ -212,9 +212,13 @@ c                                 save the final QP result
       call savrpc (gfinal,0d0,swap)
 c---------------
       if (lopt(54).and..not.swap) then
-c     if (lopt(54)) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
+c                                 in case on 1st iteration set refine to 
+c                                 to true and then reset to old value on 
+c                                 exit
+         xref = refine
+         refine = .true.
 
          do i = 1, lstot(rids)
 
@@ -249,6 +253,8 @@ c                                 increment the counter
             call savrpc (gfinal,nopt(48)/2d0,swap)
 
          end do
+c                                 reset refine
+         refine = xref
 
       end if
 
