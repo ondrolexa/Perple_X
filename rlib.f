@@ -297,8 +297,8 @@ c                                 was commented out Feb 9, 2022. Apparently
 c                                 the effect was not accounted for from the 
 c                                 initial implementation in perple_X and was
 c                                 added April 3, 2021.
-            call lamla4 (dg,lmda(id))
-            gval = gval + dg
+c           call lamla4 (dg,lmda(id))
+c           gval = gval + dg
 
          else if (ltyp(id).eq.7) then 
 c                                 in the 2021 relative to the low T phase,
