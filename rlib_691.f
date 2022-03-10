@@ -10932,8 +10932,8 @@ c---------------------------------------------------------------------
       common/ cst86 /ntot,npairs
 
       character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)

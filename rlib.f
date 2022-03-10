@@ -9528,8 +9528,8 @@ c---------------------------------------------------------------------
       common/ cst86 /ntot,npairs
 
       character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -9564,7 +9564,7 @@ c                                 generate coordinates for i'th component
 
          ync = pxnc(lpoly,lsite,k)/wt
 
-         if (dynam.and.ync.gt.xncg(ids,lpoly,lsite,k)) then 
+         if (lresub.and.ync.gt.xncg(ids,lpoly,lsite,k)) then 
             ync = xncg(ids,lpoly,lsite,k)
          else if (ync.gt.0.5d0) then
             ync = 0.5d0
@@ -15482,7 +15482,7 @@ c                                 indices:
 
       end
 
-      subroutine subdiv (ids,kds,gcind,phct,lresub)
+      subroutine subdiv (ids,kds,gcind,phct,dynam)
 c---------------------------------------------------------------------
 c stattic/dynamic subdivision and data storage
 
@@ -15500,7 +15500,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical lresub, simpl
+      logical dynam, simpl
 
       integer i, j, ii, ids, kds, ncomp, nind(h4), pos, nc, gcind,
      *        stind(h4), ipop1, phct
@@ -15508,8 +15508,8 @@ c---------------------------------------------------------------------
       double precision twt
 
       character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
@@ -15518,7 +15518,7 @@ c---------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c---------------------------------------------------------------------
 
-      dynam = lresub
+      lresub = dynam
       dead = .false.
 
       if (ksmod(ids).eq.20) then
@@ -15679,8 +15679,8 @@ c---------------------------------------------------------------------
       double precision wt
 
       character tname*10
-      logical refine, dynam
-      common/ cxt26 /refine,dynam,tname
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
 
       integer ntot,npairs
       common/ cst86 /ntot,npairs
@@ -15701,7 +15701,7 @@ c                                 copy these into the static or dynamic array
 
             icoct = icoct + 1
 c
-            if (dynam) then
+            if (lresub) then
                if (icoct.gt.k20) call error (58,0d0,0,'K20')
                zco(icoct) = simp(h)
             else
@@ -15725,7 +15725,7 @@ c                                 initialize the indices
          scoct = scoct + 1
 
          if (scoct.gt.k13) then 
-            if (dynam) then
+            if (lresub) then
                call error (58,0d0,0,'K13')
             else
                call err41 ('K13')
@@ -15763,7 +15763,7 @@ c                                 figure out which index to increment
             scoct = scoct + 1
 
             if (scoct.gt.k13) then 
-               if (dynam) then
+               if (lresub) then
                   call error (58,0d0,0,'K13')
                else
                   call err41 ('K13')
