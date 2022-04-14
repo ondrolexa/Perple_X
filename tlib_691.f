@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated March 7, 2022.',
+     *     'Perple_X version 6.9.1, source updated April 14, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -269,14 +269,14 @@ c                                 be zero during fractionation
       nopt(11) = 1d-6
 c                                 quench temperature (K)
       nopt(12) = 0d0
-c                                 initial resolution, solvus_tolerance (output)
+c                                 initial_resolution, solvus_tolerance (output)
       if (iam.eq.15) then 
 c                                 convex
          nopt(13) = 1d0/16d0
          nopt(8) = 1.5*nopt(13)
       else
 c                                 meemum, vertex
-         nopt(13) = 0.25d0
+         nopt(13) = 0.2d0
          nopt(8) = 1d-2
       end if
 c                                 solvus_tolerance_II (computational)
@@ -1756,7 +1756,7 @@ c                                 info file options
 
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:     ',f6.4,4x,
-     *                                   '[1/4] 0->1; 0 => off',/,
+     *                                   '[1/5] 0->1; 0 => off',/,
      *        4x,'stretch_factor          ',f6.4,4x,'[2d-3] >0 ',/,
      *        4x,'non_linear_switch       ',l1,9x,'[F] T',/,
      *        4x,'subdivision_override    ',a3,7x,'[lin] off str',/,
@@ -2027,6 +2027,12 @@ c      end if
       end if 
 c                                 load chars into key
       write (key,'(22a)') chars(ibeg:lend)
+c                                 initialize other values
+      strg = ' '
+      strg1 = ' '
+      nval1 = '0'
+      nval2 = '0'
+      nval3 = '0'
 
       iend = iend + 1
 c                                 now locate the value:
@@ -2041,12 +2047,6 @@ c                                 look if it contains a comment character
 c                                 save longer versions (only on first value)
 c                                 this is done in case it's long text or 
 c                                 several numbers on certain options. 
-      strg = ' '
-      strg1 = ' '
-      nval1 = '0'
-      nval2 = '0'
-      nval3 = '0'
-      
       if (iend-ibeg.gt.39) iend = ibeg+39
       write (strg,'(40a)') chars(ibeg:iend)
       write (strg1,'(40a)') chars(ibeg:ibeg+39)
@@ -4086,10 +4086,14 @@ c                                 component is in the phase.
 
          if (.not.aq.and.(ieos.eq.15.or.ieos.eq.16)) cycle
 
-         if (ieos.gt.0.and.ieos.lt.5.and.thermo(3,k10).eq.0d0) then 
+c                                 a data writing program, don't mess
+c                                 with ieos
+         if (iam.ne.6.and.iam.ne.9) then
 c                                 standard form with no volumetric EoS, 
 c                                 reset ieos internally:
-            ieos = 0
+             if (ieos.gt.0.and.ieos.lt.5.and.thermo(3,k10).eq.0d0)
+     *          ieos = 0
+
          end if 
  
          exit 
@@ -4846,7 +4850,7 @@ c----------------------------------------------------------------------
       character chars*1
       common/ cst51 /length,com,chars(lchar)
 
-      if (num.ne.0d0) then 
+      if (num.ne.0d0.or.strg.eq.'EoS') then 
 c                                 pad with 2 blanks, if not at line begining
          if (ibeg.gt.1) then
             chars(ibeg) = ' '
