@@ -1051,8 +1051,9 @@ c                                 phase composition
          end if 
  
       else 
-c                                 potential
-         if (imaf(jnd-3).eq.2.and.value.gt.0d0) then
+c                                 potential/fugacity/activity
+         if (imaf(jnd-3).eq.3.and.value.gt.0d0) then
+c                                 imaf = 3, warn on activity > 1.
             call warn (43,value,jnd,vname(jnd))
             numbad = .true.
          end if 
