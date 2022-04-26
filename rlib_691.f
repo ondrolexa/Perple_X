@@ -2234,6 +2234,8 @@ c----------------------------------------------------------------------
 
       integer ibeg, ier, iscan, imax, match, idim, index
 
+      external iscan, match
+
       character name*8, eod*3, tname*10
 
       double precision nums(m3)
@@ -2599,7 +2601,7 @@ c                                 find start of data marker '='
 c                                 find a number
       call readfr (rnum,ibeg,iend,com,ier)
       if (ier.ne.0) goto 90
-c                                 find the next non-blank chracter
+c                                 find the next non-blank character
 c                                 if it's text, then the expression
 c                                 has no constant, else save the
 c                                 constant.
@@ -14283,7 +14285,7 @@ c                                 composite polytope
      *       g12.5,' - ',g12.5,/,'its current** value is: ',g12.5)
 1040  format (/,'**warning ver993** the composition of solution: '
      *       ,a,/'is beyond the subdivision range limits for '
-     *       ,'composition X(',i1,',',i2')*.')
+     *       ,'composition X(',i1,',',i2,')*.')
 1050  format (/,'**warning ver993** the composition of solution '
      *       ,a,' is beyond',/,'the subdivision range of'
      *       ,' composition variable ',a,' of the ',a
@@ -19450,9 +19452,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      double precision y(*), zt, z(ldz,*)
-
       integer i,j,k,ldz,ids
+
+      double precision y(*), zt, z(ldz,*)
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)

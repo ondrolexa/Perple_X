@@ -1169,7 +1169,7 @@ c                                 -------------------------------------
      *        28x,i4,6x,'[800] y-length (pts)',/,
      *        4x,'field_fill             ',l1,10x,'[T] F',/,
      *        4x,'field_label            ',l1,10x,'[T] F',/,
-     *        4x,'numeric_field_label    ',l1,10x,'[F] T, if T '
+     *        4x,'numeric_field_label    ',l1,10x,'[F] T, if T ',
      *           'PSSECT writes list to *_assemblages.txt',/,
      *        4x,'replicate_label        ',f5.3,6x,'0->1 [0.025]',/,
      *        4x,'field_label_scale      ',f4.2,7x,'[0.72] (rel)',/,
@@ -1180,9 +1180,9 @@ c                                 -------------------------------------
      *        4x,'picture_transformation :',/,
      *        28x,g9.3,1x,'[0.18] x-scale (rel)',/,
      *        28x,g9.3,1x,'[0.18] y-scale (rel)',/,
-     *        28x,g9.3,1x,'[0.18] x-translation (pts)',/   
-     *        28x,g9.3,1x,'[0.18] y-translation (pts)',/
-     *        28x,g9.3,1x,'[0.0]  rotation (deg)',/           
+     *        28x,g9.3,1x,'[0.18] x-translation (pts)',/,
+     *        28x,g9.3,1x,'[0.18] y-translation (pts)',/,
+     *        28x,g9.3,1x,'[0.0]  rotation (deg)',/,
      *        4x,'plot_aspect_ratio      ',f5.3,6x,
      *           '[1.0] x_axis_length/y_axis_length',/,
      *        4x,'splines                ',l1,10x,'[T] F',/,

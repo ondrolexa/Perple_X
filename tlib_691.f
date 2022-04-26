@@ -2,7 +2,7 @@ c----------------------------------------------------------------------
 
 c TLIB - a library of subprograms called by the PERPLEX programs.
 
-c Copyright (C) 1986-2021 James A D Connolly
+c Copyright (C) 1986-2022 James A D Connolly
 
 c This file is part of Perple_X.
 
@@ -2104,6 +2104,8 @@ c----------------------------------------------------------------------
 
       integer lun, iscan, iscnlt, ibeg, iend, ier, nstrg, imax
 
+      external iscan, iscnlt
+
       logical eof
 
       character card*(lchar), string(3)*8
@@ -3460,6 +3462,8 @@ c----------------------------------------------------------------------
 
       integer ibeg, iend, ier, iscan, i, nreact, jopt
 
+      external iscan
+
       double precision rnum, nums(m3)
 
       character tname*8, name*8, rec*(lchar), tag*3
@@ -4394,7 +4398,7 @@ c----------------------------------------------------------------------
  
       integer n, ier 
 
-      character key*22, values*80, strg*80
+      character key*(*), values*(*), strg*(*)
 c----------------------------------------------------------------------
 
       call redcd0 (n,ier,key,values,strg)
