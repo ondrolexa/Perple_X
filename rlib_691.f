@@ -21489,9 +21489,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical all
-
-      integer id, i, j, tmp, start
+      integer id, i, j, tmp
 
       double precision diff
 

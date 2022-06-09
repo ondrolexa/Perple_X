@@ -7085,7 +7085,7 @@ fo       fa
                                     | NOTE restricted compositional range for Mn
 
 0    1     .1   0                    | range and resolution for X(Mn), imod = 1 -> asymmetric transform subdivision
-1d-5 1d-1  .1   1                    | range and resolution for X(Ni), imod = 0 -> cartesian subdivision
+0    1     .1   0                    | range and resolution for X(Ni), imod = 0 -> cartesian subdivision
 0    1     .1   0                    | range and resolution for X(Mg), imod = 0 -> cartesian subdivision
 
 begin_excess_function

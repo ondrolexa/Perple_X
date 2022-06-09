@@ -152,7 +152,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=14)
       parameter (k7=k5+1,k8=k5+2,k17=8,k19=3*k5)
-      parameter (k9=35,k10=500,k14=18,k15=6,k16=120)
+      parameter (k9=50,k10=500,k14=18,k15=6,k16=120)
       parameter (k22=mdim*mst*h4*k19,k23=25)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
@@ -203,7 +203,7 @@ c----------------------------------------------------------------------
 !                                      for use as static compositions during auto-refine stage.
       parameter (m0=12, m1=60, m2=8, m3=3, m4=96, m6=6, m7=15, m8=9,
      *           m9=10,
-     *           m10=6, m11=12, m12=4, m14=14, m15=85, m16=6, m17=5,
+     *           m10=6, m11=k5, m12=4, m14=14, m15=85, m16=6, m17=5,
      *           m18=6, m19=m14-1, m20=m10*(m11-2)+1, m21=m20+m19,
      *           m22=3*m19+m20, m23=2*m19**2+20*m19+11*m20, 
      *           m24 = 10*60*60*k5, m25 = m24*m14)
@@ -221,8 +221,7 @@ c----------------------------------------------------------------------
 
 ! NOTE: increasing parameter K5 requires changes to the following
 ! format statements:
-!                     1000 in routine bulkck
-!                     1000 in routine bulktst
+
 !                     1150 in routine input1
 !                     4000 in main in program build
 

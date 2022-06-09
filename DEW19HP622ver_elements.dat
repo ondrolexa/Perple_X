@@ -3254,12 +3254,14 @@ G0 = -586939.9  S0 = 98.44952  w = 532748.7  q = -1
 a1 = 3.20076  a2 = 384.928  a3 = 2.5104  a4 = -117988.8  c1 = 46.024  c2 = -158992  
 end
 
-
-HCrO4-   EoS = 16 | Gf =  -764835. HCrO4(-)  Shock et al. (1997) revised with new predicted a1 for complex species 
-Cr(1)H2(.5)O2(2) 
-G0 = -764835.2  S0 = 184.096  w = 402584.5  q = -1  
-a1 = 4.404584  a2 = 2401.537  a3 = .1059535  a4 = -126201.3  c1 = 112.9139  c2 = 46900.93  
-end
+| there are two entries for HCrO4- in the DEW19 spreadsheet, this (the second) is identical to the data in DEW17,
+| therefore it is assumed the first entry (above) is the entry intended for the DEW19 version. JADC, 4/28/2022
+|
+|HCrO4-   EoS = 16 | Gf =  -764835. HCrO4(-)  Shock et al. (1997) revised with new predicted a1 for complex species 
+|Cr(1)H2(.5)O2(2) 
+|G0 = -764835.2  S0 = 184.096  w = 402584.5  q = -1  
+|a1 = 4.404584  a2 = 2401.537  a3 = .1059535  a4 = -126201.3  c1 = 112.9139  c2 = 46900.93  
+|end
 
 
 HEXANE,A EoS = 16 | Gf =    18493. C6H14  Plyasunov & Shock (2001) for c1, c2 & omega; a1 predicted with new correlation for complex species from Sverjen
