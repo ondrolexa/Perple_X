@@ -362,10 +362,13 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
             if (idead1.eq.1) then
 c                                 let's blow this joint
-               write (*,'(/,a,/)') 'bad result on idead = 3, let''s '//
-     *                'blow this joint, the mass balance errors are:'
-               write (*,'(4(g14.6,2x))') (tot(i),i=1,icp)
+c              write (*,'(/,a,/)') 'bad result on idead = 3, let''s '//
+c    *                'blow this joint, the mass balance errors are:'
+c              write (*,'(4(g14.6,2x))') (tot(i),i=1,icp)
                idead = 3
+
+               call lpwarn (idead,'REOPT/MASS BALANCE')
+
                exit
 
 c           else if (idead.eq.3) then

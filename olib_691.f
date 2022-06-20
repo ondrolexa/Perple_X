@@ -112,6 +112,10 @@ c----------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -131,6 +135,11 @@ c                                 print standard potentials
       if (iam.eq.2) then 
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 1, ipot)
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 3, ipot)
+
+         do i = 2, icont
+            write (lu,1121) i, cx(i-1)
+         end do
+
       else 
          write (lu,1120) (vnm(i), var(i), i = 1, jvar)
       end if 
@@ -793,6 +802,7 @@ c                                 chemical potentials variance
      *          ' Solid Specific Heat Capacity (J/K/m3) (1) = ',g12.6,/)
 1110  format (1x,a8,2x,4(f8.3,2x),5x,4(f8.3,2x))
 1120  format (29x,a8,' = ',g12.6)
+1121  format (29x,'X(C',i1,')    = ',g12.6)
 1130  format (/,'Chemical Potentials (J/mol):',//,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
 1160  format (/,'Molar Properties and Density:'

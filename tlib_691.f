@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated April 26, 2022.',
+     *     'Perple_X version 6.9.1, source updated June 20, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -7845,13 +7845,19 @@ c                                             look for errors
      *                                 iwarn91.lt.6) then 
 c                                             unbounded solution, or
 c                                             other programming error.
-         call warn (91,c,idead,char) 
+         call warn (91,c,idead,char)
+
+         call prtptx
+
          iwarn91 = iwarn91 + 1
          if (iwarn91.eq.5) call warn (49,c,91,'LPWARN')
 
       else if (idead.eq.3.and.iwarn42.lt.6) then 
 c                                             no feasible solution
          call warn (42,c,idead,char)
+
+         call prtptx
+
          iwarn42 = iwarn42 + 1
          if (iwarn42.eq.6) call warn (49,c,42,'LPWARN')
 
@@ -7869,7 +7875,9 @@ c                                             solution.
             call warn (58,c,k21,char)
          else 
             call warn (58,c,k25,char)
-         end if 
+         end if
+
+         call prtptx
 
          iwarn58 = iwarn58 + 1
 
@@ -7884,25 +7892,34 @@ c                                             solution.
 
       else if (idead.eq.102.and.iwarn02.lt.10.and.lopt(32)) then
 
-          iwarn02 = iwarn02 + 1
-          call warn (100,c,102,'pure and impure solvent phases '//
-     *              'coexist within solvus_tolerance. '//
-     *              'To output result set aq_bad_result to 101')
-          if (iwarn02.eq.10) call warn (49,c,102,'LPWARN')
+         iwarn02 = iwarn02 + 1
+         call warn (100,c,102,'pure and impure solvent phases '//
+     *             'coexist within solvus_tolerance. '//
+     *             'To output result set aq_bad_result to 101')
+
+         call prtptx
+
+         if (iwarn02.eq.10) call warn (49,c,102,'LPWARN')
 
       else if (idead.eq.103.and.iwarn03.lt.10.and.lopt(32)) then
 
-          iwarn03 = iwarn03 + 1
-          call warn (100,c,103,'pure and impure solvent phases '//
+         iwarn03 = iwarn03 + 1
+         call warn (100,c,103,'pure and impure solvent phases '//
      *              'coexist. To output result set aq_bad_result.')
-          if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
+
+         call prtptx
+
+         if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
 
       else if (idead.eq.105.and.iwarn05.lt.10) then
 
-          iwarn05 = iwarn05 + 1
-          call warn (100,c,105,'ran out of memory during optimization.'
-     *                   //' On excessive failure increase k21 or k25')
-          if (iwarn05.eq.20) call warn (49,c,105,'LPWARN')
+         iwarn05 = iwarn05 + 1
+         call warn (100,c,105,'ran out of memory during optimization.'
+     *                  //' On excessive failure increase k21 or k25')
+
+         call prtptx
+
+         if (iwarn05.eq.20) call warn (49,c,105,'LPWARN')
 
       end if
 
@@ -7955,6 +7972,8 @@ c----------------------------------------------------------------------
 
       integer i
 
+      character tag*8
+
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
 
@@ -7963,8 +7982,24 @@ c----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
+
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
 c----------------------------------------------------------------------
       write (*,'(a,/)') 'Current conditions:'
+
+      do i = 2, icont
+
+         if (i.eq.2) then
+            tag = 'X(C1)   '
+         else
+            tag = 'X(C2)   '
+         end if
+
+         write (*,1000) tag,cx(i-1)
+
+      end do
 
       do i = 1, ipot
          write (*,1000) vname(iv(i)),v(iv(i))
@@ -9078,7 +9113,7 @@ c                             t = 2, and xco2 = 3, respectively.
       read (n1,*,err=998) (iv(i), i = 1, 5)
 c                             check variable ranges are consistent,
 c                             variable iv(1):
-      if (icopt.ne.0.and.icopt.ne.4.and.iam.ne.2) then
+      if (icopt.ne.0.and.icopt.ne.4.and.icopt.ne.12.and.iam.ne.2) then
 
          if (iv(1).eq.3.and.ifct.eq.0) call error (110,r,i,'I')
 

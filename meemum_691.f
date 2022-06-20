@@ -56,6 +56,10 @@ c----------------------------------------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -114,6 +118,15 @@ c                                 convert mass to molar
 
             end if
 
+         else if (icont.gt.1) then 
+c                                 files set up for bulk compositional variables
+            do i = 2, icont
+               write (*,1010) i
+               read (*,*) cx(i-1)
+            end do
+
+            call setblk
+
          end if 
 c                                 meemum does the minimization and outputs
 c                                 the results to the print file.
@@ -139,6 +152,8 @@ c                                 print summary to LUN 6
 1000  format (/,'Interactively enter bulk compositions (y/n)?',/,
      *          'If you answer no, MEEMUM uses the bulk composition',
      *         ' specified in the input file.',/)
+1010  format (/,'Enter value of bulk compositional variable X(C',i1,'):'
+     *       )
 1060  format (/,'Enter ',a,' amounts of the components:')
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
 
