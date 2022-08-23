@@ -354,9 +354,6 @@ c-----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
@@ -606,9 +603,6 @@ c-----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 
@@ -731,9 +725,6 @@ c-----------------------------------------------------------------------
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -1527,9 +1518,6 @@ c---------------------------------------------------------------------
 
       integer jlow,jlev,loopx,loopy,jinc1
       common/ cst312 /jlow,jlev,loopx,loopy,jinc1
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       save iind, jind, iiind, jjind, icind, jcind
 

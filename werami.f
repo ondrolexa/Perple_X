@@ -774,9 +774,6 @@ c                                 global assemblage data
       integer icog,jcog
       common/ cxt17 /icog(k2),jcog(k2)
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       logical oned
       common/ cst82 /oned
 
@@ -2069,9 +2066,6 @@ c-------------------------------------------------------------------
       integer javg,jdsol
       common/ cxt5 /javg,jdsol(k5)
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       double precision pcomp
       common/ cst324 /pcomp(k0,k5)
 
@@ -3037,9 +3031,6 @@ c----------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       integer idstab,nstab,istab
       common/ cst34 /idstab(i11),nstab(i11),istab
@@ -4662,9 +4653,6 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i, j, np, iam
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 c-----------------------------------------------------------------------
       solvs3 = .false.
 

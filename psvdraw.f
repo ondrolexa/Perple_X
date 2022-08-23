@@ -368,7 +368,7 @@ c pschem - subroutine to output ternary chemographies.
  
       integer iperm(2,3),i,j,iflag,isat,iop1,kvert,id,nchar
 
-      integer icp,istct,ipoint,ifct,ipot,ias,jd
+      integer icp,istct,ipoint,ifct,ipot,jas,jd
 
       logical vline, tlbl
 
@@ -529,16 +529,16 @@ c                                  last invariant
 c                                  old mode, draw tielines:
             do i = 1, ib
  
-               ias = iasmbl(i)
+               jas = iasmbl(i)
  
                do j = 1, 3
                   id = idf(j,i)
-                  if (ias.eq.0.or.id.le.ipoint) ivchk(id) = 1
+                  if (jas.eq.0.or.id.le.ipoint) ivchk(id) = 1
                   xx(j) = x(1,id) 
                   yy(j) = x(2,id) 
                end do 
 c                                           draw tie lines:
-               if (ias.eq.0) then
+               if (jas.eq.0) then
 c                                           invariant
                   if (vline) then
                      call pspygn  (xx,yy,3,1d0,1d0,0)
@@ -546,7 +546,7 @@ c                                           invariant
                      call pspygn  (xx,yy,3,1d0,0d0,0)
                   end if 
 
-               else if (ias.eq.1) then
+               else if (jas.eq.1) then
 c                                           univariant
                   if (vline) then
                      style = 1
@@ -570,7 +570,7 @@ c                                           draw the line:
                      call pspygn  (xx,yy,3,1d0,0d0,0)
                   end if 
 
-               else if (ias.eq.2) then
+               else if (jas.eq.2) then
 c                                           divariant
                   if (fill) then 
                      call pspygn  (xx,yy,3,0d0,0d0,7)
@@ -641,8 +641,8 @@ c                                       sectioning constraints
  
       double precision xx(j9), yy(j9)
  
-      integer iperm(2,3),idv(j9),idp(3),jdv(3),ias,i,kvert,j,id,
-     *                   jas,k,l,jvert,kp,kp2,ipoint,ll1,ll2,ll3
+      integer iperm(2,3),idv(j9),idp(3),jdv(3),jas,i,kvert,j,id,
+     *                   kas,k,l,jvert,kp,kp2,ipoint,ll1,ll2,ll3
 
       integer idf,ib,iasmbl,ivchk
       double precision x
@@ -652,7 +652,7 @@ c                                       sectioning constraints
       common/ phase /ikp(k1)
 c                                    merge high variance fields
 c                                    load first part into polygon:
-      ias = iasmbl(i)
+      jas = iasmbl(i)
       kvert = 3
 
       do j = 1, 3
@@ -681,9 +681,9 @@ c                                    tag used compounds:
 c                                    now search for the common simplexes:
          do 20 j = 1, ib
 
-            jas = iasmbl(j)
+            kas = iasmbl(j)
 c                                    no match, reject:
-            if (jas.ne.ias.or.j.eq.i) cycle
+            if (kas.ne.jas.or.j.eq.i) cycle
 
             do 30 k = 1, 3
                id = idf(k,j)
@@ -726,7 +726,7 @@ c                                    tag the common join on the end
                      else 
 c                                    the simplex might share the next
 c                                    segment as well:
-                        if (ias.gt.1) then 
+                        if (jas.gt.1) then 
                            if (kp.lt.kvert) then
                               kp2 = kp + 1
                            else 

@@ -1432,9 +1432,6 @@ c                                 x-coordinates for the final solution
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 c                                 composition and model flags
 c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot

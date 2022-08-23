@@ -794,9 +794,6 @@ c                                 for final adaptive solution
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
-c                                 global assemblage data
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk

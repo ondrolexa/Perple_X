@@ -16862,9 +16862,6 @@ c                                 global assemblage data
       double precision bg
       common/ cxt19 /bg(k5,k2)
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -16996,10 +16993,6 @@ c----------------------------------------------------------------------
 
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75 /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 

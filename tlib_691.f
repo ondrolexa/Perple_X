@@ -7096,9 +7096,6 @@ c----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
@@ -8023,9 +8020,6 @@ c id identifies the assemblage
       character string*(*), pname*14
 
       integer i, ist, iend, id, ids
-
-      integer idasls,iavar,iasct,ias
-      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
 
       integer length,com
       character chars*1

@@ -60,9 +60,6 @@ c                                 solution model names
       integer jx, jy, lev, xn, yn
       common/ cst58 /jx, jy, lev, xn, yn
 
-      integer idasls,iavar,iasct,ias
-      common/ cst75 /idasls(k5,k3),iavar(3,k3),iasct,ias
-
       integer iap,ibulk
       common/ cst74 /iap(k2),ibulk
 

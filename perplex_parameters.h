@@ -497,3 +497,6 @@ c                                 slptr1(i) points to the position of
 c                                 solution model i in the input list
       integer solptr
       common/ cst212 /solptr(h9)
+c                                 global assemblage pointers
+      integer idasls,iavar,iasct,ias
+      common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
