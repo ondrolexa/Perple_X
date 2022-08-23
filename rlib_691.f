@@ -174,12 +174,12 @@ c---------------------------------------------------------------------
 
       integer id, iwarn, oldid, j
 
-      logical proj
+      logical proj, err
 
       double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr, dg,
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
-     *                 gterm2, km, kmk, lnfpur, gaq, ghkf, lamla2
+     *                 gterm2, km, kmk, lnfpur, gaq, ghkf, lamla2, pgpa
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz,
      *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf, lamla2
@@ -539,6 +539,21 @@ c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
 c                                 Xiong et al., 2011 for Fe-Cr alloys
             gval = gval + glacaz(eos(id)) + vdp + thermo(1,id)
+
+c        else if (eos(id).eq.800) then
+
+c           pgpa = p/1d4
+c           call interpolator (pgpa, t, gval, vt, a, b, err)
+
+c           if (err) then 
+c              write (*,*) 'interpolator set err true'
+c              call prtptx
+c           else 
+c              write (*,'(a,g14.6)') 'from interpolator, g = ',gval
+c              write (*,'(a,g14.6)') 'from interpolator, v = ',vt
+c              write (*,'(a,g14.6)') 'from interpolator, g = ',a
+c              write (*,'(a,g14.6)') 'from interpolator, g = ',b
+c           end if
 
          end if
 
@@ -9553,7 +9568,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, im, id, idsol, ixct, gcind, irjct, infnd
+      integer i, j, im, id, idsol, ixct, gcind, irjct, infnd, ifnd
 
       logical first, chksol, wham, ok, found
 
@@ -9760,37 +9775,40 @@ c                                 indicate site_check_override and refine endmem
          end if
 c                               read next solution
       end do
+c                               make lists of found/not-found solutions
+      infnd = 0
+      ifnd = 0
+
+      do i = 1, isoct
+
+         ok = .false.
+c                                 check if fname was included:
+         do j = 1, im
+            if (fname(i).eq.sname(j)) then 
+               ok = .true.
+               ifnd = ifnd + 1
+               solptr(ifnd) = j
+               exit
+            end if
+         end do
+
+         if (ok) cycle
+c                                  check if fname was rejected:
+         do j = 1, irjct
+            if (fname(i).eq.rjct(j)) then 
+               ok = .true.
+               exit 
+            end if
+         end do
+
+         if (ok) cycle
+c                                  add to not found list:
+         infnd = infnd + 1
+         nfnd(infnd) = fname(i)
+
+      end do
 
       if (iam.lt.3.or.iam.eq.15) then
-
-         infnd = 0 
-
-         do i = 1, isoct
-
-            ok = .false.
-c                                 check if fname was included:
-            do j = 1, im
-               if (fname(i).eq.sname(j)) then 
-                  ok = .true.
-                  exit
-               end if
-            end do
-
-            if (ok) cycle
-c                                  check if fname was rejected:
-            do j = 1, irjct
-               if (fname(i).eq.rjct(j)) then 
-                  ok = .true.
-                  exit 
-               end if
-            end do
-
-            if (ok) cycle
-c                                  add to not found list:
-            infnd = infnd + 1
-            nfnd(infnd) = fname(i)
-
-         end do
 c                                  total pseudocompound count:
          if (.not.refine.or.iam.eq.15) write (*,1110) iphct - ipoint
 c                                  list of found solutions

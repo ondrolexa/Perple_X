@@ -798,7 +798,7 @@ c----------------------------------------------------------------------
 
       logical check, bad, quit, notaq, abort
 
-      integer idsol(k19),ksol(k19,k19),ids,xidsol,xksol,irep,
+      integer idsol(k19),ksol(k19,k19),ids,xidsol,xksol,irep,jlist(k5),
      *        i,j,jdsol(k19,k19),jd,k,l,nkp(k19),xjdsol(k19),kk
 
       double precision bsol(k19,k19),cpnew(k19,k19),xx,xb(k19),msol,
@@ -1155,19 +1155,28 @@ c DEBUG691
             end if
 
       end do
+c                                 make a list of solutions as ordered 
+c                                 in the input:
+      if (np.gt.1) then
+
+         call assort (jlist,ksol,np)
+
+      end if
 c                                 now reform the arrays kdv and b
       do i = 1, np
 
-         amt(i) = bnew(i)
-         kkp(i) = ksol(i,1)
-         ids = kkp(i)
+         ids = ksol(i,1)
+         kk = jlist(i)
+         amt(kk) = bnew(i)
+         kkp(kk) = ksol(i,1)
 
-         cp3(1:icomp,i) = cpnew(1:icomp,i)
+         cp3(1:icomp,kk) = cpnew(1:icomp,i)
 
-         pa3(i,1:nstot(ids)) = pnew(i,1:nstot(ids))
+         pa3(kk,1:nstot(ids)) = pnew(i,1:nstot(ids))
 c                                 lagged speciation, ionic strength, tot molality
 c                                 and solvent mass.
-         if (lopt(32).and.ksmod(ids).eq.39) caq(i,1:nat) = ncaq(i,1:nat)
+         if (lopt(32).and.ksmod(ids).eq.39) 
+     *                            caq(kk,1:nat) = ncaq(i,1:nat)
 c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          if (lopt(11)) call sollim (ids,i)
@@ -2985,8 +2994,7 @@ c                                 use getpa until it's decided
 c                                 whether to reset jphct after 
 c                                 each iteration:
                call getpa (jds,i)
-c               pa(1:nstot(jds)) = zco(icoz(jdv(i))+1:
-c     *                                icoz(jdv(i))+nstot(jds))
+
             end if
 c                                 save endmember fractions
             pa3(i,1:nstot(jds)) = pa(1:nstot(jds))

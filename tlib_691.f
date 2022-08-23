@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated June 20, 2022.',
+     *     'Perple_X version 6.9.1, source updated August 23, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -8022,7 +8022,7 @@ c id identifies the assemblage
 
       character string*(*), pname*14
 
-      integer i, ist, iend, id, np, ntot, ids
+      integer i, ist, iend, id, ids
 
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
@@ -8036,14 +8036,12 @@ c----------------------------------------------------------------------
       string = ' '
 
       ist = 1
-      np = iavar(1,id)
-      ntot = iavar(3,id)
 
       do i = 1, lchar
          chars(i) = ' '
       end do
-c                                 first solution names:
-      do i = 1, ntot
+
+      do i = 1, iavar(3,id)
              
          ids = idasls(i,id)
 
@@ -8063,6 +8061,48 @@ c                                 first solution names:
 
       end 
 
+      subroutine assort (jlist,ksol,np)
+c----------------------------------------------------------------------
+c sort phase indices in an assemblage so that they are in the same order
+c as entered in the input file.
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical quit
+
+      integer i, j, jd, np, ifnd, jlist(k5), ksol(k19,k19)
+c----------------------------------------------------------------------
+         ifnd = 0
+         quit = .false.
+
+         do i = 1, isoct
+c                                 original solution position
+            jd = solptr(i)
+
+            do j = 1, np
+c                                 look through the list to see if the solution 
+c                                 occurs, if it does, count it and set pointer
+c                                 in jlist
+               if (jd.eq.ksol(j,1)) then
+
+                  ifnd = ifnd + 1
+                  jlist(ifnd) = j
+                  if (ifnd.eq.np) then
+                     quit = .true.
+                     exit
+                  end if
+
+               end if
+
+            end do
+
+            if (quit) exit
+
+         end do
+
+      end
 
       subroutine fopen (n2name,prt,n9name,err)
 c-----------------------------------------------------------------------
@@ -9112,8 +9152,13 @@ c                             independent intensive variables, p = 1,
 c                             t = 2, and xco2 = 3, respectively.
       read (n1,*,err=998) (iv(i), i = 1, 5)
 c                             check variable ranges are consistent,
-c                             variable iv(1):
-      if (icopt.ne.0.and.icopt.ne.4.and.icopt.ne.12.and.iam.ne.2) then
+c                             variable iv(1), UNLESS:
+c                             normal calculations w/o limits
+      if (icopt.ne.0.and.icopt.ne.4.and.icopt.ne.12.and.
+c                             fractionation calculations
+     *    icopt.ne.7.and.icopt.le.9.
+c                              MEEMUM
+     *    and.iam.ne.2) then
 
          if (iv(1).eq.3.and.ifct.eq.0) call error (110,r,i,'I')
 

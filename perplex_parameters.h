@@ -493,3 +493,7 @@ c                                 plot program internal options
      *                 tcont
       common/ ops /xfac,cscale,nscale,ascale,rlabel,width,tcont,bbox(4),
      *             ifont,spline,half,tenth,lgrid,fill,label
+c                                 slptr1(i) points to the position of 
+c                                 solution model i in the input list
+      integer solptr
+      common/ cst212 /solptr(h9)
