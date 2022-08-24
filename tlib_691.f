@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated August 23, 2022.',
+     *     'Perple_X version 6.9.1, source updated August 24, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -8057,8 +8057,8 @@ c----------------------------------------------------------------------
 
       subroutine assort (jlist,ksol,np)
 c----------------------------------------------------------------------
-c sort phase indices in an assemblage so that they are in the same order
-c as entered in the input file.
+c sort solution phase indices in an assemblage so that the phases are 
+c in the same order as entered in the input file.
 c----------------------------------------------------------------------
       implicit none
 

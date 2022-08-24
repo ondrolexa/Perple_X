@@ -1167,16 +1167,16 @@ c                                 now reform the arrays kdv and b
 
          ids = ksol(i,1)
          kk = jlist(i)
-         amt(kk) = bnew(i)
-         kkp(kk) = ksol(i,1)
+         amt(i) = bnew(kk)
+         kkp(i) = ksol(kk,1)
 
-         cp3(1:icomp,kk) = cpnew(1:icomp,i)
+         cp3(1:icomp,i) = cpnew(1:icomp,kk)
 
-         pa3(kk,1:nstot(ids)) = pnew(i,1:nstot(ids))
+         pa3(i,1:nstot(ids)) = pnew(kk,1:nstot(ids))
 c                                 lagged speciation, ionic strength, tot molality
 c                                 and solvent mass.
          if (lopt(32).and.ksmod(ids).eq.39) 
-     *                            caq(kk,1:nat) = ncaq(i,1:nat)
+     *                            caq(i,1:nat) = ncaq(kk,1:nat)
 c                                 if auto_refine is on:
 c                                 check composition against solution model ranges
          if (lopt(11)) call sollim (ids,i)
