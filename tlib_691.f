@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated August 24, 2022.',
+     *     'Perple_X version 6.9.1, source updated August 26, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -366,10 +366,10 @@ c                                      99 - ign - ignore 102/103 conditions and 
       iopt(22) = 0
       valu(5) = 'err'
 c                                 for infiltration/fractionation calculations set default to 101
-      if (icopt.gt.6) then 
-         iopt(22) = 1
-         valu(5) = '101'
-      end if 
+c     if (icopt.gt.6) then 
+c        iopt(22) = 1
+c        valu(5) = '101'
+c     end if 
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
       valu(22) = 'mod'
@@ -3037,6 +3037,8 @@ c----------------------------------------------------------------------
          end if
       else if (ier.eq.61) then
          write (*,61) char
+      else if (ier.eq.62) then
+         write (*,62) char
       else if (ier.eq.63) then
          write (*,63)
       else if (ier.eq.64) then
@@ -3321,6 +3323,11 @@ c    *          8x,'increase speciation_max_it.',/,
      *       'this behavior set bad_number to a numeric value or use a',
      *       ' plotting program capable',/,'of handling NaNs, e.g., ',
      *       'MatLab or PYWERAMI.',//,'program/routine: ',a,/)
+62    format (/,'**warning ver062** ',a,' is an electrolytic fluid, th',
+     *        'e default value of ',/,'aq_bad_results has been changed',
+     *        ' from err to 101 to allow fractionation to completely',/,
+     *        'deplete solute components from the condensed phase asse',
+     *        'mblage',/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
 64    format (/,'**warning ver064** AQSOLV failed to converge on ionic',
@@ -7929,6 +7936,8 @@ c iteration will be aborted and a low quality result ouput
 c----------------------------------------------------------------------
       implicit none
 
+      include 'perplex_parameters.h'
+
       integer iwarn, iter
 
       logical quit
@@ -7938,6 +7947,11 @@ c----------------------------------------------------------------------
       data iwarn/0/
 c----------------------------------------------------------------------
       quit = .true.
+
+c     if (iter.eq.0) then
+c        lopt(34) = .true.
+c        lopt(33) = .true.
+c     end if
 
       if (iwarn.lt.9) then
 

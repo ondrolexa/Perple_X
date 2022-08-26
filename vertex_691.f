@@ -2117,8 +2117,18 @@ c                                 get phases to be fractionated
                call matchj (phase(ifrct),ifr(ifrct))
 
                if (ifr(ifrct).eq.0) then
+
                   write (*,1100) phase(ifrct)
-                  cycle 
+                  cycle
+
+               else if (ksmod(ifr(ifrct)).eq.39.and.lopt(32).and.
+     *                  iopt(22).eq.0) then
+c                                 fractionating an electrolytic fluid,
+c                                 override solid component depletion
+c                                 error trap
+                  iopt(22) = 1
+                  call warn (62,numb,ifrct,phase(ifrct))
+
                end if
 
                ifrct = ifrct + 1

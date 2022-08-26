@@ -1161,12 +1161,16 @@ c                                 in the input:
 
          call assort (jlist,ksol,np)
 
+      else if (np.eq.1) then
+
+         jlist(1) = 1
+
       end if
 c                                 now reform the arrays kdv and b
       do i = 1, np
 
-         ids = ksol(i,1)
          kk = jlist(i)
+         ids = ksol(kk,1)
          amt(i) = bnew(kk)
          kkp(i) = ksol(kk,1)
 
@@ -1549,6 +1553,8 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical bad
+
       integer ic,jc,i,j,ids
 c                                 -------------------------------------
 c                                 global variables
@@ -1587,6 +1593,19 @@ c                                lagged speciation
 
       end do
 c                                dependent potentials
+c     bad = .false.
+c     do i = 1, kbulk
+c        if (isnan(mu(i))) then
+c           bad = .true.
+c           write (*,*) i, mus
+c        end if
+c     end do
+
+c     if (bad) then
+c        write (*,*) (mu(i),i=1,kbulk)
+c        write (*,*) (xmu(i),i=1,kbulk)
+c     end if
+
       write (n5,1010) (mu(i),i=1,kbulk)
 
 1010  format (10(g16.8,1x))
@@ -2310,6 +2329,14 @@ c                                 allows output of the result.
                call lpwarn (101,'YCLOS2')
             end if
 
+            if (.not.mus) then
+
+               write (*,*) 'oink1',xmu(1:icp)
+               call muwarn (quit,iter)
+               mu(1:icp) = xmu(1:icp)
+
+            end if
+
          else if (.not.mus) then 
 
             call muwarn (quit,iter)
@@ -2663,6 +2690,14 @@ c                                 allows output of the result.
                idead = 101
             else 
                call lpwarn (101,'YCLOS2')
+            end if
+
+            if (.not.mus) then
+
+               write (*,*) 'oink2',xmu(1:icp)
+               call muwarn (quit,iter)
+               mu(1:icp) = xmu(1:icp)
+
             end if
 
          else if (.not.mus) then 
