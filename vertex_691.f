@@ -2075,7 +2075,7 @@ c----------------------------------------------------------------------
 
       logical first 
 
-      integer iam, jfrct, i
+      integer jam, jfrct, i
 
       double precision numb
 
@@ -2153,12 +2153,12 @@ c                                 new phase list from old list:
          
          do i = 1, jfrct 
 
-            call matchj (phase(i),iam)
+            call matchj (phase(i),jam)
 
-            if (iam.eq.0) cycle 
+            if (jam.eq.0) cycle 
        
             ifrct = ifrct + 1
-            ifr(ifrct) = iam 
+            ifr(ifrct) = jam 
 
          end do
 

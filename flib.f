@@ -4402,7 +4402,7 @@ c                                 compute corrected graphite activity
 
       end 
 
-      subroutine pseos (v,f,iam)
+      subroutine pseos (v,f,jam)
 c-----------------------------------------------------------------------
 c compute ln(f[iam], bar) and volume (cm3/mol) for pure fluids from Pitzer 
 c & Sterner JCP '94. 
@@ -4421,7 +4421,7 @@ c-----------------------------------------------------------------------
      *                 a2,a3,c12,c20,c33,c34,c36,c44,c46,c55,c56,c66,
      *                 c64,c53,c42,e1,e2,dv,t2
 
-      integer it, iam, iwarn
+      integer it, jam, iwarn
 
       double precision p,t,xco2,u1,u2,tr,pr,rc,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,rc,ps
@@ -4431,7 +4431,7 @@ c-----------------------------------------------------------------------
 c----------------------------------------------------------------------
       t2 = t*t
 c                                 temperature dependent coefficients
-      if (iam.eq.1) then 
+      if (jam.eq.1) then 
 c                                 h2o 
          c1 = 0.24657688d6/t + 0.51359951d2
          c2 = 0.58638965/t -0.28646939d-2 + 0.31375577d-4*t
@@ -4449,7 +4449,7 @@ c                                 h2o
 c                                 CORK volume guess and backup fugacity
          call crkh2o (p,t,v,f) 
 
-      else if (iam.eq.2) then 
+      else if (jam.eq.2) then 
 c                                 co2 
          c1 = 0.18261340d7/t + 0.79224365d2
          c2 = 0.66560660d-4 + 0.57152798d-5*t + 0.30222363d-9*t2
@@ -4469,7 +4469,7 @@ c                                 CORK volume guess and backup fugacity
 
       else 
 
-         call error (11,xco2,iam,'species (routine pseos)')
+         call error (11,xco2,jam,'species (routine pseos)')
 
       end if 
 

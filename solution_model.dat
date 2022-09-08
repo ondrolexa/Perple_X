@@ -11586,6 +11586,13 @@ end_excess_function
 
 4                                   | 4 site entropy model (m1a, m1b, m2b, m2a)
 
+M1a
+4  .5  .5                           | 4 species on m1a, mult = 1/2
+z(Mg,M1a)   = 1 di + 1 cfm
+z(Fe2+,M1a) = 1 hed
+z(Fe3+,M1a) = 1 acm_dqf + 1 jac
+z(Al,M1a)   = 1 jd + 1 om
+
 M1b
 4  .5  .5                           | 4 species on m1b, mult = 1/2
 z(Al,m1b)   = 1 jd  + 1 jac
@@ -11603,12 +11610,6 @@ M2b
 z(Na,M2b)   = 1 jd + 1 acm_dqf + 1 jac
 z(Ca,M2b)   = 1 di + 1 hed + 1 om + 1 cfm
 
-M1a
-4  .5  .5                           | 4 species on m1a, mult = 1/2
-z(Mg,M1a)   = 1 di + 1 cfm
-z(Fe2+,M1a) = 1 hed
-z(Fe3+,M1a) = 1 acm_dqf + 1 jac
-z(Al,M1a)   = 1 jd + 1 om
 
 [Si2O6]                            | formula suffix, enter "none" for no suffix.
 

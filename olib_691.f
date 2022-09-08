@@ -933,6 +933,8 @@ c                                 bookkeeping variables
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
 10    if (lopt(14)) p = 1d1**p 
+c                                 logarithmic_x option
+      if (lopt(37)) xco2 = 1d1**xco2
 
       nodata = .false. 
 
@@ -1109,6 +1111,8 @@ c                                 compute aggregate properties:
       call gtsysp (sick,ssick,bulkg,bsick)
 
 99    if (lopt(14)) p = dlog10(p)
+
+      if (lopt(37)) xco2 = dlog10(xco2)
 
       end
 

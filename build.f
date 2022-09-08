@@ -1896,7 +1896,7 @@ c                                 allowed.
          call getxvr (ivct,jvct,icont,jc,oned,'the independent')
 c                                 get sectioning variables values:
          do j = 1, ivct
-            if (j.eq.jc) cycle 
+            if (iv(j).eq.jc) cycle 
             call redvar (j,2)
             vmax(iv(j)) = vmin(iv(j))
          end do     
@@ -2378,14 +2378,23 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 jcont = 0, no bulk composition allowed
       jcont = 0
-
+c                                 at this point:
+c                                 1 - convex
+c                                 2 - 2d grid (oned false)
+c                                 2 - 1d grid - no fileio (oned true)
+c                                 3 - swash
+c                                 4 - 1d frac - no fileio (oned true)
+c                                 6 - 0d frac
+c                                 9 - frac2d - no fileo
+c                                10 - 1d - with fileio (oned false)
+c                                11 - frac2d - with fileio (oned false)
       if (icopt.eq.1) then 
 c                                 2d projection, no bulk composition allowed
       else if (icopt.eq.3) then 
 c                                 1d projection, no bulk composition allowed
       else if (icopt.eq.9.or.icopt.eq.11) then 
 c                                 2-d fractionation
-      else if (icopt.eq.2.or.icopt.eq.10) then
+      else if ((icopt.eq.2.and.oned).or.icopt.eq.10) then
 c                                 1d-gridded min file I/O
       else if (icopt.eq.4.or.icopt.eq.2.or.icopt.eq.5) then
 c                                 icopt = 4 -> 1d with P(T) or T(P)

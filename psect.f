@@ -1433,7 +1433,7 @@ c----------------------------------------------------------------------
 
       character*10 xnam, prompt*14
 
-      integer iw, iam 
+      integer iw, jam 
 
       integer ixct, iex, ict, jex
       common/ excl1 /ixct(3),iex(50,3),jex(50,3),ict(3)
@@ -1450,15 +1450,15 @@ c----------------------------------------------------------------------
    
          if (xnam.eq.' ') exit
 
-         call matchj (xnam,iam)
+         call matchj (xnam,jam)
 
-         if (iam.eq.0) then
+         if (jam.eq.0) then
             write (*,1100) xnam
             cycle
          end if
 
          ixct(iw) = ixct(iw) + 1
-         iex(ixct(iw),iw) = iam
+         iex(ixct(iw),iw) = jam
          xnams(ixct(iw),iw) = xnam
  
       end do 

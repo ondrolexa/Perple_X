@@ -21,7 +21,7 @@ c-----------------------------------------------------------------------
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
       double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot,
-     *                 tol
+     *                 tol,oldx
 
       integer iw(liw)
 
@@ -88,8 +88,11 @@ c                                 degeneracy test
 
       oldt = t
       oldp = p
+      oldx = xco2
 c                                logarithmic_p option
       if (lopt(14)) p = 1d1**p
+c                                logarithmic_X option
+      if (lopt(37)) xco2 = 1d1**xco2
 c                                t_stop option
       if (t.lt.nopt(12)) t = nopt(12)
 
@@ -200,7 +203,7 @@ c                                 hail mary
 
       t = oldt
       p = oldp
-
+      xco2 = oldx
 
       end 
 

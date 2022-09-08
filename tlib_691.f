@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated August 26, 2022.',
+     *     'Perple_X version 6.9.1, source updated September 8, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -478,6 +478,8 @@ c                                 fractionation threshold, set by nopt(32)/nopt(
       lopt(35) = .false.
 c                                 aq_oxide_components
       lopt(36) = .false.
+c                                 logarithmic X
+      lopt(37) = .false.
 c                                 non_linear_switch
       lopt(38) = .false.
 c                                 refine_endmembers
@@ -1226,6 +1228,10 @@ c                                 assume linear boundaries within a cell during 
  
             if (val.eq.'T') lopt(14) = .true.
 
+         else if (key.eq.'logarithmic_X') then
+ 
+            if (val.eq.'T') lopt(37) = .true.
+
          else if (key.eq.'spreadsheet') then
  
             if (val.eq.'F') lopt(15) = .false.
@@ -1690,7 +1696,8 @@ c                                 pause_on_error
 c                                 auto_exclude
             write (n,1234) lopt(5)
 c                                 logarithmic_p, bad_number, interim_results
-            if (iam.eq.1) write (n,1014) lopt(14),nopt(7),valu(34)
+            if (iam.eq.1) write (n,1014) lopt(14),lopt(37),nopt(7),
+     *                                   valu(34)
 
          end if 
 
@@ -1698,8 +1705,8 @@ c                                 logarithmic_p, bad_number, interim_results
 
       if (iam.eq.3) then 
 c                                 WERAMI input/output options
-         write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),
-     *                  lopt(15),lopt(14),nopt(7),lopt(22),valu(2),
+         write (n,1230) lopt(25),iopt(32),l9,valu(26),valu(27),lopt(15),
+     *                  lopt(14),lopt(37),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(41),lopt(42),lopt(45),
      *                  valu(4),lopt(6),valu(22),lopt(51),lopt(21),
      *                  lopt(24),
@@ -1714,7 +1721,7 @@ c                                 WERAMI thermodynamic options
       else if (iam.eq.2) then 
 c                                 MEEMUM input/output options
          write (n,1231) lopt(25),iopt(32),l9,valu(26),valu(27),
-     *                  lopt(14),nopt(7),lopt(22),valu(2),
+     *                  lopt(14),lopt(37),nopt(7),lopt(22),valu(2),
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(51),
      *                  lopt(21),lopt(24),valu(14),lopt(19),
      *                  lopt(20),lopt(61)
@@ -1722,8 +1729,8 @@ c                                 MEEMUM input/output options
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
-         write (n,1232) lopt(15),lopt(14),nopt(7),lopt(6),lopt(19),
-     *                  .false.
+         write (n,1232) lopt(15),lopt(37),lopt(14),nopt(7),lopt(6),
+     *                  lopt(19),.false.
 
       end if 
 c                                 seismic property options
@@ -1802,6 +1809,7 @@ c                                 generic thermo options
      *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
      *        4x,'timing                  ',l1,9x,'[T] F')
 1014  format (4x,'logarithmic_p           ',l1,9x,'[F] T',/,
+     *        4x,'logarithmic_X           ',l1,9x,'[F] T',/,
      *        4x,'bad_number          ',f7.1,7x,'[NaN]',/,
      *        4x,'interim_results         ',a3,7x,'[auto] off manual')
 1015  format (/,2x,'Auto-refine options:',//,
@@ -1890,6 +1898,7 @@ c                                 thermo options for frendly
      *        'y [m]: y => mol fraction, m => molality',/,
      *        4x,'spreadsheet             ',l1,9x,'[F] T',/,
      *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
+     *        4x,'logarithmic_X           ',l1,9x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
      *        4x,'composition_constant    ',l1,9x,'[F] T',/,
      *        4x,'composition_phase       ',a3,7x,'[mol] wt',/,
@@ -1918,6 +1927,7 @@ c                                 thermo options for frendly
      *        4x,'aq_solute_composition   ',a3,7x,
      *        'y [m]: y => mol fraction, m => molality',/,
      *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
+     *        4x,'logarithmic_X           ',l1,9x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
      *        4x,'composition_constant    ',l1,9x,'[F] T',/,
      *        4x,'composition_phase       ',a3,7x,'[mol] wt',/,
@@ -1935,6 +1945,7 @@ c                                 thermo options for frendly
 1232  format (/,2x,'Input/Output options:',//,
      *        4x,'spreadsheet             ',l1,9x,'[F] T',/,
      *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
+     *        4x,'logarithmic_X           ',l1,9x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
      *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
      *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
@@ -5730,6 +5741,8 @@ c                                 potential is to be replaced by activity/fugaci
       end do 
 c                                 set log p variable name.
       if (icopt.gt.4.and.lopt(14)) vname(1) = 'log[P,b]'
+c                                 set log p variable name.
+      if (icopt.gt.4.and.lopt(37)) vname(3) = 'log[X_f]'
 c                                 read end key
       call getkey (n2,ier,key,values,strg)
 c                                  set reference conditions
@@ -8390,9 +8403,21 @@ c                                 set cycle dependent parameters
                i = 1
 
             end if
-c                                 solvus tolerance, in 691 the
+c                                 auto solvus_tolerance, in 691 the
 c                                 only fixed resolution is nopt(13)
-            if (lopt(9)) nopt(8) = 1.5d0*rid(3,1)
+            if (lopt(9)) then
+
+               if (iam.eq.15) then
+c                                 CONVEX
+                  nopt(8) = 1.5d0*rid(3,i)
+
+               else
+c                                 MEEMUM VERTEX
+                  nopt(8) = 1d-2
+
+               end if
+
+            end if 
 
          else if (iam.eq.13) then
 c                                 the global level of unsplt, which should generate 
