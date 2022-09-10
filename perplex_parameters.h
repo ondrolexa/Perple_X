@@ -283,9 +283,10 @@ c                                 -------------------------------
       integer isimp, ipvert, ivert, pimd
       common/ cst688 /isimp(h4),ipvert(h4),ivert(h4,mst),
      *                pimd(h4,mst,msp)
-c                                 solution model counter
+c                                 solution model counter, temp logical flag
+      logical ltemp1
       integer isoct
-      common/ cst79 /isoct
+      common/ cst79 /isoct, ltemp1
 c                                 -------------------------------
 c                                 global solution model variables:
 c                                 -------------------------------
@@ -500,3 +501,9 @@ c                                 solution model i in the input list
 c                                 global assemblage pointers
       integer idasls,iavar,iasct,ias
       common/ cst75  /idasls(k5,k3),iavar(3,k3),iasct,ias
+
+      character*5 zname
+      common/ cst29a /zname
+
+      integer iwt
+      common/ cst209 /iwt

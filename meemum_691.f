@@ -18,9 +18,6 @@ c----------------------------------------------------------------------
 
       double precision num
 
-      integer iwt
-      common/ cst209 /iwt
-
       integer npt,jdv
       logical fulrnk
       double precision cptot,ctotal

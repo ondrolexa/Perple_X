@@ -7268,13 +7268,12 @@ c                                 implemented).
       end if
 c                                 -------------------------------------
 c                                 relict equipartion warning:
-      if (lopt(56).and..not.stck.and..not.refine.and.iam.lt.3) then
+      if (.not.stck.and..not.refine.and.iam.lt.3) then
 
          call warn (17,r,i,tname)
 
-         read (*,'(a)') abc
+         if (lopt(56)) call wrnstp
 
-         if (abc.ne.'y'.and.abc.ne.'Y') stop
 
       end if
 c                                 -------------------------------------
@@ -17803,14 +17802,8 @@ c----------------------------------------------------------------------
 
       logical eof, good, first, tpro(k5)
 
-      integer iwt
-      common/ cst209 /iwt
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
-
-      character zname*5
-      common/ cst209a /zname
 
       character cname*5
       common/ csta4 /cname(k5)
@@ -17924,6 +17917,7 @@ c                               counters for bounds
       lamin = 0 
       idsin = 0 
       idfl = 0
+c                               fla
 c                               read data base header, do component
 c                               transformations, read make definitions.
       call topn2 (0)

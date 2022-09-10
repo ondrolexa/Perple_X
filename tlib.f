@@ -1179,6 +1179,7 @@ c                                 reserved values for debugging, etc
             read (strg,*) nopt(29) 
          else if (key.eq.'nop_30') then
             read (strg,*) nopt(30) 
+
 c                                691 options read for compatability
 
          else if (key.eq.'replicate_threshold'.or.
@@ -1192,6 +1193,9 @@ c                                691 options read for compatability
      *            key.eq.'re-refine'.or.      
      *            key.eq.'warning_ver017'.or.      
      *            key.eq.'warning_ver013'.or.      
+     *            key.eq.'warn_interactive'.or.
+     *            key.eq.'warn_no_limit'.or.
+     *            key.eq.'logarithmic_X'.or.
      *            key.eq.'intermediate_savrpc'.or.      
      *            key.eq.'intermediate_savdyn'.or.      
      *            key.eq.'keep_all_rpcs'.or.
@@ -7689,7 +7693,6 @@ c----------------------------------------------------------------------
 
       end
 
-
       subroutine lpwarn (idead,char)
 c----------------------------------------------------------------------
 c write warning messages from lpnag as called by routine 'char',
@@ -8471,17 +8474,11 @@ c-----------------------------------------------------------------------
       integer icp2
       common/ cst81 /icp2
 
-      character*5 zname
-      common/ cst209a /zname
-
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
 
       double precision buf
       common/ cst112 /buf(5)
-
-      integer iwt
-      common/ cst209 /iwt
 
       integer ivfl
       common/ cst102 /ivfl

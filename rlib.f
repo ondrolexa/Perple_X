@@ -17910,14 +17910,8 @@ c----------------------------------------------------------------------
  
       logical eof, good, first
 
-      integer iwt
-      common/ cst209 /iwt
-
       integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp  
-     
-      character zname*5
-      common/ cst209a /zname
+      common/ cst6  /icomp,istct,iphct,icp
 
       character cname*5
       common/ csta4 /cname(k5)

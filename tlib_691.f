@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 8, 2022.',
+     *     'Perple_X version 6.9.1, source updated September 9, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -512,7 +512,7 @@ c                                 scatter-points
       lopt(54) = .true.
 c                                 re-refine
       lopt(55) = .false.
-c                                 warning_ver017, relict equipartition
+c                                 warning_ver017, relict equipartition -> now warn_interactive
       lopt(56) = .true.
 c                                 intermediate_savrpc calls
       lopt(57) = .false.
@@ -528,6 +528,7 @@ c                                 order_check
       lopt(62) = .false.
 c                                 allow GFSM/disable saturated phase
       lopt(63) = .false.
+c 
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -861,13 +862,18 @@ c                                 scatter point increment
 c                                 allow re-refinement in VERTEX
             if (val.eq.'T') lopt(55) = .true.
 
-         else if (key.eq.'warning_ver017') then
-c                                 warn with pause for equipartition models
+         else if (key.eq.'warning_ver017'.or.
+     *            key.eq.'warn_interactive') then
+c                                 override interactive warnings with the bad choice.
             if (val.eq.'F') lopt(56) = .false.
 
          else if (key.eq.'warning_ver013') then
 c                                 warn and reject negative component phases
             if (val.eq.'F') lopt(60) = .false.
+
+         else if (key.eq.'warn_no_limit') then
+c                                 override counter limits for (some) warnings
+            if (val.eq.'T') lopt(64) = .true.
 
          else if (key.eq.'timing') then
 c                                 timing for VERTEX
@@ -3174,9 +3180,7 @@ c                                 generic warning, also 99
      *        'lution model. The use of',/,'such models in Perple_X 6.',
      *        '9.1+ may result in erratic, though formally correct,',/,
      *        'phase field geometries, to avoid this problem replace ',
-     *        a,' with an up-to-date model.',//,'To supress this warni',
-     *        'ng, set the warning_ver017 option to F.',//,
-     *        'Continue execution using this model (Y/N)?')
+     *        a,' with an up-to-date model.',/)
 18    format (/,'**warning ver018** the value of the default dependen',
      *         't variable (',g14.6,') for the following',/,
      *         'equilibrium was inconsistent with the an earlier ',
@@ -3255,12 +3259,12 @@ c                                 generic warning, also 99
      *          'to numerical instability',/,
      *          'or because the phases of the system do not span ',
      *          'its bulk composition.',//,
-     *          4x,'In the 1st case:',/,
+     *          4x,'In the 1st case (best solutions listed first):',/,
+     *          8x,'set intermediate_savrpc and intermediate_savrpc to',
+     *             ' T and/or',/,
      *          8x,'increase (sic) optimization_precision and/or',/,
      *          8x,'increase (sic) replicate_threshold and/or',/,
      *          8x,'increase (sic) rep_dynamic_threshold.'/,
-c    *          8x,'increase speciation_precision and/or',/,
-c    *          8x,'increase speciation_max_it.',/,
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
      *          4x,'In the 2nd case: ',
@@ -3286,7 +3290,9 @@ c    *          8x,'increase speciation_max_it.',/,
      *         'does not include',/,' volumetric properties (SWASH).',/)
 49    format (/,'**warning ver049** warning ',i3,' will not be repeated'
      *         ,' for future instances of this problem.',/,
-     *          'currently in routine: ',a,//)
+     *          'currently in routine: ',a,//,
+     *          'To override this limit on the number of warnings set ',
+     *          'warn_no_limit to T',/)
 50    format (/,'**warning ver050** reformulating prismatic ',
      *          'solution: ',a,' because of missing endmembers. ',
      *        /,'(reformulation can be controlled explicitly ',
@@ -7845,21 +7851,21 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer idead, iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, 
-     *        iwarn03, iwarn05, iwarn58
+     *        iwarn03, iwarn58
 
       character char*(*)
 
       double precision c
 
       save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
-     *     iwarn05, iwarn58
+     *     iwarn58
 
       data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
-     *     iwarn05, iwarn58/8*0/
+     *     iwarn58/7*0/
 c----------------------------------------------------------------------
 c                                             look for errors
       if (idead.eq.2.or.idead.gt.4.and.idead.lt.8.and.
-     *                                 iwarn91.lt.6) then 
+     *                      (lopt(64).or.iwarn91.lt.6)) then 
 c                                             unbounded solution, or
 c                                             other programming error.
          call warn (91,c,idead,char)
@@ -7867,18 +7873,22 @@ c                                             other programming error.
          call prtptx
 
          iwarn91 = iwarn91 + 1
-         if (iwarn91.eq.5) call warn (49,c,91,'LPWARN')
+         if (iwarn91.eq.5.and..not.lopt(64)) 
+     *                        call warn (49,c,91,'LPWARN')
 
-      else if (idead.eq.3.and.iwarn42.lt.6) then 
+      else if (idead.eq.3.and.
+     *                      (lopt(64).or.iwarn42.lt.6)) then 
 c                                             no feasible solution
          call warn (42,c,idead,char)
 
          call prtptx
 
          iwarn42 = iwarn42 + 1
-         if (iwarn42.eq.6) call warn (49,c,42,'LPWARN')
+         if (iwarn42.eq.6.and..not.lopt(64)) 
+     *                        call warn (49,c,42,'LPWARN')
 
-      else if (idead.eq.4.and.iwarn90.lt.6) then 
+      else if (idead.eq.4.and.
+     *                      (lopt(64).or.iwarn90.lt.6)) then 
 c                                             iteration count exceeded,
 c                                             probable cause no feasible
 c                                             solution.
@@ -7886,7 +7896,8 @@ c                                             solution.
          iwarn90 = iwarn90 + 1
          if (iwarn90.eq.5) call warn (49,c,90,'LPWARN')
 
-      else if (iwarn58.lt.11.and.(idead.eq.58.or.idead.eq.59)) then 
+      else if ((lopt(64).or.iwarn58.lt.11)
+     *         .and.(idead.eq.58.or.idead.eq.59)) then 
 
          if (idead.eq.58) then 
             call warn (58,c,k21,char)
@@ -7898,16 +7909,21 @@ c                                             solution.
 
          iwarn58 = iwarn58 + 1
 
-         if (iwarn58.eq.10) call warn (49,c,58,'LPWARN')
+         if (iwarn58.eq.10.and..not.lopt(64)) 
+     *                        call warn (49,c,58,'LPWARN')
 
-      else if (idead.eq.101.and.iwarn01.lt.10.and.lopt(32)) then
+      else if (idead.eq.101.and.
+     *        (lopt(64).or.iwarn01.lt.10).and.lopt(32)) then
 
           iwarn01 = iwarn01 + 1
           call warn (100,c,101,'under-saturated solute-component.'
      *              //' To output result set aq_bad_result to 102')
-          if (iwarn01.eq.10) call warn (49,c,101,'LPWARN')
 
-      else if (idead.eq.102.and.iwarn02.lt.10.and.lopt(32)) then
+          if (iwarn01.eq.10.and..not.lopt(64)) 
+     *                        call warn (49,c,101,'LPWARN')
+
+      else if (idead.eq.102.and.
+     *        (lopt(64).or.iwarn02.lt.10).and.lopt(32)) then
 
          iwarn02 = iwarn02 + 1
          call warn (100,c,102,'pure and impure solvent phases '//
@@ -7916,9 +7932,11 @@ c                                             solution.
 
          call prtptx
 
-         if (iwarn02.eq.10) call warn (49,c,102,'LPWARN')
+          if (iwarn02.eq.10.and..not.lopt(64)) 
+     *                        call warn (49,c,102,'LPWARN')
 
-      else if (idead.eq.103.and.iwarn03.lt.10.and.lopt(32)) then
+      else if (idead.eq.103.and.
+     *        (lopt(64).or.iwarn03.lt.10).and.lopt(32)) then
 
          iwarn03 = iwarn03 + 1
          call warn (100,c,103,'pure and impure solvent phases '//
@@ -7926,17 +7944,8 @@ c                                             solution.
 
          call prtptx
 
-         if (iwarn03.eq.10) call warn (49,c,103,'LPWARN')
-
-      else if (idead.eq.105.and.iwarn05.lt.10) then
-
-         iwarn05 = iwarn05 + 1
-         call warn (100,c,105,'ran out of memory during optimization.'
-     *                  //' On excessive failure increase k21 or k25')
-
-         call prtptx
-
-         if (iwarn05.eq.20) call warn (49,c,105,'LPWARN')
+          if (iwarn03.eq.10.and..not.lopt(64)) 
+     *                        call warn (49,c,103,'LPWARN')
 
       end if
 
@@ -7961,12 +7970,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       quit = .true.
 
-c     if (iter.eq.0) then
-c        lopt(34) = .true.
-c        lopt(33) = .true.
-c     end if
-
-      if (iwarn.lt.9) then
+      if (iwarn.lt.9.or.lopt(64)) then
 
          iwarn = iwarn + 1
 
@@ -8695,17 +8699,11 @@ c-----------------------------------------------------------------------
       integer icp2
       common/ cst81 /icp2
 
-      character*5 zname
-      common/ cst209a /zname
-
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
 
       double precision buf
       common/ cst112 /buf(5)
-
-      integer iwt
-      common/ cst209 /iwt
 
       integer ivfl
       common/ cst102 /ivfl
@@ -11272,12 +11270,23 @@ c     *                                       call warn (13,tot,j,name)
 
       if (tot.eq.0d0) then
 
-         if (iam.eq.1.or.iam.eq.15.or.iam.eq.2) 
-     *                                      call warn (13,tot,j,name)
+         if (iam.eq.1.or.iam.eq.15.or.iam.eq.2) then
+
+            call warn (13,tot,j,name)
+
+            if (lopt(56)) call wrnstp
+
+         end if
 
          goto 90
 
       end if
+c                               check for GFSM fluid species when saturated phase
+c                               and saturated component constraints are in use.
+
+
+
+
 c                               do a check to make sure that the phase does
 c                               not consist of just mobile components
       tot = 0d0
@@ -13310,5 +13319,45 @@ c---------------------------------------------------------------------
 
       ptx(ipt2-1) = v(iv1)
       ptx(ipt2)   = v(iv2)
+
+      end
+
+      subroutine wrnstp
+c---------------------------------------------------------------------
+c wrnstp terminate execution on iner
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      character y*1
+
+      write (*,'(a)') 'Continue execution despite this warning (Y/N)?'
+
+      if (lopt(56)) then
+c                                 read the choice
+         read (*,'(a)') y
+
+         if (y.ne.'y'.and.y.ne.'Y') then
+c                                 quit on warning
+            stop
+
+         else
+c                                 blurb on override
+            write (*,1000)
+
+         end if
+
+      else
+c                                 automatically continue
+         write (*,1010)
+
+      end if
+
+1000  format (/,'To automatically answer interactive warnings affirmat',
+     *        'ively, set warn_interactive',/,'to false.',/)
+1010  format (/,'**warning ver017** the preceding interactive warning ',
+     *        'was automatically answered Y',/,'because warn_interacti',
+     *        've has been set to F, this is often bad practice',/)
 
       end
