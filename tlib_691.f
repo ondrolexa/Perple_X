@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 9, 2022.',
+     *     'Perple_X version 6.9.1, source updated September 11, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -862,14 +862,9 @@ c                                 scatter point increment
 c                                 allow re-refinement in VERTEX
             if (val.eq.'T') lopt(55) = .true.
 
-         else if (key.eq.'warning_ver017'.or.
-     *            key.eq.'warn_interactive') then
+         else if (key.eq.'warn_interactive') then
 c                                 override interactive warnings with the bad choice.
             if (val.eq.'F') lopt(56) = .false.
-
-         else if (key.eq.'warning_ver013') then
-c                                 warn and reject negative component phases
-            if (val.eq.'F') lopt(60) = .false.
 
          else if (key.eq.'warn_no_limit') then
 c                                 override counter limits for (some) warnings
@@ -1699,8 +1694,8 @@ c                                 for meemum add fd stuff
 c                                 vertex output options, dependent potentials
 c                                 pause_on_error
             write (n,1013) lopt(19),lopt(61)
-c                                 auto_exclude
-            write (n,1234) lopt(5)
+c                                 auto_exclude, warn_interactive, etc
+            write (n,1234) lopt(5),lopt(56),lopt(64)
 c                                 logarithmic_p, bad_number, interim_results
             if (iam.eq.1) write (n,1014) lopt(14),lopt(37),nopt(7),
      *                                   valu(34)
@@ -1717,7 +1712,6 @@ c                                 WERAMI input/output options
      *                  valu(4),lopt(6),valu(22),lopt(51),lopt(21),
      *                  lopt(24),
      *                  valu(14),lopt(19),lopt(20),valu(34),lopt(48)
-         write (n,1234) lopt(5)
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
@@ -1731,7 +1725,8 @@ c                                 MEEMUM input/output options
      *                  valu(21),valu(3),lopt(6),valu(22),lopt(51),
      *                  lopt(21),lopt(24),valu(14),lopt(19),
      *                  lopt(20),lopt(61)
-         write (n,1234) lopt(5)
+c                                 auto_exclude, warn_interactive, etc
+         write (n,1234) lopt(5),lopt(56),lopt(64)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
@@ -1966,7 +1961,9 @@ c                                 thermo options for frendly
      *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
      *        4x,'poisson_test            ',l1,9x,'[F] T',/,
      *        4x,'Tisza_test              ',l1,9x,'[F] T')
-1234  format (4x,'auto_exclude            ',l1,9x,'[T] F')
+1234  format (4x,'auto_exclude            ',l1,9x,'[T] F',/,
+     *        4x,'warn_interactive        ',l1,9x,'[T] F',/,
+     *        4x,'warn_no_limit           ',l1,9x,'[F] T')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files       ',l1,9x,'[F] T; ',
      *           'echo computational options',/,
@@ -3159,11 +3156,12 @@ c                                 generic warning, also 99
 12    format (/,'**warning ver012** ',a,' has a transition ',
      *          ' with dp/dT < 0 and may not be treated ',/,
      *          ' correctly.')
-13    format (/,'**warning ver013** because the total amount of the '
-     *         ,'components in ',a,'is <= 0,',/,'it will be rejected '
-     *         ,'from this calculation. To prevent its rejection '
-     *         ,'transform the',/,'data base components so that the '
-     *         ,'total amount of the components in ',a,' is > 0.',/)
+13    format (/,'**warning ver013** because the total amount of the com'
+     *         ,'mponents in ',a,'is <= 0',/,'it will be rejected from '
+     *         ,'this calculation although it is a legitimate phase.',/,
+     *          'To prevent this rejection transform the data base comp'
+     *          'onents (e.g., using CTRANSF)',/,'so that the total amo'
+     *         ,'unt of the components in ',a,' is > 0.',/)
 14    format (/,'**warning ver014** You can not redefine the ',
      *          'saturated phase component:',a,/,'To circumvent this ',
      *          'restriction use CTRANSF to make a data base with the',/
@@ -11254,14 +11252,9 @@ c                               reject phases with negative/zero compositions
       tot = 0d0
 
       do j = 1, icmpn
+
          if (comp(j).lt.0d0.and.comp(j).gt.-nopt(50)) then
             comp(j) = 0d0
-c         else if (comp(j).lt.0d0.and.(ieos.ne.15.and.ieos.ne.16)) then
-c                               use ichk to avoid multiple messages
-c            if (ichk.eq.1.and.iam.eq.1.or.iam.eq.2.or.iam.eq.4.or.
-c     *          iam.eq.5.or.iam.eq.6.or.iam.eq.15)
-c     *                                       call warn (13,tot,j,name)
-
          end if
 
          tot = tot + comp(j)
@@ -11346,11 +11339,15 @@ c                               otherwise rejected.
 
       if (tot.lt.0d0.and.ichk.eq.1.and.lopt(60)) then
 c                               reject phases such as H2 = O2/2 - H2O
-         if (iam.eq.1.or.iam.eq.2.or.iam.eq.15)
-     *                                call warn (13,tot,j,name)
+         if (iam.eq.1.or.iam.eq.2.or.iam.eq.15) then
+
+            call warn (13,tot,j,name)
+
+            if (lopt(56)) call wrnstp
+
+         end if
 
          goto 90
-
 
       else if (tot.eq.0d0.and.ichk.ne.4) then
 
@@ -13356,7 +13353,7 @@ c                                 automatically continue
 
 1000  format (/,'To automatically answer interactive warnings affirmat',
      *        'ively, set warn_interactive',/,'to false.',/)
-1010  format (/,'**warning ver017** the preceding interactive warning ',
+1010  format (/,'**warning ver536** the preceding interactive warning ',
      *        'was automatically answered Y',/,'because warn_interacti',
      *        've has been set to F, this is often bad practice',/)
 

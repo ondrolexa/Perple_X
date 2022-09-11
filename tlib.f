@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated August 23, 2022.',
+     *     'Perple_X version 6.9.0, source updated September 11, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -1191,8 +1191,6 @@ c                                691 options read for compatability
      *            key.eq.'scatter-points'.or.      
      *            key.eq.'scatter-increment'.or.      
      *            key.eq.'re-refine'.or.      
-     *            key.eq.'warning_ver017'.or.      
-     *            key.eq.'warning_ver013'.or.      
      *            key.eq.'warn_interactive'.or.
      *            key.eq.'warn_no_limit'.or.
      *            key.eq.'logarithmic_X'.or.

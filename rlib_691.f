@@ -3732,6 +3732,8 @@ c                               the saturated component idc:
      *                            'SATTST increase parameter k1')
                ids(j,isct(j)) = iphct
                call loadit (iphct,make,.true.)
+c                                set ltemp1 if a GFSM endmember
+               if (ieos.gt.100.and.ieos.lt.200) ltemp1 = .true.
                good = .true.
                return
             end if
@@ -9616,6 +9618,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
       integer jend
       common/ cxt23 /jend(h9,m14+2)
 
@@ -9714,6 +9719,16 @@ c                                 that the name is duplicated in the solution mo
             end do
 
          end if
+
+         if (jsmod.eq.39.and.ifct.gt.0) then
+c                                 check that a GFSM model is not being 
+c                                 used together with a saturated fluid 
+c                                 constraint
+               write (*,1060) tname, tname
+
+               call wrnstp
+
+         end if 
 c                                 save solution name
          sname(im) = tname
 c                                 abbreviation
@@ -9873,6 +9888,14 @@ c                              close solution model file
 1000  format (/,'the following solution models will be considered:',/)
 1010  format (7(2x,a10))
 1020  format (/,'Of the requested solution models:',/)
+1030  format ('**warning ver535** ',a,' is a generic fluid solution ',
+     *        'model (GFSM) the presence',/,'of which is inconsistent ',
+     *        'with saturated phase constraints if the saturated phase',
+     *      /,' is a fluid. Possible courses of action are:',//,4x,
+     *        '1) remove ',a,' and restart.',/,4x,
+     *        '2) remove the phase saturation constraint and restart.',/
+     *    ,4x,'3) ignore this warning and continue execution.',//,
+     *        'Continue (Y/N)?')
 1040  format (/,'no models will be considered.',/)
 1060  format (/,'Solution: ',a,/,12x,'Endmember fractions:',
      *        /,12x,20(a,1x))
@@ -17917,7 +17940,8 @@ c                               counters for bounds
       lamin = 0 
       idsin = 0 
       idfl = 0
-c                               fla
+c                               flag for GFSM endmembers in the saturated component space
+      ltemp1 = .false.
 c                               read data base header, do component
 c                               transformations, read make definitions.
       call topn2 (0)
@@ -18462,6 +18486,42 @@ c                                endmembers:
          end if
 
       end do
+c                                 if saturated phase components, 
+c                                 then check to make sure no GFSM
+c                                 endmembers are in use as saturated 
+c                                 components or in the thermodynamic
+c                                 composition space:
+      if (ifct.gt.0) then
+
+         do i = ifct+1, iphct
+
+            if (eos(i).gt.100.and.eos(i).lt.200) then 
+c                                 got one
+               write (*,1060) names(i), names(i)
+
+               call wrnstp
+
+            end if
+
+         end do
+
+      end if
+
+      if (ltemp1) then
+
+         do i = istct, iphct
+
+            if (eos(i).gt.100.and.eos(i).lt.200) then 
+c                                 got one
+               write (*,1070) names(i), names(i)
+
+               call wrnstp
+
+            end if
+
+         end do
+
+      end if
 
 1000  format ('**error ver007** at least one of the reference ',
      *        'endmembers:',/,5(a,1x))
@@ -18474,6 +18534,24 @@ c                                endmembers:
 1030  format (6(a,2x,i2,3x))
 1040  format (2x,'for: ',5(a,1x))
 1050  format (4x,6(a,2x))
+1060  format (/,'**warning ver533** ',a,' is a molecular fluid species '
+     *       ,'the presence of which is ',/,'inconsistent with satura',
+     *        'ted phase component constraints if the saturated phase',
+     *      /,' is a fluid. Possible courses of action are:',//,4x,
+     *        '1) exclude ',a,' and restart.',/,4x,
+     *        '2) remove the phase saturation constraint and restart.',/
+     *    ,4x,'3) ignore this warning and continue execution.',//,
+     *        'Continue (Y/N)?')
+1070  format (/,'**warning ver534** ',a,' is a molecular fluid species '
+     *       ,'the presence of which is ',/,'inconsistent with existe',
+     *        'nce of molecular fluid species in the saturated ',/,
+     *        'component composition space.',//,
+     *        'Possible courses of action are:',//,4x,
+     *        '1) exclude ',a,' and restart.',/,4x,
+     *        '2) remove the component saturation constraint and ',
+     *        'restart.',/,4x,
+     *        '3) ignore this warning and continue execution.',//,
+     *        'Continue (Y/N)?')
 1230  format ('**error ver013** ',a,' is an incorrect component'
      *       ,' name, valid names are:',/,12(1x,a))
 1240  format ('check for upper/lower case matches or extra blanks',/)
