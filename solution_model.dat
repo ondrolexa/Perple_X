@@ -253,10 +253,42 @@
 
                              perplex.ethz.ch/Perple_X_generic_hyrbid_fluid_EoS.html
                             ---------------------------------------------------------------------------
-begin_model                
-                      Ti-Mg-F Clinohumite after Duffy & Greenwood, Am Min 64:1156-1174, 1979. With
-                      Ad-hoc Ti
-TiCh(B)
+begin_model         
+                      | Ti-Fe-Mg-OH-O Chlinohumite, with ad-hoc Ti and Fe, assumes, somewhat improbably, that 
+                      | Fe and Mg are disordered across MO and MB and that Ti is disordered on MB. this model 
+                      | is an implicit o/d model because the ftchum endmember is specified as an independent 
+                      | endmember. JADC, 5/20.
+
+                                      Site:           MB      MO       OH
+                                                     ____________________________
+                                      Mutliplicity    1       8        2
+
+                                    endmember        ____________________________   type
+                                    _________                                       _________
+
+                                        chum          Mg      Mg       OH            independent
+                                        tchum         Mg      TiMg     OOH           independent
+                                        fchum         Fe      Fe       OH            independent
+                                        ftchum        Fe      TiFe     OOH           independent
+
+                      | chum is in holland & powell data files, as is an arbitrary make definition for
+                      | fchum (after fruh-green et al 94). this model requires make definitions (or real data) 
+                      | for tchum and ftchum
+
+                      | a guess for tchum might be
+
+                      | tchum = 4 fo + 1/2 br + 1/2 ru
+                      | -33581. 32. 0.
+
+                      | i think that data was used by www.perplex.ethz.ch/papers/vizcaino_cmp_05.pdf 
+                      | (probably treating tichum as a stoichiometric phase or, even worse, with activity "corrections")
+
+                      | at the same level of approximation used for fchum, ftchum would then be
+
+                      | ftchum = 4 fo + 1/2 br + 1/2 ru - 8/3 ta + 8/3 fta
+                      | -33581. 32. 0.
+
+TiCh(P)
 abbreviation TiCh
 full_name    clinohumite
 
@@ -265,46 +297,137 @@ full_name    clinohumite
 1                                  | number of polytopes
 2                                  | number of simplices
 2 2                                | number of vertices on each simplex
-chu      fchu
-tchu     ftchu
+chum       tchum
+fchum      ftchum
 
-X_F  0. 1   .1   0                 | X(F), imod = 0 -> cartesian subdivision
+X_Ti 0. 1   .1   0                 | imod = 0 -> cartesian subdivision
+X_M  by difference
+
+X_Fe 0. 1   .1   0                 | imod = 0 -> cartesian subdivision
+X_Mg by difference
+
+ideal
+
+3                                   | number of sites in configurational entropy model
+
+MO                                  | site name
+2 8 8                               | number of species, effective multiplicity, true multiplicity
+z(Mg,M)  = 1 chum + 1 tchum
+z(Fe,M)  = 1 fchum + 1 ftchum
+
+MB                                  | site name
+3 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Ti,M)  = 1/2 tchum + 1/2 ftchum
+z(Mg,M)  = 1 chum  + 1/2 tchum
+z(Fe,M)  = 1 fchum + 1/2 ftchum
+
+OH                                  | site name
+2 2 2                               | number of species, effective multiplicity, true multiplicity
+z(OH,OH) = 1 chum + 1/2 tchum + 1 fchum + 1/2 ftchum
+z(O,OH)  = 1/2 tchum + 1/2 ftchum
+
+[Si4O16]                            | formula suffix, enter "none" for no suffix.
+
+end_of_model
+                            ---------------------------------------------------------------------------
+begin_model         
+
+                      | Ti-Fe-Mg-F Chondrodite, with non-ideal F-OH interaction after Duffy & Greenwood, Am Min 64:1156-1174, 1979.
+                      | Ad-hoc Ti and Fe, assumes, somewhat improbably, that Fe and Mg are disordered across
+                      | MO and MB and that Ti is disordered on MB. this model is an implicit o/d model because
+                      | the tichdr endmember is specified as an independent endmember. JADC, 5/20.
+
+                                      Site:           MB      MO       OH
+                                                     ____________________________
+                                      Mutliplicity    1       8        2
+
+                                    endmember        ____________________________   type
+                                    _________                                       _________
+
+                                        chdr         Mg      Mg       OH            independent
+                                        fchdr        Mg      Mg       F             independent
+                                        tchdr        Mg      TiMg     OOH           independent
+                                        ftchdr       Mg      TiMg     OF            dependent
+                                        ichdr        Fe      Fe       OH            independent
+                                        fichdr       Fe      Fe       F             dependent
+                                        tichdr       Fe      TiFe     OOH           independent
+                                        ftichdr      Fe      TiFe     OF            dependent
+
+                        This model requires data (or a make definition) for tichdr, my first guess would
+                        be to use tchdr + 4*(fa-fo) + (fta-ta).
+
+TiChdr(B)
+abbreviation TiCh
+full_name    clinohumite
+
+688                                | model type: 688 format standard model
+ 
+1                                  | number of polytopes
+3                                  | number of simplices
+2 2 2                              | number of vertices on each simplex
+chdr      fchdr
+tchdr     ftchdr
+ichdr     fichdr
+tichdr    ftichdr
+
+X_F  0. 1   .1   0                      | X(F), imod = 0 -> cartesian subdivision
 X_OH by difference
 
-X_Ti 0. 1   .1   0                 | X(Ti), imod = 0 -> cartesian subdivision
+X_Ti 0. 1   .1   0                      | X(Ti), imod = 0 -> cartesian subdivision
+X_M  by difference
+
+X_Fe 0. 1   .1   0                      | X(Fe), imod = 0 -> cartesian subdivision
 X_Mg by difference
 
 begin_dependent_endmembers
-ftchu   = 1 tchu + 1/2 fchu - 1/2 chu
+ftchdr   = 1 tchdr + 1/2 fchdr - 1/2 chdr
+fichdr   = 1 ichdr + 1 fchdr - 1 chdr
+ftichdr  = 1 tichdr + 1/2 fchdr - 1/2 chdr
 end_dependent_endmembers
 
 begin_excess_function
-W(chu  chu  fchu)   -21572
-W(chu  tchu fchu)   -21572
-W(tchu tchu fchu)    -5293
-W(chu  fchu fchu)   -59120
-W(fchu fchu tchu)   -29560
-end_excess_function 
 
-2                                   | number of sites in configurational entropy model
+W(ichdr  ichdr  fchdr)  -21572
+W(chdr  tichdr fchdr)   -21572
+W(tichdr tichdr fchdr)   -5393
+W(ichdr  fchdr fchdr)   -59120
+W(fchdr fchdr tichdr)   -29560
 
-M                                   | site name
-2 1 1                               | number of species, effective multiplicity, true multiplicity
-z(Ti,M)  = 1/2 tchu
-z(Mg,M)  = 1 fchu + 1 chu + 1/2 tchu
+W(fchdr chdr ichdr)    -43144.2
+W(fchdr ichdr tchdr)   -21572.1
+W(fchdr ichdr tichdr)  -21572.1
+W(fchdr tchdr tichdr)  -10786.05
+
+W(chdr  chdr  fchdr)   -21572
+W(chdr  tchdr fchdr)   -21572
+W(tchdr tchdr fchdr)    -5393
+W(chdr  fchdr fchdr)   -59120
+W(fchdr fchdr tchdr)   -29560
+end_excess_function
+
+3                                   | number of sites in configurational entropy model
+
+MO                                  | site name
+2 8 8                               | number of species, effective multiplicity, true multiplicity
+z(Mg,M)  = 1 fchdr + 1 chdr + 1 tchdr
+z(Fe,M)  = 1 ichdr + 1 tichdr
+
+MB                                  | site name
+3 1 1                               | number of species, effective multiplicity, true multiplicity
+z(Ti,M)  = 1/2 tchdr + 1/2 tichdr
+z(Mg,M)  = 1 fchdr + 1 chdr + 1/2 tchdr
+z(Fe,M)  = 1 ichdr + 1/2 tichdr
 
 OH                                  | site name
 3 2 2                               | number of species, effective multiplicity, true multiplicity
-z(OH,OH) = 1 chu + 1/2 tchu
-z(F,OH)  = 1 fchu
-z(O,OH)  = 1 tchu
+z(OH,OH) = 1 chdr + 1/2 tchdr + 1 ichdr + 1/2 tichdr
+z(F,OH)  = 1 fchdr
+z(O,OH)  = 1/2 tchdr + 1/2 tichdr
 
-[Mg8Si4O16]                         | formula suffix, enter "none" for no suffix.
-
-reach_increment 3
+[Si4O16]                            | formula suffix, enter "none" for no suffix.
 
 end_of_model
-                      --------------------------------------------------------
+                            ---------------------------------------------------------------------------
 begin_model                
                            ternary feldsar (fuhrman & lindsley, am min, 1988)
                            for binary plagioclse this model is identical
