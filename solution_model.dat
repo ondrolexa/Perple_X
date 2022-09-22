@@ -267,9 +267,9 @@ begin_model
                                     _________                                       _________
 
                                         chum          Mg      Mg       OH            independent
-                                        tchum         Mg      TiMg     OOH           independent
+                                        tchum         TiMg    Mg       OOH           independent
                                         fchum         Fe      Fe       OH            independent
-                                        ftchum        Fe      TiFe     OOH           independent
+                                        ftchum        TiFe    Fe       OOH           independent
 
                       | chum is in holland & powell data files, as is an arbitrary make definition for
                       | fchum (after fruh-green et al 94). this model requires make definitions (or real data) 
@@ -285,10 +285,18 @@ begin_model
 
                       | at the same level of approximation used for fchum, ftchum would then be
 
-                      | ftchum = 4 fo + 1/2 br + 1/2 ru - 8/3 ta + 8/3 fta
+                      | ftchum = 4 fa + 1/2 br + 1/2 ru - 1/6 ta + 1/6 fta 
                       | -33581. 32. 0.
 
-TiCh(P)
+                      | or perhaps better:
+
+                      | tchum = 1 chum - 1/2 br + 1/2 ru
+                      | DQF = 0 - R*ln(2)*T + 0*P
+
+                      | ftchum = 1 chum - 1/2 br + 1/2 ru - 1/6 ta + 1/6 fta - 4 fo + 4 fa
+                      | DQF = 0 - R*ln(2)*T + 0*P
+
+TiCh(PL)
 abbreviation TiCh
 full_name    clinohumite
 
@@ -11957,7 +11965,7 @@ ideal                      | the fluid is non-ideal, this tag means only no exce
 
 0
 
-reach_increment 0
+refine_endmembers
 
 end_of_model
                       --------------------------------------------------------

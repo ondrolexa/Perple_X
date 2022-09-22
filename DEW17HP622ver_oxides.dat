@@ -3184,8 +3184,15 @@ end
 
 NaHCO3,a EoS = 16 | Gf =  -849720. NaHCO3(0)  Fit to Stefansson et al. (2013; 80 to 200 C) & Nakayama (1971; at 25 C) to get G, S and Cp; with V, a1, and omega fro
 Na2O(.5)H2O(.5)CO2(1) 
-G0 = -849720.2  S0 = 129.704  w = 271960  
-a1 = 4.020824  a2 = 1071.104  a3 = 4.22584  a4 = -120499.2  c1 = 232.212  c2 = 502080  
+| DEW 17 data:
+|G0 = -849720.2  S0 = 129.704  w = 271960  
+|a1 = 4.020824  a2 = 1071.104  a3 = 4.22584  a4 = -120499.2  
+|c1 = 232.212  c2 = 502080
+| DEW 19 data seems to extrapolate more plausibly
+G0 = -849770.4  S0 = 133.888  w = 334720  
+a1 = 3.965727  a2 = 1983.701  a3 = 3.60947  a4 = -124474  c1 = 208.6674  c2 = 401446.4  
+| DEW 13 gives lowest solubility (still more plausible?)
+|G0 = -849720.2  S0 = 154.808  w = -15899.2  
 end
 
 

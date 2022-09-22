@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 11, 2022.',
+     *     'Perple_X version 6.9.1, source updated September 21, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -277,7 +277,7 @@ c                                 convex
       else
 c                                 meemum, vertex
          nopt(13) = 0.2d0
-         nopt(8) = 1d-2
+         nopt(8) = 3d-2
       end if
 c                                 solvus_tolerance_II (computational)
       nopt(25) = 1d0/16d0
@@ -3385,7 +3385,7 @@ c                                 generic warning, also 99
      *        'composition at all physical',/,'conditions and the prob',
      *        'lem can only be remedied by increasing the range of',/,
      *        'compositions spanned by the possible phases of the ',
-     *        'system.')
+     *        'system.',/)
 91    format (/,'**warning ver091** optimization failed. Change ',
      *        'minimnization method',/)
 92    format (/,'**warning ver092** you have requested ',i4,
@@ -8405,21 +8405,8 @@ c                                 set cycle dependent parameters
                i = 1
 
             end if
-c                                 auto solvus_tolerance, in 691 the
-c                                 only fixed resolution is nopt(13)
-            if (lopt(9)) then
-
-               if (iam.eq.15) then
-c                                 CONVEX
-                  nopt(8) = 1.5d0*rid(3,i)
-
-               else
-c                                 MEEMUM VERTEX
-                  nopt(8) = 1d-2
-
-               end if
-
-            end if 
+c                                 auto solvus_tolerance, only relevant for CONVEX
+            if (lopt(9).and.iam.eq.15) nopt(8) = 1.5d0*rid(3,i)
 
          else if (iam.eq.13) then
 c                                 the global level of unsplt, which should generate 

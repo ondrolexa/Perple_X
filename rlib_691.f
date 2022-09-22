@@ -12342,7 +12342,7 @@ c                                 forward model
 
       end if
 
-1000  format (/,'Back-calculated solute speciation:',/)
+1000  format (/,'Back-calculated vs optimized solute speciation:',/)
 1005  format (/,'Simple back-calculated solute speciation:',/)
 1010  format (a8,4x,i2,3x,g12.6,3x,g12.6,5x,i8,5(2x,g12.6))
 1020  format (/,'Solvent endmember properties:',//,
@@ -21498,7 +21498,9 @@ c----------------------------------------------------------------------
 c     call chkpa (ids)
 
       if (refine.and..not.lopt(55)) return
-
+c                                 currently all calls to savdyn set tol
+c                                 > 0, and rplica hardwires a tolerance
+c                                 = nopt(35)
       if (tol.gt.0d0) then
          if (rplica(ids)) return
       end if

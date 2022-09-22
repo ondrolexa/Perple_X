@@ -149,18 +149,18 @@ c     vertex must be set .true..
       ncnln = 0
       ldh = 1
       mm = 0
-
-c     cold start:  only  x  is provided.
-c     warm start:  initial working set is specified in  istate.
-c     hot  start:  the work arrays  iw  and  w  are assumed to have been
-c                  initialized during a previous run.
-c                  the first three elements of  iw  contain details
-c                  on the dimension of the initial working set.
-
+c                                 cold start:  x may be provided, but 
+c                                 in perplex it isn't and therefore 
+c                                 x is initialized below for cold.
+c                                 warm start:  initial working set is in istate.
+c                                 hot  start:  work arrays iw and w have 
+c                                 been the first three elements of iw contain details
+c                                 dimensions of the initial working set. in perplex
+c                                 warm is set, but the start is hot. warm start is 
+c                                 only used for static composition optimizations.
       if (lcrash.eq.0) then
          start = 'cold'
       else if (lcrash.eq.1) then
-         start = 'warm'
          lcrash = 2
          start  = 'hot '
       else if (lcrash.eq.2) then
@@ -196,13 +196,16 @@ c     define the initial feasibility tolerances in clamda.
 
       if (tolfea.gt.0d0) call sload (n+nclin,(tolfea),w(lfeatu),1)
 
-      call cmdgen ('initialize anti-cycling variables',n,nclin,
+      call cmdgen ('i',n,nclin,
      *             nmoved,iter,numinf,istate,bl,bu,clamda,
      *             w(lfeatu),x)
 
       if (cold .or. warm) then
 
-c        cold or warm start. just about everything must be initialized.
+c                                 initialize istate, x, obj
+         if (cold) x(1:n) = 0d0
+c                                 cold or warm start. just about 
+c                                 everything must be initialized.
 c        the exception is istate during a warm start.
 
          ianrmj = lanorm
@@ -10223,6 +10226,7 @@ c        they are not changed.
          do j = 1, n + nclin
             featol(j) = tolx0*featlu(j)
          end do
+
       else
 
 c        job = 'end of cycle' or 'optimal'.
