@@ -112,9 +112,7 @@ c                                 load the adaptive refinement cpd g's
 c                                 load the bulk into the constraint array
       bl(jphct+1:jphct+icp) = b(1:icp)
       bu(jphct+1:jphct+icp) = b(1:icp)
-c                                 idead = -1 tells lpnag to save parameters
-c                                 for subsequent warm starts
-      idead = -1
+
       iprint = 0
       lpprob = 2
       tol = wmach(4)
@@ -218,7 +216,7 @@ c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer liw, lw, iter, idead, jstart, opt, kter, kitmax, i, j,
-     *        idead1, jter, iprint, lpprob
+     *        idead1, jter, iprint, lpprob, xphct
 
       logical quit, kterat
 
@@ -280,6 +278,24 @@ c                                 likely failed aqlagd
          return
 
       end if
+c                                  warm start initialization
+c                                  set the initial guess
+      x(1:jphct) = 0d0
+      is(jpoint+1:jphct) = 1
+      is(1:jpoint) = xis(1:jpoint)
+c                                  stoichiometric phases
+      do i = 1, lcpt
+         x(ldv(i)) = lamt(i)
+      end do
+c                                  solution compositions
+      do i = 1, lspt
+         if (lsdv(i).eq.0) cycle
+         x(lsdv(i)) = lsamt(i)
+         is(lsdv(i)) = lsst(i)
+      end do
+c                                  set constraint states
+      is(jphct+1:jphct+icp) = 3
+      xphct = jphct
 
       if (kterat) kitmax = iopt(33)
 
@@ -296,11 +312,8 @@ c                                 set quit flag
          if (iter.gt.iopt(20).and.kter.eq.kitmax) then 
             quit = .true.
          end if
-c                                 cold start
-         jstart = 0 
-c                                 set idead = 0 to prevent lpsol from
-c                                 overwriting warm start parameters
-         idead = 0
+c                                 cold 0/warm 1 start
+         jstart = 0
          iprint = 0
          lpprob = 2
          tol = wmach(4)
@@ -436,6 +449,13 @@ c                                 the zco array.
          if (quit) exit
 c                                 generate new pseudocompounds
          call resub (iter,kterat)
+c                                 set the new values of is, x
+         is(xphct+1:jphct) = 1
+         x(xphct+1:jphct) = 0d0
+c                                  set constraint states
+         is(jphct+1:jphct+icp) = 3
+c                                  save the old count
+         xphct = jphct
 
       end do
 
@@ -452,7 +472,7 @@ c----------------------------------------------------------------------
 
       logical kterat, swap
 
-      integer i, ids, lds, id, kd, iter
+      integer i, ids, lds, id, kd, iter, idif
 
       double precision gg, gsol1
 
@@ -497,6 +517,7 @@ c     end if
 c                                 loop on previous stable phases
 c                                 refine as necessay:
       lds = 0
+      lsdv(1:npt) = 0
 
       do kd = 1, npt
 
@@ -566,11 +587,14 @@ c                                 one solvent species this is
 c                                 all that needs to be done.
          if (iter.eq.1) then
             gg = gsol1 (rids,.true.)
-            call savrpc (gg,nopt(37),swap)
+            call savrpc (gg,nopt(37),idif,swap)
          else 
             gg = gsol1 (rids,.false.)
-            call savrpc (gg,nopt(37),swap)
+            call savrpc (gg,nopt(37),idif,swap)
          end if
+c                                 save the location so that the 
+c                                 amount can be initialized
+         lsdv(kd) = idif
 
          if (nstot(ids).gt.1) then 
 
@@ -1682,6 +1706,8 @@ c----------------------------------------------------------------------
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
       npt = 0
+      lcpt = 0
+      lspt = 0
       nsol = 0
       quit = .true.
       soltol = nopt(25)
@@ -1735,7 +1761,14 @@ c                                 new point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
-            if (id.gt.ipoint) jkp(i) = ikp(id)
+            if (id.gt.ipoint) then 
+               jkp(i) = ikp(id)
+            else if (x(i).gt.zero) then
+c                                 save compound amts for starting guess
+               lcpt = lcpt + 1
+               ldv(lcpt) = i
+               lamt(lcpt) = x(i)
+            end if
 
             if (lopt(34)) then
 
@@ -1886,8 +1919,14 @@ c                                 save amounts for final processing
 c                                 sort the phases, why? don't know, but it's 
 c                                 necessary
          call sortin
+c                                 save the amounts for lp starting point
+         do i = 1, npt
+            lspt = lspt + 1
+            lsamt(lspt) = x(jdv(i))
+            lsst(lspt) = is(jdv(i))
+         end do 
 
-      end if 
+      end if
 
       end
 

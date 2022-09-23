@@ -507,3 +507,9 @@ c                                 global assemblage pointers
 
       integer iwt
       common/ cst209 /iwt
+c                                 previous LP result amounts for
+c                                 dynamic optimization starting points
+      integer lcpt, lspt, ldv, lsdv, lsst
+      double precision lsamt, lamt
+      common/ cst120 / lsamt(k19), lamt(k19),
+     *                 lcpt, lspt, ldv(k19), lsdv(k19), lsst(k19)

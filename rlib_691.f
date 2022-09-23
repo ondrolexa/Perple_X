@@ -976,19 +976,22 @@ c                                 7 - relative to the low T phase (stixrude 2021
                smax = tm(2,j)
                t0 = tm(1,j)
                vmax = tm(3,j)
-               qr2 = dsqrt (1d0 - tr/t0)
 
                therlm(1,j,lamin) = t0
                therlm(2,j,lamin) = smax
 c                                 this makes therlm(3) dt/dp
                therlm(3,j,lamin) = vmax/smax
+
+               if (jlam.eq.4) then 
+                  qr2 = dsqrt (1d0 - tr/t0)
 c                                 PX ds5 landau
-               therlm(4,j,lamin) = (2d0*t0 + tr)*qr2/3d0
+                  therlm(4,j,lamin) = (2d0*t0 + tr)*qr2/3d0
 c                                 TC ds6 landau
-               therlm(7,j,lamin) = t0*(qr2 - qr2**3/3d0)
-               therlm(8,j,lamin) = qr2
+                  therlm(7,j,lamin) = t0*(qr2 - qr2**3/3d0)
+                  therlm(8,j,lamin) = qr2
 c                                 Vdp coefficient
-               therlm(6,j,lamin) = vmax*qr2/thermo(3,k10)
+                  therlm(6,j,lamin) = vmax*qr2/thermo(3,k10)
+               end if
 
             end do
 

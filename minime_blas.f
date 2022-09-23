@@ -22,7 +22,7 @@ c-----------------------------------------------------------------------
 
       logical tic, zbad, swap, quit, xref
 
-      integer i, j, nvar, iter, iwork(m22), itic,
+      integer i, j, nvar, iter, iwork(m22), itic, idif,
      *        ivars(13), istate(m21), idead, nclin, ntot
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
@@ -209,7 +209,7 @@ c                                 if logical arg = T use implicit ordering
          return
       end if
 c                                 save the final QP result
-      call savrpc (gfinal,0d0,swap)
+      call savrpc (gfinal,0d0,idif,swap)
 c---------------
       if (lopt(54).and..not.swap) then
 c                                 scatter in only for nstot-1 gradients
@@ -250,7 +250,7 @@ c                                 not allow non-degenerate scatter points
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,swap)
+            call savrpc (gfinal,nopt(48)/2d0,idif,swap)
 
          end do
 c                                 reset refine
@@ -272,7 +272,7 @@ c-----------------------------------------------------------------------
 
       logical zbad, saved
 
-      integer i, j, nvar, mode, ivars(*), istart
+      integer i, j, nvar, mode, ivars(*), istart, idif
 
       double precision ppp(*), gval, dgdp(*), rvars(*),
      *                 gsol1, g, sum1, zsite(m10,m11)
@@ -369,7 +369,7 @@ c                                 if logical arg = T use implicit ordering
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
-         call savrpc (g,nopt(37),saved)
+         call savrpc (g,nopt(37),idif,saved)
 
       end if
 
@@ -377,7 +377,7 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,swap)
+      subroutine savrpc (g,tol,idif,swap)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -387,9 +387,9 @@ c-----------------------------------------------------------------------
 
       logical swap, swapit
 
-      integer i, j, ntot
+      integer i, j, ntot, idif
 
-      double precision g, diff, tol
+      double precision g, diff, tol, mindif
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -429,6 +429,9 @@ c                                 save degenerate results:
          end if
       end do
       end if
+
+      mindif = 0d0
+      idif = 0
 c                                 check if duplicate
       do i = jpoint + 1, jphct
 
@@ -444,7 +447,9 @@ c                                 check if duplicate
 c                                 swap if lower g
                swap = .true.
 
-               if (g2(i).gt.g/rsum) then
+               idif = i
+
+              if (g2(i).gt.g/rsum) then
                   exit
                else
                   return
@@ -457,8 +462,18 @@ c                                 swap if lower g
                if (diff.lt.tol) return
 
             else
+c                                 swap non-identical comps
+               if (diff.lt.zero) return
 
-              if (diff.lt.zero) return
+c              else if (diff.lt.1d1*zero) then
+c                                 replace the closest rpc 
+c                 if (idif.eq.0.or.(idif.ne.0.and.diff.lt.mindif)) then 
+c                    idif = i
+c                    mindif = diff
+c                    swap = .true.
+c                 end if
+
+c              end if
 
             end if
 
@@ -471,31 +486,36 @@ c                                 increment counters
          jphct = jphct + 1
          icoz(i) = zcoct
          zcoct = zcoct + ntot
+         idif = i
+
+      else 
+
+c        write (*,*) 'swapping ',mindif,idif,rids,jkp(idif)
 
       end if
 c                                 lagged speciation quack flag
-      quack(i) = rkwak
+      quack(idif) = rkwak
 c                                 normalize and save the composition
-      cp2(1:icomp,i) = rcp(1:icomp)/rsum
+      cp2(1:icomp,idif) = rcp(1:icomp)/rsum
 c                                 the solution model pointer
-      jkp(i) = rids
+      jkp(idif) = rids
 c                                 the refinement point pointer
-      hkp(i) = rkds
+      hkp(idif) = rkds
 c                                 save the normalized g
-      g2(i) = g/rsum
+      g2(idif) = g/rsum
 c                                 sum scp(1:icp)
       if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then
 c                                 this will renormalize the bulk to a 
 c                                 mole of solvent, it's no longer clear to 
 c                                 me why this is desireable.
-         c2tot(i) = rsum/rsmo
+         c2tot(idif) = rsum/rsmo
       else
-         c2tot(i) = rsum
+         c2tot(idif) = rsum
       end if
 
-      quack(i) = rkwak
+      quack(idif) = rkwak
 c                                 save the endmember fractions
-      zco(icoz(i)+1:icoz(i)+ntot) = pa(1:ntot)
+      zco(icoz(idif)+1:icoz(idif)+ntot) = pa(1:ntot)
 
       end 
 

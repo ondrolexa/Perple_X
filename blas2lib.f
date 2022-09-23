@@ -161,8 +161,8 @@ c                                 only used for static composition optimizations
       if (lcrash.eq.0) then
          start = 'cold'
       else if (lcrash.eq.1) then
-         lcrash = 2
-         start  = 'hot '
+         lcrash = 1
+         start  = 'warm'
       else if (lcrash.eq.2) then
          start = 'hot '
       end if
@@ -203,7 +203,7 @@ c     define the initial feasibility tolerances in clamda.
       if (cold .or. warm) then
 
 c                                 initialize istate, x, obj
-         if (cold) x(1:n) = 0d0
+c        if (cold) x(1:n) = 0d0
 c                                 cold or warm start. just about 
 c                                 everything must be initialized.
 c        the exception is istate during a warm start.
@@ -301,14 +301,12 @@ c     move x onto the constraints in the working set.
 
       done = found .and. nviol.eq.0 .and. nmoved.eq.0
 
-c     until      done  .or.  halted
       if (.not. (done .or. halted)) go to 40
-
-c     set clamda for a subsequent hot start.
-
+c                                 set clamda for hot start
+c                                 and or yclos routines 
       call cmprnt (nfree,n,nclin,nctotl,nactiv,iw(lkactv),iw(lkx),
      *             clamda,w(lrlam))
-
+c                                 also set for hot start
       iw(1) = 0
       if (unitq) iw(1) = 1
       iw(2) = nfree
@@ -339,7 +337,7 @@ c     set clamda for a subsequent hot start.
          if (ifail.lt.3) ifail = 0
 
          if (ifail.lt.4) then
-            istart = 1
+            istart = 2
          else
             istart = 0
          end if
@@ -8576,7 +8574,7 @@ c           lagrangian function.
             call scond (n,r,ldr+1,drmax,drmin)
             cond = sdiv (drmax,drmin,overfl)
 
-            if (cond.gt.rcndbd .or. rfrobn.gt.rootn*1d2*drmax) then
+            if (cond.gt.rcndbd .or.rfrobn.gt.rootn*1d2*drmax) then
 
 c              reset the condition estimator and range-space
 c              partition of q'hq.

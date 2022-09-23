@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 21, 2022.',
+     *     'Perple_X version 6.9.1, source updated September 23, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -277,7 +277,7 @@ c                                 convex
       else
 c                                 meemum, vertex
          nopt(13) = 0.2d0
-         nopt(8) = 3d-2
+         nopt(8) = 5d-2
       end if
 c                                 solvus_tolerance_II (computational)
       nopt(25) = 1d0/16d0
