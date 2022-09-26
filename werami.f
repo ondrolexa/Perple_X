@@ -175,7 +175,7 @@ c----------------------------------------------------------------------
 
       double precision tmin(2), tmax(2), dx(2)
 
-      character*100 n6name, n5name, yes*1
+      character n6name*100, n5name*100, yes*1, tag*9
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -270,34 +270,37 @@ c                                 parameters are to be used:
 c                                 sample on a grid, this is awkward
 c                                 since it's not known if auto-refine
 c                                 or exploratory
-            write (*,'(/,a)') 'Select the grid resolution (to use an '//
-     *                        'arbitrary grid set sample_on_grid to F):'
+10          write (*,'(/,a,/)') 'Select the grid resolution (to use an '
+     *                      //'arbitrary grid set sample_on_grid to F):'
+
+            tag = '[default]'
 
             do j = 1, grid(3,i)
 
                nxy(1) = (grid(1,i)-1) * 2**(j-1) + 1
                nxy(2) = (grid(2,i)-1) * 2**(j-1) + 1
 
-               if (nxy(1).ge.loopx.or.nxy(2).ge.loopy.or.
-     *            2**(grid(3,i)-j).eq.jinc) then
+               write (*,'(4x,i1,a,2(i4,a),a)') j,' - ',nxy(1),
+     *                                           ' x ',nxy(2),
+     *                                           ' nodes ',tag
 
-                  write (*,'(4x,i1,a,2(i4,a))') j,
-     *                                         ' - ',(loopx-1)/jinc + 1,
-     *                                         ' x ',(loopy-1)/jinc + 1,
-     *                                            ' nodes [default]'
-                  exit
-
-               else
-
-                  write (*,'(4x,i1,a,2(i4,a))') j,' - ',nxy(1),
-     *                                         ' x ',nxy(2),' nodes'
-
-               end if
+               tag = ' '
 
             end do
 c                                 get grid spacing
-            call rdnumb (nopt(1),0d0,j,j,.false.)
-            write (*,'(/)')
+            call rdnumb (nopt(1),0d0,j,1,.false.)
+            
+            if (j.eq.1) then 
+
+               write (*,'(/)')
+
+            else
+
+               write (*,1010)
+               read (*,'(a)') yes
+               if (yes.ne.'y'.and.yes.ne.'Y') goto 10 
+
+            end if
 
             nxy(1) = (loopx - 1)/ 2**(grid(3,i)-j) + 1
             nxy(2) = (loopy - 1)/ 2**(grid(3,i)-j) + 1
@@ -358,6 +361,12 @@ c                                 wrap up the calculation
      *       'PLT, sample_on_grid uses the',/,'highest resolution pos',
      *       'sible (',i4,'x',i4,'), if this is excessive set ',/,
      *       'sample_on_grid to false and restart WERAMI',/)
+1010  format (/,'**warning ver538** use of high level grids may genera',
+     *       'te noise due to data interpolation',/,'onto unpopulated ',
+     *       'nodes. If higher resolution is required, best practice is'
+     *       ,' to increase',/,'the auto-refine stage resolution of the'
+     *       ,' lowest level grid (2nd values of x/y_nodes).',
+     *       //,'Continue (y/n)?')
 1040  format (/,'Change default variable range (y/n)?')
 1060  format (/,'Current limits on ',a,' are: ',g14.7,'->',g14.7,/,
      *          'Enter new values:')
