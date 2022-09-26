@@ -278,24 +278,41 @@ c                                 likely failed aqlagd
          return
 
       end if
-c                                  warm start initialization
-c                                  set the initial guess
+c                                  initialization
       x(1:jphct) = 0d0
-      is(jpoint+1:jphct) = 1
-      is(1:jpoint) = xis(1:jpoint)
-c                                  stoichiometric phases
-      do i = 1, lcpt
-         x(ldv(i)) = lamt(i)
-      end do
-c                                  solution compositions
-      do i = 1, lspt
-         if (lsdv(i).eq.0) cycle
-         x(lsdv(i)) = lsamt(i)
-         is(lsdv(i)) = lsst(i)
-      end do
-c                                  set constraint states
-      is(jphct+1:jphct+icp) = 3
       xphct = jphct
+c                                  iopt(38) = 0, cold start, amounts 
+c                                  and state are not set.
+      if (iopt(38).eq.1) then 
+c                                  iopt(38) = 1, set amounts, but not state.
+c                                  stoichiometric phases
+         do i = 1, lcpt
+            x(ldv(i)) = lamt(i)
+         end do
+c                                  solution compositions
+         do i = 1, lspt
+            if (lsdv(i).eq.0) cycle
+            x(lsdv(i)) = lsamt(i)
+         end do
+
+      else if (iopt(38).eq.2) then 
+c                                  iopt(38) = 2, set amounts and state.
+         is(jpoint+1:jphct) = 1
+         is(1:jpoint) = xis(1:jpoint)
+c                                  stoichiometric phases
+         do i = 1, lcpt
+            x(ldv(i)) = lamt(i)
+         end do
+c                                  solution compositions
+         do i = 1, lspt
+            if (lsdv(i).eq.0) cycle
+            x(lsdv(i)) = lsamt(i)
+            is(lsdv(i)) = lsst(i)
+         end do
+c                                  set constraint states
+         is(jphct+1:jphct+icp) = 3
+
+      end if
 
       if (kterat) kitmax = iopt(33)
 
@@ -313,7 +330,12 @@ c                                 set quit flag
             quit = .true.
          end if
 c                                 cold 0/warm 1 start
-         jstart = 0
+         if (iopt(38).eq.2) then
+            jstart = 1
+         else 
+            jstart = 0
+         end if
+
          iprint = 0
          lpprob = 2
          tol = wmach(4)

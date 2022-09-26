@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated September 23, 2022.',
+     *     'Perple_X version 6.9.1, source updated September 24, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -398,6 +398,12 @@ c                                  1 - set minfx on any constraint, but allow sp
 c                                  2 - set minfx on any constraint, only continue for icase = 0
 c                                  3 - set minfx on any constraint, continue for all cases.
       iopt(37) = 0
+c                                 dynamic_LP_start
+c                                  0 - cold
+c                                  1 - warm
+c                                  2 - hot
+      iopt(38) = 2
+      valu(38) = 'hot'
 c                                 keep_max
       iopt(52) = 20000
 c                                 -------------------------------------
@@ -528,7 +534,8 @@ c                                 order_check
       lopt(62) = .false.
 c                                 allow GFSM/disable saturated phase
       lopt(63) = .false.
-c 
+c                                 override counter limits for (some) warnings
+      lopt(64) = .false.
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -869,6 +876,16 @@ c                                 override interactive warnings with the bad cho
          else if (key.eq.'warn_no_limit') then
 c                                 override counter limits for (some) warnings
             if (val.eq.'T') lopt(64) = .true.
+
+         else if (key.eq.'dynamic_LP_start') then
+c                                 use cold starts for dynamic LP
+            if (val.eq.'col') then 
+               iopt(38) = 0
+            else if (val.eq.'war') then 
+               iopt(38) = 1
+            end if
+
+            valu(38) = val
 
          else if (key.eq.'timing') then
 c                                 timing for VERTEX
@@ -1644,7 +1661,7 @@ c                                 reaction format and lists
          else 
 c                                 adaptive optimization
             write (n,1180) nopt(49),iopt(37),iopt(20),nopt(21),
-     *                     lopt(62),iopt(31),k5,
+     *                     valu(38),lopt(62),iopt(31),k5,
      *                     lopt(49),
      *                     lopt(54),nopt(48),nval2,nopt(9)
 c                                 gridding parameters
@@ -1694,8 +1711,9 @@ c                                 for meemum add fd stuff
 c                                 vertex output options, dependent potentials
 c                                 pause_on_error
             write (n,1013) lopt(19),lopt(61)
-c                                 auto_exclude, warn_interactive, etc
-            write (n,1234) lopt(5),lopt(56),lopt(64)
+c                                 auto_exclude, warn_interactive, 
+c                                 output_iteration_details, output_iteration_g
+            write (n,1234) lopt(5),lopt(56),lopt(64),lopt(33),lopt(34)
 c                                 logarithmic_p, bad_number, interim_results
             if (iam.eq.1) write (n,1014) lopt(14),lopt(37),nopt(7),
      *                                   valu(34)
@@ -1726,7 +1744,7 @@ c                                 MEEMUM input/output options
      *                  lopt(21),lopt(24),valu(14),lopt(19),
      *                  lopt(20),lopt(61)
 c                                 auto_exclude, warn_interactive, etc
-         write (n,1234) lopt(5),lopt(56),lopt(64)
+         write (n,1234) lopt(5),lopt(56),lopt(64),lopt(33),lopt(34)
 
       else if (iam.eq.5) then 
 c                                 FRENDLY input/output options
@@ -1860,6 +1878,7 @@ c                                 thermo options for frendly
      *        4x,'optimization_max_it     ',i2,8x,'[40] >1',/,
      *        4x,'optimization_precision ',g7.1E1,4x,
      *           '[1e-4], 1e-1 => 1e-6, absolute',/,
+     *        4x,'dynamic_LP_start        ',a3,7x,'[hot] cold warm',/,
      *        4x,'order_check             ',l1,9x,'[F] T',/,
      *        4x,'refinement_points       ',i2,8x,'[auto] 1->',i2,/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,
@@ -1963,7 +1982,9 @@ c                                 thermo options for frendly
      *        4x,'Tisza_test              ',l1,9x,'[F] T')
 1234  format (4x,'auto_exclude            ',l1,9x,'[T] F',/,
      *        4x,'warn_interactive        ',l1,9x,'[T] F',/,
-     *        4x,'warn_no_limit           ',l1,9x,'[F] T')
+     *        4x,'warn_no_limit           ',l1,9x,'[F] T',/,
+     *        4x,'output_iteration_detai  ',l1,9x,'[F] T',/,
+     *        4x,'output_iteration_g      ',l1,9x,'[F] T')
 1240  format (/,2x,'Information file output options:',//,
      *        4x,'option_list_files       ',l1,9x,'[F] T; ',
      *           'echo computational options',/,
