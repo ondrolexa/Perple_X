@@ -38,6 +38,7 @@
 |                         that result in rough phase boundaries or blotchy patches of failed
 |                         optimizations.
 
+dynamic_LP_start          default | [hot] hot, cold, warm. 
 GFSM                      default | [F] allow GFSM/disable saturated-phase constraints
 intermediate_savrpc       default | [F] save intermediate compositions during dynamic optiomization
 intermediate_savdyn       default | [F] save intermediate dynamic compositions as auto-refine static compositions
@@ -66,7 +67,7 @@ absolute                  default | [F] WERAMI - output absolute component amoun
 Anderson-Gruneisen        default | [F] Anderson-Gruneisen parameter correction for polythermal Murnaghan and Birch-Murnaghan
 approx_alpha              default | [T] use approximation exp(x) ~ 1+x to evaluate expansivity effect on volume
 aq_bad_results            default | [error]* 101 102 103 or ignore => response to suspect lagged speciation results. *defaults to 101 for fractionation problems
-aq_output                 T default | [T] output back-calculated solute chemistry when electrolyte data is available
+aq_output                 default | [T] output back-calculated solute chemistry when electrolyte data is available
 aq_oxide_components       default | [F] accomodate oxide components in aqueous speciation calculations
 aq_species                default | [20] maximum number of solute species output (ranked by concentration) for back-calculated results
 aq_lagged_iterations      default | [0] number of internal iterations for lagged speciation.
@@ -127,7 +128,7 @@ sample_on_grid            default | [T] F => WERAMI (mode 2) samples on the comp
 seismic_output            default | [some] all, some, none
 seismic_data_file         default | [F] summarize options used for endmembers and solutions
 short_print               default | [on] suppress output of equilibrium coordinates to the print file, only relevant for CONVEX
-solution_names            abb default | [mod] mod, abb or ful; use the model, abbreviation, or full name for solution models for output
+solution_names            abb default | [mod] model, abbreviate or full; use the model, abbreviation, or full name for solution models for output
 solvus_tolerance          default | [auto] auto or 0->1, should be > initial_resolution/auto_refine_factor
 solvus_tolerance_II       default | [0.2] 0->1 
 speciation_max_it         default | [100] maximum number of iterations permitted in iterative calculations

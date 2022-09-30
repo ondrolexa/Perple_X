@@ -2175,22 +2175,22 @@ c                                 max solid prop
       end if 
 c                                 check and warn if necessary for negative
 c                                 expansivity
-      if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.11
+      if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.6
      *    .and.pname(jd).ne.wname1.and..not.rxn) then
 
          write (*,1030) t,p,pname(jd)
          iwarn1 = iwarn1 + 1
          wname1 = pname(jd)
-         if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
+         if (iwarn1.eq.6) call warn (49,r,179,'GETPHP') 
 
       end if
 
-      if (ppois.and.iwarn2.lt.11.and.pname(jd).ne.wname2.and.pois) then 
+      if (ppois.and.iwarn2.lt.6.and.pname(jd).ne.wname2.and.pois) then 
 
          iwarn2 = iwarn2 + 1
          wname2 = pname(jd)
          write (*,1040) t,p,pname(jd)
-         if (iwarn2.eq.11) call warn (49,r,178,'GETPHP')
+         if (iwarn2.eq.6) call warn (49,r,178,'GETPHP')
 
       end if 
 c                                 accumulate non-seismic totals 
