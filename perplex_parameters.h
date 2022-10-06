@@ -152,7 +152,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       parameter (k0=25,k2=100000,k3=2000,k4=32,k5=14)
       parameter (k7=k5+1,k8=k5+2,k17=8,k19=3*k5)
-      parameter (k9=50,k10=500,k14=18,k15=6,k16=120)
+      parameter (k9=50,k10=500,k14=18,k15=6,k16=150)
       parameter (k22=mdim*mst*h4*k19,k23=25)
 !                                 l2 - max number of independent potential variables
 !                                 l3 - max number of variables for gridded min and graphics (l2+2)
@@ -201,7 +201,7 @@ c----------------------------------------------------------------------
 !                                      static compositions during auto-refine stage 
 !                                m25 - max number of dynamic compositional coordinates to be saved
 !                                      for use as static compositions during auto-refine stage.
-      parameter (m0=12, m1=60, m2=8, m3=3, m4=96, m6=6, m7=15, m8=9,
+      parameter (m0=12, m1=80, m2=8, m3=3, m4=96, m6=6, m7=15, m8=9,
      *           m9=10,
      *           m10=6, m11=k5, m12=4, m14=14, m15=85, m16=6, m17=5,
      *           m18=6, m19=m14-1, m20=m10*(m11-2)+1, m21=m20+m19,
@@ -441,8 +441,9 @@ c                                 local solution model variables:
       double precision pa3
       common/ cstpa3 /pa3(k19,m14)
 
+      logical equimo
       double precision deph,dydy,dnu
-      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(h9)
+      common/ cxt3r /deph(3,j3,h9),dydy(m4,j3,h9),dnu(j3,h9),equimo(h9)
 
       double precision dzdp, dmdp, ds0dp, dgex, dcdp, gend
 c                                 derivatives with respect to the p' th endmember fraction:

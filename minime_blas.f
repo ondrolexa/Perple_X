@@ -70,7 +70,7 @@ c-----------------------------------------------------------------------
       nclin = nz(rids)
       ntot = nstot(rids)
 
-      if (dnu(rids).eq.0d0) then
+      if (equimo(rids)) then
          nvar = ntot - 1
       else 
          nvar = ntot
@@ -556,15 +556,16 @@ c                                   set the remaining proportions
 
         if (ivars(6).eq.1) then 
 c                                   numerical derivatives
-           gval = gord(ids) * (1d0 + dnu(ids) * ppp(1)-p0a(nstot(ids)))
+           gval = gord(ids) 
+     *               * (1d0 + dnu(1,ids) * ppp(1)-p0a(nstot(ids)))
 
-        else if (dnu(ids).ne.0d0) then
-c                                   analytical derivatives dnu ~= 0
-           call gpder1 (ids,ppp(1)-p0a(nstot(ids)),dgdp(1),gval,.true.)
-
-        else
+        else if (equimo(ids)) then
 c                                   analytical derivatives dnu = 0
            call gderiv (ids,gval,dgdp,.true.,error)
+
+        else
+c                                   analytical derivatives dnu ~= 0
+           call gpder1 (ids,ppp(1)-p0a(nstot(ids)),dgdp(1),gval,.true.)
 
         end if
 
@@ -609,13 +610,12 @@ c                                   proportions of the ordered species
 
          call dpinc (ppp(k)-p0a(jd),k,ids,jd)
 
-      end do
-
-      if (dnu(ids).ne.0d0) then 
-c                                   currently dnu ~= 0 only for nord = 1
+         if (equimo(ids)) cycle
+c                                   dnu ~= 0
          pa(1:nstot(ids)) = pa(1:nstot(ids)) / 
-     *                      (1d0 + dnu(ids)*(ppp(1)-p0a(jd)))
-      end if
+     *                      (1d0 + dnu(k,ids)*(ppp(k)-p0a(jd)))
+
+      end do
 
       end
 
@@ -702,7 +702,7 @@ c                                 prism
 c                                 explicit closure definitely helps
             clos = .true.
 
-            if (dnu(id).ne.0d0) 
+            if (.not.equimo(id)) 
      *         call errdbg ('unanticipated prism/non-eq molar/py2x')
 
 c                                 get the disordered p's
@@ -1094,7 +1094,7 @@ c                                coefficients
 
       end do
 
-      if (dnu(ids).ne.0d0) then
+      if (.not.equimo(ids)) then
 
          nclin = 0
          bl(1) = 0d0

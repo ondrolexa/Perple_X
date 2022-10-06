@@ -6837,8 +6837,6 @@ c                                 number of independent disordered endmembers
 c                                 reject bad compositions, only relevant
 c                                 for relict equipartition models
       bdx(im) = badx
-c                                 non-equimolar speciation reaction
-      dnu(im) = 0d0
 c                                 override norf if refine_endmembers option is set (default is false)
       if (lopt(39)) norf = .false.
 c                                 refine endmembers if norf is false (default is true). since this
@@ -7307,7 +7305,7 @@ c                                 -------------------------------------
 c                                 organize O/D model parameters
       call setord (im)
 
-      if (dnu(im).ne.0d0) then
+      if (.not.equimo(im)) then
 c                                 non-equimolar restrictions:
          if (lrecip(im)) call error (72,r,i,'prismatic composition spa'/
      *        /'ce not anticipated for non-equimolar ordering: '//tname)
@@ -7565,7 +7563,7 @@ c                                 can be overridden (unbd) by the unbounded_comp
 c                                 model keyword.
       if ((.not.unbd.and.lstot(im).eq.nstot(im).and.
      *     lstot(im).eq.mstot(im)).or.
-     *    (.not.unbd.and.lorder(im).and.dnu(im).ne.0d0)) then
+     *    (.not.unbd.and.lorder(im).and..not.equimo(im))) then
 
           boundd(im) = .true.
 
@@ -7698,7 +7696,7 @@ c----------------------------------------------------------------------
 
       minfx = .false.
 
-      if (dnu(id).ne.0d0) then
+      if (dnu(1,id).ne.0d0) then
 
          call gpmlt1 (g,id,error)
 
@@ -9894,7 +9892,7 @@ c                              close solution model file
 1030  format ('**warning ver535** ',a,' is a generic fluid solution ',
      *        'model (GFSM) the presence',/,'of which is inconsistent ',
      *        'with saturated phase constraints if the saturated phase',
-     *      /,' is a fluid. Possible courses of action are:',//,4x,
+     *      /,'is a fluid. Possible courses of action are:',//,4x,
      *        '1) remove ',a,' and restart.',/,4x,
      *        '2) remove the phase saturation constraint and restart.',/
      *    ,4x,'3) ignore this warning and continue execution.',//,
@@ -15476,11 +15474,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, id, itic
+      integer i, id, itic, lord
 
       logical error, done
 
-      double precision g, qmax, qmin, q, q0, dqq, rqmax, gold
+      double precision g, qmax(j3), qmin(j3), q(j3), q0(j3), 
+     *                 dqq, rqmax, gold
 
       double precision omega, gex
       external omega, gex
@@ -15509,29 +15508,56 @@ c----------------------------------------------------------------------
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
       error = .false.
+      lord = 0
 c                                 rqmax the maximum amount of the
 c                                 ordered species that can be formed
 c                                 from the fully disordered species
 c                                 fractions
+      do k = 1, nord(id)
 
-c                                 this solver DOES NOT account for the
-c                                 antiordered state! is there one? i donut
-c                                 think so
-      rqmax = 1d0
+         rqmax(k) = 1d0
 
-      do i = 1, nrct(1,id)
+         do i = 1, nrct(k,id)
 c                                 this is probably ok for HP melt models
 c                                 as the endmember fractions are generally
 c                                 related to a site fraction
-         if (dydy(ideps(i,1,id),1,id).gt.0d0) cycle
+            if (dydy(ideps(i,k,id),k,id).gt.0d0) cycle
 
-         if (-p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id).lt.rqmax)
-     *              rqmax = -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
+            if (-p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id).lt.rqmax)
+     *          rqmax(k) = -p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id)
+
+         end do
+
+         q0(k) = p0a(lstot(id)+k)
+         rqmax(k) = q0(k) + rqmax(k)
+
+         if (rqmax(k).gt.nopt(50)) then
+            pin(k) = .false.
+         else
+            pin(k) = .true.
+         end if
 
       end do
 
-      q0 = p0a(nstot(id))
-      rqmax = q0 + rqmax
+c                                 set initial q values
+      if (refine) then
+c                                 use known speciation
+         do k = 1, nord(id)
+            q(k) = q0(k)
+         end do 
+
+      else
+c                                 assume parameters are independent
+c                                 set each to 0.9*qmax as in speci2
+         do k = 1, nord(id)
+            q(k) = 0.9d0 * rqmax(k)
+         end do
+
+      end if
+
+
+
+
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(50), at this
 c                                 condition the first derivative < 0,
@@ -15627,19 +15653,20 @@ c                                 starting point compute the fully ordered
 c                                 g, specis will compare this to the
 c                                 disordered g and take the lowest:
          do i = 1, nstot(id)
-            pa(i) = (p0a(i) + dydy(i,1,id)*rqmax)/(1d0 + dnu(id)*rqmax)
+            pa(i) = (p0a(i) + 
+     *              dydy(i,1,id)*rqmax)/(1d0 + dnu(1,id)*rqmax)
          end do
 
          g = (pa(nstot(id))*enth(1) - t*omega(id,pa) + gex(id,pa)) *
-     *       (1d0 + dnu(id)*rqmax)
+     *       (1d0 + dnu(1,id)*rqmax)
 
       end if
 
       end
 
-      subroutine gpder1 (id,q,dg,g,minfxc)
+      subroutine gpderi (id,dq,g,dp,minfxc)
 c----------------------------------------------------------------------
-c subroutine to compute the newton-raphson increment (dg) in the ordering
+c subroutine to compute the newton-raphson increment (dp) in the ordering
 c parameter from the 1st and 2nd derivatives of the g of a temkin model
 c with one ordering parameter. id is the index of the solution model.
 
@@ -15653,9 +15680,10 @@ c----------------------------------------------------------------------
 
       logical minfxc
 
-      double precision g, dg, d2g, s, ds, d2s, q, pnorm, pnorm2, 
-     *                 d2p(m11), dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
-     *                 d2z, lnz1, zlnz, dzlnz, d2zlnz, nu, dp(m11),
+      double precision g, dg(j3), d2g(j3,j3), s, ds(j3), d2s(j3,j3), 
+     *                 q(*), dp(m11,j3), d2p(m11,j3,j3), 
+     *                 dng, gnorm, dgnorm, nt, dnt, d2nt, dz,
+     *                 d2z, lnz1, zlnz, dzlnz, d2zlnz, nu, 
      *                 z, n(m11), dn(m11), d2n(m11), t, dt, d2t
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
@@ -15681,7 +15709,8 @@ c                                 configurational entropy variables:
       double precision v,tr,pr,r,ps
       common / cst5 /v(l2),tr,pr,r,ps
 c----------------------------------------------------------------------
-c                                 initialize
+c                                 initialize, assume pa is initialized 
+c                                 to p0a
       g   = 0d0
       dg  = 0d0
       d2g = 0d0
@@ -15690,69 +15719,137 @@ c                                 initialize
       ds = 0d0
       d2s = 0d0
 
-      gnorm  = 1d0 + dnu(id) * q
-      dgnorm = dnu(id)
-      pnorm  = 1d0/gnorm
-      pnorm2 = 2d0*pnorm
-c                                 the difficulty in this model is the
-c                                 non-equimolar speciation reaction, this
-c                                 causes the number of moles of the components
-c                                 in a mole of solution to change as a function
-c                                 of the order parameter even if composition is
-c                                 held constant.
+      norm = 1d0
+c                                 the total number of moles after disordering
+      do k = 1, norder
+         norm = dnu(k,id) * dq(k)
+      end do
 
-c                                 to keep the number of moles of the components
-c                                 in the solution constant the gibbs energy
-c                                 is multiplied by gnorm = 1 + q*sum(nu(i)), where
-c                                 the nu(i) are the stoichiometric coefficients of
-c                                 the endmembers in the ordering reaction (it being
-c                                 assumed that nu(jd) = 1 and p0(jd) = 0). this gives
-c                                 the solutions g when it has the same amounts of the
-c                                 components as in the disordered limit (p = p0). the
-c                                 amounts of the species (p) for a partially or completely
-c                                 disordered state are p(i) = (p0(i) + nu(i))*q/gnorm.
-c                                 q is the molar amount of the ordered species formed
-c                                 by the ordering reaction from the amounts of the
-c                                 reactant species in the disordered limit.
-
-c                                 for the green et al melt model sum(nu(i)) for the
-c                                 reaction wo + als = an is -1, therefore
-c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
+      theta = 1d0/norm
+c                                 derivatives of theta with respect to q
+      do k = 1, norder
+         dtheta(k) = -dnu(k,id)*theta/norm
+         do j = 1, norder 
+            d2thet(k,j) = -2d0*theta(k)*dnu(j,id)/norm
+         end do
+      end do
+c                                 derivatives of species fraction with respect to q
       do i = 1, nstot(id)
-c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
-         nu = dydy(i,1,id)
-         pa(i) = (p0a(i) + nu*q) * pnorm
-         dp(i) = (nu - pa(i)*dnu(id)) * pnorm
-         d2p(i) = dp(i) * pnorm2
+c                                 compute the species fractions, it is assumed that
+c                                 each disordered species is related to only one 
+c                                 ordered species, use of a pointer would eliminate
+c                                 this loop
+         do k = 1, norder
+
+            dnk = dydy(i,k,id)
+            n = (p0a(i) + dn*dq(k))
+            pa(i) = n*theta
+            dp(i,k) = n*dtheta(k) + dn*theta(k)
+
+            do j = 1, norder
+c                              initialize to dnj * dtheta
+               if (j.eq.k) then
+                  d2p(i,k,j) = dn * dtheta(k)
+               else
+                  d2p(i,k,j) = 0
+               end if
+
+               d2p(i,k,j) = d2p(i,k,j) 
+c                              n * d2thet
+     *                    + n * d2thet(k,j)
+c                              d2n is always zero, so final term is
+     *                    + dnk * dtheta(j)
+
+            end do
+
+         end do
 
       end do
 
+
       if (llaar(id)) then
-
+c                                 h&p van laar, initialize
          t = 0d0
-         dt = 0d0
-         d2t = 0d0
-c                                 h&p van laar
-         do i = 1, nstot(id)
-            t = t + alpha(i)* pa(i)
-            dt = dt + alpha(i)* dp(i)
-            d2t = d2t + alpha(i)* d2p(i)
-         end do
 
+         do k = 1, norder
+
+            dt(k) = 0d0
+
+            do j = 1, norder
+               d2t(k,j) = 0d0
+            end do
+
+         end do
+c                                 t-derivatives
+         do i = 1, nstot(id)
+
+            t = t + alpha(i)* pa(i)
+
+            do k = 1, norder
+
+               dt(k) = dt(k) + alpha(i)* dp(i,k)
+
+               do j = 1, norder 
+                  d2t(k,j) = d2t(k,j) + alpha(i)* d2p(i,k,j)
+               end do
+
+            end do
+
+         end do
+c                                 excess terms
          do i = 1, jterm(id)
 
             i1 = jsub(1,i,id)
             i2 = jsub(2,i,id)
 
             g = g + w(i) * pa(i1) * pa(i2)
-            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
-            d2g = d2g + w(i) * (pa(i1)*d2p(i2) + pa(i2)*d2p(i1) 
-     *                                         + 2d0*dp(i1)*dp(i2) )
+
+            do k = 1, norder
+
+               dg(k) = dg(k) 
+     *                 + w(i) * (pa(i1)*dp(i2,k) + pa(i2)*dp(i1,k))
+
+               do j = 1, norder
+
+                  d2g(k,j) = d2g(k,j) + w(i) * 
+     *                   (pa(i1)*d2p(i2,k,j) + pa(i2)*d2p(i1,k,j) 
+     *                                       + dp(i1,j)*dp(i2,k) 
+     *                                       + dp(i2,j)*dp(i1,k))
+
+               end do
+
+            end do
+
          end do
+c                                 laar size normalization
 
          g = g/t
-         dg =  dg - g*dt
-         d2g = (d2g - 2d0*dt/t*dg - g*d2t)/t
+
+         do k = 1, norder
+c                                 use ds, d2s as temporary storage for normalized
+c                                 derivatives
+c                                 WAS THIS IN ERROR BEFORE?
+            ds(k) = (dg(k) - g*dt(k))/t
+
+            do j = 1, norder
+
+              d2s(k,j) = (d2g(k,j) - g*d2t(k,j)
+     *                   + ((2d0*g*dt(k) - dg(k))*dt(j) - dg(j)*dt(k))/t
+     *                   ) / t
+
+            end do
+
+         end do
+c                                 reassign dg, d2g
+         do k = 1, norder
+
+            dg(k) = ds(k)
+
+            do j = 1, norder
+              d2g(k,j) = d2s(k,j)
+            end do
+
+         end do
 
       else
 
@@ -15762,10 +15859,19 @@ c                                 excess g assuming regular terms
             i2 = jsub(2,i,id)
 
             g = g + w(i) * pa(i1) * pa(i2)
-            dg = dg + w(i) * (pa(i1)*dp(i2) + pa(i2)*dp(i1))
-            d2g = d2g + w(i) * (      d2p(i1) * pa(i2)
-     *                           + 2d0*dp(i2) * dp(i1)
-     *                           +    d2p(i2) * pa(i1) )
+
+            do k = 1, norder
+
+              dg(k) = dg(k) + w(i) * (pa(i1)*dp(i2,k) + pa(i2)*dp(i1,k))
+
+              do j = 1, norder
+
+                 d2g = d2g + w(i) * ( pa(i1)*d2p(i2,k,j)
+     *                              + pa(i2)*d2p(i1,k,j) 
+     *                              + dp(i1,j)*dp(i2,k) 
+     *                              + dp(i2,j)*dp(i1,k) )
+
+            end do
 
          end do
 
@@ -15774,31 +15880,46 @@ c                                 get the configurational entropy derivatives
       do i = 1, msite(id)
 
          nt = 0d0
-         dnt = 0d0
-         d2nt = 0d0
+         dnt(1:norder) = 0d0
+         d2nt(1:norder,1:norder) = 0d0
          zlnz = 0d0
-         dzlnz = 0d0
-         d2zlnz = 0d0
+         dzlnz(1:norder) = 0d0
+         d2zlnz(1:norder,1:norder) = 0d0
 
          if (zmult(id,i).eq.0d0) then
 c                                 temkin
             do j = 1, zsp(id,i)
 
                n(j) = dcoef(0,j,i,id)
-               dn(j) = 0d0
-               d2n(j) = 0d0
+               dn(j,1:norder) = 0d0
+               d2n(j,1:norder,1:norder) = 0d0
 
                do k = 1, lterm(j,i,id)
 c                                 n(j) is molar site population
                   n(j) = n(j) + dcoef(k,j,i,id) * pa(ksub(k,j,i,id))
-                  dn(j) = dn(j) + dcoef(k,j,i,id) * dp(ksub(k,j,i,id))
-                  d2n(j) = d2n(j) + dcoef(k,j,i,id) *d2p(ksub(k,j,i,id))
+
+                  do l = 1, norder
+
+                     dn(j,l) = dn(j,l) 
+     *                         + dcoef(k,j,i,id) * dp(ksub(k,j,i,id),l)
+
+                     do m = 1, norder
+                        d2n(j,l,m) = d2n(j,l,m) + dcoef(k,j,i,id) 
+     *                               * d2p(ksub(k,j,i,id),l,m)
+                     end do
+
+                  end do
 
                end do
 
                nt = nt + n(j)
-               dnt = dnt + dn(j)
-               d2nt = d2nt + d2n(j)
+
+               do l = 1, norder
+                  dnt(l) = dnt(l) + dn(j,l)
+                  do m = 1, norder
+                     d2nt(l,m) = d2nt(l,m) + d2n(j,l,m)
+                  end do
+               end do
 
             end do
 
@@ -15807,13 +15928,28 @@ c                                 site has non-zero multiplicity
                do j = 1, zsp(id,i)
 
                   z = n(j)/nt
-                  dz = (dn(j) - z*dnt)/nt
+c                                 zlnz is accumulated z*ln(z), lnz1 is 1 + ln(z)
+                  call ckdzlz (z,zlnz,lnz1)
+
+                  do k = 1, norder
+
+                     dz(k) = (dn(j,k) - z*dnt(k)) / nt
+                     dzlnz(k) = dzlnz(k) + dz(k) * lnz1
+
+                     do l = 1, norder
+
+                        d2z(k,l) = (d2n(j,k,l) 
+     *                             + (2d0 * z * dnt(k) * dnt(l)
+     *                                         - dn(j,k)*dnt(l) 
+     *                                         - dn(j,l)*dnt(k)) / nt
+     *                                         - z * d2nt(k,l) ) / nt
+
+
+
+
                   d2z = (2d0*dnt*(z*dnt-dn(j)) + nt*d2n(j) - n(j)*d2nt)
      *                  /nt**2
 
-                  call ckdzlz (z,zlnz,lnz1)
-
-                  dzlnz = dzlnz + dz * lnz1
                   d2zlnz = d2zlnz + d2z * lnz1 + dz**2/z
 
                end do
@@ -18540,7 +18676,7 @@ c                                 got one
 1060  format (/,'**warning ver533** ',a,' is a molecular fluid species '
      *       ,'the presence of which is ',/,'inconsistent with satura',
      *        'ted phase component constraints if the saturated phase',
-     *      /,' is a fluid. Possible courses of action are:',//,4x,
+     *      /,'is a fluid. Possible courses of action are:',//,4x,
      *        '1) exclude ',a,' and restart.',/,4x,
      *        '2) remove the phase saturation constraint and restart.',/
      *    ,4x,'3) ignore this warning and continue execution.',//,
@@ -18553,8 +18689,7 @@ c                                 got one
      *        '1) exclude ',a,' and restart.',/,4x,
      *        '2) remove the component saturation constraint and ',
      *        'restart.',/,4x,
-     *        '3) ignore this warning and continue execution.',//,
-     *        'Continue (Y/N)?')
+     *        '3) ignore this warning and continue execution.',//)
 1230  format ('**error ver013** ',a,' is an incorrect component'
      *       ,' name, valid names are:',/,12(1x,a))
 1240  format ('check for upper/lower case matches or extra blanks',/)
@@ -19311,7 +19446,7 @@ c                                 Az*p >= 0 constraints:
             do k = 1, lterm(j,i,id)
 
                m = ksub(k,j,i,id)
-               if (m.ne.nstot(id).or.dnu(id).ne.0d0) then
+               if (m.ne.nstot(id).or..not.equimo(id)) then
 
                   apz(id,nz(id),m) = apz(id,nz(id),m) 
      *                               + dcoef(k,j,i,id)
@@ -19628,7 +19763,7 @@ c----------------------------------------------------------------------
           deriv(ids) = .false.
           reason = 'redlich-kistler ex'
 
-      else if (dnu(ids).ne.0d0) then
+      else if (.not.equimo(ids)) then
 
           deriv(ids) = .false.
           reason = 'non-equimolar O/D'
@@ -20372,6 +20507,7 @@ c                                 endmember pointers
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c----------------------------------------------------------------------
+      equimo(im) = .true.
 c                                 models with speciation:
       do j = 1, norder
 
@@ -20437,20 +20573,18 @@ c                                species.
 
 c                                derivatives of the consituent species
 c                                with respect to the ordered species
-         dnu(im) = 1d0
+         dnu(j,im) = 1d0
 
          do i = 1, nr(j)
             dydy(ideps(i,j,im),j,im) = dydy(ideps(i,j,im),j,im)
      *                                  - depnu(i,j)
-            dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
+            dnu(j,im) = dnu(j,im) + dydy(ideps(i,j,im),j,im)
          end do
 c                                dnu =~ 0 => speciation reaction is not equimolar
-         if (dabs(dnu(im)).gt.nopt(50)) then
-            if (norder.gt.1) call error (72,r,i,
-     *              'ordering schemes with > 1 non-equi'//
-     *              'molar reaction have not been anticipated: '//tname)
-         else
-            dnu(im) = 0d0
+         if (dabs(dnu(j,im)).lt.nopt(50)) then
+            dnu(j,im) = 0d0
+         else 
+            equimo(im) = .false.
          end if
 
       end do
@@ -20466,6 +20600,7 @@ c                                respect to kth species
      *                           +
      *                              dydy(jsub(2,i,im),k,im)
      *                             *dydy(jsub(1,i,im),j,im)
+
             end do
          end do
       end do

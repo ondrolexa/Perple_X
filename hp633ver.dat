@@ -422,6 +422,61 @@ ekWL = 1/2 eskL
 tiWL = 1 ruL
    dqf =  5.6d3     - 0.489*Pbar
 
+|--------------------------------------------------------------------------------
+                                  | Make definitions for Tomlinson and Holland; JPet, 2021 (TH models)
+                                  | Entered by Debaditya Bandyopadhyay, JADC 9/22
+      |---------------------------  Melt
+qTHL = 3 qL
+       DQF(J/mol) =  0.47d3   - 0.078*Pbar
+foTHL = 2 foL
+       DQF(J/mol) = 9.73d3    - 0.176*Pbar
+faTHL = 2 faL
+       DQF(J/mol) = 16.52d3    - 0.034*Pbar
+neTHL = 1 abL - 2 qL
+       DQF(J/mol) =  33.11d3  + 0.306*Pbar
+hmTHL = 1/2 hemL
+       DQF(J/mol) =  3.76d3    - 0.027*Pbar
+ekTHL = 1/2 eskL
+       DQF(J/mol) =  24.98d3  + 0.170*Pbar
+tiTHL = 1 ruL
+       DQF(J/mol) =  0.42d3   - 0.257*Pbar
+kjTHL = 1 kspL - 1 qL
+       DQF(J/mol) =  22.93d3  + 0.292*Pbar
+      |---------------------------  Spinel
+ispTH   = 1 nsp
+       DQF(J/mol) = 23.5d3  - 5.76303 * T
+ihercTH = 1 nherc
+       DQF(J/mol) = 23.6d3  - 5.76303 * T
+imtTH   = 1 mt
+       DQF(J/mol) = 300
+      |---------------------------  Garnet
+tigTH   = 1 py + 1/2 per + 1/2 ru - 1/2 cor
+       DQF(J/mol) = 53.5d3  - 17.3 * T
+      |---------------------------  Opx
+odiTH  = 1 di
+       DQF(J/mol) = 1900 + 0.005 * P 
+crenTH = 1 mgts + 1 kos - 1 jd
+       DQF(J/mol) = -31850 + 15.5 * T + 0.05 * P
+obufTH = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
+       DQF(J/mol) = 4350 - 5.1 * T - 0.0061 * P
+macmTH = 1 mgts + 1 acm - 1 jd
+       DQF(J/mol) = 2630 - 0.089 * P
+ojdTH  = 1 jd
+       DQF(J/mol) = 18840 - 0.043 * P
+      |---------------------------  Cpx
+cenTH  = 1 en
+       DQF(J/mol) = 3500 - 2 * T + 0.048 * P
+cfsTH  = 1 fs
+       DQF(J/mol) = 2100 - 2 * T + 0.045 * P
+cessTH = 1 cats + 1 acm - 1 jd
+       DQF(J/mol) = -5810
+crdiTH = 1 cats + 1 kos - 1 jd
+       DQF(J/mol) = -5660
+mcbufTH = 1 cats + 1/2 per + 1/2 ru -1/2 cor
+       DQF(J/mol) = -6.47d3 - 1.2 * T + 0.078 * P 
+kjdTH = 1 jd + 1 san - 1 abh
+       DQF(J/mol) = -4d3 + 1.35 * P  
+
 end_makes
  
 Notation (incomplete and NOT alphabetical!)
