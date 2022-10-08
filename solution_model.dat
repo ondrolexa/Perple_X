@@ -2459,25 +2459,25 @@ full_name    liquid
 
 1                                  | number of polytopes
 1                                  | number of simplices
-11                                 | number of vertices (endmembers) on each simplex
+12                                 | number of vertices (endmembers) on each simplex
 
 foHL     faHL
 jdL      silL     kjL
 woL      ekL      hmL
-tiL      qHL      h2oL
-
+tiL      qHL      CO2 
+h2oL
 
 0     1   .1  0                    | range and resolution of X(fo)
-0    .3   .1  0                    | range and resolution of X(fa)
-0    .8   .1  0                    | range and resolution of X(jd)
-0    .3   .1  0                    | range and resolution of X(sil)
-0    .4   .1  0                    | range and resolution of X(kj)
-0    .5   .1  0                    | range and resolution of X(wo)
-0    .1   .1  0                    | range and resolution of X(ek)
-0    .1   .1  0                    | range and resolution of X(hm)
-0    .1   .1  0                    | range and resolution of X(ti)
-0    .6   .1  0                    | range and resolution of X(q)
-
+0     1   .1  0                    | range and resolution of X(fa)
+0     1   .1  0                    | range and resolution of X(jd)
+0     1   .1  0                    | range and resolution of X(sil)
+0     1   .1  0                    | range and resolution of X(kj)
+0     1   .1  0                    | range and resolution of X(wo)
+0     1   .1  0                    | range and resolution of X(ek)
+0     1   .1  0                    | range and resolution of X(hm)
+0     1   .1  0                    | range and resolution of X(ti)
+0     1   .1  0                    | range and resolution of X(q)
+0     1   .1  0                    | range and resolution of X(CO2)
 
 begin_ordered_endmembers
                                     | H(ctL) = -108.3d3  +55*TK  +0.053*Pbar - dqfwol - dqfsil + dqfq/4
@@ -2566,7 +2566,7 @@ n(Ca) = 1 woL
 n(Al) = 1 silL
 
 F
-10 0 0                      | Temkin F-site, decomposing "AlSi2" into k/na-jd here eliminates the necessity of the A-site
+11 0 0                      | Temkin F-site, decomposing "AlSi2" into k/na-jd here eliminates the necessity of the A-site
 n(jdL)   = 1 jdL
 n(kjL)   = 1 kjL
 n(alsi)  = 1 silL
@@ -2591,18 +2591,19 @@ end_dqf_corrections
 
 
 begin_van_laar_sizes
-alpha(qHL)   = 1.0
+alpha(qHL)   = 1
 alpha(silL)  = 1.2
 alpha(woL)   = 1.4
 alpha(foHL)  = 2.4
-alpha(faHL)  = 1.0
+alpha(faHL)  = 1
 alpha(jdL)   = 1.2
-alpha(hmL)   = 1.0
-alpha(ekL)   = 1.0
-alpha(tiL)   = 1.0
-alpha(kjL)   = 1.0
-alpha(ctL)   = 1.0
-alpha(h2oL)  = 1.0
+alpha(hmL)   = 1
+alpha(ekL)   = 1
+alpha(tiL)   = 1
+alpha(kjL)   = 1
+alpha(ctL)   = 1
+alpha(CO2)   = 1
+alpha(h2oL)  = 1
 end_van_laar_sizes
 
 begin_flagged_endmembers
@@ -2625,6 +2626,7 @@ hmL
 tiL      
 qHL      
 h2oL
+CO2
 end_flagged_endmembers
 
 end_of_model
@@ -3252,13 +3254,13 @@ jdjL ctjL fojL fajL dijL hmjL ekjL qjL
 
 0 0 0 0 0 0 0 0
 
-0  .6  .1 0   | jd
-0  .5 .1 0   | ct
-0  .8  .1 0   | fo
-0  .4  .1 0   | fa
-0  .45 .1 0   | di
-0  .1  .1 0   | hm
-0  .1  .1 0   | ek
+0  1  .1 0   | jd
+0  1  .1 0   | ct
+0  1  .1 0   | fo
+0  1  .1 0   | fa
+0  1  .1 0   | di
+0  1  .1 0   | hm
+0  1  .1 0   | ek
 
 begin_excess_function
 W(qjL dijL)     26d3   - .4 * P
