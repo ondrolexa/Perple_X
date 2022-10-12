@@ -1,8 +1,12 @@
-c   program to read the original hp2010 thermodynamic datafile 
+c   program to read the original hp2010 thermodynamic datafile (DS6 thermocalc 
+c   files) to old perplex format, the result must then be converted to the new
+c   perplex format with the program rewrite_2010.f (which must be linked to 
+c   tlib.f with a modified perplex_parameters.h file, see header comments in 
+c   rewrite_2010.f). hp2010tover.f has no dependencies. JADC, 10/2022 
 
       program trans
 
-      open (9, file='tc-ds633.txt', status= 'old')
+      open (9, file='tc-ds634.txt', status= 'old')
       open (10,file='junk.dat')
 
       call rdin

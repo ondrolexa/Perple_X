@@ -7696,48 +7696,37 @@ c----------------------------------------------------------------------
 
       minfx = .false.
 
-      if (.not.equimo(id)) then
+      if (iopt(37).lt.0) then
+c                                 minfxc has been made the default solver:
+         call minfxc (g,id,minfx)
 
-         call gpmelt (g,id,minfx)
+      else if (nord(id).eq.1) then
+c                                 as most models are single species, use 
+c                                 special routines to avoid overhead.
+         if (equimo(id)) then
+c                                 initialize limit expressions
+            call p0limt (id)
 
-         call gpmlt1 (oldg,id,error)
+            call speci1 (g,id,1)
 
-         dg = oldg - g
+         else
+c                                 assumes non-equimolar speciation is not
+c                                 subject to site fraction restrictions
+            call gpmlt1 (g,id,error)
 
-         if (dg.lt.-1d-9.and.g.ne.1d99) then 
-
-            write (*,*) 'oink a'
-            call gpmelt (g,id,minfx)
-
-            call gpmlt1 (oldg,id,error)
-
-         else if (dg.gt.1d-9.and.g.ne.1d99) then 
-
-            write (*,*) 'oink b'
-            call gpmelt (g,id,minfx)
-
-            call gpmlt1 (oldg,id,error)
-
-         end if 
+         end if
 
       else
-c                                 initialize limit expressions
-         call p0limt (id)
-c                                 as most models are single species and
-c                                 there is so much overhead in computing
-c                                 multiple speciation, use a special routine
-c                                 for single species models:
-         if (iopt(37).lt.0) then
-c                                 minfxc has been made the default solver:
-            call minfxc (g,id,minfx)
 
-         else if (nord(id).gt.1) then
+         if (equimo(id)) then
+c                                 initialize limit expressions
+            call p0limt (id)
 
             call speci2 (g,id,minfx)
 
          else
 
-            call speci1 (g,id,1)
+            call gpmelt (g,id,minfx)
 
          end if
 
@@ -8016,7 +8005,7 @@ c                          compute the newton-raphson increments:
          if (pin(k)) then
 c                          flesh out the hessian
             do l = 1, k-1
-               d2g(k,l) = d2g(l,k)
+               d2g(l,k) = d2g(k,l)
             end do
 
          else
@@ -15534,13 +15523,6 @@ c                                 the root must lie at p > pmax - nopt(50).
 c                                 the p's are computed in gpderi
          call gpder1 (id,qmax-q0,dqq,g,.false.)
 
-         aq(1) = qmax-q0
-         call gpderi (id,aq,g,adqq,.false.,error)
-
-         if (dabs(adqq(1)-dqq).gt.1d-9) then 
-            write (*,*) 'oink ',adqq(1), dqq
-         end if 
-
          if (dqq.lt.0d0) then
 c                                 at the maximum concentration, the
 c                                 first derivative is positive, if
@@ -15633,6 +15615,62 @@ c                                 disordered g and take the lowest:
 
       end
 
+      subroutine qlim (dqmin,dqmax,lord,id)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, k, id, jd, lord
+
+      double precision dqmax(*), dqmin(*)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      lord = 0
+c                                 rqmax the maximum amount of the
+c                                 ordered species that can be formed
+c                                 from the fully disordered species
+c                                 fractions
+      do k = 1, nord(id)
+
+         dqmax(k) = 1d0
+
+         do i = 1, nrct(k,id)
+c                                 this is probably ok for HP melt models
+c                                 as the endmember fractions are generally
+c                                 related to a site fraction
+            jd = ideps(i,k,id)
+
+            if (dydy(jd,k,id).gt.0d0) cycle
+
+            if (-p0a(jd)/dydy(jd,k,id).lt.dqmax(k))
+     *                           dqmax(k) = -p0a(jd)/dydy(jd,k,id)
+
+         end do
+
+         dqmin(k) = -p0a(lstot(k)+k) + nopt(50)
+         dqmax(k) = dqmax(k) - nopt(50)
+
+         if (dqmax(k)-dqmin(k).gt.nopt(50)) then
+            pin(k) = .true.
+            lord = lord + 1
+         else
+            pin(k) = .false.
+         end if
+
+      end do
+
+      end
+
       subroutine gpmelt (g,id,minfx)
 c----------------------------------------------------------------------
 c subroutine to non-equilimolar speciation order-disorder. this
@@ -15687,40 +15725,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       error = .false.
       minfx = .false.
-      lord = 0
-c                                 rqmax the maximum amount of the
-c                                 ordered species that can be formed
-c                                 from the fully disordered species
-c                                 fractions
-      do k = 1, nord(id)
-
-         dqmax(k) = 1d0
-
-         do i = 1, nrct(k,id)
-c                                 this is probably ok for HP melt models
-c                                 as the endmember fractions are generally
-c                                 related to a site fraction
-            jd = ideps(i,k,id)
-
-            if (dydy(jd,k,id).gt.0d0) cycle
-
-            if (-p0a(jd)/dydy(jd,k,id).lt.dqmax(k))
-     *                           dqmax(k) = -p0a(jd)/dydy(jd,k,id)
-
-         end do
-
-         dqmin(k) = -p0a(lstot(k)+k) + nopt(50)
-         dqmax(k) = dqmax(k) - nopt(50)
-
-         if (dqmax(k)-dqmin(k).gt.nopt(50)) then
-            pin(k) = .true.
-            lord = lord + 1
-         else
-            pin(k) = .false.
-         end if
-
-      end do
-
+c                                 count free order parameters and get limits
+      call qlim (dqmin,dqmax,lord,id)
 c                                 set initial q values
       if (refine) then
 c                                 use known speciation

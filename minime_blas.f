@@ -465,16 +465,6 @@ c                                 swap if lower g
 c                                 swap non-identical comps
                if (diff.lt.zero) return
 
-c              else if (diff.lt.1d1*zero) then
-c                                 replace the closest rpc 
-c                 if (idif.eq.0.or.(idif.ne.0.and.diff.lt.mindif)) then 
-c                    idif = i
-c                    mindif = diff
-c                    swap = .true.
-c                 end if
-
-c              end if
-
             end if
 
          end if
@@ -484,13 +474,9 @@ c              end if
       if (.not.swap) then
 c                                 increment counters
          jphct = jphct + 1
-         icoz(i) = zcoct
+         icoz(jphct) = zcoct
          zcoct = zcoct + ntot
-         idif = i
-
-      else 
-
-c        write (*,*) 'swapping ',mindif,idif,rids,jkp(idif)
+         idif = jphct
 
       end if
 c                                 lagged speciation quack flag
@@ -533,10 +519,10 @@ c-----------------------------------------------------------------------
 
       logical error 
 
-      integer ids, nvar, istart, mode, ivars(*)
+      integer ids, i, nvar, istart, mode, ivars(*)
 
       double precision ppp(*), gval, dgdp(*), rvars(*), d2s(j3,j3), 
-     *                 gord
+     *                 gord, ddq(j3), norm
 
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -557,15 +543,30 @@ c                                   set the remaining proportions
         if (ivars(6).eq.1) then 
 c                                   numerical derivatives
            gval = gord(ids) 
-     *               * (1d0 + dnu(1,ids) * ppp(1)-p0a(nstot(ids)))
+
+           if (.not.equimo(ids)) then
+
+              norm = 1d0
+
+              do i = 1, nvar
+                 norm = norm +  dnu(i,ids) * (ppp(i)-p0a(lstot(ids)+i))
+              end do
+
+              gval = gval * norm
+
+           end if
 
         else if (equimo(ids)) then
-c                                   analytical derivatives dnu = 0
+c                                   analytical derivatives, equimolar o/d
            call gderiv (ids,gval,dgdp,.true.,error)
 
-        else
-c                                   analytical derivatives dnu ~= 0
-           call gpder1 (ids,ppp(1)-p0a(nstot(ids)),dgdp(1),gval,.true.)
+        else 
+c                                   analytical derivatives, non-equimolar
+           do i = 1, nvar
+              ddq(i) = ppp(i)-p0a(lstot(ids)+i)
+           end do
+
+           call gpderi (ids,ddq,gval,dgdp,.true.,error)
 
         end if
 
@@ -574,6 +575,8 @@ c                                   negentropy minimization:
 c                                   will only be called for analytical
 c                                   dnu = 0 case.
          call sderiv (ids,gval,dgdp,d2s,.true.)
+
+         if (.not.equimo(ids)) call errdbg ('piggy wee, piggy waa')
 
       end if
 
@@ -590,7 +593,7 @@ c-----------------------------------------------------------------------
 
       integer ids, jd, k
 
-      double precision ppp(*)
+      double precision ppp(*), norm
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -610,12 +613,17 @@ c                                   proportions of the ordered species
 
          call dpinc (ppp(k)-p0a(jd),k,ids,jd)
 
-         if (equimo(ids)) cycle
-c                                   dnu ~= 0
-         pa(1:nstot(ids)) = pa(1:nstot(ids)) / 
-     *                      (1d0 + dnu(k,ids)*(ppp(k)-p0a(jd)))
-
       end do
+
+      if (equimo(ids)) return
+c                                 non-equimolar normalization
+      norm = 1d0
+
+      do k = 1, nord(ids)
+         norm = norm +  dnu(k,ids) * (ppp(k)-p0a(lstot(ids)+k))
+      end do
+
+      pa(1:nstot(ids)) = pa(1:nstot(ids)) / norm
 
       end
 
@@ -965,7 +973,7 @@ c-----------------------------------------------------------------------
      *                 clamda(m21),r(m19,m19),work(m23),rvars(6),
      *                 lapz(m20,m19)
 c DEBUG691                    dummies for NCNLN > 0
-     *                 ,c(1),cjac(1,1),xp(m14), ftol
+     *                 ,c(1),cjac(1,1),xp(m14)
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -1004,28 +1012,31 @@ c DEBUG691                    dummies for NCNLN > 0
 
       external gsol4, gordp0, dummy
 c-----------------------------------------------------------------------
-c                                 initialize limit expressions from p0
-      call p0limt (ids)
 c                                 compute the disordered g for bailouts
       g0 = gordp0(ids)
+
+      fac = 1d-2
+      nvar = nord(ids)
+
+      if (equimo(ids)) then 
+c                                 initialize limit expressions from p0
+         call p0limt (ids)
 c                                 set initial p values and count the
 c                                 the number of non-frustrated od
 c                                 variables.
-      call pinc0 (ids,lord)
+         call pinc0 (ids,lord)
 
-      fac = 1d-2
-
-      if (icase(ids).eq.0) then 
+         if (icase(ids).eq.0) then 
 c                                 o/d reactions are independent and
 c                                 pin settings from pinc0 are valid
 c                                 regardless if whether p0 is fully 
 c                                 disorderd
-         if (lord.eq.0) then 
-            gfinal = g0
-            return
-         end if
+            if (lord.eq.0) then 
+               gfinal = g0
+               return
+            end if
 
-      else if (maxs) then
+         else if (maxs) then
 c                                 if maxs then p0 is likely partially 
 c                                 ordered, the pin settings from pinc0
 c                                 can't be relied upon, a routine could 
@@ -1034,11 +1045,11 @@ c                                 maxs inversion is mostly likely to be
 c                                 called for a general composition, the
 c                                 lazy solution here is to keep everything
 c                                 in:
-         fac = 1d0
-         pin = .true.
-         lord = nord(ids)
+            fac = 1d0
+            pin = .true.
+            lord = nvar
 
-      else if (icase(ids).eq.1) then 
+         else if (icase(ids).eq.1) then 
 c                                 p0 for ~maxs will always correspond to
 c                                 the disordered limit, in this case 
 c                                 pin for uncorrelated o/d reactions can 
@@ -1049,70 +1060,69 @@ c                                 test for this and fully correlated cases
 c                                 could be made, but since ~maxs calls are
 c                                 only for backup from specis the lazy solution
 c                                 is adopted here for the fully correlated case.
-         pin = .true.
-         lord = nord(ids)
+            pin = .true.
+            lord = nvar
 
-      end if
-
-      nvar = nord(ids)
+         end if
 c                                 variable bounds and local (ppp) variable
 c                                 initialization
-      do k = 1, nord(ids)
+         do k = 1, nord(ids)
 
-         if (pin(k)) then
-            bu(k) = 1d0
-            bl(k) = -1d0
-         else
-            bu(k) = pa(lstot(ids)+k)
-            bl(k) = pa(lstot(ids)+k)
-         end if
+            if (pin(k)) then
+               bu(k) = 1d0
+               bl(k) = -1d0
+            else
+               bu(k) = pa(lstot(ids)+k)
+               bl(k) = pa(lstot(ids)+k)
+            end if
 
-      end do
+         end do
 c                                constraints
-      nclin = 0
+         nclin = 0
 
-      do k = 1, nord(ids)
+         do k = 1, nord(ids)
 c                                for each constraint
-         do i = 1, ln(k,ids)
+            do i = 1, ln(k,ids)
 
-            nclin = nclin + 1
+               nclin = nclin + 1
 c                                bounds
-            bu(nvar+nclin) = -tsum(i,k)
-            bl(nvar+nclin) = -tsum(i,k) - l0c(2,i,k,ids)
+               bu(nvar+nclin) = -tsum(i,k)
+               bl(nvar+nclin) = -tsum(i,k) - l0c(2,i,k,ids)
 c                                coefficients
-            lapz(nclin,1:nvar) = 0d0
+               lapz(nclin,1:nvar) = 0d0
 
-            do j = 1, jt(i,k,ids)
+               do j = 1, jt(i,k,ids)
 
-               lapz(nclin,jid(j,i,k,ids)-lstot(ids)) = jc(j,i,k,ids)
+                  lapz(nclin,jid(j,i,k,ids)-lstot(ids)) = jc(j,i,k,ids)
+
+               end do
+
+               lapz(nclin,k) = -1d0
 
             end do
 
-            lapz(nclin,k) = -1d0
-
          end do
+c                                 initialize ppp
+         ppp(1:nvar) = pa(lstot(ids)+1:lstot(ids)+nvar)
 
-      end do
-
-      if (.not.equimo(ids)) then
-
-         nclin = 0
-         bl(1) = 0d0
-         bu(1) = 1d0
-
-         do i = 1, nrct(1,ids)
-c                                 this is probably ok for HP melt models
+      else
+c                                 not equimolar, ok for HP melt models
 c                                 as the endmember fractions are generally
 c                                 related to a site fraction
-            if (dydy(ideps(i,1,ids),1,ids).gt.0d0) cycle
+         nclin = 0
 
-            ftol = -p0a(ideps(i,1,ids))/dydy(ideps(i,1,ids),1,ids)
+         call qlim (bl,bu,lord,ids) 
 
-            if (ftol.lt.bu(1)) bu(1) = ftol
-
+         if (lord.eq.0) then 
+            gfinal = g0
+            return
+         end if
+c                                 initialize ppp
+         do i = 1, nvar
+            ppp(i) = (bl(i)+bu(i))/2d0
          end do
-
-         bu(1) = bu(1) + p0a(nstot(ids))
+c                                 need to extract sderivs from gpderi
+         if (maxs) call errdbg ('oink di oink oink!!')
 
       end if
 c                                 solution model index
@@ -1133,8 +1143,7 @@ c                                 derivatives are available
       itic = 0
 
       iprint = 0
-c                                 initialize ppp
-      ppp(1:nvar) = pa(lstot(ids)+1:lstot(ids)+nvar)
+
       xp(1:nvar) = ppp(1:nvar)
 
 10    idead = -1
