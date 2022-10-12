@@ -7683,7 +7683,7 @@ c----------------------------------------------------------------------
 
       logical minfx, error
 
-      double precision g, oldg, oldp(m14), g0, gordp0
+      double precision g, oldg, oldp(m14), g0, gordp0, dg
 
       external gordp0
 
@@ -7696,9 +7696,29 @@ c----------------------------------------------------------------------
 
       minfx = .false.
 
-      if (dnu(1,id).ne.0d0) then
+      if (.not.equimo(id)) then
 
-         call gpmlt1 (g,id,error)
+         call gpmelt (g,id,minfx)
+
+         call gpmlt1 (oldg,id,error)
+
+         dg = oldg - g
+
+         if (dg.lt.-1d-9.and.g.ne.1d99) then 
+
+            write (*,*) 'oink a'
+            call gpmelt (g,id,minfx)
+
+            call gpmlt1 (oldg,id,error)
+
+         else if (dg.gt.1d-9.and.g.ne.1d99) then 
+
+            write (*,*) 'oink b'
+            call gpmelt (g,id,minfx)
+
+            call gpmlt1 (oldg,id,error)
+
+         end if 
 
       else
 c                                 initialize limit expressions
@@ -7709,71 +7729,39 @@ c                                 multiple speciation, use a special routine
 c                                 for single species models:
          if (iopt(37).lt.0) then
 c                                 minfxc has been made the default solver:
-            call minfxc (g,id,.false.)
+            call minfxc (g,id,minfx)
 
          else if (nord(id).gt.1) then
 
             call speci2 (g,id,minfx)
-c                                 if minfx try bail out solution
-            if (minfx.and.iopt(37).ne.5) then
-
-               oldp(1:nstot(id)) = pa(1:nstot(id))
-c                                 this is necessary for pinc0
-               pa(1:nstot(id)) = p0a(1:nstot(id))
-               oldg = g
-
-               call minfxc (g,id,.false.)
-
-               if (oldg-g.lt.-nopt(53)) then 
-c                                   the speci2 result was better, revert
-c                  if (dabs((oldg-g)/oldg).gt.1d-3) then
-c                     write (*,*) 'minfx nfg',oldg-g,oldg,id
-c                  end if
-
-                   g = oldg
-                   pa(1:nstot(id)) = oldp(1:nstot(id))
-
-               end if
-
-            else if (lopt(62)) then
-c                                   order_check option
-               oldp(1:nstot(id)) = pa(1:nstot(id))
-c                                 this is necessary for pinc0
-               pa(1:nstot(id)) = p0a(1:nstot(id))
-               oldg = g
-
-               call minfxc (g,id,.false.)
-
-               if (oldg-g.gt.nopt(53)) then 
-c                                 even though speci2 converged, minfxc is better
-                  if (dabs((oldg-g)/oldg).gt.1d-3) then
-c                    write (*,*) 'spec2 nfg',oldg-g,oldg,id
-                  end if
-
-               else if (oldg.lt.g) then 
-c                                 restore the old result
-                   g = oldg
-                   pa(1:nstot(id)) = oldp(1:nstot(id))
-
-               end if
-
-            end if
 
          else
 
             call speci1 (g,id,1)
 
-c           oldg = g
-
-c           call opeci1 (oldg,id,1)
-
-c           if (dabs(oldg-g).gt.1d-6) then 
-c              write (*,*) 'oink'
-c           end if 
-
          end if
 
       end if
+c                                 if order_check (lopt(62)) or a routine
+c                                 has set minfx = true, try bail out solution
+      if (minfx.and.iopt(37).ne.5.or.lopt(62)) then
+c                                 order_check option
+         oldp(1:nstot(id)) = pa(1:nstot(id))
+c                                 this is necessary for pinc0
+         pa(1:nstot(id)) = p0a(1:nstot(id))
+
+         oldg = g
+
+         call minfxc (g,id,.false.)
+
+         if (oldg-g.lt.-nopt(53)) then 
+c                                 restore the old result
+               g = oldg
+               pa(1:nstot(id)) = oldp(1:nstot(id))
+
+         end if
+
+       end if
 c                                 compare g for initial and eq speciation
 c                                 return the lower
       if (g.gt.g0) then 
@@ -7840,7 +7828,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine gderiv (id,g,dp,minfx,error)
+      subroutine gderiv (id,g,dg,minfx,error)
 c----------------------------------------------------------------------
 c subroutine to compute the g of a solution (id) and it's 1st and 2nd
 c derivatives with respect to the fractions of the nord(id) ordered
@@ -7856,7 +7844,7 @@ c----------------------------------------------------------------------
 
       integer i,k,l,i1,i2,i3,id,ipvt(j3)
 
-      double precision g,dp(*),t,s,ds(j3),d2s(j3,j3),dg(j3),d2g(j3,j3)
+      double precision g,dg(*),t,s,ds(j3),d2s(j3,j3),d2g(j3,j3)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -7912,7 +7900,7 @@ c                                 order cases are considered here:
                   dg(k) = dg(k) + w(i) * (pa(i1)*dydy(i2,k,id)
      *                                  + pa(i2)*dydy(i1,k,id))
 
-                  do l = 1, norder
+                  do l = k, norder
 
                      d2g(l,k) = d2g(l,k) + w(i) * dppp(l,k,i,id)
 
@@ -7937,7 +7925,7 @@ c                                 order cases are considered here:
      *                                   + pa(i1)*pa(i3)*dydy(i2,k,id)
      *                                   + pa(i2)*pa(i3)*dydy(i1,k,id) )
 
-                  do l = 1, norder
+                  do l = k, norder
 
                      d2g(l,k) = d2g(l,k) + w(i) * (
      *                            pa(i1)*(dydy(i2,l,id)*dydy(i3,k,id) +
@@ -8017,44 +8005,41 @@ c      end if
 c                                 if minfx just return with the gradient
       if (minfx) then
 
-         dp(1:norder) = -dg(1:norder)
+         dg(1:norder) = -dg(1:norder)
 
          return
 
       end if
-c                                 copy dg and d2g into dp and d2s
+c                          compute the newton-raphson increments:
       do k = 1, norder
-         if (pin(k)) then
-            dp(k) = dg(k)
-            d2s(k,k) = d2g(k,k)
-            do l = k+1, norder
-               if (pin(l)) then
-                  d2s(l,k) = d2g(l,k)
-                  d2s(k,l) = d2g(l,k)
-               end if
-            end do
-         end if
-      end do
 
-      do k = 1, norder
-         if (.not.pin(k)) then
-            dp(k) = 1d0
-            d2s(k,k) = 1d0
+         if (pin(k)) then
+c                          flesh out the hessian
+            do l = 1, k-1
+               d2g(k,l) = d2g(l,k)
+            end do
+
+         else
+
+            dg(k) = 1d0
+            d2g(k,k) = 1d0
+
             do l = 1, norder
                if (l.eq.k) cycle
-               d2s(l,k) = 0d0
-               d2s(k,l) = 0d0
+               d2g(l,k) = 0d0
+               d2g(k,l) = 0d0
             end do
+
          end if
       end do
 c                                 get the newton-raphson increments:
 c                                 this is a general factorization routine, should
 c                                 exploit that d2g is symmetric.
-      call factor (d2s,j3,norder,ipvt,error)
+      call factor (d2g,j3,norder,ipvt,error)
 c                                 solve for the increments by back-substitution,
 c                                 this routine is also not efficient and should
 c                                 be re written.
-      if (.not.error) call subst (d2s,j3,ipvt,norder,dp,error)
+      if (.not.error) call subst (d2g,j3,ipvt,norder,dg,error)
 c                                 substitute replaces the values of dg with the
 c                                 newton-raphson increments for the ordered species
 c                                 compositions.
@@ -15479,12 +15464,12 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, k, jd, id, itic, lord
+      integer i, id, itic
 
       logical error, done
 
-      double precision g, qmax(j3), qmin(j3), q(j3), q0(j3), 
-     *                 rqmax(j3), dp(j3)
+      double precision g, qmax, qmin, q, q0, dqq, rqmax, gold,
+     *                 adqq(1),aq(1)
 
       double precision omega, gex
       external omega, gex
@@ -15513,6 +15498,195 @@ c----------------------------------------------------------------------
       common/ cst20 /goodc(3),badc(3)
 c----------------------------------------------------------------------
       error = .false.
+c                                 rqmax the maximum amount of the
+c                                 ordered species that can be formed
+c                                 from the fully disordered species
+c                                 fractions
+
+c                                 this solver DOES NOT account for the
+c                                 antiordered state! is there one? i donut
+c                                 think so
+      rqmax = 1d0
+
+      do i = 1, nrct(1,id)
+c                                 this is probably ok for HP melt models
+c                                 as the endmember fractions are generally
+c                                 related to a site fraction
+         if (dydy(ideps(i,1,id),1,id).gt.0d0) cycle
+
+         if (-p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id).lt.rqmax)
+     *              rqmax = -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
+
+      end do
+
+      q0 = p0a(nstot(id))
+      rqmax = q0 + rqmax
+c                                 to avoid singularity set the initial
+c                                 composition to the max - nopt(50), at this
+c                                 condition the first derivative < 0,
+c                                 and the second derivative > 0 (otherwise
+c                                 the root must lie at p > pmax - nopt(50).
+      if (rqmax.gt.nopt(50)) then
+
+         pin(1) = .true.
+         qmax = rqmax - nopt(50)
+         qmin = nopt(50)
+c                                 the p's are computed in gpderi
+         call gpder1 (id,qmax-q0,dqq,g,.false.)
+
+         aq(1) = qmax-q0
+         call gpderi (id,aq,g,adqq,.false.,error)
+
+         if (dabs(adqq(1)-dqq).gt.1d-9) then 
+            write (*,*) 'oink ',adqq(1), dqq
+         end if 
+
+         if (dqq.lt.0d0) then
+c                                 at the maximum concentration, the
+c                                 first derivative is positive, if
+c                                 the second is also > 0 then we're
+c                                 business
+            q = qmax
+
+         else
+c                                 try the min
+            call gpder1 (id,qmin-q0,dqq,g,.false.)
+
+            if (dqq.gt.0d0) then
+c                                 ok
+               q = qmin
+
+            else
+c                                 no search from either limit possible
+c                                 set error .true. to compare g at the
+c                                 limits.
+               error = .true.
+               goto 90
+
+            end if
+         end if
+c                                 increment and check p
+         call pcheck (q,qmin,qmax,dqq,done)
+c                                 iteration counter to escape
+c                                 infinite loops
+         itic = 0
+
+         gold = g
+c                                 newton raphson iteration
+         do
+
+            call gpder1 (id,q-q0,dqq,g,.false.)
+
+            call pcheck (q,qmin,qmax,dqq,done)
+c                                 done is just a flag to quit
+            if (done.or.dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50)) then
+
+c              if (done.and.dabs((gold-g)/g).gt.nopt(53)) then 
+c                 write (*,*) 'oink3',gold-g,g,itic,id
+c              end if
+
+               goodc(1) = goodc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
+c                                 in principle the p's could be incremented
+c                                 here and g evaluated for the last update.
+               return
+
+            else
+
+               gold = g
+
+            end if
+
+            itic = itic + 1
+
+            if (itic.gt.iopt(21)) then
+c                                 fails to converge.
+               error = .true.
+               badc(1) = badc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
+               exit
+
+            end if
+
+         end do
+
+      else
+c                                 speciation is stoichiometrically frustrated
+         g = -t*omega(id,p0a) + gex(id,p0a)
+         return
+
+      end if
+
+90    if (error) then
+c                                 didn't converge or couldn't find a good
+c                                 starting point compute the fully ordered
+c                                 g, specis will compare this to the
+c                                 disordered g and take the lowest:
+         do i = 1, nstot(id)
+            pa(i) = (p0a(i) + dydy(i,1,id)*rqmax)/(1d0 +dnu(1,id)*rqmax)
+         end do
+
+         g = (pa(nstot(id))*enth(1) - t*omega(id,pa) + gex(id,pa)) *
+     *       (1d0 + dnu(1,id)*rqmax)
+
+      end if
+
+      end
+
+      subroutine gpmelt (g,id,minfx)
+c----------------------------------------------------------------------
+c subroutine to non-equilimolar speciation order-disorder. this
+c model is a special case because the model has a single ordering parameter, which
+c green et al take as the fraction of the ordered species (an). this formulation is
+c unfortunate because p(an) is not orthogonal to the disordered speciation
+c (p0, because the moles of the species is not constant with changing speciation).
+c here the model is recast as g(p0,q) where q is the number of moles of an that can be
+c formed given p0.
+
+c    id - identifies the solution.
+c    g  - change in G for the stable speciation relative to a mechanical
+c          mixture of the endmembers.
+c    pc is the mass normalization factor, sum(p0*ctot)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer i, k, jd, id, itic, lord
+
+      logical error, minfx
+
+      double precision g, dqmax(j3), dqmin(j3), dqq(j3), ddq(j3), gold,
+     *                 tdp, xtdp
+
+      double precision omega, gex
+      external omega, gex
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      double precision r,tr,pr,ps,p,t,xco2,u1,u2
+      common/ cst5   /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      logical pin
+      common/ cyt2 /pin(j3)
+
+      double precision enth
+      common/ cxt35 /enth(j3)
+
+      character tname*10
+      logical refine, lresub
+      common/ cxt26 /refine,lresub,tname
+
+      double precision goodc, badc
+      common/ cst20 /goodc(3),badc(3)
+c----------------------------------------------------------------------
+      error = .false.
+      minfx = .false.
       lord = 0
 c                                 rqmax the maximum amount of the
 c                                 ordered species that can be formed
@@ -15520,7 +15694,7 @@ c                                 from the fully disordered species
 c                                 fractions
       do k = 1, nord(id)
 
-         rqmax(k) = 1d0
+         dqmax(k) = 1d0
 
          do i = 1, nrct(k,id)
 c                                 this is probably ok for HP melt models
@@ -15530,18 +15704,19 @@ c                                 related to a site fraction
 
             if (dydy(jd,k,id).gt.0d0) cycle
 
-            if (-p0a(jd)/dydy(jd,k,id).lt.rqmax(k))
-     *                                 rqmax(k) = -p0a(jd)/dydy(jd,k,id)
+            if (-p0a(jd)/dydy(jd,k,id).lt.dqmax(k))
+     *                           dqmax(k) = -p0a(jd)/dydy(jd,k,id)
 
          end do
 
-         q0(k) = p0a(lstot(id)+k)
-         rqmax(k) = q0(k) + rqmax(k)
+         dqmin(k) = -p0a(lstot(k)+k) + nopt(50)
+         dqmax(k) = dqmax(k) - nopt(50)
 
-         if (rqmax(k).gt.nopt(50)) then
-            pin(k) = .false.
-         else
+         if (dqmax(k)-dqmin(k).gt.nopt(50)) then
             pin(k) = .true.
+            lord = lord + 1
+         else
+            pin(k) = .false.
          end if
 
       end do
@@ -15550,32 +15725,126 @@ c                                 set initial q values
       if (refine) then
 c                                 use known speciation
          do k = 1, nord(id)
-            q(k) = q0(k)
+            dqq(k) = 0d0
          end do 
 
       else
 c                                 assume parameters are independent
 c                                 set each to 0.9*qmax as in speci2
          do k = 1, nord(id)
-            q(k) = 0.9d0 * rqmax(k)
+            dqq(k) = 0.9d0 * (dqmax(k)-dqmin(k))
          end do
 
       end if
 
-      call gpderi (id,q,g,dp,.false.)
+      if (lord.gt.0) then
+
+         itic = 0
+         gold = 0d0
+         xtdp = 0d0
+         minfx = .false.
+
+         do
+
+            call gpderi (id,dqq,g,ddq,.false.,error)
+
+            if (error) then
+               badc(1) = badc(1) + 1d0
+               exit
+            end if
+
+            tdp = 0d0
+c                                 increment q's
+            do k = 1, nord(id)
+
+               if (.not.pin(k)) cycle
+
+               if (dqq(k)+ddq(k).gt.dqmax(k)) then
+                  ddq(k) = dqmax(k) - dqq(k)
+                  dqq(k) = dqmax(k)
+               else if (dqq(k)+ddq(k).lt.dqmin(k)) then
+                  ddq(k) = dqmin(k) - ddq(k)
+                  dqq(k) = dqmin(k)
+               else
+                  dqq(k) = dqq(k) + ddq(k)
+               end if
+
+               tdp = tdp + dabs(ddq(k))
+
+            end do
+c                                 check for convergence
+            if ((tdp.lt.nopt(50).or.
+     *          dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50))
+     *         .and.itic.gt.1) then
+
+c              if (tdp.lt.nopt(52).and.dabs((gold-g)/g).gt.nopt(53))
+c    *            then 
+c                 write (*,*) 'oink2',gold-g,g,itic,id
+c              end if
+
+               goodc(1) = goodc(1) + 1d0
+               goodc(2) = goodc(2) + dfloat(itic)
+               exit
+
+            else if (itic.gt.5.and.gold.lt.g) then
+
+               minfx = .true.
+               exit
+
+            else if (itic.gt.iopt(21)) then 
+
+c              write (*,*) 'div2 ',gold-g,id,itic,g,tdp,tdp-xtdp
+               minfx = .true. 
+               exit
+
+            else if (itic.gt.5.and.tdp.eq.xtdp) then 
+
+               minfx = .true. 
+c              write (*,*) 'wroink67 ',dp(1:lord),id,g
+               exit
+
+            end if
+
+            itic = itic + 1
+
+            xtdp = tdp
+
+            gold = g
+
+         end do
+
+      end if
+
+      if (error) then
+c                                 speciation is stoichiometrically frustrated,
+c                                 didn't converge, or couldn't find a good
+c                                 starting point compute the fully ordered
+c                                 g, specis will compare this to the
+c                                 disordered g and take the lowest:
+         dqq(1:nord(id)) = dqmax(1:nord(id))
+         call gpderi (id,dqq,g,ddq,.false.,error)
+         error = .true.
+
+      else if (lord.eq.0) then
+
+         g = 1d99
+
+      end if 
 
       end
 
-      subroutine gpderi (id,q,g,dg,minfxc)
+      subroutine gpderi (id,q,g,dg,minfxc,error)
 c----------------------------------------------------------------------
 c subroutine to compute the newton-raphson increment (dp) in the ordering
 c parameter from the 1st and 2nd derivatives of the g of a solution with
 c non-equimolar. 
 
+c   minfxc - input, indicates calling program specis/minfxc 
 c   id - is the index of the solution model.
-c   q - on input the order parameter relative to the p0a composition
-c   g  - the gibbs energy of the solution at dq
-c   dg - if minfxc - the derivatives dg/dq, else the newton-raphson increments
+c   q - input, the current order parameters
+c   g  - output, the gibbs energy of the solution at q
+c   dg - output: if minfxc - the derivatives dg/dq, else the newton-raphson increments
+c   error - output, true if couldn't solve for the increments
 
 c assumptions:
 
@@ -15587,17 +15856,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, l, m, i1, i2, id
+      integer i, j, k, l, m, i1, i2, id, ipvt(j3)
 
-      logical minfxc
+      logical minfxc, error
 
       double precision g, dg(*), d2g(j3,j3), s, ds(j3), d2s(j3,j3), 
      *                 q(*), dp(m14,j3), d2p(m14,j3,j3), d2gn(j3,j3), 
      *                 theta, dtheta(j3), d2thet(j3,j3), nn, dnn, norm,
-     *                 nt, dnt(j3), d2nt(j3,j3), dz(j3), z1, z2,
+     *                 nt, dnt(j3), d2nt(j3,j3), dz(j3),
      *                 d2z(j3,j3), lnz1, zlnz, dzlnz(j3), d2zlnz(j3,j3),
      *                 z, n(m11), dn(m11,j3), d2n(m11,j3,j3),
-     *                 t, dt(j3), d2t(j3,j3)
+     *                 t, dt(j3), d2t(j3,j3), dnorm(j3)
 c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -15619,6 +15888,9 @@ c                                 configurational entropy variables:
       double precision enth
       common/ cxt35 /enth(j3)
 
+      logical pin
+      common/ cyt2 /pin(j3)
+
       integer iddeps,norder,nr
       double precision depnu,denth
       common/ cst141 /depnu(j4,j3),denth(j3,3),iddeps(j4,j3),norder,
@@ -15629,6 +15901,8 @@ c                                 configurational entropy variables:
 c----------------------------------------------------------------------
 c                                 initialize, assume pa is initialized 
 c                                 to p0a
+      norder = nord(id)
+
       g   = 0d0
       dg(1:norder) = 0d0
       d2g(1:norder,1:norder) = 0d0
@@ -15638,46 +15912,45 @@ c                                 to p0a
       d2s(1:norder,1:norder) = 0d0
 
       norm = 1d0
+      dnorm(1:norder) = dnu(1:norder,id)
 c                                 the total number of moles after disordering
       do k = 1, norder
-         norm = norm + dnu(k,id) * q(k)
+         norm = norm + dnorm(k) * q(k)
       end do
 
       theta = 1d0/norm
 c                                 derivatives of theta with respect to q
       do k = 1, norder
-         dtheta(k) = -dnu(k,id)*theta/norm
+         dtheta(k) = -dnorm(k)*theta/norm
          do j = 1, norder 
-            d2thet(k,j) = -2d0*dtheta(k)*dnu(j,id)/norm
+            d2thet(k,j) = -2d0*dtheta(k)*dnorm(j)/norm
          end do
       end do
-c                                 derivatives of species fraction with respect to q
+
       do i = 1, nstot(id)
-c                                 compute the species fractions, it is assumed that
+c                                 compute the unnormalized species fractions, it is assumed that
 c                                 each disordered species is related to only one 
 c                                 ordered species, use of a pointer would eliminate
 c                                 this loop
+         nn = p0a(i)
+         dnn = 0d0
+
          do k = 1, norder
 
             dnn = dydy(i,k,id)
-            nn = (p0a(i) + dnn*q(k))
-            pa(i) = nn*theta
+            nn = nn + dnn * q(k)
             dp(i,k) = nn*dtheta(k) + dnn*theta
+            if (dnn.ne.0d0) exit
 
+         end do
+
+         pa(i) = nn*theta
+
+         do k = 1, norder
             do j = 1, norder
-c                              initialize to dnj * dtheta
-               if (j.eq.k) then
-                  d2p(i,k,j) = dnn * dtheta(k)
-               else
-                  d2p(i,k,j) = 0
-               end if
-
-               d2p(i,k,j) =   d2p(i,k,j) 
-c                              n * d2thet
-     *                      + nn * d2thet(k,j)
-c                              d2n is always zero, so final term is
-     *                      + dnn * dtheta(j)
-
+c                              d2n is always zero
+               d2p(i,k,j) =   dnn * (dtheta(k) + dtheta(j))
+     *                      +  nn * d2thet(k,j)
             end do
          end do
       end do
@@ -15696,7 +15969,7 @@ c                                 t-derivatives
 
                dt(k) = dt(k) + alpha(i)* dp(i,k)
 
-               do j = 1, norder 
+               do j = 1, norder
                   d2t(k,j) = d2t(k,j) + alpha(i)* d2p(i,k,j)
                end do
             end do
@@ -15720,12 +15993,10 @@ c                                 excess terms
      *                   (pa(i1)*d2p(i2,k,j) + pa(i2)*d2p(i1,k,j) 
      *                                       + dp(i1,j)*dp(i2,k) 
      *                                       + dp(i2,j)*dp(i1,k))
-
                end do
             end do
          end do
 c                                 laar size normalization
-
          g = g/t
 
          do k = 1, norder
@@ -15739,7 +16010,6 @@ c                                 WAS THIS IN ERROR BEFORE?
               d2s(k,j) = (d2g(k,j) - g*d2t(k,j)
      *                   + ((2d0*g*dt(k) - dg(k))*dt(j) - dg(j)*dt(k))/t
      *                   ) / t
-
             end do
          end do
 c                                 reassign dg, d2g
@@ -15762,14 +16032,13 @@ c                                 excess g assuming regular terms
 
                do j = 1, norder
 
-                  d2g = d2g + w(i) * ( pa(i1)*d2p(i2,k,j)
-     *                               + pa(i2)*d2p(i1,k,j) 
-     *                               + dp(i1,j)*dp(i2,k) 
-     *                               + dp(i2,j)*dp(i1,k) )
+                  d2g(k,j) = d2g(k,j) + w(i) * ( pa(i1)*d2p(i2,k,j)
+     *                                + pa(i2)*d2p(i1,k,j) 
+     *                                + dp(i1,j)*dp(i2,k) 
+     *                                + dp(i2,j)*dp(i1,k) )
                end do
            end do
          end do
-
       end if
 c                                 get the configurational entropy derivatives
       do i = 1, msite(id)
@@ -15820,8 +16089,6 @@ c                                 site has non-zero multiplicity
                do j = 1, zsp(id,i)
 
                   z = n(j) / nt
-                  z1 = z + 1d0
-                  z2 = z / z1
 c                                 zlnz is accumulated z*ln(z), lnz1 is 1 + ln(z)
                   call ckdzlz (z,zlnz,lnz1)
 c                                 accumulate 1st derivative
@@ -15845,9 +16112,8 @@ c                                 accumulate 2nd derivative
                      do l = 1, norder
 
                         d2zlnz(k,l) = d2zlnz(k,l) 
-     *                                + d2z(k,l) * (lnz1 + z2)
-     *                                + dz(k) * dz(l) * (2d0 - z2)/z1
-
+     *                                + d2z(k,l) * lnz1
+     *                                + dz(k) * dz(l) / z
                      end do
                   end do
                end do
@@ -15858,7 +16124,7 @@ c                                 entropy units
 
                   ds(k) = ds(k) - nt * dzlnz(k) - zlnz * dnt(k)
 
-                  do l = 1, norder
+                  do l = k, norder
 
                      d2s(k,l) = d2s(k,l)
      *                          - nt * d2zlnz(k,l) - dnt(l) * dzlnz(k)
@@ -15891,9 +16157,6 @@ c                                 accumulate first and second derivatives
                end do
 
                call ckdzlz (z,zlnz,lnz1)
-
-               z1 = z + 1d0
-               z2 = z / z1
 c                                 why bother? this is gonna be 1
                nt = nt + z
 
@@ -15907,9 +16170,10 @@ c                                 difference, so this sum(dz(l),l=1..n-1) is non
                   do m = 1, norder
 
                      d2nt(l,m) = d2nt(l,m) + d2z(l,m)
+c                                  dlnz1 = dz(l)/z
                      d2zlnz(l,m) = d2zlnz(l,m) 
-     *                             + d2z(l,m) * (lnz1 + z2)
-     *                             + dz(l) * dz(m) * (2d0 - z2)/z1
+     *                             + d2z(l,m) * lnz1
+     *                             + dz(l) * dz(m) / z
                   end do
                end do
             end do
@@ -15925,15 +16189,11 @@ c                                  the contribution of the nth species
 c                                  to dzlnz(k) is -dnt(k) * lnz1
                ds(k) = ds(k) - zmult(id,i)/r*(dzlnz(k) - dnt(k) * lnz1)
 
-               do l = 1, norder
-c                                  dlnz1 = -d2nt(k,l)/z1 - (dnt(k)*dnt(l))/z1^2
+               do l = k, norder
+c                                  dlnz1 = dz(l)/z
                   d2s(k,l) = d2s(k,l) - zmult(id,i)/r *
-     *                       (d2zlnz(k,l) 
-     *                        + d2nt(k,l) * (dnt(k)/z1 - lnz1)
-     *                        + (dnt(k)/z1)**2*dnt(l))
-c                                 this was wrong (!?) before for 1d:
-c                                 (d2zlnz - d2nt * lnz1 + dnt**2 / z)
-c                                 i.e., neglected diff(lnz1,q)
+     *                       (d2zlnz(k,l) - d2nt(k,l) * lnz1
+     *                                    - dz(l)/z * dnt(k))
                end do
             end do
 
@@ -15948,31 +16208,63 @@ c                                 and add in enthalpic terms
          g      = g      + enth(k) * pa(lstot(id)+k)
          dg(k)  = dg(k)  + enth(k) * dp(lstot(id)+k,k) - r*v(2)*ds(k)
 
-         do l = 1, norder
+         do l = k, norder
             d2g(k,l) = d2g(k,l) + enth(k) * d2p(lstot(id)+k,k,l) 
      *                          - r*v(2)*d2s(k,l)
          end do
-
       end do
 c                                 normalize
       do k = 1, norder
 
-         dg(k)  = g * dtheta(k) + theta * dg(k)
+         dg(k)  = g * dnorm(k) + norm * dg(k)
 
-         do l = 1, norder
-            d2gn(k,l) =   g * d2thet(k,l) + dg(l) * dtheta(k)
-     *                  + dtheta(l) * dg(k) + theta * d2g(k,l)
+         do l = k, norder
+            d2gn(k,l) =   dg(l) * dnorm(k)
+     *                  + dnorm(l) * dg(k) + norm * d2g(k,l)
          end do
-
       end do
 
-      g = g * theta
+      g = g * norm
 
       if (minfxc) return
 c                          compute the newton-raphson increments:
+      do k = 1, norder
+
+         if (pin(k)) then
+
+            dg(k) = -dg(k)
+c                          flesh out the hessian
+            do l = 1, k-1
+               d2g(k,l) = d2g(l,k)
+            end do
+
+         else
+
+            dg(k) = 1d0
+            d2g(k,k) = 1d0
+
+            do l = 1, norder
+               if (l.eq.k) cycle
+               d2g(l,k) = 0d0
+               d2g(k,l) = 0d0
+            end do
+
+         end if
+      end do
+c                                 get the newton-raphson increments:
+c                                 this is a general factorization routine, should
+c                                 exploit that d2g is symmetric.
+      call factor (d2g,j3,norder,ipvt,error)
+c                                 solve for the increments by back-substitution,
+c                                 this routine is also not efficient and should
+c                                 be re written.
+      if (.not.error) call subst (d2g,j3,ipvt,norder,dg,error)
+c                                 substitute replaces the values of dg with the
+c                                 newton-raphson increments for the ordered species
+c                                 compositions.
+c     dg(1) = -dg(1)/d2gn(1,1)
 
       end
-
 
       subroutine gpder1 (id,q,dg,g,minfxc)
 c----------------------------------------------------------------------
