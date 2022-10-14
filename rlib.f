@@ -6516,7 +6516,7 @@ c                                 site check override
 c                                 low-reach flag, not actually used.
       lorch(im) = lowrch
 c                                 non-equimolar speciation reaction
-      dnu(im) = 0d0
+      dnu(1,im) = 0d0
 c                                 override norf if refine_endmembers option is set (default is false)
       if (lopt(39)) norf = .false.
 c                                 refine endmembers if norf is false (default is true). since this
@@ -6754,14 +6754,7 @@ c                                 this looks like bad news, for laar/recip
 c                                 or laar/order, but appears to be overridden
 c                                 by use of logical classification variables,
 c                                 in which case, why is it here????
-      if (laar) then
-
-         if (iterm.eq.0) laar = .false.
-c        if (dnu(im).ne.0d0) call error (72,r,i,'laar excess function '/
-c    *          /'not anticipated for non-equimolar ordering: '//tname)
-
-      end if
-
+      if (laar.and.iterm.eq.0) laar = .false.
 
       if (iterm.gt.0) then
          lexces(im) = .true.
@@ -6784,8 +6777,8 @@ c                                 as lrecip.
       if (recip.or.depmod) then
 
          lrecip(im) = .true.
-         if (dnu(im).ne.0d0) call error (72,r,i,'prismatic composition'/
-     *    /' space not anticipated for non-equimolar ordering: '//tname)
+         if (dnu(1,im).ne.0d0) call error (72,r,i,'prismatic compositio'
+     *  //'n space not anticipated for non-equimolar ordering: '//tname)
 
       end if
 c                                 -------------------------------------
@@ -7345,7 +7338,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
       g = 0d0
 
-      if (dnu(id).ne.0d0) then
+      if (dnu(1,id).ne.0d0) then
 
          call gpmlt1 (g,id,error)
 
@@ -14286,7 +14279,7 @@ c                                 starting point compute the fully ordered
 c                                 g, specis will compare this to the
 c                                 disordered g and take the lowest:
          do i = 1, nstot(id)
-            pa(i) = (p0a(i) + dydy(i,1,id)*qmax) / (1d0 + dnu(id)*qmax)
+            pa(i) = (p0a(i) + dydy(i,1,id)*qmax)/(1d0 + dnu(1,id)*qmax)
          end do
 
          g = (pa(nstot(id))*enth(1) - t*omega(id,pa) + gex(id,pa)) *
@@ -19207,20 +19200,20 @@ c                                species.
 
 c                                derivatives of the consituent species
 c                                with respect to the ordered species
-         dnu(im) = 1d0
+         dnu(1,im) = 1d0
 
          do i = 1, nr(j)
             dydy(ideps(i,j,im),j,im) = dydy(ideps(i,j,im),j,im)
      *                                  - depnu(i,j)
-            dnu(im) = dnu(im) + dydy(ideps(i,j,im),j,im)
+            dnu(1,im) = dnu(1,im) + dydy(ideps(i,j,im),j,im)
          end do
 c                                dnu ~0 => speciation reaction is not equimolar
-         if (dabs(dnu(im)).gt.zero) then
+         if (dabs(dnu(1,im)).gt.zero) then
             if (norder.gt.1) call error (72,r,i,
      *              'ordering schemes with > 1 non-equi'//
      *              'molar reaction have not been anticipated: '//tname)
          else
-            dnu(im) = 0d0
+            dnu(1,im) = 0d0
          end if
 
       end do
@@ -20020,8 +20013,8 @@ c                                 initialize
 
       zinf = 1d0 + dlog(zero)
 
-      gnorm  = 1d0 + dnu(id) * q
-      dgnorm = dnu(id)
+      gnorm  = 1d0 + dnu(1,id) * q
+      dgnorm = dnu(1,id)
       pnorm  = 1d0/gnorm
       pnorm2 = 2d0*pnorm
 c                                 the difficulty in this model is the
@@ -20052,7 +20045,7 @@ c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
 c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
          nu = dydy(i,1,id)
          pa(i) = (p0a(i) + nu*q) * pnorm
-         dp(i) = (nu - pa(i)*dnu(id)) * pnorm
+         dp(i) = (nu - pa(i)*dnu(1,id)) * pnorm
          d2p(i) = dp(i) * pnorm2
 
       end do

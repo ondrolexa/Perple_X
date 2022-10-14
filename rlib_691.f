@@ -7712,7 +7712,7 @@ c                                 initialize limit expressions
          else
 c                                 assumes non-equimolar speciation is not
 c                                 subject to site fraction restrictions
-            call gpmlt1 (g,id,error)
+            call gpmlt1 (g,1,id,error)
 
          end if
 
@@ -7747,6 +7747,16 @@ c                                 this is necessary for pinc0
 c                                 restore the old result
                g = oldg
                pa(1:nstot(id)) = oldp(1:nstot(id))
+
+c              if (.not.equimo(id)) then 
+
+c                  write (*,*) 'not worked',pa(13:14)
+
+c               end if
+
+c        else if (.not.equimo(id)) then 
+
+c           write (*,*) 'worked',pa(13:14)
 
          end if
 
@@ -15434,7 +15444,7 @@ c                                 restretch.
 
       end
 
-      subroutine gpmlt1 (g,id,error)
+      subroutine gpmlt1 (g,k,id,error)
 c----------------------------------------------------------------------
 c subroutine to speciation of the green et al (JMG, 2016) melt model. this
 c model is a special case because the model has a single ordering parameter, which
@@ -15453,7 +15463,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, id, itic
+      integer i, k, id, itic
 
       logical error, done
 
@@ -15497,14 +15507,14 @@ c                                 antiordered state! is there one? i donut
 c                                 think so
       rqmax = 1d0
 
-      do i = 1, nrct(1,id)
+      do i = 1, nrct(k,id)
 c                                 this is probably ok for HP melt models
 c                                 as the endmember fractions are generally
 c                                 related to a site fraction
-         if (dydy(ideps(i,1,id),1,id).gt.0d0) cycle
+         if (dydy(ideps(i,k,id),k,id).gt.0d0) cycle
 
-         if (-p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id).lt.rqmax)
-     *              rqmax = -p0a(ideps(i,1,id))/dydy(ideps(i,1,id),1,id)
+         if (-p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id).lt.rqmax)
+     *              rqmax = -p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id)
 
       end do
 
@@ -15517,11 +15527,11 @@ c                                 and the second derivative > 0 (otherwise
 c                                 the root must lie at p > pmax - nopt(50).
       if (rqmax.gt.nopt(50)) then
 
-         pin(1) = .true.
+         pin(k) = .true.
          qmax = rqmax - nopt(50)
          qmin = nopt(50)
 c                                 the p's are computed in gpderi
-         call gpder1 (id,qmax-q0,dqq,g,.false.)
+         call gpder1 (k,id,qmax-q0,dqq,g,.false.)
 
          if (dqq.lt.0d0) then
 c                                 at the maximum concentration, the
@@ -15532,7 +15542,7 @@ c                                 business
 
          else
 c                                 try the min
-            call gpder1 (id,qmin-q0,dqq,g,.false.)
+            call gpder1 (k,id,qmin-q0,dqq,g,.false.)
 
             if (dqq.gt.0d0) then
 c                                 ok
@@ -15557,7 +15567,7 @@ c                                 infinite loops
 c                                 newton raphson iteration
          do
 
-            call gpder1 (id,q-q0,dqq,g,.false.)
+            call gpder1 (k,id,q-q0,dqq,g,.false.)
 
             call pcheck (q,qmin,qmax,dqq,done)
 c                                 done is just a flag to quit
@@ -15605,11 +15615,11 @@ c                                 starting point compute the fully ordered
 c                                 g, specis will compare this to the
 c                                 disordered g and take the lowest:
          do i = 1, nstot(id)
-            pa(i) = (p0a(i) + dydy(i,1,id)*rqmax)/(1d0 +dnu(1,id)*rqmax)
+            pa(i) = (p0a(i) + dydy(i,k,id)*rqmax)/(1d0 +dnu(k,id)*rqmax)
          end do
 
-         g = (pa(nstot(id))*enth(1) - t*omega(id,pa) + gex(id,pa)) *
-     *       (1d0 + dnu(1,id)*rqmax)
+         g = (pa(nstot(id))*enth(k) - t*omega(id,pa) + gex(id,pa)) *
+     *       (1d0 + dnu(k,id)*rqmax)
 
       end if
 
@@ -15657,7 +15667,7 @@ c                                 related to a site fraction
 
          end do
 
-         dqmin(k) = -p0a(lstot(k)+k) + nopt(50)
+         dqmin(k) = -p0a(lstot(id)+k) + nopt(50)
          dqmax(k) = dqmax(k) - nopt(50)
 
          if (dqmax(k)-dqmin(k).gt.nopt(50)) then
@@ -15727,6 +15737,16 @@ c----------------------------------------------------------------------
       minfx = .false.
 c                                 count free order parameters and get limits
       call qlim (dqmin,dqmax,lord,id)
+c                                 if lord = 1, switch to 1d solver
+      if (lord.eq.1) then
+         do k = 1, nord(id)
+            if (pin(k)) then
+               call gpmlt1 (g,k,id,error)
+               return
+            end if
+         end do
+      end if
+
 c                                 set initial q values
       if (refine) then
 c                                 use known speciation
@@ -15792,7 +15812,7 @@ c              end if
                goodc(2) = goodc(2) + dfloat(itic)
                exit
 
-            else if (itic.gt.5.and.gold.lt.g) then
+            else if (itic.gt.25.and.gold.lt.g) then
 
                minfx = .true.
                exit
@@ -16272,7 +16292,7 @@ c     dg(1) = -dg(1)/d2gn(1,1)
 
       end
 
-      subroutine gpder1 (id,q,dg,g,minfxc)
+      subroutine gpder1 (l,id,q,dg,g,minfxc)
 c----------------------------------------------------------------------
 c subroutine to compute the newton-raphson increment (dg) in the ordering
 c parameter from the 1st and 2nd derivatives of the g of a temkin model
@@ -16284,7 +16304,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, i1, i2, id
+      integer i, j, k, l, i1, i2, id
 
       logical minfxc
 
@@ -16325,8 +16345,8 @@ c                                 initialize
       ds = 0d0
       d2s = 0d0
 
-      gnorm  = 1d0 + dnu(1,id) * q
-      dgnorm = dnu(1,id)
+      gnorm  = 1d0 + dnu(l,id) * q
+      dgnorm = dnu(l,id)
       pnorm  = 1d0/gnorm
       pnorm2 = 2d0*pnorm
 c                                 the difficulty in this model is the
@@ -16355,9 +16375,9 @@ c                                 reaction wo + als = an is -1, therefore
 c                                 gnorm = (1 - q) and pnorm = 1/(gnorm)
       do i = 1, nstot(id)
 c                                 calculate pa, dp(i)/dq, d2p(i)/dq.
-         nu = dydy(i,1,id)
+         nu = dydy(i,l,id)
          pa(i) = (p0a(i) + nu*q) * pnorm
-         dp(i) = (nu - pa(i)*dnu(1,id)) * pnorm
+         dp(i) = (nu - pa(i)*dnu(l,id)) * pnorm
          d2p(i) = dp(i) * pnorm2
 
       end do
@@ -16498,8 +16518,8 @@ c                                 add the contibution from the last species:
 
       end do
 
-      g   = g   + enth(1)*pa(nstot(id))  - r*v(2)*s
-      dg  = dg  + enth(1)*dp(nstot(id))  - r*v(2)*ds
+      g   = g   + enth(l)*pa(nstot(id))  - r*v(2)*s
+      dg  = dg  + enth(l)*dp(nstot(id))  - r*v(2)*ds
 c                                 the normalized g derivative
       dng  = g * dgnorm + gnorm * dg
 c                                 the normalized g:
@@ -16510,7 +16530,7 @@ c                                 the normalized g:
          return
       end if
 c                                 and second derivative
-      d2g = gnorm * (d2g + enth(1)*d2p(nstot(id)) - r*v(2)*d2s)
+      d2g = gnorm * (d2g + enth(l)*d2p(nstot(id)) - r*v(2)*d2s)
      *       + 2d0 * dg * dgnorm
 c                                 dg becomes the newton-raphson increment:
       dg = -dng/d2g

@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.0, source updated September 11, 2022.',
+     *     'Perple_X version 6.9.0, source updated October 13, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -56,8 +56,8 @@ c----------------------------------------------------------------------
       else if (new.eq.'008'.or.new.eq.'011'.or.new.eq.'670'.or.
      *         new.eq.'672'.or.new.eq.'673'.or.new.eq.'674'.or.
      *         new.eq.'675'.or.new.eq.'676'.or.new.eq.'678'.or.
-     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'690'.or.
-     *         new.eq.'691') then 
+     *         new.eq.'679'.or.new.eq.'689'.or.new.eq.'690'
+     *         ) then 
          chksol = .true.
 
       else 

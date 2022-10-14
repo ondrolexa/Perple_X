@@ -443,18 +443,14 @@ tiTHL = 1 ruL
 kjTHL = 1 kspL - 1 qL
        DQF(J/mol) =  22.93d3  + 0.292*Pbar
       |---------------------------  Spinel
+      | iherc and imt as in Sp(HGP)
 ispTH   = 1 nsp
        DQF(J/mol) = 23.5d3  - 5.76303 * T
-ihercTH = 1 nherc
-       DQF(J/mol) = 23.6d3  - 5.76303 * T
-imtTH   = 1 mt
-       DQF(J/mol) = 300
       |---------------------------  Garnet
 tigTH   = 1 py + 1/2 per + 1/2 ru - 1/2 cor
        DQF(J/mol) = 53.5d3  - 17.3 * T
       |---------------------------  Opx
-odiTH  = 1 di
-       DQF(J/mol) = 1900 + 0.005 * P 
+      | odi as in Opx(HGP)
 crenTH = 1 mgts + 1 kos - 1 jd
        DQF(J/mol) = -31850 + 15.5 * T + 0.05 * P
 obufTH = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
@@ -464,10 +460,7 @@ macmTH = 1 mgts + 1 acm - 1 jd
 ojdTH  = 1 jd
        DQF(J/mol) = 18840 - 0.043 * P
       |---------------------------  Cpx
-cenTH  = 1 en
-       DQF(J/mol) = 3500 - 2 * T + 0.048 * P
-cfsTH  = 1 fs
-       DQF(J/mol) = 2100 - 2 * T + 0.045 * P
+      | cenjh, cfsg as in Cpx(HGP)
 cessTH = 1 cats + 1 acm - 1 jd
        DQF(J/mol) = -5810
 crdiTH = 1 cats + 1 kos - 1 jd

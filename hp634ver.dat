@@ -29,9 +29,7 @@ Holland & Powell, JMG 2011 (TC-DS633, 23 Jun,2017) + additional data |<= data ba
 | "ftr" to maintain consistency with ds5 data files.
 
 | data from other sources (HSC, SUPCRT, etc) has been added at the end of this
-| file. JADC, Oct 12, 2022. 
-
-Holland & Powell, JMG 2011 (TC-DS634, 19 Dec, 2019) + additional data             |<= data base title
+| file. JADC, Oct 12, 2022.
 
 begin_standard_variables |<= name (<9 characters), reference value, tolerance
 P(bar)      1.00   0.1E-3
@@ -422,7 +420,6 @@ ekWL = 1/2 eskL
    dqf =  24.75d3   + 0.245*Pbar
 tiWL = 1 ruL
    dqf =  5.6d3     - 0.489*Pbar
-
 |--------------------------------------------------------------------------------
                                   | Make definitions for Tomlinson and Holland; JPet, 2021 (TH models)
                                   | Entered by Debaditya Bandyopadhyay, JADC 9/22
@@ -444,18 +441,14 @@ tiTHL = 1 ruL
 kjTHL = 1 kspL - 1 qL
        DQF(J/mol) =  22.93d3  + 0.292*Pbar
       |---------------------------  Spinel
+      | iherc and imt as in Sp(HGP)
 ispTH   = 1 nsp
        DQF(J/mol) = 23.5d3  - 5.76303 * T
-ihercTH = 1 nherc
-       DQF(J/mol) = 23.6d3  - 5.76303 * T
-imtTH   = 1 mt
-       DQF(J/mol) = 300
       |---------------------------  Garnet
 tigTH   = 1 py + 1/2 per + 1/2 ru - 1/2 cor
        DQF(J/mol) = 53.5d3  - 17.3 * T
       |---------------------------  Opx
-odiTH  = 1 di
-       DQF(J/mol) = 1900 + 0.005 * P 
+      | odi as in Opx(HGP)
 crenTH = 1 mgts + 1 kos - 1 jd
        DQF(J/mol) = -31850 + 15.5 * T + 0.05 * P
 obufTH = 1 mgts + 1/2 per + 1/2 ru - 1/2 cor
@@ -465,10 +458,7 @@ macmTH = 1 mgts + 1 acm - 1 jd
 ojdTH  = 1 jd
        DQF(J/mol) = 18840 - 0.043 * P
       |---------------------------  Cpx
-cenTH  = 1 en
-       DQF(J/mol) = 3500 - 2 * T + 0.048 * P
-cfsTH  = 1 fs
-       DQF(J/mol) = 2100 - 2 * T + 0.045 * P
+      | cenjh, cfsg as in Cpx(HGP)
 cessTH = 1 cats + 1 acm - 1 jd
        DQF(J/mol) = -5810
 crdiTH = 1 cats + 1 kos - 1 jd
@@ -2314,12 +2304,28 @@ transition = 1  type = 5  t1 = 13930  t3 = -3600  t5 = 2  t6 = .6666667
 end
 
  
+nsp       EoS = 8 | H=  -2300080 
+MgO(1)Al2O3(1)
+GH = -2324120  S0 = 80.63  V0 = 3.978  
+c1 = 200.5  c2 = .6252E-2  c3 = -2996400  c5 = -888.4  
+b1 = .193E-4  b5 = 592.252  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
+end
+
+ 
 herc      EoS = 8 | H=  -1949490 
 Al2O3(1)FeO(1)
 GH = -1983449  S0 = 113.9  V0 = 4.075  
 c1 = 184.9  c2 = .1417E-1  c3 = -3674800  c5 = -404  
 b1 = .206E-4  b5 = 468.3105  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
 transition = 1  type = 5  t1 = 13930  t3 = -3600  t5 = 2  t6 = .6666667  
+end
+
+
+nherc      EoS = 8 | H=  -1949490 
+Al2O3(1)FeO(1)
+GH = -1983449  S0 = 113.9  V0 = 4.075  
+c1 = 184.9  c2 = .1417E-1  c3 = -3674800  c5 = -404  
+b1 = .206E-4  b5 = 468.3105  b6 = 1922000  b7 = -.21E-5  b8 = 4.04  
 end
 
  
