@@ -718,8 +718,13 @@ c                                 it's a solution:
          kcoct = kcoct + nstot(ids)
 
          if (lopt(58).and.(.not.refine.or.lopt(55))) then
+
             pa(1:nstot(ids)) = zco(icoz(id)+1:icoz(id)+nstot(ids))
+c                                 only for pp comparison
+            if (lorder(ids)) call makepp (ids)
+
             call savdyn (nopt(35),ids)
+
          end if
 
       end do 
@@ -1142,6 +1147,9 @@ c                                 lopt(58) is true.
 c           if (.not.lopt(58).and.(.not.refine.or.lopt(55))) then 
 c                                 load into pa and save for refinement
                pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
+c                                 for pp comparison only
+               call makepp (ids)
+
                call savdyn (zero,ids)
             end if
 c                                conditional for zero-mode stable phases
@@ -1602,8 +1610,6 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical bad
-
       integer ic,jc,i,j,ids
 c                                 -------------------------------------
 c                                 global variables
@@ -1642,19 +1648,6 @@ c                                lagged speciation
 
       end do
 c                                dependent potentials
-c     bad = .false.
-c     do i = 1, kbulk
-c        if (isnan(mu(i))) then
-c           bad = .true.
-c           write (*,*) i, mus
-c        end if
-c     end do
-
-c     if (bad) then
-c        write (*,*) (mu(i),i=1,kbulk)
-c        write (*,*) (xmu(i),i=1,kbulk)
-c     end if
-
       write (n5,1010) (mu(i),i=1,kbulk)
 
 1010  format (10(g16.8,1x))

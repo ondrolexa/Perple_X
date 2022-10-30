@@ -179,7 +179,7 @@ c---------------------------------------------------------------------
       double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr, dg,
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
-     *                 gterm2, km, kmk, lnfpur, gaq, ghkf, lamla2, pgpa
+     *                 gterm2, km, kmk, lnfpur, gaq, ghkf, lamla2
 
       external vdpbm3, gsixtr, gstxgi, gmake, gkomab, gstxlq, glacaz,
      *         gaq,    lnfpur, gmet, gmet2, gterm2, ghkf, lamla2
@@ -10417,7 +10417,10 @@ c                                 to the future static array:
                do j = 1, jend(i,2)
                   tmp = tmp + 1
                   if (ststbl(ipoint+tmp).or.lopt(30)) then
+
                      pa(1:ntot) = txco(itxp(tmp)+1:itxp(tmp)+ntot)
+c                                 only for pp comparison
+                     if (lorder(i)) call makepp (i)
 c                                 negative tolerance means these
 c                                 will be saved no matter what.
                      call savdyn (nopt(35),i)
@@ -15700,7 +15703,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, k, jd, id, itic, lord
+      integer i, k, id, itic, lord
 
       logical error, minfx
 
@@ -22231,13 +22234,22 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, i, j, tmp
+      integer id, i, j, k, l, tmp
 
-      double precision diff
+      double precision diff, xdiff, psum
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
+
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
 c                                 simple model
          do i = stpct, tpct
@@ -22247,9 +22259,72 @@ c                                 simple model
             diff = 0d0
             tmp = itxp(i)
 
-            do j = 1, nstot(id)
-               diff = diff + dabs(pa(j) - txco(tmp+j))
-            end do 
+c           if (.not.lorder(id)) then
+
+               do j = 1, nstot(id)
+                  diff = diff + dabs(pa(j) - txco(tmp+j))
+               end do
+
+            xdiff = diff
+
+            if (lorder(id)) then
+
+               y(1:nstot(id)) = txco(tmp+1:tmp+nstot(id))
+               z(1:nstot(id)) = pa(1:nstot(id))
+
+               do k = 1, nord(id)
+                  do l = 1, nrct(k,id)
+                     j = ideps(l,k,id)
+                     z(j) = z(j) - dydy(j,k,id) * z(lstot(id)+k)
+                     y(j) = y(j) - dydy(j,k,id) * y(lstot(id)+k)
+                  end do
+               end do
+
+               do j = 1, lstot(id)
+                  if (dabs(pp(j)-z(j)).gt.zero/1d4) then 
+                     write (*,*) 'oink'
+                  end if
+               end do
+
+               if (.not.equimo(id)) then
+
+                  diff = 0d0
+                  psum = 0d0
+c                                 renormalize
+                  do j = 1, lstot(id)
+                     diff = diff + y(j)
+                     psum = psum + pp(j)
+                  end do
+
+                  do j = 1, lstot(id)
+                     y(j) = y(j)/diff
+                  end do
+
+                  diff = 0d0
+
+               else 
+
+                 psum = 1d0
+
+               end if
+c                                 compare
+               do j = 1, lstot(id)
+                  diff = diff + dabs(pp(j)/psum - y(j))
+               end do
+
+               if (dabs(diff-xdiff).gt.1e-5) then
+c                 write (*,*) fname(id),diff,xdiff,i
+               end if
+
+               if (diff.lt.nopt(35).and.xdiff.gt.nopt(35)) then 
+c                 write (*,*) fname(id),' diff squeaks ',diff
+               else if (diff.gt.nopt(35).and.xdiff.lt.nopt(35)) then 
+                  write (*,*) fname(id),' xdiff squeaks ',xdiff
+               end if
+
+            end if
+
+            diff = xdiff
 
             if (diff.lt.nopt(35)) then
                rplica = .true.

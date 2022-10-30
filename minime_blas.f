@@ -249,6 +249,9 @@ c                                 not allow non-degenerate scatter points
             end if
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
+c                                 if savrpc is going to use the pp array, it
+c                                 must be reset here for non-equimolar o/d?
+c           if (.not.equimo(rids)) call makepp (rids)
 c                                 increment the counter
             call savrpc (gfinal,nopt(48)/2d0,idif,swap)
 
@@ -387,9 +390,9 @@ c-----------------------------------------------------------------------
 
       logical swap, swapit
 
-      integer i, j, ntot, idif
+      integer i, j, k, l, ntot, idif
 
-      double precision g, diff, tol, mindif
+      double precision g, diff, tol, xdiff, psum
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -399,11 +402,17 @@ c-----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
 
+      integer ideps,icase,nrct
+      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
+
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
       double precision wmach
       common/ cstmch /wmach(10)
+
+      character fname*10, aname*6, lname*22
+      common/ csta7 /fname(h9),aname(h9),lname(h9)
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -417,20 +426,9 @@ c-----------------------------------------------------------------------
       end if
 
       swap = .false.
-c                                 degenerate bulk, only 
-c                                 save degenerate results:
-      if (idegen.gt.1000) then 
-      do j = 1, idegen
-         if (rcp(idg(j)).gt.0d0.and..not.dispro(idg(j))) then
-            if (rcp(idg(j)).lt.zero) then 
-               write (*,*) 'wonka ',rcp(idg(j))
-            end if
-            return
-         end if
-      end do
-      end if
+c                                 degenerate bulk check
+c                                 in earlier versions.
 
-      mindif = 0d0
       idif = 0
 c                                 check if duplicate
       do i = jpoint + 1, jphct
@@ -439,9 +437,69 @@ c                                 check if duplicate
 
             diff = 0d0
 
-            do j = 1, ntot
-               diff = diff + dabs(pa(j) - zco(icoz(i)+j))
-            end do
+c           if (.not.lorder(rids)) then
+
+               do j = 1, ntot
+                  diff = diff + dabs(pa(j) - zco(icoz(i)+j))
+               end do
+
+               xdiff = diff
+
+            if (lorder(rids)) then
+c           else 
+c                                 o/d models convert speciation 
+c                                 to bulk composition
+               y(1:ntot) = zco(icoz(i)+1:icoz(i)+ntot)
+               z(1:ntot) = p0a(1:ntot)
+
+               do k = 1, nord(rids)
+                  do l = 1, nrct(k,rids)
+                     j = ideps(l,k,rids)
+                     z(j) = z(j) - dydy(j,k,rids) * z(lstot(rids)+k)
+                     y(j) = y(j) - dydy(j,k,rids) * y(lstot(rids)+k)
+                  end do
+               end do
+
+               do j = 1, lstot(rids)
+                  if (dabs(pp(j)-z(j)).gt.zero/1d4) then 
+                     write (*,*) 'oink'
+                  end if
+               end do
+
+               if (.not.equimo(rids)) then
+c                                 renormalize
+                  do j = 1, lstot(rids)
+                     diff = diff + y(j)
+                     psum = psum + pp(j)
+                  end do
+
+                  do j = 1, lstot(rids)
+                     y(j) = y(j)/diff
+                  end do
+
+                  diff = 0d0
+
+               else 
+
+                  psum = 1d0
+
+               end if
+c                                 compare
+               do j = 1, lstot(rids)
+                  diff = diff + dabs(pp(j)/psum - y(j))
+               end do
+
+c              if (dabs(diff-xdiff).gt.1e-5) then
+c                 write (*,*) 'savrpc',fname(rids),diff,xdiff,i
+c              end if
+
+               if (diff.lt.tol.and.xdiff.gt.tol) then 
+                  write (*,*) fname(rids),' diff svrpc ',diff
+               else if (diff.gt.tol.and.xdiff.lt.tol) then 
+c                 write (*,*) fname(rids),' xdiff svrpc ',xdiff
+               end if
+
+            end if
 
             if (diff.eq.0d0) then 
 c                                 swap if lower g
