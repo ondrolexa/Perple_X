@@ -1151,6 +1151,7 @@ c                                 for pp comparison only
                if (lorder(ids)) call makepp (ids)
 
                call savdyn (zero,ids)
+
             end if
 c                                conditional for zero-mode stable phases
             if (bnew(i).gt.0d0) then 

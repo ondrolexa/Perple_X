@@ -22136,7 +22136,6 @@ c                                 George's Hillert & Jarl magnetic transition mo
 
       end
 
-
       subroutine savdyn (tol,ids)
 c----------------------------------------------------------------------
 c subroutine to save exploratory stage dynamic compositions for use
@@ -22147,7 +22146,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical rplica, isend, t1, t2, xplica
+      logical rplica, isend
 
       integer ids, j
 
@@ -22161,42 +22160,14 @@ c----------------------------------------------------------------------
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
 
-      external rplica, isend, xplica
+      external rplica, isend
 c----------------------------------------------------------------------
       if (refine.and..not.lopt(55)) return
 c                                 currently all calls to savdyn set tol
 c                                 > 0, and rplica hardwires a tolerance
 c                                 = nopt(35)
-      if (tol.gt.0d0) then
-
-            t1 = rplica(ids)
-            t2 = xplica(ids)
-         if (t1.ne.t2) then 
-            write (*,*) 'GRTOINK'
-            t1 = rplica(ids)
-            t2 = xplica(ids)
-
-
-         end if
-
-         if (rplica(ids)) return
-      end if
-
-      if (idegen.gt.1000) then
-
-         call getscp (rcp,rsum,ids,1)
-
-         do j = 1, idegen
-            if (rcp(idg(j)).gt.0d0.and..not.dispro(idg(j))) then
-               if (rcp(idg(j)).lt.1d-8) then
-                  write (*,*) 'wonka ',rcp(idg(j))
-               end if
-               return
-            end if
-         end do
-
-      end if
-
+      if (tol.gt.0d0.and.rplica(ids)) return
+c                                 deleted degneracy test.
       if (isend(ids)) return
 
       tpct = tpct + 1
@@ -22209,7 +22180,7 @@ c                                 save the composition
       txco(tcct+1:tcct+nstot(ids)) = pa(1:nstot(ids))
 
       if (lorder(ids))
-     *       txco(tcct+nstot(ids)+1:tcct+nstot(ids)+lstot(ids)) = 
+     *       txco(tcct+nstot(ids)+1:tcct+tstot(ids)) = 
      *       pp(1:lstot(ids))
 c                                 save the starting position - 1
       itxp(tpct) = tcct
@@ -22322,121 +22293,5 @@ c                                the normalization here
       end do
 
       rplica = .false.
-
-      end
-
-
-      logical function xplica (id)
-c-----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer id, i, j, k, l, tmp
-
-      double precision diff, xdiff, psum, zsum
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      character fname*10, aname*6, lname*22
-      common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-c-----------------------------------------------------------------------
-c                                 simple model
-         do i = stpct, tpct
-
-            if (dkp(i).ne.id) cycle
-
-            diff = 0d0
-            tmp = itxp(i)
-
-c           if (.not.lorder(id)) then
-
-               do j = 1, nstot(id)
-                  diff = diff + dabs(pa(j) - txco(tmp+j))
-               end do
-
-            xdiff = diff
-
-            if (lorder(id)) then
-
-               y(1:nstot(id)) = txco(tmp+1:tmp+nstot(id))
-               z(1:nstot(id)) = pa(1:nstot(id))
-
-               do k = 1, nord(id)
-                  do l = 1, nrct(k,id)
-                     j = ideps(l,k,id)
-                     z(j) = z(j) - dydy(j,k,id) * z(lstot(id)+k)
-                     y(j) = y(j) - dydy(j,k,id) * y(lstot(id)+k)
-                  end do
-               end do
-
-               if (.not.equimo(id)) then
-
-                  diff = 0d0
-                  psum = 0d0
-                  zsum = 0d0
-c                                 renormalize
-                  do j = 1, lstot(id)
-                     diff = diff + y(j)
-                     psum = psum + pp(j)
-                     zsum = zsum + z(j)
-                  end do
-
-                  do j = 1, lstot(id)
-                     y(j) = y(j)/diff
-                  end do
-
-                  diff = 0d0
-
-               else 
-
-                 psum = 1d0
-                 zsum = 1d0
-
-               end if
-
-               do j = 1, lstot(id)
-                  if (dabs(pp(j)/psum-z(j)/zsum).gt.zero/1d4) then 
-                     write (*,*) 'oink',pp(j),z(j),equimo(id)
-                     write (*,*) pp(j)/psum - z(j)/zsum, psum, zsum
-                  end if
-               end do
-
-               diff = 0d0
-c                                 compare
-               do j = 1, lstot(id)
-                  diff = diff + dabs(pp(j)/psum - y(j))
-               end do
-
-               if (dabs(diff-xdiff).gt.1e-5) then
-c                 write (*,*) fname(id),diff,xdiff,i
-               end if
-
-               if (diff.lt.nopt(35).and.xdiff.gt.nopt(35)) then 
-c                 write (*,*) fname(id),' diff squeaks ',diff
-               else if (diff.gt.nopt(35).and.xdiff.lt.nopt(35)) then 
-                  write (*,*) fname(id),' xdiff squeaks ',xdiff
-               end if
-
-            end if
-
-c           diff = xdiff
-
-            if (diff.lt.nopt(35)) then
-               xplica = .true.
-               return
-            end if
-
-         end do
-
-      xplica = .false.
 
       end
