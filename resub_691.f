@@ -1148,7 +1148,7 @@ c           if (.not.lopt(58).and.(.not.refine.or.lopt(55))) then
 c                                 load into pa and save for refinement
                pa(1:nstot(ids)) = pa3(jd,1:nstot(ids))
 c                                 for pp comparison only
-               call makepp (ids)
+               if (lorder(ids)) call makepp (ids)
 
                call savdyn (zero,ids)
             end if

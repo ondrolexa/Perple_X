@@ -390,9 +390,175 @@ c-----------------------------------------------------------------------
 
       logical swap, swapit
 
-      integer i, j, k, l, ntot, idif
+      integer i, j, ntot, ltot, ttot, idif, ipt, jdif, match
 
-      double precision g, diff, tol, xdiff, psum
+      double precision g, diff, tol, psum, xdi
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
+      integer jphct
+      double precision g2, cp2, c2tot
+      common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),jphct
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision wmach
+      common/ cstmch /wmach(10)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c-----------------------------------------------------------------------
+      ntot = nstot(rids)
+      ltot = lstot(rids)
+      ttot = tstot(rids)
+c                                o/d models use the pp array, which is 
+c                                not normalized for non-equimolar o/d, do
+c                                the normalization here
+      if (.not.equimo(rids)) then
+
+         psum = 0d0
+
+         do j = 1, lstot(rids)
+            psum = psum + pp(j)
+         end do
+
+         do j = 1, lstot(rids)
+            pp(j) = pp(j)/psum
+         end do
+
+      end if
+
+      if (tol.eq.0d0) then
+         swapit = .true.
+      else
+         swapit = .false.
+      end if
+
+      swap = .false.
+
+      call xavrpc (g,tol,jdif,swap,match,xdi)
+
+      if (match.ne.0.and.match.ne.jphct+1) then 
+c        write (*,*) 'match ',match
+      end if
+c                                 degenerate bulk check is in earlier 
+c                                 versions, probably was never done right
+      idif = 0
+c                                 check if duplicate
+      do i = jpoint + 1, jphct
+
+         if (jkp(i).eq.rids) then
+
+            diff = 0d0
+
+            if (.not.lorder(rids)) then
+
+               do j = 1, ntot
+                  diff = diff + dabs(pa(j) - zco(icoz(i)+j))
+               end do
+
+            else 
+c                                 o/d models convert speciation 
+c                                 to bulk composition
+               ipt = icoz(i) + ntot
+
+               do j = 1, ltot
+                  diff = diff + dabs(pp(j) - zco(ipt+j))
+               end do
+
+            end if
+
+            if (i.eq.match.and.dabs(diff-xdi).gt.zero/1d4) then 
+               write (*,*) 'oink',diff-xdi,diff,xdi
+            end if 
+
+            if (diff.eq.0d0) then 
+c                                 swap if lower g
+               swap = .true.
+
+               idif = i
+
+              if (g2(i).gt.g/rsum) then
+                  exit
+               else
+                  return
+               end if
+
+            end if
+
+            if (.not.swapit) then
+
+               if (diff.lt.tol) return
+
+            else
+c                                 swap non-identical comps
+               if (diff.lt.zero) return
+
+            end if
+
+         end if
+
+      end do
+
+      call xavrpc (g,tol,jdif,swap,match,xdi)
+
+      if (jdif.ne.idif) then
+         write (*,*) jphct, jdif, idif
+         call xavrpc (g,tol,jdif,swap,match,xdi)
+      end if 
+
+      if (.not.swap) then
+c                                 increment counters
+         jphct = jphct + 1
+         icoz(jphct) = zcoct
+         idif = jphct
+         zcoct = zcoct + ttot
+      end if
+c                                 lagged speciation quack flag
+      quack(idif) = rkwak
+c                                 normalize and save the composition
+      cp2(1:icomp,idif) = rcp(1:icomp)/rsum
+c                                 the solution model pointer
+      jkp(idif) = rids
+c                                 the refinement point pointer
+      hkp(idif) = rkds
+c                                 save the normalized g
+      g2(idif) = g/rsum
+c                                 sum scp(1:icp)
+      if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then
+c                                 this will renormalize the bulk to a 
+c                                 mole of solvent, it's no longer clear to 
+c                                 me why this is desireable.
+         c2tot(idif) = rsum/rsmo
+      else
+         c2tot(idif) = rsum
+      end if
+
+      quack(idif) = rkwak
+c                                 save the endmember fractions
+      zco(icoz(idif)+1:icoz(idif)+ntot) = pa(1:ntot)
+c                                 and normalized bulk fractions if o/d
+      if (lorder(rids)) 
+     *   zco(icoz(idif)+ntot+1:icoz(idif)+ttot) = pp(1:ltot)
+
+      end 
+
+      subroutine xavrpc (g,tol,idif,swap,match,diff)
+c-----------------------------------------------------------------------
+c save a dynamic composition/g for the lp solver
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical swap, swapit
+
+      integer i, j, k, l, ntot, idif, match
+
+      double precision g, diff, tol, xdiff, psum, zsum
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -428,7 +594,6 @@ c-----------------------------------------------------------------------
       swap = .false.
 c                                 degenerate bulk check
 c                                 in earlier versions.
-
       idif = 0
 c                                 check if duplicate
       do i = jpoint + 1, jphct
@@ -437,7 +602,7 @@ c                                 check if duplicate
 
             diff = 0d0
 
-c           if (.not.lorder(rids)) then
+           if (.not.lorder(rids)) then
 
                do j = 1, ntot
                   diff = diff + dabs(pa(j) - zco(icoz(i)+j))
@@ -445,8 +610,7 @@ c           if (.not.lorder(rids)) then
 
                xdiff = diff
 
-            if (lorder(rids)) then
-c           else 
+            else 
 c                                 o/d models convert speciation 
 c                                 to bulk composition
                y(1:ntot) = zco(icoz(i)+1:icoz(i)+ntot)
@@ -460,6 +624,21 @@ c                                 to bulk composition
                   end do
                end do
 
+               zsum = 0d0
+               do j = 1, lstot(rids)
+                  zsum = zsum + z(j)
+               end do
+
+               do j = 1, lstot(rids)
+                  z(j) = z(j)/zsum
+               end do
+
+               do j = 1, lstot(rids)
+                  if (dabs(pp(j)-z(j)).gt.zero/1d4) then 
+                     write (*,*) 'oink'
+                  end if
+               end do
+
                do j = 1, lstot(rids)
                   if (dabs(pp(j)-z(j)).gt.zero/1d4) then 
                      write (*,*) 'oink'
@@ -467,6 +646,8 @@ c                                 to bulk composition
                end do
 
                if (.not.equimo(rids)) then
+
+                 psum = 0d0
 c                                 renormalize
                   do j = 1, lstot(rids)
                      diff = diff + y(j)
@@ -493,11 +674,11 @@ c              if (dabs(diff-xdiff).gt.1e-5) then
 c                 write (*,*) 'savrpc',fname(rids),diff,xdiff,i
 c              end if
 
-               if (diff.lt.tol.and.xdiff.gt.tol) then 
-                  write (*,*) fname(rids),' diff svrpc ',diff
-               else if (diff.gt.tol.and.xdiff.lt.tol) then 
+c              if (diff.lt.tol.and.xdiff.gt.tol) then 
+c                 write (*,*) fname(rids),' diff svrpc ',diff
+c              else if (diff.gt.tol.and.xdiff.lt.tol) then 
 c                 write (*,*) fname(rids),' xdiff svrpc ',xdiff
-               end if
+c              end if
 
             end if
 
@@ -510,6 +691,8 @@ c                                 swap if lower g
               if (g2(i).gt.g/rsum) then
                   exit
                else
+                  match = i
+c                 write (*,*) 'oink1'
                   return
                end if
 
@@ -517,11 +700,19 @@ c                                 swap if lower g
 
             if (.not.swapit) then
 
-               if (diff.lt.tol) return
+               if (diff.lt.tol) then 
+                  match = i
+c                 write (*,*) 'oink2'
+                  return
+               end if 
 
             else
 c                                 swap non-identical comps
-               if (diff.lt.zero) return
+               if (diff.lt.zero) then 
+                  match = i
+c                 write (*,*) 'oink3'
+                   return
+               end if
 
             end if
 
@@ -531,35 +722,9 @@ c                                 swap non-identical comps
 
       if (.not.swap) then
 c                                 increment counters
-         jphct = jphct + 1
-         icoz(jphct) = zcoct
-         zcoct = zcoct + ntot
-         idif = jphct
+                  match = i
 
       end if
-c                                 lagged speciation quack flag
-      quack(idif) = rkwak
-c                                 normalize and save the composition
-      cp2(1:icomp,idif) = rcp(1:icomp)/rsum
-c                                 the solution model pointer
-      jkp(idif) = rids
-c                                 the refinement point pointer
-      hkp(idif) = rkds
-c                                 save the normalized g
-      g2(idif) = g/rsum
-c                                 sum scp(1:icp)
-      if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then
-c                                 this will renormalize the bulk to a 
-c                                 mole of solvent, it's no longer clear to 
-c                                 me why this is desireable.
-         c2tot(idif) = rsum/rsmo
-      else
-         c2tot(idif) = rsum
-      end if
-
-      quack(idif) = rkwak
-c                                 save the endmember fractions
-      zco(icoz(idif)+1:icoz(idif)+ntot) = pa(1:ntot)
 
       end 
 
