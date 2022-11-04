@@ -22264,25 +22264,21 @@ c                                the normalization here
 
          if (dkp(i).ne.id) cycle
 
-         diff = 0d0
-
          if (.not.lorder(id)) then
 
             tmp = itxp(i)
-
-            do j = 1, nstot(id)
-               diff = diff + dabs(pa(j) - txco(tmp+j))
-            end do
 
          else
 
             tmp = itxp(i) + nstot(id)
 
-            do j = 1, lstot(id)
-               diff = diff + dabs(pp(j) - txco(tmp+j))
-            end do
-
          end if
+
+         diff = 0d0
+
+         do j = 1, lstot(id)
+            diff = diff + dabs(pp(j) - txco(tmp+j))
+         end do
 
          if (diff.lt.nopt(35)) then
             rplica = .true.

@@ -446,24 +446,21 @@ c                                 check if duplicate
 
          if (jkp(i).eq.rids) then
 
-            diff = 0d0
-
             if (.not.lorder(rids)) then
 
-               do j = 1, ntot
-                  diff = diff + dabs(pa(j) - zco(icoz(i)+j))
-               end do
+               ipt = icoz(i)
 
             else 
-c                                 o/d models convert speciation 
-c                                 to bulk composition
+
                ipt = icoz(i) + ntot
 
-               do j = 1, ltot
-                  diff = diff + dabs(pp(j) - zco(ipt+j))
-               end do
-
             end if
+
+            diff = 0d0
+
+            do j = 1, ltot
+               diff = diff + dabs(pp(j) - zco(ipt+j))
+            end do
 
             if (diff.eq.0d0) then 
 c                                 swap if lower g
