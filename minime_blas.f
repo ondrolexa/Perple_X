@@ -390,7 +390,7 @@ c-----------------------------------------------------------------------
 
       logical swap, swapit
 
-      integer i, j, ntot, ltot, ttot, idif, ipt
+      integer i, j, ntot, ltot, ttot, idif, ipt, ist
 
       double precision g, diff, tol, psum
 
@@ -421,11 +421,11 @@ c                                the normalization here
 
          psum = 0d0
 
-         do j = 1, lstot(rids)
+         do j = 1, ltot
             psum = psum + pp(j)
          end do
 
-         do j = 1, lstot(rids)
+         do j = 1, ltot
             pp(j) = pp(j)/psum
          end do
 
@@ -446,20 +446,24 @@ c                                 check if duplicate
 
          if (jkp(i).eq.rids) then
 
-            if (.not.lorder(rids)) then
-
-               ipt = icoz(i)
-
+            if (lorder(rids)) then
+               ist = icoz(i) + ntot
             else 
-
-               ipt = icoz(i) + ntot
-
+               ist = icoz(i)
             end if
 
             diff = 0d0
 
             do j = 1, ltot
-               diff = diff + dabs(pp(j) - zco(ipt+j))
+
+               ipt = ist + j
+
+               if (lorder(rids)) then
+                  diff = diff + dabs(pp(j) - zco(ipt))
+               else 
+                  diff = diff + dabs(pa(j) - zco(ipt))
+               end if
+
             end do
 
             if (diff.eq.0d0) then 

@@ -22226,7 +22226,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id, i, j, tmp
+      integer id, i, j, tmp, ltot, ntot
 
       double precision diff, psum
 
@@ -22243,6 +22243,9 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
+       ltot = lstot(id)
+       ntot = nstot(id)
+       if (.not.lorder(id).and.ntot.ne.ltot) call errdbg ('oink')
 c                                o/d models use the pp array, which is 
 c                                not normalized for non-equimolar o/d, do
 c                                the normalization here
@@ -22250,11 +22253,11 @@ c                                the normalization here
 
          psum = 0d0
 
-         do j = 1, lstot(id)
+         do j = 1, ltot
             psum = psum + pp(j)
          end do
 
-         do j = 1, lstot(id)
+         do j = 1, ltot
             pp(j) = pp(j)/psum
          end do
 
@@ -22264,21 +22267,25 @@ c                                the normalization here
 
          if (dkp(i).ne.id) cycle
 
-         if (.not.lorder(id)) then
+         diff = 0d0
 
-            tmp = itxp(i)
+         if (lorder(id)) then
+
+            tmp = itxp(i) + ntot
+
+            do j = 1, ltot
+               diff = diff + dabs(pp(j) - txco(tmp+j))
+            end do
 
          else
 
-            tmp = itxp(i) + nstot(id)
+            tmp = itxp(i)
+
+            do j = 1, ltot
+               diff = diff + dabs(pa(j) - txco(tmp+j))
+            end do
 
          end if
-
-         diff = 0d0
-
-         do j = 1, lstot(id)
-            diff = diff + dabs(pp(j) - txco(tmp+j))
-         end do
 
          if (diff.lt.nopt(35)) then
             rplica = .true.
