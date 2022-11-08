@@ -593,10 +593,10 @@ c                                 one solvent species this is
 c                                 all that needs to be done.
          if (iter.eq.1) then
             gg = gsol1 (rids,.true.)
-            call savrpc (gg,nopt(37),idif,swap)
+            call savrpc (gg,nopt(37),swap)
          else 
             gg = gsol1 (rids,.false.)
-            call savrpc (gg,nopt(37),idif,swap)
+            call savrpc (gg,nopt(37),swap)
          end if
 c                                 save the location so that the 
 c                                 amount can be initialized

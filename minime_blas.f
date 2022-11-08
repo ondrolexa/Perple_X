@@ -22,7 +22,7 @@ c-----------------------------------------------------------------------
 
       logical tic, zbad, swap, quit, xref
 
-      integer i, j, nvar, iter, iwork(m22), itic, idif,
+      integer i, j, nvar, iter, iwork(m22), itic, 
      *        ivars(13), istate(m21), idead, nclin, ntot
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
@@ -209,9 +209,9 @@ c                                 if logical arg = T use implicit ordering
          return
       end if
 c                                 save the final QP result
-      call savrpc (gfinal,0d0,idif,swap)
+      call savrpc (gfinal,0d0,swap)
 c---------------
-      if (lopt(54).and..not.swap) then
+      if (.not.lopt(54).and..not.swap) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
 c                                 in case on 1st iteration set refine to 
@@ -253,7 +253,7 @@ c                                 if savrpc is going to use the pp array, it
 c                                 must be reset here for non-equimolar o/d?
 c           if (.not.equimo(rids)) call makepp (rids)
 c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,idif,swap)
+            call savrpc (gfinal,nopt(48)/2d0,swap)
 
          end do
 c                                 reset refine
@@ -275,7 +275,7 @@ c-----------------------------------------------------------------------
 
       logical zbad, saved
 
-      integer i, j, nvar, mode, ivars(*), istart, idif
+      integer i, j, nvar, mode, ivars(*), istart
 
       double precision ppp(*), gval, dgdp(*), rvars(*),
      *                 gsol1, g, sum1, zsite(m10,m11)
@@ -372,7 +372,7 @@ c                                 if logical arg = T use implicit ordering
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
-         call savrpc (g,nopt(37),idif,saved)
+         call savrpc (g,nopt(37),saved)
 
       end if
 
@@ -380,7 +380,7 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,idif,swap)
+      subroutine savrpc (g,tol,swap)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -388,11 +388,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical swap, swapit
+      logical swap
 
-      integer i, j, ntot, ltot, ttot, idif, ipt, ist
+      integer i, j, ntot, ltot, ttot, ipt, ist
 
-      double precision g, diff, tol, psum
+      double precision g, diff, tol, psum, diffmx, dtol
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -432,18 +432,17 @@ c                                the normalization here
       end if
 
       if (tol.eq.0d0) then
-         swapit = .true.
+         dtol = zero
       else
-         swapit = .false.
+         dtol = tol/1d2
       end if
 
       swap = .false.
 c                                 degenerate bulk check is in earlier 
 c                                 versions, probably was never done right
-      idif = 0
-c                                 check if duplicate
-      do i = jpoint + 1, jphct
 
+      do i = jpoint + 1, jphct
+c                                 check if duplicate
          if (jkp(i).eq.rids) then
 
             if (lorder(rids)) then
@@ -452,81 +451,72 @@ c                                 check if duplicate
                ist = icoz(i)
             end if
 
-            diff = 0d0
+            diffmx = 0d0
 
             do j = 1, ltot
 
                ipt = ist + j
 
                if (lorder(rids)) then
-                  diff = diff + dabs(pp(j) - zco(ipt))
+                  diff = dabs(pp(j) - zco(ipt))
                else 
-                  diff = diff + dabs(pa(j) - zco(ipt))
+                  diff = dabs(pa(j) - zco(ipt))
                end if
+
+               if (diff.gt.diffmx) diffmx = diff
+               if (diff.gt.dtol) exit
 
             end do
 
-            if (diff.eq.0d0) then 
-c                                 swap if lower g
+            if (diffmx.lt.zero) then
+c                                 true zero difference, set swap to 
+c                                 avoid scatter point replication.
                swap = .true.
+c                                 if perfect replica swap lower g's
+               if (diffmx.eq.0d0.and.g2(i).gt.g/rsum) g2(i) = g/rsum
 
-               idif = i
+               return
 
-              if (g2(i).gt.g/rsum) then
-                  exit
-               else
-                  return
-               end if
+            else if (diffmx.lt.dtol) then 
 
-            end if
-
-            if (.not.swapit) then
-
-               if (diff.lt.tol) return
-
-            else
-c                                 swap non-identical comps
-               if (diff.lt.zero) return
+               return
 
             end if
 
          end if
 
       end do
-
-      if (.not.swap) then
 c                                 increment counters
-         jphct = jphct + 1
-         icoz(jphct) = zcoct
-         idif = jphct
-         zcoct = zcoct + ttot
-      end if
+      jphct = jphct + 1
+      icoz(jphct) = zcoct
+      zcoct = zcoct + ttot
+
 c                                 lagged speciation quack flag
-      quack(idif) = rkwak
+      quack(jphct) = rkwak
 c                                 normalize and save the composition
-      cp2(1:icomp,idif) = rcp(1:icomp)/rsum
+      cp2(1:icomp,jphct) = rcp(1:icomp)/rsum
 c                                 the solution model pointer
-      jkp(idif) = rids
+      jkp(jphct) = rids
 c                                 the refinement point pointer
-      hkp(idif) = rkds
+      hkp(jphct) = rkds
 c                                 save the normalized g
-      g2(idif) = g/rsum
+      g2(jphct) = g/rsum
 c                                 sum scp(1:icp)
       if (ksmod(rids).eq.39.and.lopt(32).and..not.rkwak) then
 c                                 this will renormalize the bulk to a 
 c                                 mole of solvent, it's no longer clear to 
 c                                 me why this is desireable.
-         c2tot(idif) = rsum/rsmo
+         c2tot(jphct) = rsum/rsmo
       else
-         c2tot(idif) = rsum
+         c2tot(jphct) = rsum
       end if
 
-      quack(idif) = rkwak
+      quack(jphct) = rkwak
 c                                 save the endmember fractions
-      zco(icoz(idif)+1:icoz(idif)+ntot) = pa(1:ntot)
+      zco(icoz(jphct)+1:icoz(jphct)+ntot) = pa(1:ntot)
 c                                 and normalized bulk fractions if o/d
       if (lorder(rids)) 
-     *   zco(icoz(idif)+ntot+1:icoz(idif)+ttot) = pp(1:ltot)
+     *   zco(icoz(jphct)+ntot+1:icoz(jphct)+ttot) = pp(1:ltot)
 
       end 
 

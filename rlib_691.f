@@ -22226,9 +22226,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical ok
+
       integer id, i, j, tmp, ltot, ntot
 
-      double precision diff, psum
+      double precision tol, psum
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -22245,6 +22247,9 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
        ltot = lstot(id)
        ntot = nstot(id)
+
+       tol = nopt(35)/1000d0
+
        if (.not.lorder(id).and.ntot.ne.ltot) call errdbg ('oink')
 c                                o/d models use the pp array, which is 
 c                                not normalized for non-equimolar o/d, do
@@ -22267,14 +22272,17 @@ c                                the normalization here
 
          if (dkp(i).ne.id) cycle
 
-         diff = 0d0
+         ok = .false.
 
          if (lorder(id)) then
 
             tmp = itxp(i) + ntot
 
             do j = 1, ltot
-               diff = diff + dabs(pp(j) - txco(tmp+j))
+               if (dabs(pp(j) - txco(tmp+j)).gt.tol) then
+                  ok = .true.
+                  exit
+               end if
             end do
 
          else
@@ -22282,15 +22290,18 @@ c                                the normalization here
             tmp = itxp(i)
 
             do j = 1, ltot
-               diff = diff + dabs(pa(j) - txco(tmp+j))
+               if (dabs(pa(j) - txco(tmp+j)).gt.tol) then
+                  ok = .true.
+                  exit
+               end if
             end do
 
          end if
 
-         if (diff.lt.nopt(35)) then
-            rplica = .true.
-            return
-         end if
+         if (ok) cycle
+
+         rplica = .true.
+         return
 
       end do
 
