@@ -20,9 +20,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical tic, zbad, swap, quit, xref
+      logical tic, zbad, swap, xref
 
-      integer i, j, nvar, iter, iwork(m22), itic, 
+      integer i, nvar, iter, iwork(m22), itic, idif,
      *        ivars(13), istate(m21), idead, nclin, ntot
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
@@ -209,9 +209,9 @@ c                                 if logical arg = T use implicit ordering
          return
       end if
 c                                 save the final QP result
-      call savrpc (gfinal,0d0,swap)
+      call savrpc (gfinal,0d0,swap,idif)
 c---------------
-      if (.not.lopt(54).and..not.swap) then
+      if (lopt(54).and..not.swap) then
 c                                 scatter in only for nstot-1 gradients
          pinc = 1d0 + nopt(48)
 c                                 in case on 1st iteration set refine to 
@@ -229,31 +229,11 @@ c                                 exit
             if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) 
      *                                                            cycle 
             call makepp (rids)
-c                                 if the system is chemically degenerate do
-c                                 not allow non-degenerate scatter points
-            if (idegen.gt.1000) then
-
-               call getscp (rcp,rsum,rids,1)
-
-               quit = .false.
-
-               do j = 1, idegen
-                  if (rcp(idg(j)).ne.0d0) then
-                     quit = .true.
-                     exit
-                  end if
-               end do
-
-               if (quit) cycle
-
-            end if
+c                                 degeneracy test removed
 c                                 if logical arg = T use implicit ordering
             gfinal = gsol1 (rids,.true.)
-c                                 if savrpc is going to use the pp array, it
-c                                 must be reset here for non-equimolar o/d?
-c           if (.not.equimo(rids)) call makepp (rids)
-c                                 increment the counter
-            call savrpc (gfinal,nopt(48)/2d0,swap)
+c                                 save the scatter point
+            call savrpc (gfinal,nopt(37),swap,idif)
 
          end do
 c                                 reset refine
@@ -275,7 +255,7 @@ c-----------------------------------------------------------------------
 
       logical zbad, saved
 
-      integer i, j, nvar, mode, ivars(*), istart
+      integer i, j, nvar, mode, ivars(*), istart, idif
 
       double precision ppp(*), gval, dgdp(*), rvars(*),
      *                 gsol1, g, sum1, zsite(m10,m11)
@@ -372,7 +352,7 @@ c                                 if logical arg = T use implicit ordering
 
          if (zbad(pa,rids,zsite,fname(rids),.false.,fname(rids))) return
 c                                 save the composition
-         call savrpc (g,nopt(37),saved)
+         call savrpc (g,nopt(37),saved,idif)
 
       end if
 
@@ -380,7 +360,7 @@ c                                 save the composition
 
       end
 
-      subroutine savrpc (g,tol,swap)
+      subroutine savrpc (g,tol,swap,idif)
 c-----------------------------------------------------------------------
 c save a dynamic composition/g for the lp solver
 c-----------------------------------------------------------------------
@@ -390,7 +370,7 @@ c-----------------------------------------------------------------------
 
       logical swap
 
-      integer i, j, ntot, ltot, ttot, ipt, ist
+      integer i, j, ntot, ltot, ttot, ipt, ist, idif
 
       double precision g, diff, tol, psum, diffmx, dtol
 
@@ -414,6 +394,8 @@ c-----------------------------------------------------------------------
       ntot = nstot(rids)
       ltot = lstot(rids)
       ttot = tstot(rids)
+
+      idif = 0
 c                                o/d models use the pp array, which is 
 c                                not normalized for non-equimolar o/d, do
 c                                the normalization here
@@ -434,7 +416,7 @@ c                                the normalization here
       if (tol.eq.0d0) then
          dtol = zero
       else
-         dtol = tol/1d2
+         dtol = tol
       end if
 
       swap = .false.
@@ -475,6 +457,8 @@ c                                 avoid scatter point replication.
 c                                 if perfect replica swap lower g's
                if (diffmx.eq.0d0.and.g2(i).gt.g/rsum) g2(i) = g/rsum
 
+               idif = i
+
                return
 
             else if (diffmx.lt.dtol) then 
@@ -488,6 +472,7 @@ c                                 if perfect replica swap lower g's
       end do
 c                                 increment counters
       jphct = jphct + 1
+      idif = jphct
       icoz(jphct) = zcoct
       zcoct = zcoct + ttot
 

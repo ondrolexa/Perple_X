@@ -593,11 +593,11 @@ c                                 one solvent species this is
 c                                 all that needs to be done.
          if (iter.eq.1) then
             gg = gsol1 (rids,.true.)
-            call savrpc (gg,nopt(37),swap)
          else 
             gg = gsol1 (rids,.false.)
-            call savrpc (gg,nopt(37),swap)
          end if
+
+         call savrpc (gg,nopt(37),swap,idif)
 c                                 save the location so that the 
 c                                 amount can be initialized
          lsdv(kd) = idif
@@ -707,7 +707,7 @@ c                                 it's a solution:
 c                                 only for pp comparison
             if (lorder(ids)) call makepp (ids)
 
-            call savdyn (nopt(35),ids)
+            call savdyn (ids)
 
          end if
 
@@ -1134,7 +1134,7 @@ c                                 load into pa and save for refinement
 c                                 for pp comparison only
                if (lorder(ids)) call makepp (ids)
 
-               call savdyn (zero,ids)
+               call savdyn (ids)
 
             end if
 c                                conditional for zero-mode stable phases

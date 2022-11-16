@@ -10395,7 +10395,7 @@ c                                 the list of dynamic compositions
                   ids = ikp(i)
                   call setxyp (ids,i,bad)
                   if (bad) cycle
-                  call savdyn (nopt(35),ids)
+                  call savdyn (ids)
                end if
 
             end do
@@ -10433,9 +10433,8 @@ c                                 to the future static array:
                      pa(1:ntot) = txco(itxp(tmp)+1:itxp(tmp)+ntot)
 c                                 only for pp comparison
                      if (lorder(i)) call makepp (i)
-c                                 negative tolerance means these
-c                                 will be saved no matter what.
-                     call savdyn (nopt(35),i)
+
+                     call savdyn (i)
 
                      zcoct = zcoct + ttot
                      if (tcct+ttot.gt.m25) call errdbg ('increase m25')
@@ -22135,7 +22134,7 @@ c                                 George's Hillert & Jarl magnetic transition mo
 
       end
 
-      subroutine savdyn (tol,ids)
+      subroutine savdyn (ids)
 c----------------------------------------------------------------------
 c subroutine to save exploratory stage dynamic compositions for use
 c as static compositions during auto-refine, pa loaded by sollim
@@ -22149,8 +22148,6 @@ c----------------------------------------------------------------------
 
       integer ids
 
-      double precision tol
-
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
@@ -22162,11 +22159,10 @@ c----------------------------------------------------------------------
       external rplica, isend
 c----------------------------------------------------------------------
       if (refine.and..not.lopt(55)) return
-c                                 currently all calls to savdyn set tol
-c                                 > 0, and rplica hardwires a tolerance
-c                                 = nopt(35)
-      if (tol.gt.0d0.and.rplica(ids)) return
-c                                 deleted degneracy test.
+c                                 currently all calls to savdyn make replicate 
+c                                 test with hardwired tolerance nopt(35)
+      if (rplica(ids)) return
+c                                 deleted degeneracy test.
       if (isend(ids)) return
 
       tpct = tpct + 1
@@ -22248,7 +22244,7 @@ c-----------------------------------------------------------------------
        ltot = lstot(id)
        ntot = nstot(id)
 
-       tol = nopt(35)/1000d0
+       tol = nopt(35)
 
        if (.not.lorder(id).and.ntot.ne.ltot) call errdbg ('oink')
 c                                o/d models use the pp array, which is 

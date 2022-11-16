@@ -95,6 +95,7 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 parameters set by arguments
 c                                 istart - 0 - cold start, 1 - warm start, 2 - hot (no benefit)
+c     istart = 0
       lcrash = istart
 c                                 tol - feasibility tolerance
       tolfea = tol
@@ -205,9 +206,14 @@ c     define the initial feasibility tolerances in clamda.
      *             w(lfeatu),x)
 
       if (cold .or. warm) then
+c DEBUG DEBUG 
+c                                 initialize x, this may not
+c                                 be essential, but it is necessary
+c                                 to avoid sNaN
+         if (cold) x(1:n) = 0d0
 
-c                                 initialize istate, x, obj
-c        if (cold) x(1:n) = 0d0
+c        istate(1:nclin) = 0
+c        clamda(1:nclin) = 0d0
 c                                 cold or warm start. just about 
 c                                 everything must be initialized.
 c        the exception is istate during a warm start.
@@ -250,7 +256,6 @@ c        compute the tq factorization of the working set matrix.
 
 c        arrays  iw  and  w  have been defined in a previous run.
 c        the first three elements of  iw  are  unitq,  nfree and nactiv.
-
          unitq = iw(1).eq.1
          nfree = iw(2)
          nactiv = iw(3)
@@ -481,7 +486,9 @@ c                                 0.05-.4 seem best
 c                                 fdint, finite difference interval, forward.
       fdint = user(6)
 c                                 cdint, centered finite difference interval
-      cdint = fdint**(0.67d0)
+c     cdint = fdint**(0.67d0)
+c DEBUG DEBUG why two versions? for defaults pretty much identical but the 
+c former makes more sense.
       cdint = epsrf**(0.33d0)
 
       if (fdint.gt.0d0) then
@@ -820,9 +827,9 @@ c                            (0 )
      *                     gq(nrz),1)
             else
                call dcopy (nrz,hz,1,work,1)
-               call dtrmv ('u','t','n',nrz,r,ldr,work,1)
+               call dtrmv ('u','t','n',nrz,r,ldr,work)
                if (nrz.lt.n) call dgemv ('t',nrz,n-nrz,1d0,r(1,nrz+1),
-     *                                  ldr,hz,1,0d0,work(nrz+1),1)
+     *                                  ldr,hz,0d0,work(nrz+1))
                call daxpy (n,alfa,work,1,gq,1)
 
             end if
@@ -1424,7 +1431,7 @@ c----------------------------------------------------------------------
 c     swap the elements of the i-th and j-th columns of r on, or above,
 c     the main diagonal.
 
-      call dswap(min(i,nrank),r(1,i),1,r(1,j),1)
+      call dswap(min(i,nrank),r(1,i),r(1,j),1)
       lenj = min(j,nrank)
 
       if (lenj.gt.i) then
@@ -1506,7 +1513,7 @@ c           columns nfree+1 and ir of r must be swapped.
                kx(nfree) = jdel
                if (nrank.gt.0) call nggnbu(n,nres,nrank,ldr,nfree,ir,r,
      *                                     res,c,s)
-               call dswap(ngq,gq(nfree,1),n,gq(ir,1),n)
+               call dswap(ngq,gq(nfree,1),gq(ir,1),n)
             end if
 
             if (.not. unitq) then
@@ -1613,7 +1620,7 @@ c              apply the row rotations to the remaining rows of r.
 
       if (nz.gt.nrz) then
          if (jdel.gt.0) then
-            jart = nrz1 - 1 + idamax(nz-nrz1+1,gq(nrz1,1),1)
+            jart = nrz1 - 1 + idamax(nz-nrz1+1,gq(nrz1,1))
          else
             jart = -jdel
          end if
@@ -1627,10 +1634,10 @@ c           swap columns nrz1 and jart of r.
                kx(nrz1) = kx(jart)
                kx(jart) = k
             else
-               call dswap(nfree,zy(1,nrz1),1,zy(1,jart),1)
+               call dswap(nfree,zy(1,nrz1),zy(1,jart),1)
             end if
 
-            call dswap(ngq,gq(nrz1,1),n,gq(jart,1),n)
+            call dswap(ngq,gq(nrz1,1),gq(jart,1),n)
             if (nrank.gt.0) call nggnbu(n,nres,nrank,ldr,nrz1,jart,r,
      *                                  res,c,s)
          end if
@@ -1699,7 +1706,7 @@ c
             j = n + k
             bnd = bl(j)
             if (istate(j).eq.2) bnd = bu(j)
-            work(nz+i) = bnd - ddot (n,aqp(k,1),ldaqp,dx,1)
+            work(nz+i) = bnd - ddot (n,aqp(k,1),ldaqp,dx)
    40    continue
 
          if (nactiv.gt.0) call cmtsol (1,ldt,nactiv,t(1,nz+1),
@@ -1707,23 +1714,23 @@ c
          call dcopy (nactiv+nfixed,work(nz+1),1,dx(nz+1),1)
          if (nz.gt.0) call sload (nz,0d0,dx,1)
 
-         gdx = ddot (nactiv+nfixed,gq(nz+1),1,dx(nz+1),1)
+         gdx = ddot (nactiv+nfixed,gq(nz+1),1,dx(nz+1))
 
          if (nz.lt.n) then
-            call dgemv ('n',nz,n-nz,-1d0,r(1,nz+1),ldr,dx(nz+1),1,1d0,
-     *                 rpq,1)
+            call dgemv ('n',nz,n-nz,-1d0,r(1,nz+1),ldr,dx(nz+1),1d0,
+     *                 rpq)
             if (nz.lt.nlnx) then
                nr = ldr
                if (nz+1.eq.n) nr = 1
                call dcopy (nlnx-nz,dx(nz+1),1,rpq(nz+1),1)
                call dscal (nlnx-nz,-1d0,rpq(nz+1),1)
                call dtrmv ('u','n','n',nlnx-nz,r(nz+1,nz+1),nr,
-     *                    rpq(nz+1),1)
+     *                    rpq(nz+1))
                if (nlnx.lt.n) then
                   nr = ldr
                   if (nlnx+1.eq.n) nr = n - nz
                   call dgemv ('n',nlnx-nz,n-nlnx,-1d0,r(nz+1,nlnx+1),nr,
-     *                       dx(nlnx+1),1,1d0,rpq(nz+1),1)
+     *                       dx(nlnx+1),1d0,rpq(nz+1))
                end if
             end if
          end if
@@ -1735,8 +1742,7 @@ c     compute the 2-norm of  dx.
 c     initialize  a*dx.
 
       dxnorm = dnrm2 (n,dx,1)
-      if (ncqp.gt.0) call dgemv ('n',ncqp,n,1d0,aqp,ldaqp,dx,1,0d0,adx,
-     *                          1)
+      if (ncqp.gt.0) call dgemv ('n',ncqp,n,1d0,aqp,ldaqp,dx,0d0,adx)
 c                                 end of npsetx
       end
 
@@ -2885,7 +2891,7 @@ c     constraint gradient.
 
 c        compute  (jacobian)*dx.
 
-         call dgemv ('normal',ncnln,n,1d0,cjacu,ldcju,dx,1,0d0,cjdx,1)
+         call dgemv ('normal',ncnln,n,1d0,cjacu,ldcju,dx,0d0,cjdx)
 
 c        make forward-difference approximation along dx.
 
@@ -2904,7 +2910,7 @@ c        set  err = (c1 - c)/h  - jacobian*dx.  this should be small.
          do 80 i = 1, ncnln
             err(i) = (c1(i)-c(i))/h - cjdx(i)
    80    continue
-         imax = idamax(ncnln,err,1)
+         imax = idamax(ncnln,err)
          emax = abs(err(imax))/(abs(cjdx(imax))+1d0)
 
          if (emax.ge. 0.9d0) inform = 1
@@ -3012,7 +3018,7 @@ c                 exit for this element.
 c           finished with this column.
 
             if (ncolj.gt.0) then
-               imax = idamax(ncnln,err,1)
+               imax = idamax(ncnln,err)
                emax = abs(err(imax))
 
                if (emax.ge.colmax) then
@@ -3081,11 +3087,11 @@ c        of z1.  this can only occur when unitgz is true.
 
          if (nrz.gt.1) then
             call dcopy (nrz-1,r(1,nrz),1,p,1)
-            call dtrsv ('u','n','n',nrz-1,r,ldr,p,1)
+            call dtrsv ('u','n','n',nrz-1,r,ldr,p)
          end if
          p(nrz) = -1d0
 
-         gtp = ddot (nrz,gq,1,p,1)
+         gtp = ddot (nrz,gq,1,p)
          if (gtp.gt.0d0) call dscal (nrz,-1d0,p,1)
 
          if (nrz.le.nrank) then
@@ -3110,7 +3116,7 @@ c        the objective is quadratic in the space spanned by z1.
             else
                call dcopy (nrz,gq,1,hz,1)
                call dscal (nrz,-1d0,hz,1)
-               call dtrsv ('u','t','n',nrz,r,ldr,hz,1)
+               call dtrsv ('u','t','n',nrz,r,ldr,hz)
             end if
          else
             call dcopy (nrz,res,1,hz,1)
@@ -3119,20 +3125,20 @@ c        the objective is quadratic in the space spanned by z1.
 c        solve  rz1*pz1 = hz1.
 
          call dcopy (nrz,hz,1,p,1)
-         call dtrsv ('u','n','n',nrz,r,ldr,p,1)
+         call dtrsv ('u','n','n',nrz,r,ldr,p)
 
       end if
 
 c     compute  p = z1*pz1  and its norm.
 
-      if (linobj) ctp = ddot (nrz,cq,1,p,1)
+      if (linobj) ctp = ddot (nrz,cq,1,p)
       pnorm = dnrm2 (nrz,p,1)
 
       call cmqmul (1,n,nrz,nfree,ldzy,unitq,kx,p,zy,work)
 
 c     compute  ap.
 
-      if (nclin.gt.0) call dgemv ('n',nclin,n,1d0,a,lda,p,1,0d0,ap,1)
+      if (nclin.gt.0) call dgemv ('n',nclin,n,1d0,a,lda,p,0d0,ap)
 
 c                                 end of lsgetp
       end
@@ -3195,7 +3201,7 @@ c----------------------------------------------------------------------
                ctx = x(j)
             else
                k = j - n
-               ctx = ddot (n,a(k,1),lda,x,1)
+               ctx = ddot (n,a(k,1),lda,x)
             end if
             istate(j) = 0
 
@@ -3256,11 +3262,11 @@ c        set nrz so that rz1 is nonsingular.
 
 c           compute gq = - r' * (transformed residual)
 
-            call sscmv (nrank,-1d0,res,1,gq,1)
-            call dtrmv ('u','t','n',nrank,r,ldr,gq,1)
+            call sscmv (nrank,-1d0,res,gq)
+            call dtrmv ('u','t','n',nrank,r,ldr,gq)
             if (nrank.lt.n) call dgemv ('t',nrank,n-nrank,-1d0,
-     *                                 r(1,nrank+1),ldr,res,1,0d0,
-     *                                 gq(nrank+1),1)
+     *                                 r(1,nrank+1),ldr,res,0d0,
+     *                                 gq(nrank+1))
             if (linobj) call daxpy (n,1d0,cq,1,gq,1)
             unitgz = .false.
             rownrm = dnrm2 (n,r(1,1),ldr)
@@ -3340,7 +3346,7 @@ c           violation if the constraint is in the working set.
    20    work(j) = res
    40 continue
 
-      jmax = idamax(n+nclin,work,1)
+      jmax = idamax(n+nclin,work)
       errmax = abs(work(jmax))
 
       cvnorm = dnrm2 (n+nclin,work,1)
@@ -4146,7 +4152,7 @@ c     constraints in the working set, by solving  t'*lamda = y'g.
 
       if (n.gt.nz) call dcopy (n-nz,gq(nz+1),1,rlamda,1)
       if (nactiv.gt.0) call dtrsv ('u','t','n',nactiv,t(1,nz+1),ldt,
-     *                            rlamda,1)
+     *                            rlamda)
 
 c     set elements  nactiv, nactiv+1,... of  rlamda  equal to
 c     the multipliers for the bound constraints.
@@ -4321,7 +4327,7 @@ c     compute the directional derivative.
          end if
    40 continue
 
-      gdx = ddot (n,gradu,1,dx,1)
+      gdx = ddot (n,gradu,1,dx)
 
 c     make forward-difference approximation along  p.
 
@@ -4820,23 +4826,23 @@ c              of  (rz)u = -(v + w),  where  (rz)'w = z'g  and  v  is
 c              vector of first nz elements of  r(pq).
 
                call dcopy (nz,w(lgq),1,dx,1)
-               call dtrsv ('u','t','n',nz,r,ldr,dx,1)
+               call dtrsv ('u','t','n',nz,r,ldr,dx)
 
                call daxpy (nz,1d0,w(lrpq),1,dx,1)
 
-               call dtrsv ('u','n','n',nz,r,ldr,dx,1)
+               call dtrsv ('u','n','n',nz,r,ldr,dx)
                call dscal (nz,-1d0,dx,1)
 
 c              recompute rpq, hpq, gdx and qpcurv.
 
                call dcopy (nlnx,dx,1,w(lrpq),1)
-               call dtrmv ('u','n','n',nlnx,r,ldr,w(lrpq),1)
+               call dtrmv ('u','n','n',nlnx,r,ldr,w(lrpq))
                if (nlnx.lt.n) call dgemv ('n',nlnx,n-nlnx,1d0,
-     *                                   r(1,nlnx+1),ldr,dx(nlnx+1),1,
-     *                                   1d0,w(lrpq),1)
+     *                                   r(1,nlnx+1),ldr,dx(nlnx+1),
+     *                                   1d0,w(lrpq))
 
-               gdx = ddot (n,w(lgq),1,dx,1)
-               qpcurv = ddot (n,w(lrpq),1,w(lrpq),1)
+               gdx = ddot (n,w(lgq),1,dx)
+               qpcurv = ddot (n,w(lrpq),1,w(lrpq))
 
                call cmqmul (3,n,nz,nfree,ldzy,unitq,kx,dx,w(lzy),
      *                     w(lwrk1))
@@ -4844,15 +4850,15 @@ c              recompute rpq, hpq, gdx and qpcurv.
 c              recompute adx and the 2-norm of dx.
 
                dxnorm = dnrm2 (n,dx,1)
-               if (ncqp.gt.0) call dgemv ('n',ncqp,n,1d0,aqp,ldaqp,dx,1,
-     *                                   0d0,adx,1)
+               if (ncqp.gt.0) call dgemv ('n',ncqp,n,1d0,aqp,ldaqp,dx,
+     *                                   0d0,adx)
 
             end if
 
             call dcopy (nlnx,w(lrpq),1,w(lhpq),1)
-            call dtrmv ('u','t','n',nlnx,r,ldr,w(lhpq),1)
+            call dtrmv ('u','t','n',nlnx,r,ldr,w(lhpq))
             if (nlnx.lt.n) call dgemv ('t',nlnx,n-nlnx,1d0,r(1,nlnx+1),
-     *                                ldr,w(lrpq),1,0d0,w(lhpq+nlnx),1)
+     *                                ldr,w(lrpq),0d0,w(lhpq+nlnx))
          end if
 
 c        for given values of the objective function and constraints,
@@ -4963,7 +4969,7 @@ c----------------------------------------------------------------------
                ctx = x(j)
             else
                k = j - n
-               ctx = ddot (n,a(k,1),lda,x,1)
+               ctx = ddot (n,a(k,1),lda,x)
             end if
             istate(j) = 0
 
@@ -5049,7 +5055,7 @@ c           columns  nfree+1  and  ir  of gqm' must be swapped.
             if (nfree.lt.ir) then
                kx(ir) = kx(nfree)
                kx(nfree) = jdel
-               call dswap(ngq,gqm(nfree,1),n,gqm(ir,1),n)
+               call dswap(ngq,gqm(nfree,1),gqm(ir,1),n)
             end if
 
             if (.not. unitq) then
@@ -5137,7 +5143,7 @@ c           separately.
 
       if (nz.gt.nrz) then
          if (jdel.gt.0) then
-            jart = nrz1 - 1 + idamax(nz-nrz1+1,gqm(nrz1,1),1)
+            jart = nrz1 - 1 + idamax(nz-nrz1+1,gqm(nrz1,1))
          else
             jart = -jdel
          end if
@@ -5151,10 +5157,10 @@ c           swap columns  nrz1  and  jart  of  q  and  gqm.
                kx(nrz1) = kx(jart)
                kx(jart) = k
             else
-               call dswap(nfree,q(1,nrz1),1,q(1,jart),1)
+               call dswap(nfree,q(1,nrz1),q(1,jart),1)
             end if
 
-            call dswap(ngq,gqm(nrz1,1),n,gqm(jart,1),n)
+            call dswap(ngq,gqm(nrz1,1),gqm(jart,1),n)
          end if
       end if
 
@@ -5925,8 +5931,8 @@ c----------------------------------------------------------------------
 
       rtmin = wmach(6)
 
-      objalf = objalf - ddot (ncnln,cmul,1,cs,1)
-      grdalf = grdalf - ddot (ncnln,dlam,1,cs,1)
+      objalf = objalf - ddot (ncnln,cmul,1,cs)
+      grdalf = grdalf - ddot (ncnln,dlam,1,cs)
 
       call dcopy (ncnln,cs,1,work1,1)
 
@@ -5939,7 +5945,7 @@ c----------------------------------------------------------------------
    20    continue
       end if
 
-      grdalf = grdalf + ddot (ncnln,work1,1,cmul,1)
+      grdalf = grdalf + ddot (ncnln,work1,1,cmul)
 
       if (feasqp) then
 
@@ -6004,7 +6010,7 @@ c        but compute the scale factor so that the constraint violations
 c        are reduced.
 
          call sdscl (ncnln,rho,1,work1,1)
-         pterm2 = ddot (ncnln,work1,1,cs,1)
+         pterm2 = ddot (ncnln,work1,1,cs)
 
          scale = rhomax
          tscl = sdiv (grdalf,pterm2,overfl)
@@ -6019,7 +6025,7 @@ c     merit function.
 
       call sdscl (ncnln,rho,1,work1,1)
 
-      pterm = ddot (ncnln,work1,1,cs,1)
+      pterm = ddot (ncnln,work1,1,cs)
       objalf = objalf + scale*pterm/2d0
 
       if (feasqp) pterm2 = pterm
@@ -6460,7 +6466,7 @@ c        set the array of violations.
    20    work(j) = res
    40 continue
 
-      jmax = idamax(n+nclin+ncnln,work,1)
+      jmax = idamax(n+nclin+ncnln,work)
       errmax = abs(work(jmax))
 
       cvnorm = dnrm2 (n+nclin+ncnln,work,1)
@@ -6535,8 +6541,7 @@ c----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       epsmch = wmach(3)
 
-      if (.not.needfd .and. ncnln.gt.0) cs1jdx = ddot (ncnln,cs1,1,
-     *                                                  cjdx,1)
+      if (.not.needfd .and. ncnln.gt.0) cs1jdx = ddot (ncnln,cs1,1,cjdx)
 
       nstate = 0
 
@@ -6670,8 +6675,8 @@ c           compute the new constraint vector and jacobian.
             call dcopy (ncnln,cs,1,work,1)
             call sdscl (ncnln,rho,1,work,1)
 
-            fterm = ddot (ncnln,cmul,1,cs,1) - scale/2d0*ddot (ncnln,
-     *              work,1,cs,1)
+            fterm = ddot (ncnln,cmul,1,cs) - scale/2d0*ddot (ncnln,
+     *              work,1,cs)
          end if
 
 c        compute the value and gradient of the objective function.
@@ -6690,25 +6695,25 @@ c        compute the value and gradient of the objective function.
 c        compute auxiliary gradient information.
 
          if (.not. needfd) then
-            gtry = ddot (n,gradu,1,dx,1)
+            gtry = ddot (n,gradu,1,dx)
             tgdx = gtry
             tglf = gtry
             if (ncnln.gt.0) then
 
 c              compute the jacobian times the search direction.
 
-               call dgemv ('n',ncnln,n,1d0,cjacu,ldcju,dx,1,0d0,cjdx2,1)
+               call dgemv ('n',ncnln,n,1d0,cjacu,ldcju,dx,0d0,cjdx2)
 
                call dcopy (ncnln,cjdx2,1,work,1)
                call daxpy (ncnln,-1d0,dslk,1,work,1)
 
-               gtry = gtry - ddot (ncnln,cmul,1,work,1)
-               if (alfa.le.1d0) gtry = gtry - ddot (ncnln,dlam,1,cs,1)
+               gtry = gtry - ddot (ncnln,cmul,1,work)
+               if (alfa.le.1d0) gtry = gtry - ddot (ncnln,dlam,1,cs)
 
                call sdscl (ncnln,rho,1,work,1)
-               gtry = gtry + scale*ddot (ncnln,work,1,cs,1)
+               gtry = gtry + scale*ddot (ncnln,work,1,cs)
 
-               tglf = tgdx - ddot (ncnln,cjdx2,1,qpmul,1)
+               tglf = tgdx - ddot (ncnln,cjdx2,1,qpmul)
 
 c              if alfbnd .le. alfa.lt.alfmax and the norm of the
 c              quasi-newton update is bounded, set alfmax to be alfa.
@@ -6717,7 +6722,7 @@ c              function is decreasing at the boundary.
 
                if (alfbnd.le.alfa .and. alfa.lt.alfmax) then
 c
-                  csjdx = ddot (ncnln,cs,1,cjdx2,1)
+                  csjdx = ddot (ncnln,cs,1,cjdx2)
 
                   curvlf = tglf - glf1
                   curvc = abs(csjdx-cs1jdx)
@@ -6859,12 +6864,12 @@ c     update gq1 to include the augmented lagrangian terms.
          do 80 i = 1, ncnln
             wrk1(i) = -qpmul(i) + omega(i)*cs1(i)
    80    continue
-         call dgemv ('t',ncnln,n,1d0,cjac1,ldcj1,wrk1,1,0d0,wrk2,1)
+         call dgemv ('t',ncnln,n,1d0,cjac1,ldcj1,wrk1,0d0,wrk2)
 
          do 100 i = 1, ncnln
             wrk1(i) = qpmul(i) - omega(i)*cs2(i)
   100    continue
-         call dgemv ('t',ncnln,n,1d0,cjac2,ldcj2,wrk1,1,1d0,wrk2,1)
+         call dgemv ('t',ncnln,n,1d0,cjac2,ldcj2,wrk1,1d0,wrk2)
 
          call cmqmul(6,n,nz,nfree,ldzy,unitq,kx,wrk2,zy,wrk1)
          call daxpy (n,1d0,wrk2,1,gq1,1)
@@ -7233,7 +7238,7 @@ c        where  py  solves the triangular system  t*(py) = residuals.
             j = n + k
             bnd = bl(j)
             if (istate(j).eq.2) bnd = bu(j)
-            work(i) = bnd - ddot (n,a(k,1),lda,x,1)
+            work(i) = bnd - ddot (n,a(k,1),lda,x)
    60    continue
 
          call cmtsol(1,ldt,nactiv,t(1,nz+1),work)
@@ -7248,7 +7253,7 @@ c     compute the 2-norm of  x.
 c     initialize  ax  for all the general constraints.
 
       xnorm = dnrm2 (n,x,1)
-      if (nclin.gt.0) call dgemv ('n',nclin,n,1d0,a,lda,x,1,0d0,ax,1)
+      if (nclin.gt.0) call dgemv ('n',nclin,n,1d0,a,lda,x,0d0,ax)
 
 c     check the row residuals.
 
@@ -7261,7 +7266,7 @@ c     check the row residuals.
             if (is.ge.2) work(k) = bu(j) - ax(i)
    80    continue
 
-         jmax = idamax(nactiv,work,1)
+         jmax = idamax(nactiv,work)
          errmax = abs(work(jmax))
       end if
 
@@ -7280,12 +7285,12 @@ c     residual  pr  -  rq'x = res0  -  rq'x.
       end if
 
       ctx = 0d0
-      if (linobj) ctx = ddot (n,cq,1,p,1)
+      if (linobj) ctx = ddot (n,cq,1,p)
 
       if (nrank.gt.0) then
-         call dtrmv ('u','n','n',nrank,r,ldr,p,1)
+         call dtrmv ('u','n','n',nrank,r,ldr,p)
          if (nrank.lt.n) call dgemv ('n',nrank,n-nrank,1d0,r(1,nrank+1),
-     *                              ldr,p(nrank+1),1,1d0,p,1)
+     *                              ldr,p(nrank+1),1d0,p)
          call dcopy (nrank,res0,1,res,1)
          call daxpy (nrank,-1d0,p,1,res,1)
       end if
@@ -7583,7 +7588,7 @@ c        first entry.  initialize.
       end if
 
       if (numinf.eq.0 .and. lp) then
-         obj = ddot (n,cvec,1,x,1)
+         obj = ddot (n,cvec,1,x)
       else
          obj = suminf
       end if
@@ -7742,8 +7747,8 @@ c           compute a search direction.
             dnorm = dnrm2 (nrz,w(ld),1)
 
             call cmqmul(1,n,nrz,nfree,ldq,unitq,kx,w(ld),w(lq),w(lwrk))
-            call dgemv ('no transpose',nclin,n,1d0,a,lda,w(ld),1,0d0,
-     *                 w(lad),1)
+            call dgemv ('no transpose',nclin,n,1d0,a,lda,w(ld),0d0,
+     *                 w(lad))
 
 c           find the constraint we bump into along d.
 c           update  x  and  ax  if the step alfa is nonzero.
@@ -7860,7 +7865,7 @@ c              move  x  on to the working set if it is close.
             end if
 
             if (numinf.eq.0 .and. lp) then
-               obj = ddot (n,cvec,1,x,1)
+               obj = ddot (n,cvec,1,x)
             else
                obj = suminf
             end if
@@ -8217,7 +8222,7 @@ c     hot start for the first qp subproblem.
       nstate = 0
       objalf = objf
 
-      if (ncnln.gt.0) objalf = objalf - ddot (ncnln,w(lcmul),1,c,1)
+      if (ncnln.gt.0) objalf = objalf - ddot (ncnln,w(lcmul),1,c)
 
       newgq = .false.
 
@@ -8387,7 +8392,7 @@ c     point or after a large change in x.
       grdalf = gdx
       glf1 = gdx
       if (ncnln.gt.0) then
-         glf1 = glf1 - ddot (ncnln,w(lcjdx),1,clamda(nl),1)
+         glf1 = glf1 - ddot (ncnln,w(lcjdx),1,clamda(nl))
 
 c        compute the value and directional derivative of the
 c        augmented lagrangian merit function.
@@ -8545,12 +8550,12 @@ c              compute the missing gradients.
                inform = mode
                if (mode.lt.0) go to 60
 
-               gdx = ddot (n,grad,1,w(ldx),1)
+               gdx = ddot (n,grad,1,w(ldx))
                glf2 = gdx
                if (ncnln.gt.0) then
-                  call dgemv ('n',ncnln,n,1d0,cjac,ldcj,w(ldx),1,0d0,
-     *                       w(lcjdx),1)
-                  glf2 = glf2 - ddot (ncnln,w(lcjdx),1,clamda(nl),1)
+                  call dgemv ('n',ncnln,n,1d0,cjac,ldcj,w(ldx),0d0,
+     *                       w(lcjdx))
+                  glf2 = glf2 - ddot (ncnln,w(lcjdx),1,clamda(nl))
                end if
             end if
 
@@ -8681,10 +8686,10 @@ c        where  py  solves the triangular system  t*(py) = residuals.
             j = n + k
             bnd = bl(j)
             if (istate(j).eq.2) bnd = bu(j)
-            work(nactiv-i+1) = bnd - ddot (n,a(k,1),lda,x,1)
+            work(nactiv-i+1) = bnd - ddot (n,a(k,1),lda,x)
    60    continue
 
-         call dtrsv ('u','n','n',nactiv,t(1,nz+1),ldt,work,1)
+         call dtrsv ('u','n','n',nactiv,t(1,nz+1),ldt,work)
          call sload (n,0d0,p,1)
          call dcopy (nactiv,work,1,p(nz+1),1)
 
@@ -8696,7 +8701,7 @@ c     compute the 2-norm of  x.
 c     initialize  ax  for all the general constraints.
 
       xnorm = dnrm2 (n,x,1)
-      if (nclin.gt.0) call dgemv ('n',nclin,n,1d0,a,lda,x,1,0d0,ax,1)
+      if (nclin.gt.0) call dgemv ('n',nclin,n,1d0,a,lda,x,0d0,ax)
 
 c     check the row residuals.
 
@@ -8709,7 +8714,7 @@ c     check the row residuals.
             if (is.ge.2) work(k) = bu(j) - ax(i)
    80    continue
 
-         jmax = idamax(nactiv,work,1)
+         jmax = idamax(nactiv,work)
          errmax = abs(work(jmax))
       end if
 
@@ -8912,12 +8917,12 @@ c              in the working set.  skip it.
                   call sgrfg (nz-1,delta,w,1,0d0,w(nz))
                   if (w(nz).gt.0d0) then
 
-                     call dgemv ('n',nfree,nz,1d0,q,ldq,w,1,0d0,s,1)
-                     call dger (nfree,nz,-1d0,s,1,w,1,q,ldq)
+                     call dgemv ('n',nfree,nz,1d0,q,ldq,w,0d0,s)
+                     call dger (nfree,nz,-1d0,s,w,q,ldq)
 
                      if (ngq.gt.0) then
-                        call dgemv ('t',nz,ngq,1d0,gqm,n,w,1,0d0,s,1)
-                        call dger (nz,ngq,-1d0,w,1,s,1,gqm,n)
+                        call dgemv ('t',nz,ngq,1d0,gqm,n,w,0d0,s)
+                        call dger (nz,ngq,-1d0,w,s,gqm,n)
                      end if
                   end if
 
@@ -9143,10 +9148,11 @@ c        is complete or all the remaining residuals are too large.
 
 c        first, compute the residuals for all the constraints not in the
 c        working set.
-
+c DEBUG DEBUG, was lt n, changed back
          if (nclin.gt.0 .and. nactiv+nfixed.lt.n) then
+
             do 140 i = 1, nclin
-               if (istate(n+i).le.0) ax(i) = ddot (n,a(i,1),lda,wx,1)
+               if (istate(n+i).le.0) ax(i) = ddot (n,a(i,1),lda,wx)
   140       continue
 
             is = 1
@@ -9302,8 +9308,8 @@ c        set  wrk  =  relevant part of  zy * v.
             if (unitq) then
                call dcopy (lenv,v(j1),1,wrk(j1),1)
             else
-               call dgemv ('n',nfree,j2-j1+1,1d0,zy(1,j1),nq,v(j1),1,
-     *                    1d0,wrk,1)
+               call dgemv ('n',nfree,j2-j1+1,1d0,zy(1,j1),nq,v(j1),
+     *                    1d0,wrk)
             end if
          end if
 
@@ -9350,8 +9356,8 @@ c           set  v  =  relevant part of  zy' * wrk.
                if (unitq) then
                   call dcopy (lenv,wrk(j1),1,v(j1),1)
                else
-                  call dgemv ('t',nfree,j2-j1+1,1d0,zy(1,j1),nq,wrk,1,
-     *                       0d0,v(j1),1)
+                  call dgemv ('t',nfree,j2-j1+1,1d0,zy(1,j1),nq,wrk,
+     *                       0d0,v(j1))
                end if
             end if
          end if
@@ -10436,7 +10442,7 @@ c        of decreasing magnitude.
                   kx(jmax) = kx(j)
                   kx(j) = jsave
                else
-                  call dswap(nfree,zy(1,jmax),1,zy(1,j),1)
+                  call dswap(nfree,zy(1,jmax),zy(1,j),1)
                end if
 c
                gjmax = gq(jmax)
@@ -10636,7 +10642,7 @@ c        working set.
 
          if (nclin.gt.0 .and. nactiv.lt.nfree) then
             do 120 i = 1, nclin
-               if (istate(n+i).le.0) ax(i) = ddot (n,a(i,1),lda,wx,1)
+               if (istate(n+i).le.0) ax(i) = ddot (n,a(i,1),lda,wx)
   120       continue
 
             is = 1
@@ -10744,7 +10750,7 @@ c                                 end of cmcrsh
 
 c START OF BLAS 2. 
 
-      subroutine dtrmv (uplo, trans, diag, n, a, lda, x, incx)
+      subroutine dtrmv (uplo, trans, diag, n, a, lda, x)
 c-----------------------------------------------------------------------
 c  dtrmv  does one of the matrix-vector operations
 c     x := a*x,   or   x := a'*x,
@@ -10757,7 +10763,7 @@ c-----------------------------------------------------------------------
 
       logical  nounit
 
-      integer  incx, lda, n, i, ix, j, jx, kx
+      integer  lda, n, i, j
 
       double precision  a(lda,*), x(*), temp
 c-----------------------------------------------------------------------
@@ -10765,24 +10771,15 @@ c-----------------------------------------------------------------------
 
       nounit = (diag.eq.'n')
 
-c     set up the start point in x if the increment is not unity. this
-c     will be  (n - 1)*incx  too small for descending loops.
-
-      if (incx.le.0) then
-         kx = 1 - (n - 1)*incx
-      else if (incx.ne.1) then
-         kx = 1
-      end if
-
 c     start the operations. in this version the elements of a are
 c     accessed sequentially with one pass through a.
 
       if (trans.eq.'n') then
 
-c        form  x := a*x.
+c                                 form  x := a*x.
 
          if (uplo.eq.'u') then
-            if (incx.eq.1) then
+
                do j = 1, n
                   if (x(j).ne.0d0) then
                      temp = x(j)
@@ -10794,23 +10791,9 @@ c        form  x := a*x.
 
                   end if
                end do
-            else
-               jx = kx
-               do 40, j = 1, n
-                  if (x(jx).ne.0d0) then
-                     temp = x(jx)
-                     ix   = kx
-                     do 30, i = 1, j - 1
-                        x(ix) = x(ix) + temp*a(i,j)
-                        ix      = ix      + incx
-   30                continue
-                     if (nounit) x(jx) = x(jx)*a(j,j)
-                  end if
-                  jx = jx + incx
-   40          continue
-            end if
+
          else
-            if (incx.eq.1) then
+
                do 60, j = n, 1, -1
                   if (x(j).ne.0d0) then
                      temp = x(j)
@@ -10820,29 +10803,15 @@ c        form  x := a*x.
                      if (nounit) x(j) = x(j)*a(j,j)
                   end if
    60          continue
-            else
-               kx = kx + (n - 1)*incx
-               jx = kx
-               do 80, j = n, 1, -1
-                  if (x(jx).ne.0d0) then
-                     temp = x(jx)
-                     ix   = kx
-                     do 70, i = n, j + 1, -1
-                        x(ix) = x(ix) + temp*a(i,j)
-                        ix      = ix      - incx
-   70                continue
-                     if (nounit) x(jx) = x(jx)*a(j,j)
-                  end if
-                  jx = jx - incx
-   80          continue
-            end if
+
          end if
+
       else
 
 c        form  x := a'*x.
 
          if (uplo.eq.'u') then
-            if (incx.eq.1) then
+
                do 100, j = n, 1, -1
                   temp = x(j)
                   if (nounit) temp = temp*a(j,j)
@@ -10851,23 +10820,9 @@ c        form  x := a'*x.
    90             continue
                   x(j) = temp
   100          continue
-            else
-               jx = kx + (n - 1)*incx
-               do 120, j = n, 1, -1
-                  temp = x(jx)
-                  ix   = jx
-                  if (nounit)
-     *               temp = temp*a(j,j)
-                  do 110, i = j - 1, 1, -1
-                     ix   = ix   - incx
-                     temp = temp + a(i,j)*x(ix)
-  110             continue
-                  x(jx) = temp
-                  jx      = jx   - incx
-  120          continue
-            end if
+
          else
-            if (incx.eq.1) then
+
                do 140, j = 1, n
                   temp = x(j)
                   if (nounit) temp = temp*a(j,j)
@@ -10876,33 +10831,21 @@ c        form  x := a'*x.
   130             continue
                   x(j) = temp
   140          continue
-            else
-               jx = kx
-               do 160, j = 1, n
-                  temp = x(jx)
-                  ix   = jx
-                  if (nounit) temp = temp*a(j,j)
-                  do 150, i = j + 1, n
-                     ix   = ix   + incx
-                     temp = temp + a(i,j)*x(ix)
-  150             continue
-                  x(jx) = temp
-                  jx      = jx   + incx
-  160          continue
-            end if
+
          end if
+
       end if
 c                                 end of dtrmv.
       end
 
-      integer function idamax (n, x, incx)
+      integer function idamax (n, x)
 c-----------------------------------------------------------------------
 c  idamax returns the smallest value of i such that
 c     abs(x(i)) = max(abs(x(j)))
 c-----------------------------------------------------------------------
       implicit none
 
-      integer incx, n, i, imax, ix
+      integer n, i, imax
 
       double precision x(*), xmax
 c----------------------------------------------------------------------
@@ -10910,11 +10853,11 @@ c----------------------------------------------------------------------
          imax = 1
          if (n.gt.1) then
             xmax = abs(x(1))
-            ix   = 1
+
             do 10, i = 2, n
-               ix = ix + incx
-               if (xmax.lt.abs(x(ix))) then
-                  xmax = abs(x(ix))
+
+               if (xmax.lt.abs(x(i))) then
+                  xmax = abs(x(i))
                   imax = i
                end if
    10       continue
@@ -10968,8 +10911,7 @@ c----------------------------------------------------------------------
 c                                 end of daxpy
       end
 
-      subroutine dgemv (trans, m, n, alpha, a, lda, x, incx,
-     *                   beta, y, incy)
+      subroutine dgemv (trans, m, n, alpha, a, lda, x, beta, y)
 c----------------------------------------------------------------------
 c  dgemv  does one of the matrix-vector operations
 c     y := alpha*a*x + beta*y,   or   y := alpha*a'*x + beta*y,
@@ -10978,8 +10920,7 @@ c  m by n matrix.
 c-----------------------------------------------------------------------
       implicit none
  
-      integer incx, incy, lda, m, n, i, iy, j, jx, kx, ky, 
-     *        lenx, leny, m4, n4
+      integer lda, m, n, i, j, jx, lenx, leny, m4, n4
 
       character trans*1
 
@@ -10995,49 +10936,32 @@ c-----------------------------------------------------------------------
          lenx = m
          leny = n
       end if
-      if (incx.gt.0) then
-         kx = 1
-      else
-         kx = 1 - (lenx - 1)*incx
-      end if
-      if (incy.gt.0) then
-         ky = 1
-      else
-         ky = 1 - (leny - 1)*incy
-      end if
 
-      if (beta.ne.1d0) then
+c DEBUG DEBUG avoids uninitialized ax/adx
 
-         if (incy.eq.1) then
+      if (beta.eq.0d0) then 
 
-            y(1:leny) = beta*y(1:leny)
+         y(1:leny) = 0d0
 
-         else
+      else if (beta.ne.1d0) then
 
-            iy = ky
+         y(1:leny) = beta*y(1:leny)
 
-               do 40, i = 1, leny
-                  y(iy) = beta*y(iy)
-                  iy      = iy           + incy
-   40          continue
-
-         end if
       end if
 
       if (alpha.eq.0d0) return
-      jx = kx
+
+      jx = 1
+
       if (trans.eq.'n') then
-
-c        form  y := alpha*a*x + y.
-
-         if (incy.eq.1) then
+c                                 form  y := alpha*a*x + y.
 c**** u n r o l l   t o   d e p t h   4 ********************************
             n4 = 4*(n/4)
             do 60, j = 1, n4, 4
                temp1 = alpha*x(jx)
-               temp2 = alpha*x(jx + incx)
-               temp3 = alpha*x(jx + 2*incx)
-               temp4 = alpha*x(jx + 3*incx)
+               temp2 = alpha*x(jx + 1)
+               temp3 = alpha*x(jx + 2)
+               temp4 = alpha*x(jx + 3)
                if (temp1.ne.0d0.or.temp2.ne.0d0.or.temp3.ne.0d0.or.
      *             temp4.ne.0d0) then
                   do 50, i = 1, m
@@ -11047,64 +10971,28 @@ c**** u n r o l l   t o   d e p t h   4 ********************************
      *                        + temp4*a(i, j + 3))
    50             continue
                end if
-               jx = jx + 4*incx
+               jx = jx + 4
    60       continue
 c**** clean-up loop ****************************************************
-            do 80, j = n4 + 1, n, 1
+            do 80, j = n4 + 1, n
                temp = alpha*x(jx)
                if (temp.ne.0d0) then
                   do 70, i = 1, m
                      y(i) = y(i) + temp*a(i,j)
    70             continue
                end if
-               jx = jx + incx
+               jx = jx + 1
    80       continue
-         else
-c**** u n r o l l   t o   d e p t h   4 ********************************
-            n4 = 4*(n/4)
-            do 100, j = 1, n4, 4
-               temp1 = alpha*x(jx)
-               temp2 = alpha*x(jx + incx)
-               temp3 = alpha*x(jx + 2*incx)
-               temp4 = alpha*x(jx + 3*incx)
-               if (temp1.ne.0d0.or.temp2.ne.0d0.or.temp3.ne.0d0.or.
-     *             temp4.ne.0d0) then
-                  iy = ky
-                  do 90, i = 1, m
-                     y(iy) = ((((y(iy) + temp1*a(i,j))
-     *                         + temp2*a(i, j+1))
-     *                         + temp3*a(i, j + 2))
-     *                         + temp4*a(i, j + 3))
-                     iy = iy + incy
-   90             continue
-               end if
-               jx = jx + 4*incx
-  100       continue
-c**** clean-up loop ****************************************************
-            do 120, j = n4 + 1, n, 1
-               if (x(jx).ne.0d0) then
-                  temp = alpha*x(jx)
-                  iy = ky
-                  do 110, i = 1, m
-                     y(iy) = y(iy) + temp*a(i,j)
-                     iy = iy + incy
-  110             continue
-               end if
-               jx = jx + incx
-  120       continue
-         end if
+
       else
-c
-c        form  y := alpha*a'*x + y.
-c
-         if (incy.eq.1) then
+c                                 form  y := alpha*a'*x + y.
 c**** u n r o l l   t o   d e p t h   4 ********************************
             m4 = 4*(m/4)
             do 140, j = 1, m4, 4
                temp1 = alpha*x(jx)
-               temp2 = alpha*x(jx + incx)
-               temp3 = alpha*x(jx + 2*incx)
-               temp4 = alpha*x(jx + 3*incx)
+               temp2 = alpha*x(jx + 1)
+               temp3 = alpha*x(jx + 2)
+               temp4 = alpha*x(jx + 3)
                if (temp1.ne.0d0.or.temp2.ne.0d0.or.temp3.ne.0d0.or.
      *             temp4.ne.0d0) then
                   do 130, i = 1, n
@@ -11114,57 +11002,24 @@ c**** u n r o l l   t o   d e p t h   4 ********************************
      *                        + temp4*a(j + 3, i))
   130             continue
                end if
-               jx = jx + 4*incx
+               jx = jx + 4
   140       continue
 c**** clean-up loop ****************************************************
-            do 160, j = m4 + 1, m, 1
+            do 160, j = m4 + 1, m
                temp = alpha*x(jx)
                if (temp.ne.0d0) then
                   do 150, i = 1, n
                      y(i) = y(i) + temp*a(j, i)
   150             continue
                end if
-               jx = jx + incx
+               jx = jx + 1
   160       continue
-         else
-c**** u n r o l l   t o   d e p t h   4 ********************************
-            m4 = 4*(m/4)
-            do 180, j = 1, m4, 4
-               temp1 = alpha*x(jx)
-               temp2 = alpha*x(jx + incx)
-               temp3 = alpha*x(jx + 2*incx)
-               temp4 = alpha*x(jx + 3*incx)
-               if (temp1.ne.0d0.or.temp2.ne.0d0.or.temp3.ne.0d0.or.
-     *             temp4.ne.0d0) then
-                  iy = ky
-                  do 170, i = 1, n
-                     y(iy) = ((((y(iy) + temp1*a(j, i))
-     *                         + temp2*a(j + 1, i))
-     *                         + temp3*a(j + 2, i))
-     *                         + temp4*a(j + 3, i))
-                     iy = iy + incy
-  170             continue
-               end if
-               jx = jx + 4*incx
-  180       continue
-c**** clean-up loop ****************************************************
-            do 200, j = m4 + 1, m, 1
-               if (x(jx).ne.0d0) then
-                  temp = alpha*x(jx)
-                  iy = ky
-                  do 190, i = 1, n
-                     y(iy) = y(iy) + temp*a(j, i)
-                     iy = iy + incy
-  190             continue
-               end if
-               jx = jx + incx
-  200       continue
-         end if
+
       end if
 c                                 end of dgemv.
       end
 
-      subroutine dtrsv (uplo, trans, diag, n, a, lda, x, incx)
+      subroutine dtrsv (uplo, trans, diag, n, a, lda, x)
 c-----------------------------------------------------------------------
 c  dtrsv  solves one of the systems of equations
 c     a*x = b,   or   a'*x = b,
@@ -11173,7 +11028,7 @@ c  non-unit, upper or lower triangular matrix.
 c-----------------------------------------------------------------------
       implicit none
 
-      integer incx, lda, n, i, ix, j, jx, kx
+      integer lda, n, i, j
 
       character*1 diag, trans, uplo
 
@@ -11185,18 +11040,10 @@ c-----------------------------------------------------------------------
 
       nounit = diag.eq.'n'
 
-      if (incx.le.0) then
-         kx = 1 - (n - 1)*incx
-      else if (incx.ne.1) then
-         kx = 1
-      end if
-
       if (trans.eq.'n') then
-
-c        form  x := inv(a)*x.
-
+c                                 form  x := inv(a)*x.
          if (uplo.eq.'u') then
-            if (incx.eq.1) then
+
                do 20, j = n, 1, -1
                   if (x(j).ne.0d0) then
                      if (nounit) x(j) = x(j)/a(j,j)
@@ -11206,23 +11053,9 @@ c        form  x := inv(a)*x.
    10                continue
                   end if
    20          continue
-            else
-               jx = kx + (n - 1)*incx
-               do 40, j = n, 1, -1
-                  if (x(jx).ne.0d0) then
-                     if (nounit) x(jx) = x(jx)/a(j,j)
-                     temp = x(jx)
-                     ix   = jx
-                     do 30, i = j - 1, 1, -1
-                        ix      = ix      - incx
-                        x(ix) = x(ix) - temp*a(i,j)
-   30                continue
-                  end if
-                  jx = jx - incx
-   40          continue
-            end if
+
          else
-            if (incx.eq.1) then
+
                do 60, j = 1, n
                   if (x(j).ne.0d0) then
                      if (nounit) x(j) = x(j)/a(j,j)
@@ -11232,29 +11065,15 @@ c        form  x := inv(a)*x.
    50                continue
                   end if
    60          continue
-            else
-               jx = kx
-               do 80, j = 1, n
-                  if (x(jx).ne.0d0) then
-                     if (nounit) x(jx) = x(jx)/a(j,j)
-                     temp = x(jx)
-                     ix   = jx
-                     do 70, i = j + 1, n
-                        ix      = ix      + incx
-                        x(ix) = x(ix) - temp*a(i,j)
-   70                continue
-                  end if
-                  jx = jx + incx
-   80          continue
-            end if
+
          end if
 
       else
 
-c        form  x := inv(a')*x.
+c                                 form  x := inv(a')*x.
 
          if (uplo.eq.'u') then
-            if (incx.eq.1) then
+
                do 100, j = 1, n
                   temp = x(j)
                   do 90, i = 1, j - 1
@@ -11263,22 +11082,9 @@ c        form  x := inv(a')*x.
                   if (nounit) temp = temp/a(j,j)
                   x(j) = temp
   100          continue
-            else
-               jx = kx
-               do 120, j = 1, n
-                  temp = x(jx)
-                  ix   = kx
-                  do 110, i = 1, j - 1
-                     temp = temp - a(i,j)*x(ix)
-                     ix   = ix   + incx
-  110             continue
-                  if (nounit) temp = temp/a(j,j)
-                  x(jx) = temp
-                  jx      = jx   + incx
-  120          continue
-            end if
+
          else
-            if (incx.eq.1) then
+
                do 140, j = n, 1, -1
                   temp = x(j)
                   do 130, i = n, j + 1, -1
@@ -11287,60 +11093,48 @@ c        form  x := inv(a')*x.
                   if (nounit) temp = temp/a(j,j)
                   x(j) = temp
   140          continue
-            else
-               kx = kx + (n - 1)*incx
-               jx = kx
-               do 160, j = n, 1, -1
-                  temp = x(jx)
-                  ix   = kx
-                  do 150, i = n, j + 1, -1
-                     temp = temp - a(i,j)*x(ix)
-                     ix   = ix   - incx
-  150             continue
-                  if (nounit) temp = temp/a(j,j)
-                  x(jx) = temp
-                  jx      = jx   - incx
-  160          continue
-            end if
+
          end if
+
       end if
 c                                 end of dtrsv.
       end
 
-      double precision function ddot (n, x, incx, y, incy)
+      double precision function ddot (n, x, incx, y)
 c-----------------------------------------------------------------------
 c  ddot returns  ddot = x'y
 c----------------------------------------------------------------------
       implicit none
 
-      integer incx, incy, n, i, ix, iy
+      integer incx, n, i, ix, iy
 
       double precision x(*), y(*), sum
 c----------------------------------------------------------------------
       sum = 0d0
+
       if (n.gt.0) then
-         if ((incx.eq.incy).and.(incx.gt.0)) then
-            do 10, ix = 1, 1 + (n - 1)*incx, incx
+
+         if (incx.eq.1) then
+
+            do ix = 1, n
                sum = sum + x(ix)*y(ix)
-   10       continue
+            end do
+
          else
-            if (incy.ge.0) then
-               iy = 1
-            else
-               iy = 1 - (n - 1)*incy
-            end if
+
+            iy = 1
 
             if (incx.gt.0) then
                do 20, ix = 1, 1 + (n - 1)*incx, incx
                   sum = sum + x(ix)*y(iy)
-                  iy  = iy  + incy
+                  iy  = iy  + 1
    20          continue
             else
                ix = 1 - (n - 1)*incx
                do 30, i = 1, n
                   sum = sum + x(ix)*y(iy)
                   ix  = ix  + incx
-                  iy  = iy  + incy
+                  iy  = iy  + 1
    30          continue
             end if
          end if
@@ -11350,7 +11144,7 @@ c----------------------------------------------------------------------
 c                                 end of ddot
       end
 
-      subroutine dger (m, n, alpha, x, incx, y, incy, a, lda)
+      subroutine dger (m, n, alpha, x, y, a, lda)
 c-----------------------------------------------------------------------
 c  dger does a := alpha*x*y' + a,
 c  where alpha is a scalar, x is an m element vector, y is an n element
@@ -11358,45 +11152,21 @@ c  vector and a is an m by n matrix.
 c-----------------------------------------------------------------------
       implicit none
 
-      integer incx, incy, lda, m, n, i, ix, j, jy, kx
+      integer lda, m, n, i, j
 
       double precision alpha, a(lda,*), x(*), y(*), temp
 c-----------------------------------------------------------------------
       if (m.eq.0.or.n.eq.0.or.alpha.eq.0d0) return
 
-      if (incy.gt.0) then
-         jy = 1
-      else
-         jy = 1 - (n - 1)*incy
-      end if
-      if (incx.eq.1) then
          do 20, j = 1, n
-            if (y(jy).ne.0d0) then
-               temp = alpha*y(jy)
+            if (y(j).ne.0d0) then
+               temp = alpha*y(j)
                do 10, i = 1, m
                   a(i,j) = a(i,j) + x(i)*temp
    10          continue
             end if
-            jy = jy + incy
    20    continue
-      else
-         if (incx.gt.0) then
-            kx = 1
-         else
-            kx = 1 - (m - 1)*incx
-         end if
-         do 40, j = 1, n
-            if (y(jy).ne.0d0) then
-               temp = alpha*y(jy)
-               ix   = kx
-               do 30, i = 1, m
-                  a(i,j) = a(i,j) + x(ix)*temp
-                  ix        = ix        + incx
-   30          continue
-            end if
-            jy = jy + incy
-   40    continue
-      end if
+
 c                                 end of dger.
       end
 
@@ -11483,7 +11253,7 @@ c-----------------------------------------------------------------------
          end if
          perm(k) = jmax
          if (jmax.gt.k) then
-            call dswap(m,a(1,k),1,a(1,jmax),1)
+            call dswap(m,a(1,k),a(1,jmax),1)
             temp = work(k)
             work(k) = work(jmax)
             work(jmax) = temp
@@ -11501,9 +11271,9 @@ c-----------------------------------------------------------------------
                   a(k,k) = zeta(k)
 
                   call dgemv ('transpose',m-k+1,n-k,1d0,a(k,k+1),la,
-     *                       a(k,k),1,0d0,zeta(k+1),1)
+     *                       a(k,k),0d0,zeta(k+1))
 
-                  call dger (m-k+1,n-k,-1d0,a(k,k),1,zeta(k+1),1,
+                  call dger (m-k+1,n-k,-1d0,a(k,k),zeta(k+1),
      *                      a(k,k+1),la)
 
                   a(k,k) = temp
@@ -11556,10 +11326,10 @@ c----------------------------------------------------------------------
             temp = a(k,k)
             a(k,k) = zeta(k)
 
-            call dgemv ('transpose',m-k+1,n-k,1d0,a(k,k+1),la,a(k,k),1,
-     *                 0d0,zeta(k+1),1)
+            call dgemv ('transpose',m-k+1,n-k,1d0,a(k,k+1),la,a(k,k),
+     *                 0d0,zeta(k+1))
 
-            call dger (m-k+1,n-k,-1d0,a(k,k),1,zeta(k+1),1,a(k,k+1),la)
+            call dger (m-k+1,n-k,-1d0,a(k,k),zeta(k+1),a(k,k+1),la)
 
             a(k,k) = temp
          end if
@@ -12909,47 +12679,24 @@ c----------------------------------------------------------------------
 c                                 end of srotgc
       end
 
-      subroutine dswap (n, x, incx, y, incy)
+      subroutine dswap (n, x, y, incy)
 c-----------------------------------------------------------------------
 c dswap does the operations temp := x,   x := y,   y := temp.
 c-----------------------------------------------------------------------
       implicit none
 
-      integer incx, incy, n, i, ix, iy
+      integer incy, n, iy
 
       double precision x(*), y(*), temp
 c----------------------------------------------------------------------
       if (n.gt.0) then
-         if ((incx.eq.incy).and.(incy.gt.0)) then
+
             do 10, iy = 1, 1 + (n - 1)*incy, incy
-               temp    = x(iy)
+               temp = x(iy)
                x(iy) = y(iy)
                y(iy) = temp
    10       continue
-         else
-            if (incx.ge.0) then
-               ix = 1
-            else
-               ix = 1 - (n - 1)*incx
-            end if
-            if (incy.gt.0) then
-               do 20, iy = 1, 1 + (n - 1)*incy, incy
-                  temp    = x(ix)
-                  x(ix) = y(iy)
-                  y(iy) = temp
-                  ix      = ix      + incx
-   20          continue
-            else
-               iy = 1 - (n - 1)*incy
-               do 30, i = 1, n
-                  temp    = x(ix)
-                  x(ix) = y(iy)
-                  y(iy) = temp
-                  iy      = iy      + incy
-                  ix      = ix      + incx
-   30          continue
-            end if
-         end if
+
       end if
 c                                 end of dswap
       end
@@ -13133,61 +12880,25 @@ c                                 y descending
 c                                 end of dcopy
       end
 
-      subroutine sscmv (n, alpha, x, incx, y, incy)
+      subroutine sscmv (n, alpha, x, y)
 c-----------------------------------------------------------------------
 c  sscmv does y := alpha*x
 c-----------------------------------------------------------------------
       implicit none
 
-      double precision  alpha, x(*), y(*)
+      double precision alpha, x(*), y(*)
 
-      integer  incx, incy, n, ix, iy
+      integer n
 c----------------------------------------------------------------------
       if (n.le.0) return
 
-      if (alpha.eq.0d0 .and. incy.ne.0) then
+      if (alpha.eq.0d0) then
 
-         call sload (n, 0d0, y, abs(incy))
+         call sload (n, 0d0, y, 1)
 
       else
 
-         ix = 1 + (n - 1)*incx
-
-         if (incx.eq.incy .and. incx.gt.0) then
-
-            y(1:ix:incx) = alpha*x(1:ix:incx)
-
-         else
-
-            iy = 1 + (n - 1)*incy
-
-            if (incx.gt.0) then 
-c                                 x ascending
-               if (incy.ge.0) then
-c                                 y ascending
-                  y(1:iy:incy) = alpha*x(1:ix:incx)
-
-               else
-c                                 y descending
-                  y(iy:1:incy) = alpha*x(1:ix:incx)
-
-               end if
-
-            else
-c                                 x descending
-               if (incy.ge.0) then
-c                                 y ascending
-                  y(1:iy:incy) = alpha*x(ix:1:incx)
-
-               else
-c                                 y descending
-                  y(iy:1:incy) = alpha*x(ix:1:incx)
-
-               end if
-
-            end if
-
-         end if
+         y(1:n) = alpha*x(1:n)
 
       end if
 c                                 end of sscmv
