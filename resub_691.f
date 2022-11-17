@@ -20,8 +20,8 @@ c-----------------------------------------------------------------------
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
-      double precision ax(k5),x(k1),clamda(k1+k5),w(lw),oldt,oldp,gtot,
-     *                 tol,oldx
+      double precision ax(k5),x(k1),w(lw),oldt,oldp,gtot,
+     *                 tol,oldx,clamda(k1+k5)
 
       integer iw(liw)
 
@@ -145,7 +145,7 @@ c                                 find discretization points
 c                                 for refinement
 c        if (lopt(28)) call begtim (3)
 
-         call yclos1 (clamda,x,jphct,quit)
+         call yclos1 (x,clamda,jphct,quit)
 
 c        if (lopt(28)) call endtim (3,.true.,'Static YCLOS1 ')
 
@@ -277,6 +277,7 @@ c                                 likely failed aqlagd
       end if
 c                                  initialization
       x(1:jphct) = 0d0
+      clamda(1:jphct+icp) = wmach(4)/2d0
       xphct = jphct
 c                                  iopt(38) = 0, cold start, amounts 
 c                                  and state are not set.
@@ -1639,7 +1640,7 @@ c                                dependent potentials
 
       end 
 
-      subroutine yclos1 (clamda,x,jphct,quit)
+      subroutine yclos1 (x,clamda,jphct,quit)
 c----------------------------------------------------------------------
 c subroutine to identify pseudocompounds close to the solution for 
 c subsequent refinement. this routine is only called as preparation
@@ -1656,7 +1657,7 @@ c----------------------------------------------------------------------
 
       logical degen, solvus, quit, news, solvnt(k19)
 
-      double precision clamda(*), x(*), slam(h9)
+      double precision x(*), slam(h9), clamda(*)
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -1924,7 +1925,7 @@ c                                 save the amounts for lp starting point
             lspt = lspt + 1
             lsamt(lspt) = x(jdv(i))
             lsst(lspt) = is(jdv(i))
-         end do 
+         end do
 
       end if
 

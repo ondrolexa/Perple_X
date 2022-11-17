@@ -22222,11 +22222,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ok
-
       integer id, i, j, tmp, ltot, ntot
 
-      double precision tol, psum
+      double precision tol, diff
 
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -22241,25 +22239,25 @@ c-----------------------------------------------------------------------
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c-----------------------------------------------------------------------
-       ltot = lstot(id)
-       ntot = nstot(id)
+      ltot = lstot(id)
+      ntot = nstot(id)
 
-       tol = nopt(35)
+      tol = nopt(35)
 
-       if (.not.lorder(id).and.ntot.ne.ltot) call errdbg ('oink')
+      if (.not.lorder(id).and.ntot.ne.ltot) call errdbg ('oink')
 c                                o/d models use the pp array, which is 
 c                                not normalized for non-equimolar o/d, do
 c                                the normalization here
       if (.not.equimo(id)) then
 
-         psum = 0d0
+         diff = 0d0
 
          do j = 1, ltot
-            psum = psum + pp(j)
+            diff = diff + pp(j)
          end do
 
          do j = 1, ltot
-            pp(j) = pp(j)/psum
+            pp(j) = pp(j)/diff
          end do
 
       end if
@@ -22268,17 +22266,14 @@ c                                the normalization here
 
          if (dkp(i).ne.id) cycle
 
-         ok = .false.
+         diff = 0d0
 
          if (lorder(id)) then
 
             tmp = itxp(i) + ntot
 
             do j = 1, ltot
-               if (dabs(pp(j) - txco(tmp+j)).gt.tol) then
-                  ok = .true.
-                  exit
-               end if
+               diff = diff + dabs(pp(j) - txco(tmp+j))
             end do
 
          else
@@ -22286,15 +22281,12 @@ c                                the normalization here
             tmp = itxp(i)
 
             do j = 1, ltot
-               if (dabs(pa(j) - txco(tmp+j)).gt.tol) then
-                  ok = .true.
-                  exit
-               end if
+               diff = diff + dabs(pa(j) - txco(tmp+j))
             end do
 
          end if
 
-         if (ok) cycle
+         if (diff.gt.tol) cycle
 
          rplica = .true.
          return

@@ -103,11 +103,11 @@ c                                 problem type 1 - fp, 2 - lp
       lprob = lpprob
       llptyp = lprob
 c                                 f(n) parameters
-      itmax1 = max(50,5*(n+nclin))
+      nctotl = n + nclin
+      itmax1 = max(50,5*(nctotl))
       maxact = max(1,min(n,nclin))
       maxnz = n
       mxfree = n
-      nctotl = n + nclin
 
       if (nclin.lt.n) then
          mxfree = nclin + 1
@@ -198,19 +198,26 @@ c                                 allocate remaining work arrays.
       lwrk = loclc(15)
 
 c     define the initial feasibility tolerances in clamda.
-
-      if (tolfea.gt.0d0) call sload (n+nclin,(tolfea),w(lfeatu),1)
+c                                 hot should be able to use previous
+c                                 clamda, but it doesn't seem to work
+c                                 all the time, with the result that 
+c                                 it's worse than nothing. 
+      clamda(1:nctotl) = tol/2d0
+      w(lfeatu:lfeatu+nctotl-1) = tol
 
       call cmdgen ('i',n,nclin,
      *             nmoved,iter,numinf,istate,bl,bu,clamda,
      *             w(lfeatu),x)
 
       if (cold .or. warm) then
+
 c DEBUG DEBUG 
 c                                 initialize x, this may not
 c                                 be essential, but it is necessary
 c                                 to avoid sNaN
-         if (cold) x(1:n) = 0d0
+         if (cold) then
+            x(1:n) = 0d0
+         end if
 
 c        istate(1:nclin) = 0
 c        clamda(1:nclin) = 0d0
@@ -256,6 +263,7 @@ c        compute the tq factorization of the working set matrix.
 
 c        arrays  iw  and  w  have been defined in a previous run.
 c        the first three elements of  iw  are  unitq,  nfree and nactiv.
+
          unitq = iw(1).eq.1
          nfree = iw(2)
          nactiv = iw(3)
@@ -620,12 +628,16 @@ c     the jacobian (with constant elements set) is placed in cjacu.
       end if
 
       if (nclin.gt.0) then
+
          ianrmj = lanorm
-         do 20 j = 1, nclin
+
+         do j = 1, nclin
             w(ianrmj) = dnrm2 (n,a(j,1),lda)
             ianrmj = ianrmj + 1
-   20    continue
+         end do
+
          call scond (nclin,w(lanorm),1,asize,amin)
+
       end if
 
       call scond (nplin,w(lfeatl),1,feamax,feamin)
@@ -737,7 +749,7 @@ c     check the gradients at a feasible x.
 c                                 signal gsol2 to save g
       iuser(2) = 1
 
-c     solve the problem.
+c                                 solve the problem.
 
       if (ncnln.eq.0) then
 
@@ -10194,7 +10206,7 @@ c----------------------------------------------------------------------
       integer iter, n, nclin, nmoved, numinf, istate(n+nclin), is, j, 
      *        maxfix
 
-      double precision bl(n+nclin), bu(n+nclin), d, epsmch, tolx1, tolz,
+      double precision bl(n+nclin), bu(n+nclin), d, tolx1, tolz,
      *                 featlu(n+nclin), featol(n+nclin), x(n)
 
       double precision wmach
@@ -10215,25 +10227,19 @@ c        kdegen is the expand frequency and
 c        featlu are the feasibility tolerances.
 c        they are not changed.
 
-         epsmch = wmach(3)
-
          ndegen = 0
          itnfix = 0
          nfix(1) = 0
          nfix(2) = 0
          tolx0 = 0.5d0
          tolx1 = 0.99d0
-         tolz = epsmch**0.6d0
+         tolz = wmach(3)**0.6d0
 
          if (kdegen.lt.9999999) then
             tolinc = (tolx1-tolx0)/kdegen
          else
             tolinc = 0d0
          end if
-
-         do j = 1, n + nclin
-            featol(j) = tolx0*featlu(j)
-         end do
 
       else
 
