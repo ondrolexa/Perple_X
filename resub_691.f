@@ -277,7 +277,6 @@ c                                 likely failed aqlagd
       end if
 c                                  initialization
       x(1:jphct) = 0d0
-      clamda(1:jphct+icp) = wmach(4)/2d0
       xphct = jphct
 c                                  iopt(38) = 0, cold start, amounts 
 c                                  and state are not set.
