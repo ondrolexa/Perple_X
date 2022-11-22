@@ -277,6 +277,8 @@ c                                 likely failed aqlagd
       end if
 c                                  initialization
       x(1:jphct) = 0d0
+      bl(1:jphct) = 0d0
+      bu(1:jphct) = 1d0
 c                                  iopt(38) = 0, cold start, amounts 
 c                                  and state are not set.
       if (iopt(38).eq.1) then 
@@ -311,7 +313,6 @@ c                                  set constraint states
       end if
 
       iter = 2
-      xphct = 1
 
       do
 c                                 iter is incremented before the operations,
@@ -329,10 +330,9 @@ c                                 cold 0/warm 1 start
          iprint = 0
          lpprob = 2
          tol = wmach(4)
-
-         bl(xphct:jphct) = 0d0
-         bu(xphct:jphct) = 1d0
-
+c                                  set constraint states
+         is(jphct+1:jphct+icp) = 3
+c                                  and bounds
          bl(jphct+1:jphct+icp) = b(1:icp)
          bu(jphct+1:jphct+icp) = b(1:icp)
 
@@ -457,15 +457,13 @@ c                                 the zco array.
          call savpa
 
          if (quit) exit
-
+c                                 save old counter 
          xphct = jphct
 c                                 generate new pseudocompounds
          call resub (iter)
 c                                 set the new values of is, x
          is(xphct+1:jphct) = 1
          x(xphct+1:jphct) = 0d0
-c                                  set constraint states
-         is(jphct+1:jphct+icp) = 3
 c                                  save the old count
          xphct = jphct
 

@@ -175,7 +175,6 @@ c                                 or Amir's programming, take your pick.
       cold = lcrash.eq.0
       warm = lcrash.eq.1
       hot = lcrash.eq.2
-
 c                                 allocate remaining work arrays.
       call lploc (cset,n,nclin,litotl,lwtotl)
 
@@ -206,23 +205,15 @@ c                                 the last iteration at which x was put on a con
       itnfix = 0
 
       if (cold .or. warm) then
-c                                 initial feasibility tolerances 
+c                                 cold or warm start. just about 
+c                                 everything must be initialized.
+c                                 the exception is istate on warm.
          clamda(1:nctotl) = tol/2d0
-
-c DEBUG DEBUG 
+         w(lfeatu:lfeatu+nctotl-1) = tol
 c                                 initialize x, this may not
 c                                 be essential, but it is necessary
 c                                 to avoid sNaN
-         if (cold) then
-            w(lfeatu:lfeatu+nctotl-1) = tol
-            x(1:n) = 0d0
-         end if
-
-c        istate(1:nclin) = 0
-c        clamda(1:nclin) = 0d0
-c                                 cold or warm start. just about 
-c                                 everything must be initialized.
-c        the exception is istate during a warm start.
+         if (cold) x(1:n) = 0d0
 
          ianrmj = lanorm
 
@@ -263,10 +254,6 @@ c                                 hot should be able to use previous
 c                                 clamda, but it doesn't seem to work
 c                                 all the time, with the result that 
 c                                 it's worse than nothing.
-
-c        arrays  iw  and  w  have been defined in a previous run.
-c        the first three elements of  iw  are  unitq,  nfree and nactiv.
-
          unitq = iw(1).eq.1
          nfree = iw(2)
          nactiv = iw(3)
@@ -545,7 +532,6 @@ c                                 lvlder, derivative level, 3 - all available, 1
 
 c     nploc defines the arrays that contain the locations of
 c     work arrays within  w  and  iw.
-
       call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
 
 c     allocate addresses that are not allocated in nploc.
@@ -7506,6 +7492,9 @@ c----------------------------------------------------------------------
       integer loclc
       common/ ngg003 /loclc(20)
 
+c     integer lkactv
+c     common/ ngg003 /loclc(20)
+
       double precision wmach
       common/ cstmch /wmach(10)
 
@@ -10267,7 +10256,6 @@ c        distance onto its bound.
                if (d.gt.wmach(3)**0.6d0) nmoved = nmoved + 1
             end if
    60    continue
-
 c                                 end of cmdgen
       end
 
