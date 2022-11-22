@@ -231,10 +231,15 @@ c                                 itmax2 may be reset below as iopt(7)
       itmax2 = 500
       kchk = 50
       kcycle = 10000
+c                                 kdegen:  expand frequency
       kdegen = kcycle
       tolact = 1d-2
       bigbnd = 0.99999d20
       bigdx = bigbnd
+c                                 tolinc: scaled increment to the current featol
+      tolinc = 0.49d0/kcycle
+c                                 tolx0: the minimum (scaled) feasibility tolerance
+      tolx0 = 0.5d0
 c                                 -------------------------------------
 c                                 set permanent parameters for nlpsol
 c                                 common blocks ngg017, ng019. 

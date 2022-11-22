@@ -177,9 +177,6 @@ c                                 or Amir's programming, take your pick.
       hot = lcrash.eq.2
 
 c                                 allocate remaining work arrays.
-
-      litotl = 3
-      lwtotl = 0
       call lploc (cset,n,nclin,litotl,lwtotl)
 
       lkactv = loclc(1)
@@ -197,25 +194,27 @@ c                                 allocate remaining work arrays.
       lwtinf = loclc(14)
       lwrk = loclc(15)
 
-c     define the initial feasibility tolerances in clamda.
-c                                 hot should be able to use previous
-c                                 clamda, but it doesn't seem to work
-c                                 all the time, with the result that 
-c                                 it's worse than nothing. 
-      clamda(1:nctotl) = tol/2d0
-      w(lfeatu:lfeatu+nctotl-1) = tol
-
-      call cmdgen ('i',n,nclin,
-     *             nmoved,iter,numinf,istate,bl,bu,clamda,
-     *             w(lfeatu),x)
+      nmoved = 0
+c                                 nfix(j) counter of the number of times 
+c                                 variables have been placed on the working set,
+c                                 j=1 if infeasible, j=2 if feasible.
+      nfix = 0
+c                                 ndegen: degenerate steps counter (incremented
+c                                 by cmchzr).
+      ndegen = 0
+c                                 the last iteration at which x was put on a constraint.
+      itnfix = 0
 
       if (cold .or. warm) then
+c                                 initial feasibility tolerances 
+         clamda(1:nctotl) = tol/2d0
 
 c DEBUG DEBUG 
 c                                 initialize x, this may not
 c                                 be essential, but it is necessary
 c                                 to avoid sNaN
          if (cold) then
+            w(lfeatu:lfeatu+nctotl-1) = tol
             x(1:n) = 0d0
          end if
 
@@ -260,6 +259,10 @@ c        compute the tq factorization of the working set matrix.
          end if
 
       else if (hot) then
+c                                 hot should be able to use previous
+c                                 clamda, but it doesn't seem to work
+c                                 all the time, with the result that 
+c                                 it's worse than nothing.
 
 c        arrays  iw  and  w  have been defined in a previous run.
 c        the first three elements of  iw  are  unitq,  nfree and nactiv.
@@ -354,7 +357,9 @@ c                                 also set for hot start
          if (ifail.lt.3) ifail = 0
 
          if (ifail.lt.4) then
-            istart = 2
+c                                 signal subsequent warm start, does
+c                                 almost nothing (if not worse).
+            istart = 1
          else
             istart = 0
          end if
@@ -541,8 +546,6 @@ c                                 lvlder, derivative level, 3 - all available, 1
 c     nploc defines the arrays that contain the locations of
 c     work arrays within  w  and  iw.
 
-      litotl = 0
-      lwtotl = 0
       call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
 
 c     allocate addresses that are not allocated in nploc.
@@ -7932,8 +7935,8 @@ c----------------------------------------------------------------------
       integer ldt, ncolt, ldzy
       common/ ngg004 /ldt, ncolt, ldzy
 c----------------------------------------------------------------------
-      miniw = litotl + 1
-      minw = lwtotl + 1
+      miniw = 1
+      minw = 1
 
 c     assign array lengths that depend upon the problem dimensions.
 
@@ -8758,8 +8761,8 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c     refer to the first free space in the work arrays.
 
-      miniw = litotl + 1
-      minw = lwtotl + 1
+      miniw = 4
+      minw = 1
 
 c     integer workspace.
 
@@ -10206,7 +10209,7 @@ c----------------------------------------------------------------------
       integer iter, n, nclin, nmoved, numinf, istate(n+nclin), is, j, 
      *        maxfix
 
-      double precision bl(n+nclin), bu(n+nclin), d, tolx1, tolz,
+      double precision bl(n+nclin), bu(n+nclin), d,
      *                 featlu(n+nclin), featol(n+nclin), x(n)
 
       double precision wmach
@@ -10215,33 +10218,8 @@ c----------------------------------------------------------------------
       integer itnfix, kdegen, ndegen, nfix
       double precision tolinc, tolx0
       common/ ngg005 /tolx0, tolinc, kdegen, ndegen, itnfix, nfix(2)
-
-      save              tolz
 c----------------------------------------------------------------------
       nmoved = 0
-      if (job.eq.'i') then
-
-c        job = 'initialize'.
-c        initialize at the start of each linear problem.
-c        kdegen is the expand frequency and
-c        featlu are the feasibility tolerances.
-c        they are not changed.
-
-         ndegen = 0
-         itnfix = 0
-         nfix(1) = 0
-         nfix(2) = 0
-         tolx0 = 0.5d0
-         tolx1 = 0.99d0
-         tolz = wmach(3)**0.6d0
-
-         if (kdegen.lt.9999999) then
-            tolinc = (tolx1-tolx0)/kdegen
-         else
-            tolinc = 0d0
-         end if
-
-      else
 
 c        job = 'end of cycle' or 'optimal'.
 c        initialize local variables maxfix and tolz.
@@ -10286,11 +10264,10 @@ c        distance onto its bound.
                   d = abs(x(j)-bu(j))
                end if
 
-               if (d.gt.tolz) nmoved = nmoved + 1
+               if (d.gt.wmach(3)**0.6d0) nmoved = nmoved + 1
             end if
    60    continue
 
-      end if
 c                                 end of cmdgen
       end
 
