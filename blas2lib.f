@@ -1,3 +1,4 @@
+c----------------------------------------------------------------------
 c this file contains:
 
 c 1) BLAS level 2 fortran subroutines. modified subroutines are named by 
@@ -10,13 +11,14 @@ c    to solve linear programming problems; and nlpsol a fortran subroutine,
 c    and any non-BLAS subroutines it invokes, to solve non-linear programming 
 c    problems by succesive quadratic programming. Both after
 
-c    Gill P E, Murray W, Saunders M A and Wright M H (1984) 
-c    Procedures for optimization problems with a mixture of bounds and 
-c    general linear constraints ACM Trans. Math. Software 10 282–298
+c       Gill PE, Murray W, Saunders MA, and Wright MH (1984)
+c       Procedures for optimization problems with a mixture of bounds and
+c       general linear constraints ACM Trans. Math. Software 10 282–298
 
-c    Gill PE, Hammarling S, Murray W, Saunders MA and Wright MH (1986) 
-c    User’s Guide for LSSOL (version 1.0) Report SOL 86–1 
-c    Department of Operations Research, Stanford University.
+c       Gill PE, Hammarling S, Murray W, Saunders MA, and Wright MH (1986)
+c       User’s Guide for LSSOL (version 1.0) Report SOL 86–1 Department of 
+c       Operations Research, Stanford University.
+c----------------------------------------------------------------------
 
       subroutine lpsol (n,nclin,a,lda,bl,bu,cvec,istate,x,iter,obj,ax,
      *                  clamda,iw,leniw,w,lenw,ifail,istart,tol,lpprob)

@@ -464,6 +464,8 @@ c                                 generate new pseudocompounds
 c                                 set the new values of is, x
          is(xphct+1:jphct) = 1
          x(xphct+1:jphct) = 0d0
+         bl(xphct+1:jphct) = 0d0
+         bu(xphct+1:jphct) = 1d0
 c                                  save the old count
          xphct = jphct
 
