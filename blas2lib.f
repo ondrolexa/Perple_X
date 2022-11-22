@@ -1,4 +1,3 @@
-c----------------------------------------------------------------------
 c this file contains:
 
 c 1) BLAS level 2 fortran subroutines. modified subroutines are named by 
@@ -11,14 +10,13 @@ c    to solve linear programming problems; and nlpsol a fortran subroutine,
 c    and any non-BLAS subroutines it invokes, to solve non-linear programming 
 c    problems by succesive quadratic programming. Both after
 
-c       Gill PE, Murray W, Saunders MA, and Wright MH (1984)
-c       Procedures for optimization problems with a mixture of bounds and
-c       general linear constraints ACM Trans. Math. Software 10 282–298
+c    Gill P E, Murray W, Saunders M A and Wright M H (1984) 
+c    Procedures for optimization problems with a mixture of bounds and 
+c    general linear constraints ACM Trans. Math. Software 10 282–298
 
-c       Gill PE, Hammarling S, Murray W, Saunders MA, and Wright MH (1986)
-c       User’s Guide for LSSOL (version 1.0) Report SOL 86–1 Department of 
-c       Operations Research, Stanford University.
-c----------------------------------------------------------------------
+c    Gill PE, Hammarling S, Murray W, Saunders MA and Wright MH (1986) 
+c    User’s Guide for LSSOL (version 1.0) Report SOL 86–1 
+c    Department of Operations Research, Stanford University.
 
       subroutine lpsol (n,nclin,a,lda,bl,bu,cvec,istate,x,iter,obj,ax,
      *                  clamda,iw,leniw,w,lenw,ifail,istart,tol,lpprob)
@@ -42,15 +40,13 @@ c----------------------------------------------------------------------
 
       character prbtyp*2, start*4, msg*6
 
-      logical cold, cset, done, found, halted, hot,
+      logical cold, cset, done, found, halted,
      *        rowerr, rset, unitq, vertex, warm
 
       integer istart, lpprob, ifail, iter, lda, leniw,
      *        lenw, n, nclin, istate(n+nclin), iw(leniw),
      *        ianrmj, inform, it, itmax, j, jinf, jmax,
-     *        lanorm, lcq, ld, ldh, ldr, lfeatu, lgq, litotl,
-     *        lkactv, lkx, llptyp, lq, lr, lrlam, lt, lwrk,
-     *        lwtinf, lwtotl, minact, minfxd,
+     *        ldh, ldr, litotl, lwtotl, minact, minfxd,
      *        nact1, nactiv, nartif, ncnln, nctotl, 
      *        nfree, ngq, nmoved, nrejtd, nrz, numinf, nviol, nz
 
@@ -61,11 +57,13 @@ c----------------------------------------------------------------------
 
       external dnrm2
 
+      integer lkactv, lkx, lfeatu, lanorm, lad, ld, lgq, lcq, lrlam,
+     *        lr, lt, lq, lwtinf, lwrk
+      common/ cstlcl /lkactv,lkx,lfeatu,lanorm,lad,ld,lgq,lcq,lrlam,
+     *                lr, lt, lq, lwtinf, lwrk
+
       double precision wmach
       common/ cstmch /wmach(10)
-
-      integer loclc
-      common/ ngg003 /loclc(20)
 
       integer ldt, ldq, ncolt
       common/ ngg004 /ldt, ncolt, ldq
@@ -97,17 +95,15 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------
 c                                 parameters set by arguments
 c                                 istart - 0 - cold start, 1 - warm start, 2 - hot (no benefit)
-c     istart = 0
       lcrash = istart
 c                                 tol - feasibility tolerance
       tolfea = tol
 c                                 problem type 1 - fp, 2 - lp
       lprob = lpprob
-      llptyp = lprob
 c                                 f(n) parameters
       nctotl = n + nclin
       itmax1 = max(50,5*(nctotl))
-      maxact = max(1,min(n,nclin))
+      maxact = min(n,nclin)
       maxnz = n
       mxfree = n
 
@@ -119,16 +115,6 @@ c                                 f(n) parameters
       inform = 0
       iter = 0
       condmx = max(1d0/epspt5,1d2)
-
-c     set parameters determined by the problem type.
-
-      if (llptyp.eq.1) then
-         prbtyp = 'fp'
-         cset = .false.
-      else if (llptyp.eq.2) then
-         prbtyp = 'lp'
-         cset = .true.
-      end if
 
 c     if a linear program is being solved and the matrix of general
 c     constraints has fewer rows than columns, i.e.,  nclin.lt.n,
@@ -142,11 +128,6 @@ c     vertex must be set .true..
 
       ldt = max(maxnz,maxact)
       ncolt = mxfree
-      if (nclin.eq.0) then
-         ldq = 1
-      else
-         ldq = max(1,mxfree)
-      end if
 
       ldr = ldt
       ncnln = 0
@@ -176,34 +157,54 @@ c                                 or Amir's programming, take your pick.
 
       cold = lcrash.eq.0
       warm = lcrash.eq.1
-      hot = lcrash.eq.2
-c                                 allocate remaining work arrays.
-      call lploc (cset,n,nclin,litotl,lwtotl)
+c                                 integer workspace pointers
+      lkactv = 4
+      lkx = 4 + n
+c                                 real workspace pointers
+      lfeatu = 1
+c                                 for lpcore
+      lanorm = 1 + nctotl
+      lad = lanorm + nclin
+      ld = lad + nclin
+      lgq = ld + n
+      lcq = lgq + n
 
-      lkactv = loclc(1)
-      lkx = loclc(2)
+      if (lprob.eq.1) then
+         prbtyp = 'fp'
+         cset = .false.
+         lrlam = lcq
+      else 
+         prbtyp = 'lp'
+         cset = .true.
+         lrlam = lcq + n
+      end if
 
-      lfeatu = loclc(3)
-      lanorm = loclc(4)
-      ld = loclc(7)
-      lgq = loclc(8)
-      lcq = loclc(9)
-      lrlam = loclc(10)
-      lr = loclc(11)
-      lt = loclc(12)
-      lq = loclc(13)
-      lwtinf = loclc(14)
-      lwrk = loclc(15)
+      lr = lrlam + n
+      lt = lr
+      lq = lt + ldt*ncolt
+
+      if (nclin.eq.0) then
+         ldq = 1
+         lwtinf = lq
+      else
+         ldq = max(1,mxfree)
+         lwtinf = lq + ldq*ldq
+      end if
+
+      lwrk = lwtinf + nctotl
+
+      litotl = 3 + 2*n
+      lwtotl = lwrk + nctotl - 1
 
       nmoved = 0
 c                                 nfix(j) counter of the number of times 
 c                                 variables have been placed on the working set,
-c                                 j=1 if infeasible, j=2 if feasible.
+c                                 j=1 if infeasible, j=2 if feasible
       nfix = 0
 c                                 ndegen: degenerate steps counter (incremented
-c                                 by cmchzr).
+c                                 by cmchzr)
       ndegen = 0
-c                                 the last iteration at which x was put on a constraint.
+c                                 last iteration at which x was put on a constraint
       itnfix = 0
 
       if (cold .or. warm) then
@@ -211,7 +212,7 @@ c                                 cold or warm start. just about
 c                                 everything must be initialized.
 c                                 the exception is istate on warm.
          clamda(1:nctotl) = tol/2d0
-         w(lfeatu:lfeatu+nctotl-1) = tol
+         w(1:nctotl) = tol
 c                                 initialize x, this may not
 c                                 be essential, but it is necessary
 c                                 to avoid sNaN
@@ -233,9 +234,7 @@ c                                 to avoid sNaN
          call cmcrsh (start,vertex,nclin,nctotl,nactiv,nartif,nfree,n,
      *               lda,istate,iw(lkactv),iw(lkx),bigbnd,tolact,a,ax,
      *               bl,bu,clamda,x,w(lgq),w(lwrk))
-
-c        compute the tq factorization of the working set matrix.
-
+c                                 get tq factorization of working set matrix
          unitq = .true.
          nz = nfree
 
@@ -251,7 +250,7 @@ c        compute the tq factorization of the working set matrix.
      *                   w(ld),w(lrlam))
          end if
 
-      else if (hot) then
+      else
 c                                 hot should be able to use previous
 c                                 clamda, but it doesn't seem to work
 c                                 all the time, with the result that 
@@ -264,9 +263,7 @@ c                                 it's worse than nothing.
       end if
 
       if (cset) then
-
-c        install the transformed linear term in cq.
-
+c                                 copy transformed linear term to cq.
          call dcopy (n,cvec,1,w(lcq),1)
          call cmqmul (6,n,nz,nfree,ldq,unitq,iw(lkx),w(lcq),w(lq),
      *               w(lwrk))
@@ -275,42 +272,41 @@ c        install the transformed linear term in cq.
       rset = .false.
       itmax = itmax2
       jinf = 0
-
-c     +    take your pick when minimizing the sum of infeasibilities:
-c     +    nrz    =  nz  implies steepest-descent in the two-norm.
-c     +    nrz    =  0   implies steepest-descent in the infinity norm.
+c                                 minimizing the sum of infeasibilities:
+c                                 nrz = nz steepest-descent in the two-norm.
+c                                 nrz = 0 steepest-descent in the infinity norm.
       nrz = 0
 
-c     repeat               (until working set residuals are acceptable)
-
-c     move x onto the constraints in the working set.
-
-   40 call cmsetx (rowerr,unitq,nclin,nactiv,nfree,nz,n,ldq,lda,ldt,
+      do
+c                                 move x onto the constraints in the working set.
+          call cmsetx (rowerr,unitq,nclin,nactiv,nfree,nz,n,ldq,lda,ldt,
      *            istate,iw(lkactv),iw(lkx),jmax,errmax,xnorm,a,ax,bl,
      *            bu,w(lfeatu),w(lt),x,w(lq),w(ld),w(lwrk))
 
-      if (rowerr) then
-         msg = 'infeas'
-         numinf = 1
-         obj = errmax
-         go to 60
-      end if
+         if (rowerr) then
+            msg = 'infeas'
+            numinf = 1
+            obj = errmax
+            go to 60
+         end if
 
-      call lpcore (prbtyp,msg,cset,rset,unitq,iter,itmax,
+         call lpcore (prbtyp,msg,cset,rset,unitq,iter,itmax,
      *             jinf,nviol,n,nclin,lda,nactiv,nfree,nrz,nz,istate,
      *             iw(lkactv),iw(lkx),obj,numinf,xnorm,a,ax,bl,bu,
      *             cvec,clamda,w(lfeatu),x,w)
 
-      found = msg.eq.'feasbl' .or. msg.eq.'optiml' .or. msg .eq.
+         found = msg.eq.'feasbl' .or. msg.eq.'optiml' .or. msg .eq.
      *        'weak  ' .or. msg.eq.'unbndd' .or. msg.eq.'infeas'
-      halted = msg.eq.'itnlim'
+         halted = msg.eq.'itnlim'
 
-      if (found) call cmdgen ('optimal',n,nclin,nmoved,iter,numinf,
+         if (found) call cmdgen ('optimal',n,nclin,nmoved,iter,numinf,
      *                        istate,bl,bu,clamda,w(lfeatu),x)
 
-      done = found .and. nviol.eq.0 .and. nmoved.eq.0
+         done = found .and. nviol.eq.0 .and. nmoved.eq.0
 
-      if (.not. (done .or. halted)) go to 40
+         if ( done .or. halted ) exit
+
+      end do
 c                                 set clamda for hot start
 c                                 and or yclos routines 
       call cmprnt (nfree,n,nclin,nctotl,nactiv,iw(lkactv),iw(lkx),
@@ -7480,22 +7476,23 @@ c----------------------------------------------------------------------
      *                  condt, dinky, dnorm, dzz, errmax, flmax,
      *                  gfnorm, grznrm, gznorm, objsiz, rtmax, smllst,
      *                  suminf, tinyst, trubig, trusml, wssize, zerolm
+
       integer iadd, ifix, inform, is, it, j, jbigst,
-     *                  jmax, jsmlst, jtiny, kbigst, kdel, ksmlst, lad,
-     *                  lanorm, lcq, ld, ldr, lgq, lq, lr, lrlam, lt,
-     *                  ltmp, lwrk, lwtinf, 
+     *                  jmax, jsmlst, jtiny, kbigst, kdel, ksmlst,
+     *                  ldr, ltmp,
      *                  nctotl, nfixed, ngq, nmoved, notopt, ntfixd
+
+      integer         lkactv,lkx,lfeatu,lanorm,lad,ld,lgq,lcq,lrlam,
+     *                lr, lt, lq, lwtinf, lwrk
+
+      common/ cstlcl /lkactv,lkx,lfeatu,lanorm,lad,ld,lgq,lcq,lrlam,
+     *                lr, lt, lq, lwtinf, lwrk
+
       logical firstv, fp, hitlow, lp, move, onbnd, overfl,
      *                  unbndd
 
       double precision ddot, dnrm2, sdiv 
       external ddot, dnrm2, sdiv 
-
-      integer loclc
-      common/ ngg003 /loclc(20)
-
-c     integer lkactv
-c     common/ ngg003 /loclc(20)
 
       double precision wmach
       common/ cstmch /wmach(10)
@@ -7546,20 +7543,6 @@ c     specify the machine-dependent parameters.
 
       ldr = ldt
       it = 1
-
-      lanorm = loclc(4)
-      lad = loclc(5)
-
-      ld = loclc(7)
-      lgq = loclc(8)
-      lcq = loclc(9)
-      lrlam = loclc(10)
-
-      lr = loclc(11)
-      lt = loclc(12)
-      lq = loclc(13)
-      lwtinf = loclc(14)
-      lwrk = loclc(15)
 
 c     we need a temporary array when changing the active set.
 c     use the multiplier array.
@@ -8740,12 +8723,14 @@ c----------------------------------------------------------------------
 
       logical cset
 
-      integer litotl, lwtotl, n, nclin, lad, lanorm, lcq, ld, 
-     *        lencq, lenq, lenrt, lfeatu, lgq, lkactv, lkx, lq, lr, 
-     *        lrlam, lt, lwrk, lwtinf, miniw, minw
+      integer litotl, lwtotl, n, nclin, lencq, lenq, lenrt,
+     *        miniw, minw
 
-      integer loclc
-      common/ ngg003 /loclc(20)
+      integer lkactv, lkx, lfeatu, lanorm, lad, ld, lgq, lcq, lrlam,
+     *        lr, lt, lq, lwtinf, lwrk
+
+      common/ cstlcl /lkactv,lkx,lfeatu,lanorm,lad,ld,lgq,lcq,lrlam,
+     *                lr, lt, lq, lwtinf, lwrk
 
       integer ldt, ldq, ncolt
       common/ ngg004 /ldt, ncolt, ldq
@@ -8798,23 +8783,6 @@ c     next comes stuff used by  lpcore
       minw = lwrk + n + nclin
 
 c     load the addresses in loclc.
-
-      loclc(1) = lkactv
-      loclc(2) = lkx
-
-      loclc(3) = lfeatu
-      loclc(4) = lanorm
-      loclc(5) = lad
-
-      loclc(7) = ld
-      loclc(8) = lgq
-      loclc(9) = lcq
-      loclc(10) = lrlam
-      loclc(11) = lr
-      loclc(12) = lt
-      loclc(13) = lq
-      loclc(14) = lwtinf
-      loclc(15) = lwrk
 
       litotl = miniw - 1
       lwtotl = minw - 1
