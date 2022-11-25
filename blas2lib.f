@@ -93,9 +93,27 @@ c----------------------------------------------------------------------
       common/ ngg011 /bigbnd, bigdx, bndlow, bndupp,
      *                tolact, tolfea, tolrnk
 c----------------------------------------------------------------------
-c                                 parameters set by arguments
 c                                 istart - 0 - cold start, 1 - warm start, 2 - hot (no benefit)
       lcrash = istart
+c                                 cold start:  x may be provided, but 
+c                                 in perplex it isn't and therefore 
+c                                 x is initialized below for cold.
+c                                 warm start:  initial working set is in istate.
+c                                 hot  start:  work arrays iw and w have 
+c                                 been the first three elements of iw contain details
+c                                 dimensions of the initial working set. in perplex
+c                                 warm is set, but the start is hot. warm start is 
+c                                 only used for static composition optimizations.
+      if (lcrash.eq.0) then
+         start = 'cold'
+      else if (lcrash.eq.1) then
+         start  = 'warm'
+      else if (lcrash.eq.2) then
+         start = 'hot '
+      end if
+
+      cold = lcrash.eq.0
+      warm = lcrash.eq.1
 c                                 tol - feasibility tolerance
       tolfea = tol
 c                                 problem type 1 - fp, 2 - lp
@@ -115,12 +133,10 @@ c                                 f(n) parameters
       inform = 0
       iter = 0
       condmx = max(1d0/epspt5,1d2)
-
-c     if a linear program is being solved and the matrix of general
-c     constraints has fewer rows than columns, i.e.,  nclin.lt.n,
-c     a non-zero value is known for minfxd.  note that in this case,
-c     vertex must be set .true..
-
+c                                 if the matrix of general constraints
+c                                 has fewer rows than columns (nclin < n),
+c                                 a non-zero value is known for minfxd.
+c                                 signal with vertex
       vertex = nclin.lt.n
 
       minfxd = n - mxfree
@@ -133,30 +149,6 @@ c     vertex must be set .true..
       ncnln = 0
       ldh = 1
       mm = 0
-c                                 cold start:  x may be provided, but 
-c                                 in perplex it isn't and therefore 
-c                                 x is initialized below for cold.
-c                                 warm start:  initial working set is in istate.
-c                                 hot  start:  work arrays iw and w have 
-c                                 been the first three elements of iw contain details
-c                                 dimensions of the initial working set. in perplex
-c                                 warm is set, but the start is hot. warm start is 
-c                                 only used for static composition optimizations.
-      if (lcrash.eq.0) then
-         start = 'cold'
-      else if (lcrash.eq.1) then
-         start  = 'warm'
-      else if (lcrash.eq.2) then
-         start = 'hot '
-      end if
-
-c DEBUG DEBUG                     an optimization issue for gfortran on Euler
-c                                 or Amir's programming, take your pick.
-      if (istart.ne.lcrash) 
-     *   call errdbg ('Optimization problem: lcrash~=istart?')
-
-      cold = lcrash.eq.0
-      warm = lcrash.eq.1
 c                                 integer workspace pointers
       lkactv = 4
       lkx = 4 + n
@@ -275,6 +267,7 @@ c                                 copy transformed linear term to cq.
 c                                 minimizing the sum of infeasibilities:
 c                                 nrz = nz steepest-descent in the two-norm.
 c                                 nrz = 0 steepest-descent in the infinity norm.
+c                                 2-norm may be marginally faster?
       nrz = 0
 
       do
@@ -287,7 +280,7 @@ c                                 move x onto the constraints in the working set
             msg = 'infeas'
             numinf = 1
             obj = errmax
-            go to 60
+            exit
          end if
 
          call lpcore (prbtyp,msg,cset,rset,unitq,iter,itmax,
@@ -307,17 +300,21 @@ c                                 move x onto the constraints in the working set
          if ( done .or. halted ) exit
 
       end do
+
+      if (.not.rowerr) then 
 c                                 set clamda for hot start
 c                                 and or yclos routines 
-      call cmprnt (nfree,n,nclin,nctotl,nactiv,iw(lkactv),iw(lkx),
+         call cmprnt (nfree,n,nclin,nctotl,nactiv,iw(lkactv),iw(lkx),
      *             clamda,w(lrlam))
 c                                 also set for hot start
-      iw(1) = 0
-      if (unitq) iw(1) = 1
-      iw(2) = nfree
-      iw(3) = nactiv
+         iw(1) = 0
+         if (unitq) iw(1) = 1
+         iw(2) = nfree
+         iw(3) = nactiv
 
-   60 if (msg.eq.'optiml') then
+      end if 
+
+      if (msg.eq.'optiml') then
          inform = 0
       else if (msg.eq.'feasbl') then
          inform = 0
@@ -335,24 +332,16 @@ c                                 also set for hot start
          inform = 7
       end if
 
-      if (inform.ge.0) then
+      ifail = inform
 
-         ifail = inform
+      if (ifail.lt.3) ifail = 0
 
-         if (ifail.lt.3) ifail = 0
-
-         if (ifail.lt.4) then
+      if (ifail.lt.4) then
 c                                 signal subsequent warm start, does
 c                                 almost nothing (if not worse).
-            istart = 1
-         else
-            istart = 0
-         end if
-
+         istart = 1
       else
-
-         call errdbg ('wanola')
-
+         istart = 0
       end if
 c                                 end of lpsol
       end
@@ -381,15 +370,21 @@ c----------------------------------------------------------------------
 
       integer ifail, iter, lda, ldcju, ldr, leniw, lenw, n, nclin, 
      *        ncnln,i, ianrmj, ikx, info, inform, maxnz, minact,
-     *        itmxsv, itns, j, jinf, jmax, lanorm, laqp, lax,
-     *        lcjac, lcjdx, lclam, lcmul, ldaqp, ldcj, ldfju,
-     *        ldx, lfeatl, lgq, lgrad, lhctrl, lhfrwd, liperm,
-     *        litotl, lkactv, lkx, lneedc, lq, lres, lres0,
-     *        lrho, lrlam, lt, lwrk1, lwrk2, lwrk3,
-     *        lwtinf, lwtotl, m, maxact, minfxd, mxfree, nact1, 
+     *        itmxsv, itns, j, jinf, jmax, lax,
+     *        lclam, ldaqp, ldcj, ldfju,
+     *        litotl,
+     *        lwtotl, m, maxact, minfxd, mxfree, nact1, 
      *        nartif, nctotl, nfun, ngq, ngrad,nres, nstate, numinf,
      *        nlperr, nmajor, nminor, nplin, nrank, nrejtd, 
      *        nz1, istate(n+nclin+ncnln), iuser(*), iw(leniw)
+
+      integer ladx, lanorm, laqp, lbl, lbu, lc1mul, lcjac,
+     *        lcjdx, lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
+     *        lenaqp, lent, lenzy, lfeatl, lgq, lgq1, lgrad,
+     *        lhctrl, lhfrwd, liperm, lkactv, lkx, lneedc,
+     *        lqpdx, lqpgq, lqphz, lqptol, lrho,
+     *        lrlam, lres, lres0, lslk, lslk1, lt, lwrk1,
+     *        lwrk2, lwrk3, lwtinf, lx1, lq
 
       double precision a(lda,*), bl(n+nclin+ncnln), bu(n+nclin+ncnln),
      *                 c(*), cjacu(ldcju,*), clamda(n+nclin+ncnln), 
@@ -402,6 +397,8 @@ c----------------------------------------------------------------------
 
       integer locls
       common/ ngg012 /locls(20)
+
+      integer lxcls(20),xliw,xlw,lxcnp(35)
 
       integer locnp
       common/ ngg013 /locnp(35)
@@ -530,41 +527,176 @@ c                                 lvlder, derivative level, 3 - all available, 1
 
 c     nploc defines the arrays that contain the locations of
 c     work arrays within  w  and  iw.
-      call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
+c     call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
+
+c     assign array lengths that depend upon the problem dimensions.
+
+      if (nclin+ncnln.eq.0) then
+         lent = 0
+         lenzy = 0
+      else
+         lent = ldt*ncolt
+         lenzy = ldq*ldq
+      end if
+
+      if (ncnln.eq.0) then
+         lenaqp = 0
+      else
+         lenaqp = (nclin+ncnln)*n
+      end if
+
+      lkactv = 1
+      lkx = 1 + n
+      lneedc = 1 + 2*n
+      liperm = lneedc + ncnln
+
+      lhfrwd = 1
+      lhctrl = lhfrwd + n
+      lanorm = lhctrl + n
+      lqpgq = lanorm + nclin + ncnln
+      lgq = lqpgq + n
+      lrlam = lgq + n
+      lt = lrlam + n
+      lq = lt + lent
+
+      lxcls(1) = lkactv
+      lxcls(2) = lanorm
+      lxcls(8) = lqpgq
+      lxcls(9) = lgq
+      lxcls(10) = lrlam
+      lxcls(11) = lt
+      lxcls(12) = lq
+
+c     assign the addresses for the workspace arrays used by  npiqp .
+
+      lcjdx = lq + lenzy
+      lqpdx = lcjdx + nclin + ncnln
+      lres = lqpdx + n
+      lres0 = lres + n
+      lqphz = lres0 + n
+      lwtinf = lqphz + n
+      lwrk1 = lwtinf + nctotl
+      lqptol = lwrk1 + nctotl
+
+      lxcls(3) = lcjdx
+      lxcls(4) = lqpdx
+      lxcls(5) = lres
+      lxcls(6) = lres0
+      lxcls(7) = lqphz
+      lxcls(13) = lwtinf
+      lxcls(14) = lwrk1
+      lxcls(15) = lqptol
+
+c     assign the addresses for arrays used in npcore.
+
+      laqp = lqptol + nctotl
+      ladx = laqp + lenaqp
+      lbl = ladx + nclin + ncnln
+      lbu = lbl + nctotl
+      ldx = lbu + nctotl
+      lgq1 = ldx + n
+      lfeatl = lgq1 + n
+      lx1 = lfeatl + nctotl
+      lwrk2 = lx1 + n
+
+      lxcnp(1) = lkx
+      lxcnp(2) = liperm
+      lxcnp(3) = laqp
+      lxcnp(4) = ladx
+      lxcnp(5) = lbl
+      lxcnp(6) = lbu
+      lxcnp(7) = ldx
+      lxcnp(8) = lgq1
+      lxcnp(10) = lfeatl
+      lxcnp(11) = lx1
+      lxcnp(12) = lwrk2
+
+      lcs1 = lwrk2 + nctotl
+      lcs2 = lcs1 + ncnln
+      lc1mul = lcs2 + ncnln
+      lcmul = lc1mul + ncnln
+      lcjdx = lcmul + ncnln
+      ldlam = lcjdx + ncnln
+      ldslk = ldlam + ncnln
+      lrho = ldslk + ncnln
+      lwrk3 = lrho + ncnln
+      lslk1 = lwrk3 + ncnln
+      lslk = lslk1 + ncnln
+
+      lxcnp(13) = lcs1
+      lxcnp(14) = lcs2
+      lxcnp(15) = lc1mul
+      lxcnp(16) = lcmul
+      lxcnp(17) = lcjdx
+      lxcnp(18) = ldlam
+      lxcnp(19) = ldslk
+      lxcnp(20) = lrho
+      lxcnp(21) = lwrk3
+      lxcnp(22) = lslk1
+      lxcnp(23) = lslk
+      lxcnp(24) = lneedc
+
+      lcjac = lslk + ncnln
+      lgrad = lcjac + ncnln*n
+
+      lxcnp(25) = lhfrwd
+      lxcnp(26) = lhctrl
+      lxcnp(27) = lcjac
+      lxcnp(28) = lgrad
+
+      litotl = liperm + nctotl - 1
+      lwtotl = lgrad + n - 1
+
+      xliw = litotl
+      xlw = lwtotl
 
 c     allocate addresses that are not allocated in nploc.
+
+      call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
+
+      do i = 1, 20
+         if (lxcls(i).ne.locls(i)) then 
+            write (*,*) i, lxcls(i),locls(i)
+         end if
+      end do
+
+      do i = 1, 35
+         if (lxcnp(i).ne.locnp(i)) then 
+            write (*,*) i, lxcls(i),locls(i)
+         end if
+      end do
 
       lax = lwtotl + 1
       lwtotl = lax + nclin - 1
       lax = min(lax,lwtotl)
 
-      lkactv = locls(1)
-      lanorm = locls(2)
-      lcjdx = locls(3)
-      lres = locls(5)
-      lres0 = locls(6)
-      lgq = locls(9)
-      lrlam = locls(10)
-      lt = locls(11)
-      lq = locls(12)
-      lwtinf = locls(13)
-      lwrk1 = locls(14)
-
-      lkx = locnp(1)
-      liperm = locnp(2)
-      laqp = locnp(3)
-      ldx = locnp(7)
-      lfeatl = locnp(10)
-      lwrk2 = locnp(12)
-
-      lcmul = locnp(16)
-      lrho = locnp(20)
-      lwrk3 = locnp(21)
-      lneedc = locnp(24)
-      lhfrwd = locnp(25)
-      lhctrl = locnp(26)
-      lcjac = locnp(27)
-      lgrad = locnp(28)
+      !lkactv = locls(1)
+      !lanorm = locls(2)
+      !lcjdx = locls(3)
+      !lres = locls(5)
+      !lres0 = locls(6)
+      !lgq = locls(9)
+      !lrlam = locls(10)
+      !lt = locls(11)
+      !lq = locls(12)
+      !lwtinf = locls(13)
+      !lwrk1 = locls(14)
+      !
+      !lkx = locnp(1)
+      !liperm = locnp(2)
+      !laqp = locnp(3)
+      !ldx = locnp(7)
+      !lfeatl = locnp(10)
+      !lwrk2 = locnp(12)
+      !
+      !lcmul = locnp(16)
+      !lrho = locnp(20)
+      !lwrk3 = locnp(21)
+      !lneedc = locnp(24)
+      !lhfrwd = locnp(25)
+      !lhctrl = locnp(26)
+      !lcjac = locnp(27)
+      !lgrad = locnp(28)
 
       ldcj = max(ncnln,1)
 

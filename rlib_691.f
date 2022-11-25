@@ -7407,8 +7407,8 @@ c                                 phase:
       end if
 c                                 classify liquid model as fluid/not fluid
 c                                 according to the melt_is_fluid option, this
-c                                 is only relevant for WERAMI
-      if (lname(im).eq.'liquid'.and.iam.eq.3.and.lopt(6))
+c                                 is only relevant for WERAMI and MEEMUM
+      if (lname(im).eq.'liquid'.and.(iam.eq.3.or.iam.eq.2).and.lopt(6))
      *                                                 fp(im) = .true.
 
       do i = 1, lstot(im)
@@ -8409,7 +8409,7 @@ c                                 use the last increment
 
             else if (dp.eq.xdp) then 
 
-               write (*,*) 'wroink! oscillating?',g-gold,id
+               write (*,*) 'wroink! oscillating?',g-gold,id,itic
 
             else
 c                                 apply the increment
@@ -8453,185 +8453,6 @@ c                                 anti-ordered
             call pincs (pmin-p0a(jd),dy,ind,jd,nr)
 
          end if
-
-      end if
-
-      end
-
-      subroutine xpeci1 (g,id,k)
-c----------------------------------------------------------------------
-c subroutine to speciation of a solution with a single ordering parameter
-c composition is returned in array pa.
-
-c    k  - the ordered species
-c    id - the solution.
-c    g  - the change in G for the stable speciation relative to a mechanical
-c         mixture of the endmembers.
-
-c by default the search begins from the maximum ordered endmember fraction 
-c consequently it will usually find the ordered local minimum before it finds
-c the antiordered minium. 
-c----------------------------------------------------------------------
-      implicit none
-
-      include 'perplex_parameters.h'
-
-      integer i, id, jd, k, itic, ind(m14), nr
-
-      logical error, done
-
-      double precision g, ga, pmax, pmin, dp, gord, dy(m14), gold, xdp
-
-      external gord
-
-      double precision z, pa, p0a, x, w, y, wl, pp
-      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
-     *              wl(m17,m18),pp(m4)
-
-      integer ideps,icase,nrct
-      common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
-
-      logical pin
-      common/ cyt2 /pin(j3)
-
-      character tname*10
-      logical refine, lresub
-      common/ cxt26 /refine,lresub,tname
-
-      double precision goodc, badc
-      common/ cst20 /goodc(3),badc(3)
-c----------------------------------------------------------------------
-c                                 number of reactants to form ordered species k
-      nr = nrct(k,id)
-
-      do i = 1, nr
-c                                 dependent disordered species
-         ind(i) = ideps(i,k,id)
-c                                 stoichiometric coefficients
-         dy(i) = dydy(ind(i),k,id)
-
-      end do 
-
-      jd = lstot(id) + k
-
-      error = .false.
-c                                 starting point
-      call plimit (pmin,pmax,k,id)
-c                                 necessary?
-      pin(k) = .true.
-c                                 a composition for which no O/D 
-c                                 is possible
-      if (pmax-pmin.lt.nopt(50)) return
-c                                 to avoid singularity set the initial
-c                                 composition to the max - nopt(50), at this
-c                                 condition the first derivative < 0,
-c                                 and the second derivative > 0 (otherwise
-c                                 the root must lie at p > pmax - nopt(50).
-      pmax = pmax - nopt(50)
-      pmin = pmin + nopt(50)
-c                                 get starting point for the search
-c                                 first try the maximum
-      dp = pmax - p0a(jd)
-
-      call pincs (dp,dy,ind,jd,nr)
-
-      call gderi1 (k,id,dp,g)
-
-      if (dp.ge.0d0) then
-c                                 at the maximum concentration
-c                                 and the increment is positive,
-c                                 the solution is fully ordered
-c                                 or a local minimum, try the
-c                                 the disordered case:
-         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
-
-         call gderi1 (k,id,dp,g)
-c                                 neither min nor max starting point
-c                                 is possible. setting error to
-c                                 true will cause specis to compare
-c                                 the min/max order cases, specis
-c                                 computes the min case g, therefore
-c                                 the case is set to max order here:
-         if (dp.le.0d0) error = .true.
-
-      end if
-
-      if (.not.error) then
-c                                 increment and check p
-         call pcheck (pa(jd),pmin,pmax,dp,done)
-
-         if (done) then 
-            write (*,*) 'oink33'
-         end if
-c                                 set speciation
-         call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
-c                                 iteration counter
-         itic = 0
-         gold = g
-         xdp = 0d0
-c                                 newton raphson iteration
-         do
-
-            call gderi1 (k,id,dp,g)
-
-            call pcheck (pa(jd),pmin,pmax,dp,done)
-c                                 done means the search hit a limit
-c                                 or dp < tolerance.
-
-            if (done.or.dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50)) then
-
-c              if (done.and.dabs((gold-g)/g).gt.nopt(53)) then 
-c                 write (*,*) 'oink1',gold-g,g,itic,id
-c              end if
-
-               goodc(1) = goodc(1) + 1d0
-               goodc(2) = goodc(2) + dfloat(itic)
-c                                 use the last increment
-               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
-
-               exit
-
-            else if (dp.eq.xdp) then 
-
-               write (*,*) 'wroink!',g-gold,id
-
-            else
-c                                 apply the increment
-               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
-
-               if (itic.gt.iopt(21)) then
-c                                 failed to converge. exit
-                  write (*,*) 'wroink2!',g-gold,id
-                  error = .true.
-                  badc(1) = badc(1) + 1d0
-                  goodc(2) = goodc(2) + dfloat(itic)
-
-                  exit
-
-               end if
-
-               xdp = dp
-               gold = g
-               itic = itic + 1
-
-            end if
-
-         end do
-
-      end if
-c                                 didn't converge or couldn't
-c                                 find a starting point, set
-c                                 ordered speciation, specis will
-c                                 compare this the disordered case.
-      if (error) then
-c                                 ordered
-         call pincs (pmax-p0a(jd),dy,ind,jd,nr)
-         g = gord(id)
-c                                 anti-ordered
-         call pincs (pmin-p0a(jd),dy,ind,jd,nr)
-         ga = gord(id)
-
-         if (g.lt.ga) call pincs (pmax-p0a(jd),dy,ind,jd,nr)
 
       end if
 
@@ -9192,10 +9013,6 @@ c-----------------------------------------------------------------------
 c                                 hit the limit, don't set x to
 c                                 the limit to save revaluating x
 c                                 dependent variables.
-
-        write (*,*) 'this should not happen!!',xt,xmin,xmax
-
-        x = xt
         quit = .true.
 
         return
@@ -10369,7 +10186,7 @@ c                                 compositions from the arf file
 
          do i = 1, isoct
 
-            ttot = nstot(i)
+            ttot = tstot(i)
 
             do j = 1, jend(i,2)
 

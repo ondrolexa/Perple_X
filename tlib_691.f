@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated November 2, 2022.',
+     *     'Perple_X version 6.9.1, source updated November 24, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -422,7 +422,7 @@ c                                 Anderson-Gruneisen correction
 c                                 auto_exclude 
       lopt(5) = .true.
 c                                 melt_is_fluid
-      lopt(6) = .false.
+      lopt(6) = .true.
 c                                 set locally
 c     lopt(7) 
 c                                 approx_alpha
@@ -539,6 +539,10 @@ c                                 allow GFSM/disable saturated phase
       lopt(63) = .false.
 c                                 override counter limits for (some) warnings
       lopt(64) = .false.
+c                                 fluid_shear_modulus
+      lopt(65) = .true.
+c                                 phi_d
+      nopt(65) = 0.36
 c                                 initialize mus flag lagged speciation
       mus = .false.
 c                                 -------------------------------------
@@ -875,6 +879,14 @@ c                                 override interactive warnings with the bad cho
          else if (key.eq.'warn_no_limit') then
 c                                 override counter limits for (some) warnings
             if (val.eq.'T') lopt(64) = .true.
+
+         else if (key.eq.'fluid_shear_modulus') then
+c                                 compute shear modulus assuming textural eq
+            if (val.eq.'F') lopt(65) = .false.
+
+         else if (key.eq.'phi_d') then
+c                                 disaggregation porosity for fluid_shear_modulus
+            read (strg,*) nopt(65)
 
          else if (key.eq.'dynamic_LP_start') then
 c                                 use cold starts for dynamic LP
@@ -1263,7 +1275,7 @@ c                                 assume linear boundaries within a cell during 
 
          else if (key.eq.'melt_is_fluid') then 
 
-            if (val.eq.'T') lopt(6) = .true.
+            if (val.eq.'F') lopt(6) = .false.
 
          else if (key.eq.'pc_perturbation') then
 c                                 perturbation to eliminate pseudocompound degeneracies  
@@ -1755,7 +1767,7 @@ c                                 seismic property options
       if (iam.eq.2.or.iam.eq.3.or.iam.eq.5) write (n,1233) lopt(50),
      *         valu(19),
      *         nopt(6),lopt(17),valu(15),nopt(16),valu(14),lopt(20),
-     *         .false.
+     *         .false.,lopt(65),nopt(65)
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
@@ -1927,7 +1939,7 @@ c                                 thermo options for frendly
      *        4x,'cumulative              ',l1,9x,'[F] T',/,
      *        4x,'fancy_cumulative_modes  ',l1,9x,'[F] T',/,
      *        4x,'interpolation           ',a3,7x,'[on] off ',/,
-     *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
+     *        4x,'melt_is_fluid           ',l1,9x,'[T] F',/,
      *        4x,'solution_names          ',a3,7x,'[model] ',
      *                                           'abbreviation full',/,
      *        4x,'structural_formulae     ',l1,9x,'[T] F',/,
@@ -1952,7 +1964,7 @@ c                                 thermo options for frendly
      *        4x,'composition_phase       ',a3,7x,'[mol] wt',/,
      *        4x,'composition_system      ',a3,7x,'[wt] mol',/,
      *        4x,'proportions             ',a3,7x,'[vol] wt mol',/,
-     *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
+     *        4x,'melt_is_fluid           ',l1,9x,'[T] F',/,
      *        4x,'solution_names          ',a3,7x,'[mod] abb ful',/,
      *        4x,'structural_formulae     ',l1,9x,'[T] F',/,
      *        4x,'species_output          ',l1,9x,'[T] F',/,
@@ -1966,19 +1978,21 @@ c                                 thermo options for frendly
      *        4x,'logarithmic_p           ',l1,9x,'[F] T',/,
      *        4x,'logarithmic_X           ',l1,9x,'[F] T',/,
      *        4x,'bad_number         ',f7.1,8x,'[NaN]',/,
-     *        4x,'melt_is_fluid           ',l1,9x,'[F] T',/,
+     *        4x,'melt_is_fluid           ',l1,9x,'[T] F',/,
      *        4x,'pause_on_error          ',l1,9x,'[T] F',/,
      *        4x,'Tisza_test              ',l1,9x,'[F] T')
 1233  format (/,2x,'Seismic wavespeed computational options:',//,
      *        4x,'seismic_data_file       ',l1,9x,'[F] T',/,
      *        4x,'bounds                  ',a3,7x,'[VRH] HS',/,
-     *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
+     *        4x,'vrh/hs_weighting        ',f3.1,7x,'[0.5] 0->1',/,
      *        4x,'explicit_bulk_modulus   ',l1,9x,'[T] F',/,
      *        4x,'poisson_ratio           ',a3,7x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
      *        4x,'poisson_test            ',l1,9x,'[F] T',/,
-     *        4x,'Tisza_test              ',l1,9x,'[F] T')
+     *        4x,'Tisza_test              ',l1,9x,'[F] T',/,
+     *        4x,'fluid_shear_modulus     ',l1,9x,'[T] F',/,
+     *        4x,'phi_d                   ',f4.2,6x,'[0.36] 0->1')
 1234  format (4x,'auto_exclude            ',l1,9x,'[T] F',/,
      *        4x,'warn_interactive        ',l1,9x,'[T] F',/,
      *        4x,'warn_no_limit           ',l1,9x,'[F] T',/,
@@ -6961,8 +6975,9 @@ c-----------------------------------------------------------------------
       notstx = .false.
       lmake = .false.
 
-      write (n8,1233) valu(19),nopt(6),lopt(17),valu(15),
-     *                nopt(1),valu(14),lopt(20),lopt(4),.false.
+      write (n8,1233) valu(19),nopt(6),lopt(17),valu(15),nopt(1),
+     *                valu(14),lopt(20),lopt(4),.false.,lopt(65),
+     *                nopt(65)
 
       write (n8,1030)
 
@@ -7105,14 +7120,16 @@ c-----------------------------------------------------------------------
 1050  format (6x,a10,6x,a8,4x,a9,4x,a)
 1233  format (/,'Seismic wavespeed computational options:',//,
      *        4x,'bounds                  ',a3,7x,'[VRH] HS',/,
-     *        4x,'vrh/hs_weighting       ',f3.1,8x,'[0.5] 0->1',/,
+     *        4x,'vrh/hs_weighting        ',f3.1,7x,'[0.5] 0->1',/,
      *        4x,'explicit_bulk_modulus   ',l1,9x,'[T] F',/,
      *        4x,'poisson_ratio           ',a3,7x,'[on] all off; ',
      *        'Poisson ratio = ',f4.2,/,
      *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
      *        4x,'poisson_test            ',l1,9x,'[F] T',/,
      *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
-     *        4x,'Tisza_test              ',l1,9x,'[F] T',/)
+     *        4x,'Tisza_test              ',l1,9x,'[F] T',/,
+     *        4x,'fluid_shear_modulus     ',l1,9x,'[T] F',/,
+     *        4x,'phi_d                   ',f4.2,6x,'[0.36] 0->1')
 
       end
 
