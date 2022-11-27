@@ -15295,7 +15295,7 @@ c----------------------------------------------------------------------
 
       logical error, done
 
-      double precision g, qmax, qmin, q, q0, dqq, rqmax, gold
+      double precision g, qmax, qmin, q, q0, dqq, rqmax, rqmin, gold
 
       double precision omega, gex
       external omega, gex
@@ -15331,21 +15331,30 @@ c                                 fractions
 
 c                                 this solver DOES NOT account for the
 c                                 antiordered state! is there one? i donut
-c                                 think so
+c                                 think so. There is, but it's nonsense, JADC 11/22
       rqmax = 1d0
+      rqmin = 0d0 
 
       do i = 1, nrct(k,id)
 c                                 this is probably ok for HP melt models
 c                                 as the endmember fractions are generally
 c                                 related to a site fraction
-         if (dydy(ideps(i,k,id),k,id).gt.0d0) cycle
+         if (dydy(ideps(i,k,id),k,id).lt.0d0) then
 
-         if (-p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id).lt.rqmax)
+            if (-p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id).lt.rqmax)
      *              rqmax = -p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id)
+
+         else 
+
+            if (-p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id).gt.rqmin)
+     *              rqmin = -p0a(ideps(i,k,id))/dydy(ideps(i,k,id),k,id)
+
+         end if
 
       end do
 
       q0 = p0a(nstot(id))
+      rqmin = q0 + rqmin
       rqmax = q0 + rqmax
 c                                 to avoid singularity set the initial
 c                                 composition to the max - nopt(50), at this
@@ -15356,7 +15365,7 @@ c                                 the root must lie at p > pmax - nopt(50).
 
          pin(k) = .true.
          qmax = rqmax - nopt(50)
-         qmin = nopt(50)
+         qmin = rqmin + nopt(50)
 c                                 the p's are computed in gpderi
          call gpder1 (k,id,qmax-q0,dqq,g,.false.)
 
@@ -21157,17 +21166,10 @@ c                                 save the coefficient and index:
                         jc(jt(ln(k,im),k,im),ln(k,im),k,im) = c1(ik)
                         jid(jt(ln(k,im),k,im),ln(k,im),k,im) = ik
 
-c                          write (*,*) i,j,jt(ln(k,im),k,im)
-c                          write (*,*) c0(ik),ik
-
-
                      end do
 c                                load the constant and delta:
                      l0c(1,ln(k,im),k,im) = c0(0)
                      l0c(2,ln(k,im),k,im) = delta
-
-c                       write (*,*) 'cst delta ', c0(0),delta
-c                       write (*,*) ' '
 
                   end if
 
@@ -21944,8 +21946,7 @@ c                                 George's Hillert & Jarl magnetic transition mo
 
          else
 
-            write (*,*) 'no such transition model'
-            call errpau
+            call errdbg ('no such transition model')
 
          end if
 

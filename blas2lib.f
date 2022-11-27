@@ -265,7 +265,7 @@ c                                 copy transformed linear term to cq.
       itmax = itmax2
       jinf = 0
 c                                 minimizing the sum of infeasibilities:
-c                                 nrz = nz steepest-descent in the two-norm.
+c                                 nrz = nz steepest-descent in the 2-norm.
 c                                 nrz = 0 steepest-descent in the infinity norm.
 c                                 2-norm may be marginally faster?
       nrz = 0
@@ -371,8 +371,7 @@ c----------------------------------------------------------------------
       integer ifail, iter, lda, ldcju, ldr, leniw, lenw, n, nclin, 
      *        ncnln,i, ianrmj, ikx, info, inform, maxnz, minact,
      *        itmxsv, itns, j, jinf, jmax, lax,
-     *        lclam, ldaqp, ldcj, ldfju,
-     *        litotl,
+     *        lclam, ldaqp, ldcj, ldfju,litotl,
      *        lwtotl, m, maxact, minfxd, mxfree, nact1, 
      *        nartif, nctotl, nfun, ngq, ngrad,nres, nstate, numinf,
      *        nlperr, nmajor, nminor, nplin, nrank, nrejtd, 
@@ -559,13 +558,13 @@ c     assign array lengths that depend upon the problem dimensions.
       lt = lrlam + n
       lq = lt + lent
 
-      lxcls(1) = lkactv
-      lxcls(2) = lanorm
-      lxcls(8) = lqpgq
-      lxcls(9) = lgq
-      lxcls(10) = lrlam
-      lxcls(11) = lt
-      lxcls(12) = lq
+      !lxcls(1) = lkactv
+      !lxcls(2) = lanorm
+      !lxcls(8) = lqpgq
+      !lxcls(9) = lgq
+      !lxcls(10) = lrlam
+      !lxcls(11) = lt
+      !lxcls(12) = lq
 
 c     assign the addresses for the workspace arrays used by  npiqp .
 
@@ -578,14 +577,14 @@ c     assign the addresses for the workspace arrays used by  npiqp .
       lwrk1 = lwtinf + nctotl
       lqptol = lwrk1 + nctotl
 
-      lxcls(3) = lcjdx
-      lxcls(4) = lqpdx
-      lxcls(5) = lres
-      lxcls(6) = lres0
-      lxcls(7) = lqphz
-      lxcls(13) = lwtinf
-      lxcls(14) = lwrk1
-      lxcls(15) = lqptol
+      !lxcls(3) = lcjdx
+      !lxcls(4) = lqpdx
+      !lxcls(5) = lres
+      !lxcls(6) = lres0
+      !lxcls(7) = lqphz
+      !lxcls(13) = lwtinf
+      !lxcls(14) = lwrk1
+      !lxcls(15) = lqptol
 
 c     assign the addresses for arrays used in npcore.
 
@@ -599,17 +598,17 @@ c     assign the addresses for arrays used in npcore.
       lx1 = lfeatl + nctotl
       lwrk2 = lx1 + n
 
-      lxcnp(1) = lkx
-      lxcnp(2) = liperm
-      lxcnp(3) = laqp
-      lxcnp(4) = ladx
-      lxcnp(5) = lbl
-      lxcnp(6) = lbu
-      lxcnp(7) = ldx
-      lxcnp(8) = lgq1
-      lxcnp(10) = lfeatl
-      lxcnp(11) = lx1
-      lxcnp(12) = lwrk2
+      !lxcnp(1) = lkx
+      !lxcnp(2) = liperm
+      !lxcnp(3) = laqp
+      !lxcnp(4) = ladx
+      !lxcnp(5) = lbl
+      !lxcnp(6) = lbu
+      !lxcnp(7) = ldx
+      !lxcnp(8) = lgq1
+      !lxcnp(10) = lfeatl
+      !lxcnp(11) = lx1
+      !lxcnp(12) = lwrk2
 
       lcs1 = lwrk2 + nctotl
       lcs2 = lcs1 + ncnln
@@ -623,26 +622,26 @@ c     assign the addresses for arrays used in npcore.
       lslk1 = lwrk3 + ncnln
       lslk = lslk1 + ncnln
 
-      lxcnp(13) = lcs1
-      lxcnp(14) = lcs2
-      lxcnp(15) = lc1mul
-      lxcnp(16) = lcmul
-      lxcnp(17) = lcjdx
-      lxcnp(18) = ldlam
-      lxcnp(19) = ldslk
-      lxcnp(20) = lrho
-      lxcnp(21) = lwrk3
-      lxcnp(22) = lslk1
-      lxcnp(23) = lslk
-      lxcnp(24) = lneedc
+      !lxcnp(13) = lcs1
+      !lxcnp(14) = lcs2
+      !lxcnp(15) = lc1mul
+      !lxcnp(16) = lcmul
+      !lxcnp(17) = lcjdx
+      !lxcnp(18) = ldlam
+      !lxcnp(19) = ldslk
+      !lxcnp(20) = lrho
+      !lxcnp(21) = lwrk3
+      !lxcnp(22) = lslk1
+      !lxcnp(23) = lslk
+      !lxcnp(24) = lneedc
 
       lcjac = lslk + ncnln
       lgrad = lcjac + ncnln*n
 
-      lxcnp(25) = lhfrwd
-      lxcnp(26) = lhctrl
-      lxcnp(27) = lcjac
-      lxcnp(28) = lgrad
+      !lxcnp(25) = lhfrwd
+      !lxcnp(26) = lhctrl
+      !lxcnp(27) = lcjac
+      !lxcnp(28) = lgrad
 
       litotl = liperm + nctotl - 1
       lwtotl = lgrad + n - 1
@@ -654,17 +653,17 @@ c     allocate addresses that are not allocated in nploc.
 
       call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
 
-      do i = 1, 20
-         if (lxcls(i).ne.locls(i)) then 
-            write (*,*) i, lxcls(i),locls(i)
-         end if
-      end do
-
-      do i = 1, 35
-         if (lxcnp(i).ne.locnp(i)) then 
-            write (*,*) i, lxcls(i),locls(i)
-         end if
-      end do
+      !do i = 1, 20
+      !   if (lxcls(i).ne.locls(i)) then 
+      !      write (*,*) i, lxcls(i),locls(i)
+      !   end if
+      !end do
+      !
+      !do i = 1, 35
+      !   if (lxcnp(i).ne.locnp(i)) then 
+      !      write (*,*) i, lxcls(i),locls(i)
+      !   end if
+      !end do
 
       lax = lwtotl + 1
       lwtotl = lax + nclin - 1
