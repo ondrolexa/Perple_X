@@ -370,7 +370,7 @@ c----------------------------------------------------------------------
 
       integer ifail, iter, lda, ldcju, ldr, leniw, lenw, n, nclin, 
      *        ncnln,i, ianrmj, ikx, info, inform, maxnz, minact,
-     *        itmxsv, itns, j, jinf, jmax, lax,
+     *        itmxsv, itns, j, jinf, jmax, lax, lhfwrd,
      *        lclam, ldaqp, ldcj, ldfju,litotl,
      *        lwtotl, m, maxact, minfxd, mxfree, nact1, 
      *        nartif, nctotl, nfun, ngq, ngrad,nres, nstate, numinf,
@@ -378,7 +378,7 @@ c----------------------------------------------------------------------
      *        nz1, istate(n+nclin+ncnln), iuser(*), iw(leniw)
 
       integer ladx, laqp, lbl, lbu, lc1mul, lcjac,
-     *        lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
+     *        lcmul, lcs1, lcs2, ldlam, ldslk, ldx, lcjdx,
      *        lenaqp, lent, lenzy, lfeatl, lgq1, lgrad,
      *        lhctrl, lhfrwd, liperm, lkx, lneedc,
      *        lrho, lslk, lslk1, lwrk2, lwrk3, lx1
@@ -392,12 +392,9 @@ c----------------------------------------------------------------------
 
       external confun, objfun
 
-      integer locls
-      common/ ngg012 /locls(20)
-
-      integer lkactv, lanorm, lcjdx, lqpdx, lres, lres0, lqphz,
+      integer lkactv, lanorm, lap, lqpdx, lres, lres0, lqphz,
      *        lqpgq, lgq, lrlam, lt, lq, lwtinf, lwrk1, lqptol
-      common/ cstlnp /lkactv, lanorm, lcjdx, lqpdx, lres, lres0, lqphz,
+      common/ cstlnp /lkactv, lanorm, lap, lqpdx, lres, lres0, lqphz,
      *                lqpgq, lgq, lrlam, lt, lq, lwtinf, lwrk1, lqptol
 
       integer lxcls(20),xliw,xlw,lxcnp(35)
@@ -561,33 +558,16 @@ c     assign array lengths that depend upon the problem dimensions.
       lt = lrlam + n
       lq = lt + lent
 
-      !lxcls(1) = lkactv
-      !lxcls(2) = lanorm
-      !lxcls(8) = lqpgq
-      !lxcls(9) = lgq
-      !lxcls(10) = lrlam
-      !lxcls(11) = lt
-      !lxcls(12) = lq
-
 c     assign the addresses for the workspace arrays used by  npiqp .
 
-      lcjdx = lq + lenzy
-      lqpdx = lcjdx + nclin + ncnln
+      lap = lq + lenzy
+      lqpdx = lap + nclin + ncnln
       lres = lqpdx + n
       lres0 = lres + n
       lqphz = lres0 + n
       lwtinf = lqphz + n
       lwrk1 = lwtinf + nctotl
       lqptol = lwrk1 + nctotl
-
-      !lxcls(3) = lcjdx
-      !lxcls(4) = lqpdx
-      !lxcls(5) = lres
-      !lxcls(6) = lres0
-      !lxcls(7) = lqphz
-      !lxcls(13) = lwtinf
-      !lxcls(14) = lwrk1
-      !lxcls(15) = lqptol
 
 c     assign the addresses for arrays used in npcore.
 
@@ -601,17 +581,16 @@ c     assign the addresses for arrays used in npcore.
       lx1 = lfeatl + nctotl
       lwrk2 = lx1 + n
 
-      !lxcnp(1) = lkx
-      !lxcnp(2) = liperm
-      !lxcnp(3) = laqp
-      !lxcnp(4) = ladx
-      !lxcnp(5) = lbl
-      !lxcnp(6) = lbu
-      !lxcnp(7) = ldx
-      !lxcnp(8) = lgq1
-      !lxcnp(10) = lfeatl
-      !lxcnp(11) = lx1
-      !lxcnp(12) = lwrk2
+      lxcnp(2) = liperm
+      lxcnp(3) = laqp
+      lxcnp(4) = ladx
+      lxcnp(5) = lbl
+      lxcnp(6) = lbu
+      lxcnp(7) = ldx
+      lxcnp(8) = lgq1
+      lxcnp(10) = lfeatl
+      lxcnp(11) = lx1
+      lxcnp(12) = lwrk2
 
       lcs1 = lwrk2 + nctotl
       lcs2 = lcs1 + ncnln
@@ -624,27 +603,25 @@ c     assign the addresses for arrays used in npcore.
       lwrk3 = lrho + ncnln
       lslk1 = lwrk3 + ncnln
       lslk = lslk1 + ncnln
+      lhfwrd = 1
 
-      !lxcnp(13) = lcs1
-      !lxcnp(14) = lcs2
-      !lxcnp(15) = lc1mul
-      !lxcnp(16) = lcmul
-      !lxcnp(17) = lcjdx
-      !lxcnp(18) = ldlam
-      !lxcnp(19) = ldslk
-      !lxcnp(20) = lrho
-      !lxcnp(21) = lwrk3
-      !lxcnp(22) = lslk1
-      !lxcnp(23) = lslk
-      !lxcnp(24) = lneedc
+      lxcnp(13) = lcs1
+      lxcnp(14) = lcs2
+      lxcnp(15) = lc1mul
+      lxcnp(16) = lcmul
+      lxcnp(17) = lcjdx
+      lxcnp(18) = ldlam
+      lxcnp(19) = ldslk
+      lxcnp(20) = lrho
+      lxcnp(21) = lwrk3
+      lxcnp(22) = lslk1
+      lxcnp(23) = lslk
+      lxcnp(24) = lneedc
+      lxcnp(25) = 1
+      lxcnp(26) = lhctrl
 
       lcjac = lslk + ncnln
       lgrad = lcjac + ncnln*n
-
-      !lxcnp(25) = lhfrwd
-      !lxcnp(26) = lhctrl
-      !lxcnp(27) = lcjac
-      !lxcnp(28) = lgrad
 
       litotl = liperm + nctotl - 1
       lwtotl = lgrad + n - 1
@@ -656,35 +633,16 @@ c     allocate addresses that are not allocated in nploc.
 
       call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
 
-      !do i = 1, 20
-      !   if (lxcls(i).ne.locls(i)) then 
-      !      write (*,*) i, lxcls(i),locls(i)
-      !   end if
-      !end do
-      !
-      !do i = 1, 35
-      !   if (lxcnp(i).ne.locnp(i)) then 
-      !      write (*,*) i, lxcls(i),locls(i)
-      !   end if
-      !end do
+      do i = 1, 35
+         if (lxcnp(i).ne.locnp(i)) then 
+            write (*,*) i, locnp(i),lxcnp(i)
+         end if
+      end do
 
       lax = lwtotl + 1
       lwtotl = lax + nclin - 1
       lax = min(lax,lwtotl)
 
-      !lkactv = locls(1)
-      !lanorm = locls(2)
-      !lcjdx = locls(3)
-      !lres = locls(5)
-      !lres0 = locls(6)
-      !lgq = locls(9)
-      !lrlam = locls(10)
-      !lt = locls(11)
-      !lq = locls(12)
-      !lwtinf = locls(13)
-      !lwrk1 = locls(14)
-      !
-      !lkx = locnp(1)
       !liperm = locnp(2)
       !laqp = locnp(3)
       !ldx = locnp(7)
@@ -697,8 +655,6 @@ c     allocate addresses that are not allocated in nploc.
       !lneedc = locnp(24)
       !lhfrwd = locnp(25)
       !lhctrl = locnp(26)
-      !lcjac = locnp(27)
-      !lgrad = locnp(28)
 
       ldcj = max(ncnln,1)
 
@@ -8027,9 +7983,6 @@ c----------------------------------------------------------------------
      *        lrlam, lrpq, lrpq0, lslk, lslk1, lt, lwrk1,
      *        lwrk2, lwrk3, lwtinf, lx1, lzy, miniw, minw
 
-      integer locls
-      common/ ngg012 /locls(20)
-      
       integer locnp
       common/ ngg013 /locnp(35)
 
@@ -8071,14 +8024,6 @@ c     assign array lengths that depend upon the problem dimensions.
       lzy = lt + lent
       minw = lzy + lenzy
 
-      locls(1) = lkactv
-      locls(2) = lanorm
-      locls(8) = lqpgq
-      locls(9) = lgq
-      locls(10) = lrlam
-      locls(11) = lt
-      locls(12) = lzy
-
 c     assign the addresses for the workspace arrays used by  npiqp .
 
       lqpadx = minw
@@ -8090,15 +8035,6 @@ c     assign the addresses for the workspace arrays used by  npiqp .
       lwrk1 = lwtinf + nctotl
       lqptol = lwrk1 + nctotl
       minw = lqptol + nctotl
-
-      locls(3) = lqpadx
-      locls(4) = lqpdx
-      locls(5) = lrpq
-      locls(6) = lrpq0
-      locls(7) = lqphz
-      locls(13) = lwtinf
-      locls(14) = lwrk1
-      locls(15) = lqptol
 
 c     assign the addresses for arrays used in npcore.
 
@@ -8113,7 +8049,6 @@ c     assign the addresses for arrays used in npcore.
       lwrk2 = lx1 + n
       minw = lwrk2 + nctotl
 
-      locnp(1) = lkx
       locnp(2) = liperm
       locnp(3) = laqp
       locnp(4) = ladx
@@ -8157,8 +8092,6 @@ c     assign the addresses for arrays used in npcore.
 
       locnp(25) = lhfrwd
       locnp(26) = lhctrl
-      locnp(27) = lcjac
-      locnp(28) = lgrad
 
       litotl = miniw - 1
       lwtotl = minw - 1
@@ -8200,7 +8133,7 @@ c----------------------------------------------------------------------
      *                  lc1mul, lcjac1, lcjdx, lcjdx1, lcmul, lcs1,
      *                  lcs2, ldcj1, ldlam, ldslk, ldx, lgq1,
      *                  lhctrl, lhfrwd, linact, liperm, lneedc,
-     *                  lqrwrk, lrho, lslk, lslk1,
+     *                  lrho, lslk, lslk1,
      *                  lvioln, lwrk2, lwrk3, lx1, majit0, minits, mnr,
      *                  mnrsum, mode, ncqp, nl,
      *                  nlnact, nlserr, nmajor, nminor, nplin, nqperr,
@@ -8214,9 +8147,9 @@ c----------------------------------------------------------------------
       double precision ddot, dnrm2, sdiv 
       external ddot, dnrm2, sdiv 
 
-      integer lkactv, lanorm, lcjdxx, lqpdx, lrpq, lrpq0, lqphz,
+      integer lkactv, lanorm, lcjdxx, lqpdx, lrpq, lqrwrk, lqphz,
      *        lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
-      common/ cstlnp /lkactv, lanorm, lcjdxx, lqpdx, lrpq, lrpq0, lqphz,
+      common/ cstlnp /lkactv, lanorm, lcjdxx, lqpdx, lrpq, lqrwrk,lqphz,
      *                lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
       
       integer locnp
@@ -9504,9 +9437,6 @@ c----------------------------------------------------------------------
 
       external dnrm2, sdiv 
 
-      integer locls
-      common/ ngg012 /locls(20)
-
       integer lkactv, lanorm, lap, lpx, lres, lres0, lhz,
      *        lgq, lcq, lrlam, lt, lzy, lwtinf, lwrk, lqptol
       common/ cstlnp /lkactv, lanorm, lap, lpx, lres, lres0, lhz,
@@ -9533,20 +9463,6 @@ c----------------------------------------------------------------------
      *                tolrnk
 c----------------------------------------------------------------------
       flmax = wmach(7)
-
-      lanorm = locls(2)
-      lap = locls(3)
-      lpx = locls(4)
-      lres = locls(5)
-      lres0 = locls(6)
-      lhz = locls(7)
-      lgq = locls(8)
-      lcq = locls(9)
-      lrlam = locls(10)
-      lt = locls(11)
-      lzy = locls(12)
-      lwtinf = locls(13)
-      lwrk = locls(14)
 
 c     set up the adresses of the contiguous arrays  (res0, res)
 c     and  (gq, cq).
