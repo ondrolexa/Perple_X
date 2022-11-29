@@ -377,13 +377,11 @@ c----------------------------------------------------------------------
      *        nlperr, nmajor, nminor, nplin, nrank, nrejtd, 
      *        nz1, istate(n+nclin+ncnln), iuser(*), iw(leniw)
 
-      integer ladx, lanorm, laqp, lbl, lbu, lc1mul, lcjac,
-     *        lcjdx, lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
-     *        lenaqp, lent, lenzy, lfeatl, lgq, lgq1, lgrad,
-     *        lhctrl, lhfrwd, liperm, lkactv, lkx, lneedc,
-     *        lqpdx, lqpgq, lqphz, lqptol, lrho,
-     *        lrlam, lres, lres0, lslk, lslk1, lt, lwrk1,
-     *        lwrk2, lwrk3, lwtinf, lx1, lq
+      integer ladx, laqp, lbl, lbu, lc1mul, lcjac,
+     *        lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
+     *        lenaqp, lent, lenzy, lfeatl, lgq1, lgrad,
+     *        lhctrl, lhfrwd, liperm, lkx, lneedc,
+     *        lrho, lslk, lslk1, lwrk2, lwrk3, lx1
 
       double precision a(lda,*), bl(n+nclin+ncnln), bu(n+nclin+ncnln),
      *                 c(*), cjacu(ldcju,*), clamda(n+nclin+ncnln), 
@@ -396,6 +394,11 @@ c----------------------------------------------------------------------
 
       integer locls
       common/ ngg012 /locls(20)
+
+      integer lkactv, lanorm, lcjdx, lqpdx, lres, lres0, lqphz,
+     *        lqpgq, lgq, lrlam, lt, lq, lwtinf, lwrk1, lqptol
+      common/ cstlnp /lkactv, lanorm, lcjdx, lqpdx, lres, lres0, lqphz,
+     *                lqpgq, lgq, lrlam, lt, lq, lwtinf, lwrk1, lqptol
 
       integer lxcls(20),xliw,xlw,lxcnp(35)
 
@@ -4602,7 +4605,7 @@ c----------------------------------------------------------------------
       integer ldaqp, ldcj, ldr, linact, minits, n, nactiv, nclin, ncnln,
      *        nfree, nlnact, nqperr, numinf, nz, istate(*), kactiv(n), 
      *        kx(n), i, inform, iswap, j, jinf, k, k1, k2, kviol, l, 
-     *        lgq, lhpq, lrlam, lrpq, lrpq0, lt, lwrk1, lzy, nartif, 
+     *        nartif, 
      *        ncqp, nctotl, ngq, nmajor, nminor, nplin, nrank,
      *        nrejtd, nrpq, ntry, nviol, nz1
 
@@ -4615,10 +4618,12 @@ c----------------------------------------------------------------------
      *                 quotnt, ssq, ssq1, suminf, viol, weight, wscale,
      *                 wtmax, wtmin, qpcurv, ddot, dnrm2, sdiv
 
-      external ddot, dnrm2, sdiv 
+      external ddot, dnrm2, sdiv
 
-      integer locls
-      common/ ngg012 /locls(20)
+      integer lkactv, lanorm, lcjdx, lqpdx, lrpq, lrpq0, lqphz,
+     *        lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
+      common/ cstlnp /lkactv, lanorm, lcjdx, lqpdx, lrpq, lrpq0, lqphz,
+     *                lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
 
       integer ldt, ncolt, ldzy
       common/ ngg004 /ldt, ncolt, ldzy
@@ -4654,15 +4659,6 @@ c----------------------------------------------------------------------
 
       equivalence (itmxnp,nmajor), (itmax2,nminor)
 c----------------------------------------------------------------------
-      lrpq = locls(5)
-      lrpq0 = locls(6)
-      lhpq = locls(8)
-      lgq = locls(9)
-      lrlam = locls(10)
-      lt = locls(11)
-      lzy = locls(12)
-      lwrk1 = locls(14)
-
       nrpq = 0
       ngq = 1
 
@@ -8200,13 +8196,12 @@ c----------------------------------------------------------------------
      *                  flmax, gdx, gfnorm, glf1, glf2, glnorm, gltest,
      *                  grdalf, gtest, gznorm, obj, objalf, objsiz,
      *                  qpcurv, rootn, rtftol, rtmax, xsize
-      integer info, jmax, ladx, lanorm, laqp, lbl, lbu,
+      integer info, jmax, ladx, laqp, lbl, lbu,
      *                  lc1mul, lcjac1, lcjdx, lcjdx1, lcmul, lcs1,
-     *                  lcs2, ldcj1, ldlam, ldslk, ldx, lgq, lgq1,
-     *                  lhctrl, lhfrwd, lhpq, linact, liperm, lneedc,
-     *                  lqptol, lqrwrk, lrho, lrlam, lrpq, lslk, lslk1,
-     *                  lt, lvioln, lwrk1, lwrk2, lwrk3, lwtinf, lx1,
-     *                  lzy, majit0, minits, mnr,
+     *                  lcs2, ldcj1, ldlam, ldslk, ldx, lgq1,
+     *                  lhctrl, lhfrwd, linact, liperm, lneedc,
+     *                  lqrwrk, lrho, lslk, lslk1,
+     *                  lvioln, lwrk2, lwrk3, lx1, majit0, minits, mnr,
      *                  mnrsum, mode, ncqp, nl,
      *                  nlnact, nlserr, nmajor, nminor, nplin, nqperr,
      *                  nqpinf, nstate, numinf, nviol
@@ -8219,8 +8214,10 @@ c----------------------------------------------------------------------
       double precision ddot, dnrm2, sdiv 
       external ddot, dnrm2, sdiv 
 
-      integer locls
-      common/ ngg012 /locls(20)
+      integer lkactv, lanorm, lcjdxx, lqpdx, lrpq, lrpq0, lqphz,
+     *        lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
+      common/ cstlnp /lkactv, lanorm, lcjdxx, lqpdx, lrpq, lrpq0, lqphz,
+     *                lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
       
       integer locnp
       common/ ngg013 /locnp(35)
@@ -8272,18 +8269,6 @@ c     specify machine-dependent parameters.
 
       flmax = wmach(7)
       rtmax = wmach(8)
-
-      lanorm = locls(2)
-      lrpq = locls(5)
-      lqrwrk = locls(6)
-      lhpq = locls(8)
-      lgq = locls(9)
-      lrlam = locls(10)
-      lt = locls(11)
-      lzy = locls(12)
-      lwtinf = locls(13)
-      lwrk1 = locls(14)
-      lqptol = locls(15)
 c
       liperm = locnp(2)
       laqp = locnp(3)
@@ -9506,9 +9491,7 @@ c----------------------------------------------------------------------
      *        nctotl, nfree, nrank, nrz, numinf, nz, istate(nctotl), 
      *        kactiv(n), kx(n), iadd, ifix, irefn, is, isdel, itmax,
      *        jadd, jbigst, jdel, jmax1, jsmlst, jtiny, kbigst,
-     *        kdel, ksmlst, lanorm, lap, lcq, lgq, lhz, lpx,
-     *        lres, lres0, lrlam, lt, lwrk, lwtinf, lzy,
-     *        ngq, nphase, nres, nstall, nviol
+     *        kdel, ksmlst, ngq, nphase, nres, nstall, nviol
 
       double precision ctx, ssq, ssq1, suminf, xnorm, a(lda,*), ax(*), 
      *                 bl(nctotl), bu(nctotl), cnorm,
@@ -9523,6 +9506,11 @@ c----------------------------------------------------------------------
 
       integer locls
       common/ ngg012 /locls(20)
+
+      integer lkactv, lanorm, lap, lpx, lres, lres0, lhz,
+     *        lgq, lcq, lrlam, lt, lzy, lwtinf, lwrk, lqptol
+      common/ cstlnp /lkactv, lanorm, lap, lpx, lres, lres0, lhz,
+     *                lgq, lcq, lrlam, lt, lzy, lwtinf, lwrk, lqptol
 
       double precision wmach
       common/ cstmch /wmach(10)
