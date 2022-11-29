@@ -377,11 +377,7 @@ c----------------------------------------------------------------------
      *        nlperr, nmajor, nminor, nplin, nrank, nrejtd, 
      *        nz1, istate(n+nclin+ncnln), iuser(*), iw(leniw)
 
-      integer ladx, laqp, lbl, lbu, lc1mul, lcjac,
-     *        lcmul, lcs1, lcs2, ldlam, ldslk, ldx, lcjdx,
-     *        lenaqp, lent, lenzy, lfeatl, lgq1, lgrad,
-     *        lhctrl, lhfrwd, liperm, lkx, lneedc,
-     *        lrho, lslk, lslk1, lwrk2, lwrk3, lx1
+      integer lcjac, lenaqp, lent, lenzy, lfeatl, lgrad, lkx
 
       double precision a(lda,*), bl(n+nclin+ncnln), bu(n+nclin+ncnln),
      *                 c(*), cjacu(ldcju,*), clamda(n+nclin+ncnln), 
@@ -396,6 +392,14 @@ c----------------------------------------------------------------------
      *        lqpgq, lgq, lrlam, lt, lq, lwtinf, lwrk1, lqptol
       common/ cstlnp /lkactv, lanorm, lap, lqpdx, lres, lres0, lqphz,
      *                lqpgq, lgq, lrlam, lt, lq, lwtinf, lwrk1, lqptol
+
+      integer liperm ,laqp, ladx, lbl, lbu, ldx, lgq1, lx1, lwrk2,
+     *        lcs1, lcs2, lc1mul, lcmul, lcjdx, ldlam, ldslk, lrho,
+     *        lwrk3, lslk1,lslk, lneedc, lhctrl
+      common/ cstln2 /liperm ,laqp, ladx, lbl, lbu, ldx, lgq1, lx1,
+     *        lwrk2, lcs1, lcs2, lc1mul, lcmul, lcjdx, ldlam, ldslk,
+     *        lrho, lwrk3, lslk1, lslk, lneedc, lhctrl
+
 
       integer lxcls(20),xliw,xlw,lxcnp(35)
 
@@ -549,8 +553,7 @@ c     assign array lengths that depend upon the problem dimensions.
       lneedc = 1 + 2*n
       liperm = lneedc + ncnln
 
-      lhfrwd = 1
-      lhctrl = lhfrwd + n
+      lhctrl = 1 + n
       lanorm = lhctrl + n
       lqpgq = lanorm + nclin + ncnln
       lgq = lqpgq + n
@@ -581,17 +584,6 @@ c     assign the addresses for arrays used in npcore.
       lx1 = lfeatl + nctotl
       lwrk2 = lx1 + n
 
-      lxcnp(2) = liperm
-      lxcnp(3) = laqp
-      lxcnp(4) = ladx
-      lxcnp(5) = lbl
-      lxcnp(6) = lbu
-      lxcnp(7) = ldx
-      lxcnp(8) = lgq1
-      lxcnp(10) = lfeatl
-      lxcnp(11) = lx1
-      lxcnp(12) = lwrk2
-
       lcs1 = lwrk2 + nctotl
       lcs2 = lcs1 + ncnln
       lc1mul = lcs2 + ncnln
@@ -605,20 +597,29 @@ c     assign the addresses for arrays used in npcore.
       lslk = lslk1 + ncnln
       lhfwrd = 1
 
-      lxcnp(13) = lcs1
-      lxcnp(14) = lcs2
-      lxcnp(15) = lc1mul
-      lxcnp(16) = lcmul
-      lxcnp(17) = lcjdx
-      lxcnp(18) = ldlam
-      lxcnp(19) = ldslk
-      lxcnp(20) = lrho
-      lxcnp(21) = lwrk3
-      lxcnp(22) = lslk1
-      lxcnp(23) = lslk
-      lxcnp(24) = lneedc
-      lxcnp(25) = 1
-      lxcnp(26) = lhctrl
+      locnp(2) = liperm
+      locnp(3) = laqp
+      locnp(4) = ladx
+      locnp(5) = lbl
+      locnp(6) = lbu
+      locnp(7) = ldx
+      locnp(8) = lgq1
+      locnp(10) = lfeatl
+      locnp(11) = lx1
+      locnp(12) = lwrk2
+      locnp(13) = lcs1
+      locnp(14) = lcs2
+      locnp(15) = lc1mul
+      locnp(16) = lcmul
+      locnp(17) = lcjdx
+      locnp(18) = ldlam
+      locnp(19) = ldslk
+      locnp(20) = lrho
+      locnp(21) = lwrk3
+      locnp(22) = lslk1
+      locnp(23) = lslk
+      locnp(24) = lneedc
+      locnp(26) = lhctrl
 
       lcjac = lslk + ncnln
       lgrad = lcjac + ncnln*n
@@ -626,36 +627,9 @@ c     assign the addresses for arrays used in npcore.
       litotl = liperm + nctotl - 1
       lwtotl = lgrad + n - 1
 
-      xliw = litotl
-      xlw = lwtotl
-
-c     allocate addresses that are not allocated in nploc.
-
-      call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
-
-      do i = 1, 35
-         if (lxcnp(i).ne.locnp(i)) then 
-            write (*,*) i, locnp(i),lxcnp(i)
-         end if
-      end do
-
       lax = lwtotl + 1
-      lwtotl = lax + nclin - 1
+      lwtotl = lwtotl + nclin
       lax = min(lax,lwtotl)
-
-      !liperm = locnp(2)
-      !laqp = locnp(3)
-      !ldx = locnp(7)
-      !lfeatl = locnp(10)
-      !lwrk2 = locnp(12)
-      !
-      !lcmul = locnp(16)
-      !lrho = locnp(20)
-      !lwrk3 = locnp(21)
-      !lneedc = locnp(24)
-      !lhfrwd = locnp(25)
-      !lhctrl = locnp(26)
-
       ldcj = max(ncnln,1)
 
       tolrnk = 0d0
@@ -673,7 +647,7 @@ c     load the arrays of feasibility tolerances.
       else if (lfdset.eq.1) then
          fdchk = fdint
       else
-         fdchk = w(lhfrwd)
+         fdchk = w(1)
       end if
 
       nfun = 0
@@ -693,7 +667,7 @@ c     the jacobian (with constant elements set) is placed in cjacu.
      *               ncnln,confun,objfun,iw(lneedc),bigbnd,epsrf,cdint,
      *               fdint,fdchk,fdnorm,objf,xnorm,bl,bu,c,w(lwrk3),
      *               w(lcjac),cjacu,w(lcjdx),w(ldx),w(lgrad),gradu,
-     *               w(lhfrwd),w(lhctrl),x,w(lwrk1),w(lwrk2),
+     *               w(1),w(lhctrl),x,w(lwrk1),w(lwrk2),
      *               iuser,user)
 
          if (info.ne.0) then
@@ -813,7 +787,7 @@ c     check the gradients at a feasible x.
      *            ncnln,confun,objfun,iw(lneedc),bigbnd,epsrf,cdint,
      *            fdint,fdchk,fdnorm,objf,xnorm,bl,bu,c,w(lwrk3),
      *            w(lcjac),cjacu,w(lcjdx),w(ldx),w(lgrad),gradu,
-     *            w(lhfrwd),w(lhctrl),x,w(lwrk1),w(lwrk2),iuser,user)
+     *            w(1),w(lhctrl),x,w(lwrk1),w(lwrk2),iuser,user)
 
       if (info.ne.0) then
          if (info.gt.0) inform = 7
@@ -7966,131 +7940,6 @@ c     ======================end of main loop============================
 c                                 end of lpcore
       end
 
-      subroutine nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
-c----------------------------------------------------------------------
-c     nploc allocates the addresses of the work arrays for npcore and
-c     lscore.
-c----------------------------------------------------------------------
-      implicit none
-
-      integer litotl, lwtotl, n, nclin, ncnln, nctotl
-
-      integer ladx, lanorm, laqp, lbl, lbu, lc1mul,
-     *        lcjdx, lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
-     *        lenaqp, lent, lenzy, lfeatl, lgq, lgq1, lgrad,
-     *        lhctrl, lhfrwd, liperm, lkactv, lneedc,
-     *        lqpadx, lqpdx, lqpgq, lqphz, lqptol, lrho,
-     *        lrlam, lrpq, lrpq0, lslk, lslk1, lt, lwrk1,
-     *        lwrk2, lwrk3, lwtinf, lx1, lzy, minw, miniw
-
-      integer locnp
-      common/ ngg013 /locnp(35)
-
-      integer ldt, ncolt, ldzy
-      common/ ngg004 /ldt, ncolt, ldzy
-c----------------------------------------------------------------------
-c     assign array lengths that depend upon the problem dimensions.
-
-      if (nclin+ncnln.eq.0) then
-         lent = 0
-         lenzy = 0
-      else
-         lent = ldt*ncolt
-         lenzy = ldzy*ldzy
-      end if
-
-      if (ncnln.eq.0) then
-         lenaqp = 0
-      else
-         lenaqp = (nclin+ncnln)*n
-      end if
-
-      lkactv = 1
-      lneedc = lkactv + n + n
-      liperm = lneedc + ncnln
-      miniw = liperm + nctotl
-
-      lhfrwd = 1
-      lhctrl = lhfrwd + n
-      lanorm = lhctrl + n
-      lqpgq = lanorm + nclin + ncnln
-      lgq = lqpgq + n
-      lrlam = lgq + n
-      lt = lrlam + n
-      lzy = lt + lent
-      minw = lzy + lenzy
-
-c     assign the addresses for the workspace arrays used by  npiqp .
-
-      lqpadx = minw
-      lqpdx = lqpadx + nclin + ncnln
-      lrpq = lqpdx + n
-      lrpq0 = lrpq + n
-      lqphz = lrpq0 + n
-      lwtinf = lqphz + n
-      lwrk1 = lwtinf + nctotl
-      lqptol = lwrk1 + nctotl
-
-c     assign the addresses for arrays used in npcore.
-
-      laqp = lqptol + nctotl
-      ladx = laqp + lenaqp
-      lbl = ladx + nclin + ncnln
-      lbu = lbl + nctotl
-      ldx = lbu + nctotl
-      lgq1 = ldx + n
-      lfeatl = lgq1 + n
-      lx1 = lfeatl + nctotl
-      lwrk2 = lx1 + n
-      minw = lwrk2 + nctotl
-
-      locnp(2) = liperm
-      locnp(3) = laqp
-      locnp(4) = ladx
-      locnp(5) = lbl
-      locnp(6) = lbu
-      locnp(7) = ldx
-      locnp(8) = lgq1
-      locnp(10) = lfeatl
-      locnp(11) = lx1
-      locnp(12) = lwrk2
-
-      lcs1 = minw
-      lcs2 = lcs1 + ncnln
-      lc1mul = lcs2 + ncnln
-      lcmul = lc1mul + ncnln
-      lcjdx = lcmul + ncnln
-      ldlam = lcjdx + ncnln
-      ldslk = ldlam + ncnln
-      lrho = ldslk + ncnln
-      lwrk3 = lrho + ncnln
-      lslk1 = lwrk3 + ncnln
-      lslk = lslk1 + ncnln
-      minw = lslk + ncnln
-
-      locnp(13) = lcs1
-      locnp(14) = lcs2
-      locnp(15) = lc1mul
-      locnp(16) = lcmul
-      locnp(17) = lcjdx
-      locnp(18) = ldlam
-      locnp(19) = ldslk
-      locnp(20) = lrho
-      locnp(21) = lwrk3
-      locnp(22) = lslk1
-      locnp(23) = lslk
-      locnp(24) = lneedc
-      locnp(25) = lhfrwd
-      locnp(26) = lhctrl
-
-      lgrad = minw + ncnln*n
-      minw = lgrad + n
-
-      litotl = miniw - 1
-      lwtotl = minw - 1
-c                                 end of nploc
-      end
-
       subroutine npcore (unitq,inform,majits,n,nclin,ncnln,
      *                  nctotl,nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,
      *                  nfun,ngrad,istate,kactiv,kx,objf,fdnorm,xnorm,
@@ -8122,17 +7971,16 @@ c----------------------------------------------------------------------
      *                  flmax, gdx, gfnorm, glf1, glf2, glnorm, gltest,
      *                  grdalf, gtest, gznorm, obj, objalf, objsiz,
      *                  qpcurv, rootn, rtftol, rtmax, xsize
-      integer info, jmax, ladx, laqp, lbl, lbu,
-     *                  lc1mul, lcjac1, lcjdx, lcjdx1, lcmul, lcs1,
-     *                  lcs2, ldcj1, ldlam, ldslk, ldx, lgq1,
-     *                  lhctrl, lhfrwd, linact, liperm, lneedc,
-     *                  lrho, lslk, lslk1,
-     *                  lvioln, lwrk2, lwrk3, lx1, majit0, minits, mnr,
+
+      integer info, jmax, lcjac1, lcjdx, ldcj1,
+     *                  linact, lvioln, majit0, minits, mnr,
      *                  mnrsum, mode, ncqp, nl,
      *                  nlnact, nlserr, nmajor, nminor, nplin, nqperr,
      *                  nqpinf, nstate, numinf, nviol
+
       logical centrl, convpt, convrg, done, error, feasqp,
      *                  goodgq, infeas, needfd, newgq, optiml, overfl
+
       character*5       mjrmsg
 
       logical ktcond(2)
@@ -8147,6 +7995,13 @@ c----------------------------------------------------------------------
       
       integer locnp
       common/ ngg013 /locnp(35)
+
+      integer liperm ,laqp, ladx, lbl, lbu, ldx, lgq1, lx1, lwrk2,
+     *        lcs1, lcs2, lc1mul, lcmul, lcjdx1, ldlam, ldslk, lrho,
+     *        lwrk3, lslk1,lslk, lneedc, lhctrl
+      common/ cstln2 /liperm ,laqp, ladx, lbl, lbu, ldx, lgq1, lx1,
+     *        lwrk2, lcs1, lcs2, lc1mul, lcmul, lcjdx1, ldlam, ldslk,
+     *        lrho, lwrk3, lslk1,lslk, lneedc, lhctrl
 
       double precision wmach
       common/ cstmch /wmach(10)
@@ -8217,7 +8072,6 @@ c
       lslk1 = locnp(22)
       lslk = locnp(23)
       lneedc = locnp(24)
-      lhfrwd = locnp(25)
       lhctrl = locnp(26)
 
       lcjac1 = laqp + nclin
@@ -8272,7 +8126,7 @@ c           transformed gradient of the objective.
             call npfd (centrl,mode,ldcj,ldcju,n,ncnln,bigbnd,cdint,
      *                  fdint,fdnorm,objf,confun,objfun,iw(lneedc),bl,
      *                  bu,c,w(lwrk2),w(lwrk3),cjac,cjacu,grad,gradu,
-     *                  w(lhfrwd),w(lhctrl),x,iuser,user)
+     *                  w(1),w(lhctrl),x,iuser,user)
             inform = mode
             if (mode.lt.0) go to 60
 
@@ -8576,7 +8430,7 @@ c              compute the missing gradients.
                call npfd (centrl,mode,ldcj,ldcju,n,ncnln,bigbnd,cdint,
      *                    fdint,fdnorm,objf,confun,objfun,iw(lneedc),
      *                    bl,bu,c,w(lwrk2),w(lwrk3),cjac,cjacu,grad,
-     *                    gradu,w(lhfrwd),w(lhctrl),x,iuser,user)
+     *                    gradu,w(1),w(lhctrl),x,iuser,user)
 
                inform = mode
                if (mode.lt.0) go to 60
