@@ -626,11 +626,7 @@ c                                 copy this to jacu.
      *               w(1),w(lhctrl),x,w(lwrk1),w(lwrk2),
      *               iuser,user)
 
-         if (info.ne.0) then
-            if (info.gt.0) inform = 7
-            if (info.lt.0) inform = info
-            go to 80
-         end if
+         if (info.ne.0) return
 
          nstate = 0
 
@@ -732,10 +728,7 @@ c        use work2 as the multiplier vector.
 
       itmax1 = itmxsv
 
-      if (nlperr.gt.0) then
-         inform = 2
-         go to 80
-      end if
+      if (nlperr.gt.0) return
 
 c     check the gradients at a feasible x.
 
