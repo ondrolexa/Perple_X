@@ -7975,13 +7975,13 @@ c----------------------------------------------------------------------
 
       integer litotl, lwtotl, n, nclin, ncnln, nctotl
 
-      integer ladx, lanorm, laqp, lbl, lbu, lc1mul, lcjac,
+      integer ladx, lanorm, laqp, lbl, lbu, lc1mul,
      *        lcjdx, lcmul, lcs1, lcs2, ldlam, ldslk, ldx,
      *        lenaqp, lent, lenzy, lfeatl, lgq, lgq1, lgrad,
-     *        lhctrl, lhfrwd, liperm, lkactv, lkx, lneedc,
+     *        lhctrl, lhfrwd, liperm, lkactv, lneedc,
      *        lqpadx, lqpdx, lqpgq, lqphz, lqptol, lrho,
      *        lrlam, lrpq, lrpq0, lslk, lslk1, lt, lwrk1,
-     *        lwrk2, lwrk3, lwtinf, lx1, lzy, miniw, minw
+     *        lwrk2, lwrk3, lwtinf, lx1, lzy, minw, miniw
 
       integer locnp
       common/ ngg013 /locnp(35)
@@ -7989,9 +7989,6 @@ c----------------------------------------------------------------------
       integer ldt, ncolt, ldzy
       common/ ngg004 /ldt, ncolt, ldzy
 c----------------------------------------------------------------------
-      miniw = 1
-      minw = 1
-
 c     assign array lengths that depend upon the problem dimensions.
 
       if (nclin+ncnln.eq.0) then
@@ -8008,13 +8005,12 @@ c     assign array lengths that depend upon the problem dimensions.
          lenaqp = (nclin+ncnln)*n
       end if
 
-      lkactv = miniw
-      lkx = lkactv + n
-      lneedc = lkx + n
+      lkactv = 1
+      lneedc = lkactv + n + n
       liperm = lneedc + ncnln
       miniw = liperm + nctotl
 
-      lhfrwd = minw
+      lhfrwd = 1
       lhctrl = lhfrwd + n
       lanorm = lhctrl + n
       lqpgq = lanorm + nclin + ncnln
@@ -8034,11 +8030,10 @@ c     assign the addresses for the workspace arrays used by  npiqp .
       lwtinf = lqphz + n
       lwrk1 = lwtinf + nctotl
       lqptol = lwrk1 + nctotl
-      minw = lqptol + nctotl
 
 c     assign the addresses for arrays used in npcore.
 
-      laqp = minw
+      laqp = lqptol + nctotl
       ladx = laqp + lenaqp
       lbl = ladx + nclin + ncnln
       lbu = lbl + nctotl
@@ -8085,13 +8080,11 @@ c     assign the addresses for arrays used in npcore.
       locnp(22) = lslk1
       locnp(23) = lslk
       locnp(24) = lneedc
-
-      lcjac = minw
-      lgrad = lcjac + ncnln*n
-      minw = lgrad + n
-
       locnp(25) = lhfrwd
       locnp(26) = lhctrl
+
+      lgrad = minw + ncnln*n
+      minw = lgrad + n
 
       litotl = miniw - 1
       lwtotl = minw - 1
@@ -8762,80 +8755,6 @@ c     until    (errmax .le. featol(jmax) .or. ktry.gt.ntry
 
       rowerr = errmax.gt.featol(jmax)
 c                                 end of cmsetx
-      end
-
-      subroutine lploc (cset,n,nclin,litotl,lwtotl)
-c----------------------------------------------------------------------
-c lploc allocates the addresses of the work arrays for lpcore.
-c----------------------------------------------------------------------
-      implicit none
-
-      logical cset
-
-      integer litotl, lwtotl, n, nclin, lencq, lenq, lenrt,
-     *        miniw, minw
-
-      integer lkactv, lkx, lfeatu, lanorm, lad, ld, lgq, lcq, lrlam,
-     *        lr, lt, lq, lwtinf, lwrk
-
-      common/ cstlcl /lkactv,lkx,lfeatu,lanorm,lad,ld,lgq,lcq,lrlam,
-     *                lr, lt, lq, lwtinf, lwrk
-
-      integer ldt, ldq, ncolt
-      common/ ngg004 /ldt, ncolt, ldq
-c----------------------------------------------------------------------
-c     refer to the first free space in the work arrays.
-
-      miniw = 4
-      minw = 1
-
-c     integer workspace.
-
-      lkactv = miniw
-      lkx = lkactv + n
-      miniw = lkx + n
-
-c     real workspace.
-c     assign array lengths that depend upon the problem dimensions.
-
-      lenrt = ldt*ncolt
-      if (nclin.eq.0) then
-         lenq = 0
-      else
-         lenq = ldq*ldq
-      end if
-c
-      if (cset) then
-         lencq = n
-      else
-         lencq = 0
-      end if
-
-c     we start with arrays that can be preloaded by smart users.
-
-      lfeatu = minw
-      minw = lfeatu + nclin + n
-
-c     next comes stuff used by  lpcore
-
-      lanorm = minw
-      lad = lanorm + nclin
-      ld = lad + nclin
-      lgq = ld + n
-      lcq = lgq + n
-      lrlam = lcq + lencq
-      lr = lrlam + n
-      lt = lr
-      lq = lt + lenrt
-      lwtinf = lq + lenq
-      lwrk = lwtinf + n + nclin
-      minw = lwrk + n + nclin
-
-c     load the addresses in loclc.
-
-      litotl = miniw - 1
-      lwtotl = minw - 1
-c                                 end of lploc
       end
 
       subroutine rzadds (unitq,vertex,k1,k2,it,nactiv,nartif,nz,nfree,
