@@ -348,7 +348,7 @@ c                                 end of lpsol
 
       subroutine nlpsol (n,nclin,ncnln,lda,ldcju,ldr,a,bl,bu,confun,
      *                  objfun,iter,istate,c,cjacu,clamda,objf,gradu,r,
-     *                  x,iw,leniw,w,lenw,iuser,user,ifail)
+     *                  x,iw,leniw,w,lenw,iuser,user)
 c----------------------------------------------------------------------
 c     nlpsol solves 
 
@@ -368,9 +368,9 @@ c----------------------------------------------------------------------
 
       logical cold, linobj, needfd, rowerr, vertex
 
-      integer ifail, iter, lda, ldcju, ldr, leniw, lenw, n, nclin, 
+      integer iter, lda, ldcju, ldr, leniw, lenw, n, nclin, 
      *        ncnln,i, ianrmj, ikx, info, inform, maxnz, minact,
-     *        itmxsv, itns, j, jinf, jmax, lax, lhfwrd,
+     *        itmxsv, itns, j, jinf, jmax, lax,
      *        lclam, ldaqp, ldcj, ldfju,litotl,
      *        lwtotl, m, maxact, minfxd, mxfree, nact1, 
      *        nartif, nctotl, nfun, ngq, ngrad,nres, nstate, numinf,
@@ -399,12 +399,6 @@ c----------------------------------------------------------------------
       common/ cstln2 /liperm ,laqp, ladx, lbl, lbu, ldx, lgq1, lx1,
      *        lwrk2, lcs1, lcs2, lc1mul, lcmul, lcjdx, ldlam, ldslk,
      *        lrho, lwrk3, lslk1, lslk, lneedc, lhctrl
-
-
-      integer lxcls(20),xliw,xlw,lxcnp(35)
-
-      integer locnp
-      common/ ngg013 /locnp(35)
 
       double precision wmach
       common/ cstmch /wmach(10)
@@ -528,12 +522,7 @@ c                                 lvlder, derivative level, 3 - all available, 1
       ldaqp = max(nclin+ncnln,1)
       if (ncnln.eq.0 .and. nclin.gt.0) ldaqp = lda
 
-c     nploc defines the arrays that contain the locations of
-c     work arrays within  w  and  iw.
-c     call nploc(n,nclin,ncnln,nctotl,litotl,lwtotl)
-
-c     assign array lengths that depend upon the problem dimensions.
-
+c                                 array lengths that depend on problem dimension
       if (nclin+ncnln.eq.0) then
          lent = 0
          lenzy = 0
@@ -560,9 +549,7 @@ c     assign array lengths that depend upon the problem dimensions.
       lrlam = lgq + n
       lt = lrlam + n
       lq = lt + lent
-
-c     assign the addresses for the workspace arrays used by  npiqp .
-
+c                                 addresses used by npiqp
       lap = lq + lenzy
       lqpdx = lap + nclin + ncnln
       lres = lqpdx + n
@@ -571,9 +558,7 @@ c     assign the addresses for the workspace arrays used by  npiqp .
       lwtinf = lqphz + n
       lwrk1 = lwtinf + nctotl
       lqptol = lwrk1 + nctotl
-
-c     assign the addresses for arrays used in npcore.
-
+c                                  addresses used by npcore
       laqp = lqptol + nctotl
       ladx = laqp + lenaqp
       lbl = ladx + nclin + ncnln
@@ -595,31 +580,6 @@ c     assign the addresses for arrays used in npcore.
       lwrk3 = lrho + ncnln
       lslk1 = lwrk3 + ncnln
       lslk = lslk1 + ncnln
-      lhfwrd = 1
-
-      locnp(2) = liperm
-      locnp(3) = laqp
-      locnp(4) = ladx
-      locnp(5) = lbl
-      locnp(6) = lbu
-      locnp(7) = ldx
-      locnp(8) = lgq1
-      locnp(10) = lfeatl
-      locnp(11) = lx1
-      locnp(12) = lwrk2
-      locnp(13) = lcs1
-      locnp(14) = lcs2
-      locnp(15) = lc1mul
-      locnp(16) = lcmul
-      locnp(17) = lcjdx
-      locnp(18) = ldlam
-      locnp(19) = ldslk
-      locnp(20) = lrho
-      locnp(21) = lwrk3
-      locnp(22) = lslk1
-      locnp(23) = lslk
-      locnp(24) = lneedc
-      locnp(26) = lhctrl
 
       lcjac = lslk + ncnln
       lgrad = lcjac + ncnln*n
@@ -634,9 +594,7 @@ c     assign the addresses for arrays used in npcore.
 
       tolrnk = 0d0
       rcndbd = sqrt(hcndbd)
-
-c     load the arrays of feasibility tolerances.
-
+c                                 load feasibility tolerances.
       if (tolfea.gt.0d0) call sload (nplin,tolfea,w(lfeatl),1)
 
       if (ncnln.gt.0 .and. ctol.gt.0d0) call sload (ncnln,ctol,
@@ -653,12 +611,10 @@ c     load the arrays of feasibility tolerances.
       nfun = 0
       ngrad = 0
       nstate = 1
-
-c     if required, compute the problem functions.
-c     if the constraints are nonlinear, the first call of confun
-c     sets up any constant elements in the jacobian matrix. a copy of
-c     the jacobian (with constant elements set) is placed in cjacu.
-
+c                                 if requested compute the problem functions.
+c                                 if nonlinear constraints, call confun
+c                                 to obtain constant elements in the jacobian. 
+c                                 copy this to jacu.
       if (lverfy.ge.10) then
          xnorm = dnrm2 (n,x,1)
          lvrfyc = lverfy - 10
@@ -675,7 +631,9 @@ c     the jacobian (with constant elements set) is placed in cjacu.
             if (info.lt.0) inform = info
             go to 80
          end if
+
          nstate = 0
+
       end if
 
       if (nclin.gt.0) then
@@ -695,10 +653,10 @@ c     the jacobian (with constant elements set) is placed in cjacu.
       call dcopy (nplin,w(lfeatl),1,w(lwtinf),1)
       call dscal (nplin,1d0/feamin,w(lwtinf),1)
 
-c     the input values of x and (optionally) istate are used by
-c     lscrsh  to define an initial working set.
-
+c                                 input values of x and (optionally) istate 
+c                                 are used by lscrsh to define the initial working set.
       vertex = .false.
+
       call lscrsh (cold,vertex,nclin,nplin,nactiv,nartif,nfree,n,lda,
      *            istate,iw(lkactv),bigbnd,tolact,a,w(lax),bl,bu,x,
      *            w(lwrk1),w(lwrk2))
@@ -725,6 +683,7 @@ c     lscrsh  to define an initial working set.
       rhonrm = 0d0
       rhodmp = 1d0
       scale = 1d0
+
       call sload (ncnln,0d0,w(lrho),1)
 
 c        re-order kx so that the free variables come first.
@@ -789,22 +748,15 @@ c     check the gradients at a feasible x.
      *            w(lcjac),cjacu,w(lcjdx),w(ldx),w(lgrad),gradu,
      *            w(1),w(lhctrl),x,w(lwrk1),w(lwrk2),iuser,user)
 
-      if (info.ne.0) then
-         if (info.gt.0) inform = 7
-         if (info.lt.0) inform = info
-         go to 80
-      end if
+      if (info.ne.0) return
 
       call dcopy (n,w(lgrad),1,w(lgq),1)
       call cmqmul (6,n,nz,nfree,ldq,unitq,iw(lkx),w(lgq),w(lq),w(lwrk1))
 c                                 signal gsol2 to save g
       iuser(2) = 1
-
 c                                 solve the problem.
-
       if (ncnln.eq.0) then
-
-c        the problem has only linear constraints and bounds.
+c                                 the problem has only linear constraints and bounds.
 
          call npcore (unitq,inform,iter,n,nclin,ncnln,nctotl,
      *                nactiv,nfree,nz,ldcj,ldcju,ldaqp,ldr,nfun,ngrad,
@@ -812,14 +764,10 @@ c        the problem has only linear constraints and bounds.
      *               ,objfun,a,w(lax),bl,bu,c,w(lcjac),cjacu,clamda,
      *                w(lfeatl),w(lgrad),gradu,r,x,iw,w,lenw,iuser,user)
       else
-
-c        the problem has some nonlinear constraints.
-
+c                                  the problem has nonlinear constraints
          if (nclin.gt.0) call smcopy ('general',nclin,n,a,lda,w(laqp),
      *                               ldaqp)
-
-c        try and add some nonlinear constraint indices to kactiv.
-
+c                                   try to add some nonlinear constraint indices to kactiv
          call npcrsh (cold,n,nclin,ncnln,nctotl,nactiv,nfree,nz,istate,
      *               iw(lkactv),bigbnd,tolact,bl,bu,c)
 
@@ -834,9 +782,7 @@ c        try and add some nonlinear constraint indices to kactiv.
 c                                 the diagnositics are not so hot,
 c                                 here let the calling routine decide
 c                                 what to do. this could be checked 
-c                                 again
-80    ifail = 0
-c                                 end of nlpsol
+c                                 again. end of nlpsol
       end
 
       subroutine lsmove (hitcon,hitlow,linobj,unitgz,nclin,nrank,nrz,n,
@@ -7759,7 +7705,6 @@ c                 than 1.
             else 
 c debug debug
                if (jdel.gt.0.and.nfree.eq.ldq) then 
-c                 write (*,*) 'bugwandita!'
                   msg = 'infeas'
                   goto 20
                end if
@@ -7992,9 +7937,6 @@ c----------------------------------------------------------------------
      *        lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
       common/ cstlnp /lkactv, lanorm, lcjdxx, lqpdx, lrpq, lqrwrk,lqphz,
      *                lhpq, lgq, lrlam, lt, lzy, lwtinf, lwrk1, lqptol
-      
-      integer locnp
-      common/ ngg013 /locnp(35)
 
       integer liperm ,laqp, ladx, lbl, lbu, ldx, lgq1, lx1, lwrk2,
      *        lcs1, lcs2, lc1mul, lcmul, lcjdx1, ldlam, ldslk, lrho,
@@ -8051,29 +7993,6 @@ c     specify machine-dependent parameters.
       flmax = wmach(7)
       rtmax = wmach(8)
 c
-      liperm = locnp(2)
-      laqp = locnp(3)
-      ladx = locnp(4)
-      lbl = locnp(5)
-      lbu = locnp(6)
-      ldx = locnp(7)
-      lgq1 = locnp(8)
-      lx1 = locnp(11)
-      lwrk2 = locnp(12)
-      lcs1 = locnp(13)
-      lcs2 = locnp(14)
-      lc1mul = locnp(15)
-      lcmul = locnp(16)
-      lcjdx1 = locnp(17)
-      ldlam = locnp(18)
-      ldslk = locnp(19)
-      lrho = locnp(20)
-      lwrk3 = locnp(21)
-      lslk1 = locnp(22)
-      lslk = locnp(23)
-      lneedc = locnp(24)
-      lhctrl = locnp(26)
-
       lcjac1 = laqp + nclin
       lcjdx = ladx + nclin
       lvioln = lwrk3

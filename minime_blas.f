@@ -23,7 +23,7 @@ c-----------------------------------------------------------------------
       logical tic, zbad, swap, xref
 
       integer i, nvar, iter, iwork(m22), itic, idif,
-     *        ivars(13), istate(m21), idead, nclin, ntot
+     *        ivars(13), istate(m21), nclin, ntot
 
       double precision ggrd(m19), lapz(m20,m19),gsol1, pinc,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), fac,
@@ -117,10 +117,8 @@ c                                 closure for molecular models
       end if
 
       itic = 0
-
-10    idead = -1
 c                                 EPSRF, function precision
-      rvars(1) = (wmach(3)*fac)**(0.9)
+10    rvars(1) = (wmach(3)*fac)**(0.9)
 c                                 FTOL, optimality tolerance
       rvars(2) = (wmach(3)*fac)**(0.8)
 c                                 CTOL,feasibility tolerance
@@ -164,19 +162,15 @@ c                                 derivatives.
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol2,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
-     *            m23,ivars,rvars,idead)
+     *            m23,ivars,rvars)
 
-      if (iter.eq.0.and.idead.eq.0.and.itic.le.1.and.deriv(rids)) then
+      if (iter.eq.0.and.itic.le.1.and.deriv(rids)) then
 
          pa = yt
 c                                 error counter
          itic = itic + 1
 
          goto 10
-
-      else if (idead.ne.0) then 
-    
-         write (*,*) 'woana woaba, wanka?'
 
       else
 
@@ -961,7 +955,7 @@ c-----------------------------------------------------------------------
       logical maxs
 
       integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
-     *        ivars(15),istate(m21), idead, nclin, lord
+     *        ivars(15),istate(m21), nclin, lord
 
       double precision ggrd(m19), gordp0, g0, fac,
      *                 bl(m21), bu(m21), gfinal, ppp(m19), 
@@ -1141,9 +1135,8 @@ c                                 derivatives are available
 
       xp(1:nvar) = ppp(1:nvar)
 
-10    idead = -1
 c                                 EPSRF, function precision
-      rvars(1) = (wmach(3)*fac)**(0.9)
+10    rvars(1) = (wmach(3)*fac)**(0.9)
 c                                 FTOL, optimality tolerance
       rvars(2) = (wmach(3)*fac)**(0.8)
 c                                 CTOL,feasibility tolerance
@@ -1180,13 +1173,13 @@ c                                 LVLDER = 0, no derivatives
 
       call nlpsol (nvar,nclin,0,m20,1,m19,lapz,bl,bu,dummy,gsol4,iter,
      *            istate,c,cjac,clamda,gfinal,ggrd,r,ppp,iwork,m22,work,
-     *            m23,ivars,rvars,idead)
-c                                 if nlpsol returns iter = 0 and idead 
-c                                 = 0, it's likely failed, make 2 additional 
+     *            m23,ivars,rvars)
+c                                 if nlpsol returns iter = 0
+c                                 it's likely failed, make 2 additional 
 c                                 attempts, 1st try numerical verification of 
 c                                 the derivatives, 2nd try use only numerical 
 c                                 derivatives.
-      if (iter.eq.0.and.idead.eq.0.and.itic.le.1.and.deriv(ids)) then 
+      if (iter.eq.0.and.itic.le.1.and.deriv(ids)) then 
 
          ppp(1:nvar) = xp(1:nvar)
          itic = itic + 1
@@ -1198,16 +1191,6 @@ c                                   set pa to correspond to the final
 c                                   values in ppp.
          call ppp2pa (ppp,ids)
 
-      end if
-
-      if (idead.eq.2) then 
-         write (*,*) 'minfxc infeasible initial conditions'
-      else if (idead.eq.7) then
-         write (*,*) 'weak solution'
-      else if (idead.eq.7) then
-         write (*,*) 'bad derivatives'
-      else if (idead.ne.0) then 
-         write (*,*) 'sommat else bad',idead
       end if
 
       if (.not.maxs) then
