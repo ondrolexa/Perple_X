@@ -247,6 +247,7 @@ c                                 hot should be able to use previous
 c                                 clamda, but it doesn't seem to work
 c                                 all the time, with the result that 
 c                                 it's worse than nothing.
+         clamda(1:nctotl) = tol/2d0
          unitq = iw(1).eq.1
          nfree = iw(2)
          nactiv = iw(3)
@@ -339,7 +340,7 @@ c                                 also set for hot start
       if (ifail.lt.4) then
 c                                 signal subsequent warm start, does
 c                                 almost nothing (if not worse).
-         istart = 1
+         istart = 2
       else
          istart = 0
       end if

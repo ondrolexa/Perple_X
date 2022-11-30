@@ -2932,9 +2932,9 @@ c                                 HS
       if (lopt(65).and.aflu) then
 c                                 fluid_shear_modulus model, compute the
 c                                 total aggregate shear modulus as the
-c                                 fluid_absent modulus * (1-sqrt(phi/phi_d))^2
+c                                 fluid_absent modulus * (1-sqrt(phi/phi_d))
          if (phi.lt.nopt(65)) then
-            psys(5) = psys1(5)*(1d0-dsqrt(phi/nopt(65)))**2
+            psys(5) = psys1(5)*(1d0-dsqrt(phi/nopt(65)))
          else 
             psys(5) = 0d0
          end if

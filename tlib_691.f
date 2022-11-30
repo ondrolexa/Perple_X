@@ -1783,6 +1783,7 @@ c                                 info file options
          if (iam.eq.1) write (n,'(4x,a,l1,9x,a)') 
      *                    'seismic_data_file       ',lopt(50),'[F] T;'//
      *                    ' echo seismic wavespeed options'
+
       end if 
 
       write (n,1020) 
@@ -5183,7 +5184,8 @@ c                                 readrt loads the root into prject
 
             else  
 c                                 VERTEX, MEEMUM, and plotting programs
-               write (*,1030) 
+               write (*,1030)
+c                                 Amir #1
                call readrt
 
             end if 
@@ -5215,7 +5217,9 @@ c                                 try again
 
             end if
          
-         else 
+         else
+c                                 Amir #2
+c           prject = 'amir_mantle_input'
 c                                 VERTEX, MEEMUM, UNSPLT
             open (n1,file=n1name,iostat=ierr,status='old')
 
@@ -7129,7 +7133,7 @@ c-----------------------------------------------------------------------
      *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
      *        4x,'Tisza_test              ',l1,9x,'[F] T',/,
      *        4x,'fluid_shear_modulus     ',l1,9x,'[T] F',/,
-     *        4x,'phi_d                   ',f4.2,6x,'[0.36] 0->1')
+     *        4x,'phi_d                   ',f4.2,6x,'[0.36] 0->1',/)
 
       end
 
