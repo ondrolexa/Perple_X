@@ -31,7 +31,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X version 6.9.1, source updated November 29, 2022.',
+     *     'Perple_X version 6.9.1, source updated December 1, 2022.',
 
      *     'Copyright (C) 1986-2022 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -407,6 +407,12 @@ c                                  1 - warm
 c                                  2 - hot
       iopt(38) = 1
       valu(38) = 'war'
+c                                 static_LP_start
+c                                  0 - cold
+c                                  1 - warm
+c                                  2 - hot
+      iopt(39) = 1
+      valu(39) = 'hot'
 c                                 keep_max
       iopt(52) = 20000
 c                                 -------------------------------------
@@ -897,6 +903,17 @@ c                                 use cold starts for dynamic LP
             end if
 
             valu(38) = val
+
+         else if (key.eq.'static_LP_start') then
+c                                 use cold starts for dynamic LP
+            if (val.eq.'col') then 
+               iopt(39) = 0
+            else if (val.eq.'war') then 
+               iopt(39) = 1
+            end if
+
+            valu(39) = val
+
 
          else if (key.eq.'timing') then
 c                                 timing for VERTEX
@@ -1891,6 +1908,7 @@ c                                 thermo options for frendly
      *        4x,'optimization_precision ',g7.1E1,4x,
      *           '[1e-4], 1e-1 => 1e-6, absolute',/,
      *        4x,'dynamic_LP_start        ',a3,7x,'[warm] cold hot',/,
+     *        4x,'static_LP_start         ',a3,7x,'[hot] cold warm',/,
      *        4x,'order_check             ',l1,9x,'[F] T',/,
      *        4x,'refinement_points       ',i2,8x,'[auto] 1->',i2,/,
      *        4x,'refinement_switch       ',l1,9x,'[T] F',/,

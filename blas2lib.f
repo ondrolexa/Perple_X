@@ -38,10 +38,9 @@ c     nclin - the number of general linear constraints (rows of a).
 c----------------------------------------------------------------------
       implicit none
 
-      character prbtyp*2, start*4, msg*6
+      character prbtyp*2, msg*6
 
-      logical cold, cset, done, found, halted,
-     *        rowerr, rset, unitq, vertex, warm
+      logical cset, done, found, halted, rowerr, rset, unitq, vertex
 
       integer istart, lpprob, ifail, iter, lda, leniw,
      *        lenw, n, nclin, istate(n+nclin), iw(leniw),
@@ -97,23 +96,17 @@ c                                 istart - 0 - cold start, 1 - warm start, 2 - h
       lcrash = istart
 c                                 cold start:  x may be provided, but 
 c                                 in perplex it isn't and therefore 
-c                                 x is initialized below for cold.
+c                                 x is initialized in cmcrsh.
+
 c                                 warm start:  initial working set is in istate.
+
 c                                 hot  start:  work arrays iw and w have 
 c                                 been the first three elements of iw contain details
-c                                 dimensions of the initial working set. in perplex
-c                                 warm is set, but the start is hot. warm start is 
-c                                 only used for static composition optimizations.
-      if (lcrash.eq.0) then
-         start = 'cold'
-      else if (lcrash.eq.1) then
-         start  = 'warm'
-      else if (lcrash.eq.2) then
-         start = 'hot '
-      end if
+c                                 dimensions of the initial working set.
 
-      cold = lcrash.eq.0
-      warm = lcrash.eq.1
+c                                 hot start is only used for static composition 
+c                                 optimizations.
+
 c                                 tol - feasibility tolerance
       tolfea = tol
 c                                 problem type 1 - fp, 2 - lp
@@ -199,16 +192,12 @@ c                                 by cmchzr)
 c                                 last iteration at which x was put on a constraint
       itnfix = 0
 
-      if (cold .or. warm) then
+      if (istart.lt.2) then
 c                                 cold or warm start. just about 
 c                                 everything must be initialized.
 c                                 the exception is istate on warm.
          clamda(1:nctotl) = tol/2d0
          w(1:nctotl) = tol
-c                                 initialize x, this may not
-c                                 be essential, but it is necessary
-c                                 to avoid sNaN
-         if (cold) x(1:n) = 0d0
 
          ianrmj = lanorm
 
@@ -223,7 +212,7 @@ c                                 to avoid sNaN
          call dcopy (nctotl,w(lfeatu),1,w(lwtinf),1)
          call dscal (nctotl,1d0/feamin,w(lwtinf),1)
 
-         call cmcrsh (start,vertex,nclin,nctotl,nactiv,nartif,nfree,n,
+         call cmcrsh (istart,vertex,nclin,nctotl,nactiv,nartif,nfree,n,
      *               lda,istate,iw(lkactv),iw(lkx),bigbnd,tolact,a,ax,
      *               bl,bu,clamda,x,w(lgq),w(lwrk))
 c                                 get tq factorization of working set matrix
@@ -243,11 +232,16 @@ c                                 get tq factorization of working set matrix
          end if
 
       else
-c                                 hot should be able to use previous
-c                                 clamda, but it doesn't seem to work
-c                                 all the time, with the result that 
-c                                 it's worse than nothing.
+c                                 hot can use previous clamda if
+c                                 conditions are close, otherwise
+c                                 better to steer cleer and reset
+c                                 everything (but istate).
          clamda(1:nctotl) = tol/2d0
+         x(1:n) = 0d0
+         w(lgq:lgq+n-1) = 0d0
+c                                  these counters reflect the values 
+c                                  in istate, ergo better not to reset
+c                                  istate.
          unitq = iw(1).eq.1
          nfree = iw(2)
          nactiv = iw(3)
@@ -338,9 +332,9 @@ c                                 also set for hot start
       if (ifail.lt.3) ifail = 0
 
       if (ifail.lt.4) then
-c                                 signal subsequent warm start, does
-c                                 almost nothing (if not worse).
-         istart = 2
+c                                 signal warm start possible, the calling
+c                                 routine decides what to do.
+         istart = 1
       else
          istart = 0
       end if
@@ -10149,8 +10143,8 @@ c     recompute the frobenius norm of r.
 c                                 end of nprset
       end
 
-      subroutine cmcrsh(start,vertex,nclin,nctotl,nactiv,nartif,nfree,n,
-     *                  lda,istate,kactiv,kx,bigbnd,tolact,a,ax,bl,bu,
+      subroutine cmcrsh(istart,vertex,nclin,nctotl,nactiv,nartif,nfree,
+     *                  n,lda,istate,kactiv,kx,bigbnd,tolact,a,ax,bl,bu,
      *                  featol,x,wx,work)
 c-----------------------------------------------------------------------
 c     cmcrsh  computes the quantities  istate (optionally),  kactiv,
@@ -10159,12 +10153,12 @@ c
 c     the computation depends upon the value of the input parameter
 c     start,  as follows...
 c
-c     start = 'cold'  an initial working set will be selected. first,
+c     istart = 0      an initial working set will be selected. first,
 c                     nearly-satisfied or violated bounds are added.
 c                     next,  general linear constraints are added that
 c                     have small residuals.
 c
-c     start = 'warm'  the quantities kactiv, nactiv and nfree are
+c     istart = 1      the quantities kactiv, nactiv and nfree are
 c                     initialized from istate,  specified by the user.
 c
 c     if vertex is true, an artificial vertex is defined by fixing some
@@ -10180,9 +10174,8 @@ c-----------------------------------------------------------------------
       implicit none 
 
       double precision bigbnd, tolact
-      integer lda, n, nactiv, nartif, nclin, nctotl, nfree
+      integer lda, n, nactiv, nartif, nclin, nctotl, nfree, istart
       logical vertex
-      character*4       start
 
       double precision a(lda,*), ax(*), bl(nctotl), bu(nctotl),
      *                  featol(nctotl), work(n), wx(n), x(n)
@@ -10202,46 +10195,55 @@ c-----------------------------------------------------------------------
       biglow = -bigbnd
       bigupp = bigbnd
 
-c     move the variables inside their bounds.
+      if (istart.eq.0) then
+c                                 cold, initialize to lower bound
+         x(1:n) = bl(1:n)
 
-      do 20 j = 1, n
-         b1 = bl(j)
-         b2 = bu(j)
-         tol = featol(j)
+      else 
+c                                 warm/hot move the variables inside their bounds.
+         do j = 1, n
+            b1 = bl(j)
+            b2 = bu(j)
+            tol = featol(j)
 
-         if (b1.gt.biglow) then
-            if (x(j).lt.b1-tol) x(j) = b1
-         end if
+            if (b1.gt.biglow) then
+               if (x(j).lt.b1-tol) x(j) = b1
+            end if
 
-         if (b2.lt.bigupp) then
-            if (x(j).gt.b2+tol) x(j) = b2
-         end if
-   20 continue
+            if (b2.lt.bigupp) then
+               if (x(j).gt.b2+tol) x(j) = b2
+            end if
+         end do
 
-      call dcopy (n,x,1,wx,1)
+      end if
+
+      wx(1:n) = x(1:n)
 
       nfree = n
       nactiv = 0
       nartif = 0
 
-      if (start.eq.'cold') then
-         do 40 j = 1, nctotl
+      if (istart.eq.0) then
+c                                 cold
+         do j = 1, nctotl
             istate(j) = 0
             if (bl(j).eq.bu(j)) istate(j) = 3
-   40    continue
-c
-      else if (start.eq.'warm') then
-         do 60 j = 1, nctotl
+         end do
+
+      else
+c                                warm (cmcrsh not called for hot)
+         do j = 1, nctotl
             if (istate(j).gt.3 .or. istate(j).lt.0) istate(j) = 0
             if (bl(j).ne.bu(j) .and. istate(j).eq.3) istate(j) = 0
-   60    continue
+         end do
+
       end if
 
 c     define nfree and kactiv.
 c     ensure that the number of bounds and general constraints in the
 c     working set does not exceed n.
 
-      do 80 j = 1, nctotl
+      do j = 1, nctotl
          if (nactiv.eq.nfree) istate(j) = 0
 
          if (istate(j).gt.0) then
@@ -10258,12 +10260,12 @@ c     working set does not exceed n.
                kactiv(nactiv) = j - n
             end if
          end if
-   80 continue
+      end do
 
 c     if a cold start is required,  attempt to add as many
 c     constraints as possible to the working set.
 
-      if (start.eq.'cold') then
+      if (istart.eq.0) then
 
 c        see if any bounds are violated or nearly satisfied.
 c        if so,  add these bounds to the working set and set the

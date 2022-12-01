@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,liw,lw,k,idead,inc,lphct,jter, iprint, lpprob
+      integer i,liw,lw,k,idead,inc,lphct,jter, lpprob
 
       parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
 
@@ -113,7 +113,6 @@ c                                 load the bulk into the constraint array
       bl(jphct+1:jphct+icp) = b(1:icp)
       bu(jphct+1:jphct+icp) = b(1:icp)
 
-      iprint = 0
       lpprob = 2
       tol = wmach(4)
 
@@ -121,6 +120,8 @@ c                                 load the bulk into the constraint array
 
       call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,
      *            clamda,iw,liw,w,lw,idead,istart,tol,lpprob)
+c                                 set istart according to static_LP_start
+      if (istart.ne.0) istart = iopt(39)
 
       if (lopt(61)) call endtim (13,.false.,'Static optimization ')
 

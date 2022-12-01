@@ -633,7 +633,7 @@ c-----------------------------------------------------------------------
 
       logical bad, site, comp, clos, inv, zbad
 
-      integer liw, lw, mvar, mcon, nvar, i, jter, iprint, iwarn,
+      integer liw, lw, mvar, mcon, nvar, i, jter, iwarn,
      *        iwarn1, iwarn2, lpprob
 
       double precision scp(k5), tol
@@ -794,8 +794,6 @@ c                                 add the closure constraint
       end if
 c                                 cold start
       istart = 0
-      idead = -1
-      iprint = 0
 c                                 feasible point
       lpprob = 1
 
@@ -954,7 +952,7 @@ c-----------------------------------------------------------------------
 
       logical maxs
 
-      integer ids, i, j, k, nvar, iter, iwork(m22), iprint, itic,
+      integer ids, i, j, k, nvar, iter, iwork(m22), itic,
      *        ivars(15),istate(m21), nclin, lord
 
       double precision ggrd(m19), gordp0, g0, fac,
@@ -1130,8 +1128,6 @@ c                                 derivatives are available
       ivars(6) = 0
 
       itic = 0
-
-      iprint = 0
 
       xp(1:nvar) = ppp(1:nvar)
 
