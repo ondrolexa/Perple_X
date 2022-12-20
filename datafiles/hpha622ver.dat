@@ -27,8 +27,7 @@ Holland & Powell, JMG 2011 (TC-DS622)           |<= data base title
 |                                                       JADC, March 5, 2018.
 |
 | + elastic moduli added from hpha02ver.dat, version March 13, 2018
-| aim is lithosphere, to be used with solution_model -> suppression of wadsleyite, ringwoodite, perowskite, 
-| akimotoite and all end members neither in hpha02ver nor in solution_model
+| aim is lithosphere, to be used with solution_model -> suppression of wadsleyite, ringwoodite, perowskite, akimotoite and all end members neither in hpha02ver nor in solution_model
 | no moduli for pumpellyite and stilpnomelane
 |                                                       Fanny Goussin, Aug 27, 2018.
 |
