@@ -57,17 +57,12 @@ c-----------------------------------------------------------------------
 
       logical first, err
 
-      character tag*11
-
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
       character tname*10
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -81,10 +76,13 @@ c-----------------------------------------------------------------------
       save err,first
       data err,first/.false.,.true./
 
+      character prject*100,tfname*100
+      common/ cst228 /prject,tfname
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
-c                                 iam is a flag indicating the Perple_X program
+c                                 iam indicates the Perple_X program
 c                                    iam = 1  - vertex
 c                                    iam = 2  - meemum
 c                                    iam = 3  - werami 
@@ -100,112 +98,193 @@ c                                    iam = 13 - unsplt (global)
 c                                    iam = 14 - unsplt (local)
 c                                    iam = 15 - convex
       iam = 1
-c                                 version info
-      call vrsion (6)
-c                                 initialize outprt to .false. to force input1 to 
-c                                 read input, subsequently outprt is set in aetau2
-      outprt = .false.
-c                                 this do loop is a cheap strategy to automate
-c                                 "auto_refine"
-      do
-c                                 -------------------------------------
-c                                 open statements for units n1-n6 and n9
-c                                 are in subroutine input1
- 
-c                                 read input from unit n1 (terminal/disk).
-c                                 input1 also initializes: conditions,
-c                                 equilibrium counters; units n2 n4 and n6;
-c                                 and the limits for numerical results.
-         call input1 (first,err)
-c                                 read thermodynamic data on unit n2:
-         call input2 (first)
-c                                 read/set autorefine dependent parameters, 
-c                                 it would be logical to output context specific 
-c                                 parameter settings here instead of the generic 
-c                                 blurb dumped by redop1
-         call setau1
-c                                 read data for solution phases on n9:
-         call input9 (first)
-c                                 seismic data summary file
-         if (lopt(50)) call outsei
+c                                 initialization
+      call iniprp
+c                                 start the total timer (30)
+      if (lopt(61)) call begtim (30)
 
-         call setau2
-c                                 initialize potentials
-         call inipot 
-c                                 -------------------------------------
-c                                 at this point the problem is fully 
-c                                 configured, 
-c                                 -------------------------------------
-         if (refine) then
-            tag = 'auto_refine'
-         else 
-            tag = 'exploratory'
-c DEBUG
-c           call mertxt (tfname,prject,'.tim',0)
-c           open (993,file=tfname)
-c           write (993,*) 'touch'
-c           close (993)
-         end if
+      if (.not.refine) then
+c                                 two-stage calculation,
 c                                 inform user of 1st stage
-         if (iopt(6).ne.0) write (*,1000) tag
+         write (*,1000) 'exploratory'
 
-         if (outprt) then
+      else
 
-            io4 = 0
+         write (*,1000) 'auto-refine'
 c                                 header info for print and graphics files
 c                                 title page for print file:
-            if (io3.ne.1) call outtit
+         if (io3.ne.1) call outtit
 
-         else 
-c                                 suppress output to graphics and print files
-c                                 (these flags are reset by input1). 
-            io4 = 1
-            io3 = 1
+      end if
+c                                 do the calculation
+      call docalc
+c                                 output ranges etc compositions if p2yx inversion
+      if (lopt(11)) call outlim
+c                                 output autorefine arf file and load
+c                                 rpcs into static array (routine reload)
+      call outarf
 
-         end if
+      if (iopt(6).ne.2) then
+c                                 quitting after exploratory stage:
+c                                 close n4/n5, delete interim results,
+c                                 first is a dummy.
+         call interm (.true.,first)
 
-         if (icopt.ge.0.and.icopt.le.4.or.icopt.eq.8) then
-
-            call error (72,0d0,0,'you must run CONVEX for this type '//
-     *                           'of calculation')
-
-         else if (icopt.eq.5) then 
-c                                 optimization on a 2-d grid.
-            call wav2d1
-
-         else if (icopt.eq.7) then 
-c                                 fractionation on a 1-d path.
-            call frac1d
-
-         else if (icopt.eq.12) then 
-c                                 0-d fractionation/titration
-            call titrat
-
-         else if (icopt.eq.9) then 
-c                                 fractionation on a 2-d path (space-time) 
-            call frac2d
-
-         else
-c                                 disabled stability field calculation
-            call error (32,0d0,k2,'MAIN')
-
-         end if
-c                                 output compositions for autorefine
-         call outlim 
-
-         if (outprt) then
-c                                 close n4/n5, delete interim results
-            call interm (outprt,first)
-            exit
-
-         end if
-
+      else
+c                                 start auto-refine stage
          outprt = .true.
          first = .false.
+c                                 set refine to indicate the stage
+         call setau1
+c                                 set grid parameters
+         call setau2
+c                                 suppress output to print file, why?
+c        io3 = 1
+c                                 close/open prt/plt/blk
+         if (io3.eq.0) then
+c                                 prt output file
+            call mertxt (tfname,prject,'.prn',0)
+            call inqopn (n3,tfname)
+            call outtit
 
-      end do 
+         end if
+c                                 plt output file
+         call mertxt (tfname,prject,'.plt',0)
+         call inqopn (n4,tfname)
+c                                 blk output file
+         call mertxt (tfname,prject,'.blk',0)
+         call inqopn (n5,tfname)
 
-1000  format (/,'** Starting ',a,' computational stage **',/)
+         write (*,'(80(''-''))')
+         write (*,1000) 'auto-refine'
+c                                 load the former dynamic compositions
+c                                 into the static arrays if manual
+         if (iopt(6).eq.1) call reload (refine)
+c                                 repeat the calculation
+         call docalc
+c                                 output ranges etc compositions if p2yx inversion
+         if (lopt(11)) call outlim
+c                                 output arf file if auto-re-refine
+         if (lopt(55)) call outarf
+c                                 clean up intermediate results
+         call interm (outprt,err)
+
+      end if
+
+      if (lopt(61)) call cumtim
+c                                 end of job msg
+      write (*,1020) prject
+
+1000  format ('** Starting ',a,' computational stage **',/)
+1020  format (80('-'),//,'End of job: ',a,//,80('-'),/)
+
+      end
+
+      subroutine cumtim
+c----------------------------------------------------------------------
+c output cumulative time for:
+
+c           static LP optimization (timer 13)
+c           dynamic LP optimization (timer 14)
+c           successive QP optimization (timer 15)
+c           total time (timer 30)
+c----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer n
+
+      double precision tt
+
+      character*100 prject,tfname
+      common/ cst228 /prject,tfname
+c----------------------------------------------------------------------
+c                                 the total time is in etime(30)
+      call CPU_TIME(etime(30))
+
+      call mertxt (tfname,prject,'.tim',0)
+
+      open (993,file=tfname)
+
+      n = 6
+
+      tt = (times(1) + times(13) + times(14) + times(15))
+
+      do
+
+         write (n,1000)
+
+         write (n,1010) 'Static G calculation ',
+     *                  times(1)/60,times(1)/etime(30)*1d2
+         write (n,1010) 'Dynamic G calculation',
+     *                  times(2)/60.,times(2)/etime(30)*1d2
+         write (n,1010) 'Static LP            ',
+     *                  times(13)/60.,times(13)/etime(30)*1d2
+         write (n,1010) 'Dynamic LP           ',
+     *                  times(14)/60.,times(14)/etime(30)*1d2
+         write (n,1010) 'Successive QP        ',
+     *                  (times(15)-times(2))/60.,
+     *                  (times(15)-times(2))/etime(30)*1d2
+         write (n,1010) 'Total of above       ',
+     *                  tt/60.,tt/etime(30)*1d2
+         write (n,1010) 'Total elapsed time   ',
+     *                  etime(30)/60.,1d2
+         if (n.ne.6) write (n,1020)
+
+         if (n.eq.993) exit
+
+         n = 993
+
+      end do
+
+1000  format (80('-')/,5x,'Timing',20x,'min.',9x,'% of total',/)
+1010  format (2x,a21,3x,g14.5,7x,f5.1)
+1020  format (80('-'),/)
+
+      end 
+
+
+      subroutine docalc
+c----------------------------------------------------------------------
+c do the exploratory or autorefine stage calculation requested by 
+c vertex
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+c-----------------------------------------------------------------------
+c                                 initialize potentials
+      call inipot
+c                                 initialize the bulk
+      call iniblk
+
+      if (icopt.ge.0.and.icopt.le.4.or.icopt.eq.8) then
+
+         call error (72,0d0,0,'you must run CONVEX for this type '//
+     *                        'of calculation')
+
+      else if (icopt.eq.5) then 
+c                              optimization on a 2-d grid.
+         call wav2d1
+
+      else if (icopt.eq.7) then 
+c                                 fractionation on a 1-d path.
+         call frac1d
+
+      else if (icopt.eq.12) then 
+c                                 0-d fractionation/titration
+         call titrat
+
+      else if (icopt.eq.9) then 
+c                                 fractionation on a 2-d path (space-time) 
+         call frac2d
+
+      else
+c                                 disabled stability field calculation
+         call error (32,0d0,k2,'MAIN')
+
+      end if
 
       end
 
@@ -259,8 +338,9 @@ c-----------------------------------------------------------------------
       double precision dcomp
       common/ frct2 /dcomp(k5)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -289,9 +369,6 @@ c-----------------------------------------------------------------------
       loopy = jlow
 c                                 get phases to be fractionated
       call frname 
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp 
 
       open (n0-1,status='scratch')
 c                                 patch to initialize unused potentials
@@ -516,8 +593,9 @@ c-----------------------------------------------------------------------
       double precision dcomp
       common/ frct2 /dcomp(k5)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -544,9 +622,6 @@ c                                 the molar composition of the infiltrant
       end do
 c                                 get phases to be fractionated
       call frname 
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp
 
       do j = 1, iopt(36) + 1
 
@@ -644,8 +719,9 @@ c-----------------------------------------------------------------------
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       double precision dcomp
       common/ frct2 /dcomp(k5)
@@ -880,10 +956,6 @@ c                                 number of variables in table
 
       n5name = '_cumulative_change_column'
       call tabhed (lun + 2*ilay + 1,vmn(1),dvr(1),two,1,n5name,n6name)
-
-c                                 call initlp to initialize arrays 
-c                                 for optimization.
-      call initlp
 
       write (*,'(/)')
 
@@ -1264,8 +1336,9 @@ c-----------------------------------------------------------------------
       integer igrd
       common/ cst311 /igrd(l7,l7)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer iap,ibulk
       common/ cst74  /iap(k2),ibulk
@@ -1275,7 +1348,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 c-----------------------------------------------------------------------
 c                                 check for positive bulk
       idead = 0 
@@ -1430,6 +1502,8 @@ c---------------------------------------------------------------------
      *        ii,jj,kk,hh,hhot,jcent,icent,jjc,iic,h,jtic,khot,k,
      *        ktic,j,jhot,klow,kinc2,kinc21,idead
 
+      double precision dinc, tot
+
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
 
@@ -1460,8 +1534,6 @@ c                               call old routine for 1d grid
          call wavgrd
          return
       end if 
-c                               load arrays for lp solution
-      call initlp 
 c                               jlow is the number of nodes
 c                               at the lowest level, the number of
 c                               nodes is
@@ -1470,8 +1542,6 @@ c                               first level:
       loopy = klow * 2**(jlev-1) + 1 
 
       loopx = (loopx-1) * 2**(jlev-1) + 1 
-
-      write (*,'(/)')
 
       if (loopy.gt.l7) then
          call warn (92,v(iv1),loopy,'y_node')
@@ -1506,7 +1576,14 @@ c                               increments at each level
       kinc = jinc(1)
       jinc1 = kinc
 
-      call setvar 
+      call setvar
+
+c                               init progress info
+      tot = loopx/kinc + 1
+      dinc = 1d2/tot
+      tot = 0d0
+
+      if (lopt(28)) call begtim (11)
 c                               do all points on lowest level
       do i = 1, loopx, kinc
          do j = 1, loopy, kinc
@@ -1514,11 +1591,14 @@ c                               do all points on lowest level
             call lpopt (i,j,idead)
          end do
 c                               progress info
-         write (*,1030) dfloat(i/kinc+1)/dfloat(loopx/kinc+1)*1d2
+         tot = tot + dinc
+         write (*,1030) tot
 c                               flush stdout for paralyzer
          flush (6)
 
       end do
+
+      if (lopt(28)) call endtim (11,.true.,'low level grid')
 c                               output interim plt file
       if (iopt(34).ne.0) call outgrd (loopx,loopy,kinc,1000,1)
 c                               get hot points
@@ -1563,7 +1643,9 @@ c                              now working on new level
 c
          write (*,1060) ihot,k
 c                               flush stdout for paralyzer
-         flush (6)      
+         flush (6)
+
+         if (lopt(28)) call begtim (12)
 c                              compute assemblages at refinement
 c                              points
          do h = 1, ihot
@@ -1684,6 +1766,8 @@ c                                fill hot cells
  
          write (*,1080) ktic,(loopx/kinc+1)*(loopy/kinc+1)
 
+         if (lopt(28)) call endtim (12,.true.,'nth level grid')
+
          if (khot.eq.0.or.k.eq.jlev) exit 
 c                             now switch new and old hot list
          ihot = khot
@@ -1741,8 +1825,6 @@ c----------------------------------------------------------------------
       integer jlow,jlev,loopx,loopy,jinc1
       common/ cst312 /jlow,jlev,loopx,loopy,jinc1
 c-----------------------------------------------------------------------
-c                               load arrays for lp solution
-      call initlp
 c                               jlow is the number of nodes
 c                               at the lowest level, the number of
 c                               nodes is
@@ -1993,7 +2075,7 @@ c----------------------------------------------------------------------
 
       logical first 
 
-      integer iam, jfrct, i
+      integer jam, jfrct, i
 
       double precision numb
 
@@ -2035,8 +2117,18 @@ c                                 get phases to be fractionated
                call matchj (phase(ifrct),ifr(ifrct))
 
                if (ifr(ifrct).eq.0) then
+
                   write (*,1100) phase(ifrct)
-                  cycle 
+                  cycle
+
+               else if (ksmod(ifr(ifrct)).eq.39.and.lopt(32).and.
+     *                  iopt(22).eq.0) then
+c                                 fractionating an electrolytic fluid,
+c                                 override solid component depletion
+c                                 error trap
+                  iopt(22) = 1
+                  call warn (62,numb,ifrct,phase(ifrct))
+
                end if
 
                ifrct = ifrct + 1
@@ -2061,12 +2153,12 @@ c                                 new phase list from old list:
          
          do i = 1, jfrct 
 
-            call matchj (phase(i),iam)
+            call matchj (phase(i),jam)
 
-            if (iam.eq.0) cycle 
+            if (jam.eq.0) cycle 
        
             ifrct = ifrct + 1
-            ifr(ifrct) = iam 
+            ifr(ifrct) = jam 
 
          end do
 
@@ -2180,7 +2272,6 @@ c-----------------------------------------------------------------------
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-      save / cst59 /
 c----------------------------------------------------------------------- 
 c                                 fractionation effects:
       do i = 1, jbulk

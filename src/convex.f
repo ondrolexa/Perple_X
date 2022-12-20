@@ -213,7 +213,7 @@ c                                 output compositions for autorefine
 
       end do 
 
-1000  format (/,'** Starting ',a,' computational stage **',/)
+1000  format ('** Starting ',a,' computational stage **',/)
 
       end
 
@@ -582,11 +582,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical quit
+      logical quit, bad
 
-      integer iedge,i,j,irend,knct,ier,iste,jnct,ivi,ivd
+      integer iedge,i, irend,knct,ier,iste,jnct,ivi,ivd
 
-      double precision div    
+      double precision div
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -648,10 +648,8 @@ c                                 initialize invariant and univariant
 c                                 field counters:
       ipct = 0
       irct = 0
- 
-      do i = 1, k2
-         irchk(i) = 0
-      end do 
+
+      irchk(1:k2) = 0
 c                                 set starting values for search
       v(iv1) = vmin(iv1)
       v(iv2) = vmin(iv2)
@@ -706,13 +704,11 @@ c                                 write dependent extensities blurb
 
       end if 
 c                                 initialize start parms:
-      do i = 1, icfct
-         vt(i)  = vmin(iv1)
-         vti(i) = vmin(iv2)
-         kok(i) = 1
-         jok(i) = 1
-      end do 
-      
+      vt(1:icfct)  = vmin(iv1)
+      vti(1:icfct) = vmin(iv2)
+      kok(1:icfct) = 1
+      jok(1:icfct) = 1
+
       write (*,1000) icfct
 c                                 look for reactions involving each
 c                                 assemblage.
@@ -725,18 +721,20 @@ c                                 save the current position for chkass
 
          if (imsg.eq.0) write (*,1220) i,icfct-i
 c                                 load id's into array idv:
-         do j = 1, icp
-            idv(j) = idcf(j,i)
-         end do 
+         idv(1:icp) = idcf(1:icp,i)
 c                                 get the lower/upper decomposition
 c                                 of the transpose of the concentration
 c                                 matrix:
-         call pivots (ier)
-         if (ier.eq.1) then
+         bad = .false.
+
+         call pivots (bad)
+
+         if (bad) then
 c                                 error, a degenerate assemblage in
 c                                 pivots due to a programming error.
-            call warn (29,v(1),ier,'NEWHLD')
+            call warn (29,v(1),1,'NEWHLD')
             cycle
+
          end if 
 c                                 set flag for maxend:
          ismax = jok(i) 
@@ -790,12 +788,13 @@ c                                 resume search of travserse 4:
                vti(i) = vmin(iv1)
             end if
 c                                 test for stability before search? 
-            do j = 1, icp
-               idv(j) = idcf(j,i)
-            end do 
-            call pivots (ier)
+            idv(1:icp) = idcf(1:icp,i)
+
+            call pivots (bad)
+
             igot = igot + 1
-            goto 30 
+            goto 30
+
          end if 
 
       end do 
@@ -926,7 +925,9 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,ier
+      logical err
+
+      integer i
  
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -943,20 +944,16 @@ c----------------------------------------------------------------------
       common/ cst52 /hcp,id(k7)
 c-----------------------------------------------------------------------
       do i = 1, hcp
-         do j = 1, hcp
-            a(i,j) = cp(j,id(i))
-         end do
+         a(i,1:hcp) = cp(1:hcp,id(i))
       end do
 
-      call factor (a,hcp,ipvt,ier)
- 
-      if (ier.eq.1) goto 99
- 
-      do i = 1,  hcp
-         b(i) = g(id(i))
-      end do 
- 
-      call subst (a,ipvt,hcp,b,ier)
+      call factor (a,k8,hcp,ipvt,err)
+
+      if (err) goto 99
+
+      b(1:hcp) = g(id(1:hcp))
+
+      call subst (a,k8,ipvt,hcp,b,err)
 c                                 don't use the ier flag from 
 c                                 subst 'cause it only became
 c                                 necessary with "reopt". (not
@@ -971,7 +968,7 @@ c-----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer i,j,ier
+      integer i, j
 
       logical bad
 
@@ -998,11 +995,10 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 determine chemical potentials
       iflag = 0
-      do i = 1, icp
-         b(i) = g(idv(i))
-      end do
+      b(1:icp) = g(idv(1:icp))
+      bad = .false.
 c
-      call subst (a,ipvt,icp,b,ier)
+      call subst (a,k8,ipvt,icp,b,bad)
 c                                 test phases against the
 c                                 assemblage idv
       do 20 i = istct, iphct
@@ -1184,10 +1180,8 @@ c                                 throw out reactions with variance > isudo
 
       ivarrx(irct) = ivar
 
-      do i = 1, ivct
-         vn(irct,i) = vnu(i)
-         irnms(irct,i) = idr(i)
-      end do 
+      vn(irct,1:ivct) = vnu(1:ivct)
+      irnms(irct,1:ivct) = idr(1:ivct)
 
 99    end
 
@@ -1298,14 +1292,12 @@ c                                 set ivar, just in case it's used someplace
 
       ivarrx(irct) = ivar
 
-      do i = 1, ivct
-         vn(irct,i) = vnu(i)
-         irnms(irct,i) = idr(i)
-      end do 
+      vn(irct,1:ivct) = vnu(1:ivct)
+      irnms(irct,1:ivct) = idr(1:ivct)
 
 99    end
 
-      subroutine balanc (b,idv,idphi,ier)
+      subroutine balanc (b,idv,idphi,err)
 c-----------------------------------------------------------------------
 c balanc balances reactions between the phases in idv and idphi
 c if the system is saturated with any phases these are taken
@@ -1317,7 +1309,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ipvt(k8),idv(k8),i,j,ip,idphi,ier
+      logical err
+
+      integer ipvt(k8),idv(k8),i,j,ip,idphi
 
       double precision a(k8,k8),b(k8)
 
@@ -1346,25 +1340,25 @@ c                                 matrix for an assemblage of icp phases
       ivar = 1
                                                 
       do i = 1, icp
-         do j = 1, icp
-            a(j,i) = cp(j,idv(i))
-         end do 
+
+         a(1:icp,i) = cp(1:icp,idv(i))
          idr(i) = idv(i)
+
       end do 
 c                                 assemble the composition vectore
 c                                 for the icp+1 th phase tangent to
 c                                 the free energy plane.
       ip = icp1
-      do i = 1, icp
-         b(i) = cp(i,idphi)
-      end do 
+
+      b(1:icp) = cp(1:icp,idphi)
+
       idr(ip) = idphi
       b(ip) = -1d0
 c                                 balance the equilibrium
-      call factor (a,icp,ipvt,ier)
-      if (ier.eq.1) goto 999
+      call factor (a,k8,icp,ipvt,err)
+      if (err) goto 999
 
-      call subst (a,ipvt,icp,b,ier)
+      call subst (a,k8,ipvt,icp,b,err)
 c                                 don't use the ier flag from 
 c                                 subst 'cause it only became
 c                                 necessary with "reopt". (not
@@ -1375,7 +1369,7 @@ c                                 eliminate phases with vnu= 0
 
       do i = 1, ip
 
-         if (dabs(b(i)).gt.1d-05) then 
+         if (dabs(b(i)).gt.nopt(50)) then 
             ivct = ivct + 1
             vnu(ivct) = b(i)
             idr(ivct) = idr(i)
@@ -1712,7 +1706,7 @@ c                                 the program
 c                                 set stable flag
          stable(ids) = .true.
 c                                 get composition
-         call setexs (ids,jd,.false.)
+         call setexs (ids,jd)
 
          do ii = 1, pop1(ids)
 c                                 check x-ranges
@@ -1863,9 +1857,7 @@ c                                 parameters:
             icrap = 1
          end if 
 
-         do i = 1, icp
-            idcf(i,icfct) = jdv(i)
-         end do 
+         idcf(1:icp,icfct) = jdv(1:icp)
 
          vt(icfct) = v(ivd)
          vti(icfct) = v(ivi)
@@ -1935,10 +1927,10 @@ c-----------------------------------------------------------------------
       jflg = 1
       quit = .false.
 
-      call balanc (b,idv,idphi,ier)
+      call balanc (b,idv,idphi,bad)
 c                                 singular concentration matrix
-      if (ier.eq.1) then 
-         call warn (68,v(1),ier,'COFACE')
+      if (bad) then 
+         call warn (68,v(1),1,'COFACE')
          quit = .true.
          return
       end if 
@@ -2007,8 +1999,8 @@ c                                 save the index of the c+1th phase
 c                                 as iophi.
       iophi =idphi
 c                                 factor the concentration matrix:
-      call pivots (ier)
-      if (ier.eq.1) call error (69,v(1),ier,'COFACE')
+      call pivots (bad)
+      if (bad) call error (99,v(1),1,'COFACE, singular matrix')
 c                                 set the increment for the iv
       div = odiv
 c                                 initialize counters
@@ -2405,9 +2397,11 @@ c                                 change in G due to delt
 
       do i = 1, 2
          v(i) = v(i) + delt(i)
+         call incdep (i)
          call grxn (gval)   
          dv(i) = (og - gval) / delt(i)
-         v(i) = v(i) - delt(i) 
+         v(i) = v(i) - delt(i)
+         call incdep (i)
       end do 
 c                                 get deltas on mobile comps
       if (jmct.gt.0) then
@@ -2603,7 +2597,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,lphi,lchkl,j,ier
+      logical err
+
+      integer lphi, lchkl, j
 
       double precision gproj, gphi
 
@@ -2625,15 +2621,17 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       call uproj
 
-      do i = 1, icp
-        b(i) = gproj (idv(i))
-      end do 
+      do j = 1, icp
+         b(j) = gproj (idv(j))
+      end do
 
       g(lphi) = gproj (lphi)
 
       lchkl = 0
 
-      call subst (a,ipvt,icp,b,ier)
+      err = .false.
+
+      call subst (a,k8,ipvt,icp,b,err)
 
       gphi = 0d0
 
@@ -2699,7 +2697,7 @@ c                                 initialize counter:
 
       do i = 1, icp
 c                                 is the b(i) coefficient zero/negative?
-         if (b(i).ge.1d-5) then 
+         if (b(i).ge.nopt(50)) then 
 c                                 no, save in the array idpos and count.
             ipos = ipos + 1
             idpos(ipos) = idv(i)
@@ -3362,7 +3360,9 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer igo,i,j,ier
+      logical err
+
+      integer igo, i, j
 
       double precision gproj, dg
 
@@ -3395,8 +3395,10 @@ c                                 compute energies:
       end do 
 
       dg = gproj (idphi)
+
+      err = .false.
 c                                solve for chemical potentials:
-      call subst (a,ipvt,icp,b,ier)
+      call subst (a,k8,ipvt,icp,b,err)
 c                                compute energy difference:
       do j = 1, icp
          dg = dg - cp(j,idphi)*b(j)
@@ -3427,13 +3429,15 @@ c                                 dg > dtol (and dtol was < 0).
 
       end
 
-      subroutine pivots (ier)
+      subroutine pivots (err)
 c--------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
 
-      integer j,k,ier
+      logical err
+
+      integer k
 
       double precision cp, bbb, ccc
       common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
@@ -3448,12 +3452,12 @@ c--------------------------------------------------------------------
 c--------------------------------------------------------------------
 c                              calculate pivots for the matrix 'a'
       do k = 1, icp
-         do j = 1, icp
-            a(k,j) = cp(j,idv(k))
-         end do 
+
+         a(k,1:icp) = cp(1:icp,idv(k))
+
       end do  
 
-      call factor (a,icp,ipvt,ier)
+      call factor (a,k8,icp,ipvt,err)
 
       end
 
@@ -3465,7 +3469,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,lphi,j,ier
+      integer i,lphi,j
 
       logical bad
 
@@ -3494,12 +3498,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 determine chemical potentials
       iflag = 0
+      bad = .false.
 
-      do i = 1, icp
-         b(i) = g(idv(i))
-      end do 
+      b(1:icp) = g(idv(1:icp))
 
-      call subst (a,ipvt,icp,b,ier)
+      call subst (a,k8,ipvt,icp,b,bad)
 c                                 test phases, not=iophi, against the
 c                                 assemblage idv(i),i = 1, icp
       do i = istct, iphct
@@ -3542,7 +3545,7 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,j,ier
+      integer i,j
 
       logical bad
 
@@ -3571,12 +3574,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
 c                                 determine chemical potentials
       iflag = 0
+      bad = .false.
 
-      do i = 1, icp
-         b(i) = g(idv(i))
-      end do 
+      b(1:icp) = g(idv(1:icp))
 
-      call subst (a,ipvt,icp,b,ier)
+      call subst (a,k8,ipvt,icp,b,bad)
 c                                 test phases, not=iophi, against the
 c                                 assemblage idv(i),i = 1, icp
       do i = istct, iphct
@@ -4135,11 +4137,12 @@ c                                 set invariant point conditions
          v(ivi) = vip(ivi,ip)
          call incdp0   
 
-110      call balanc (b,idv,idphi,ier)
-         if (ier.eq.1) goto 80
+110      call balanc (b,idv,idphi,bad)
+
+         if (bad) goto 80
 c                                 call pivots for lchk.
-         call pivots (ier)
-         if (ier.eq.0) goto 90
+         call pivots (bad)
+         if (.not.bad) goto 90
 c                                 in some cases singularity of the
 c                                 transpose of the concentration matrix
 c                                 may not be detected by balanc, but,
@@ -5066,7 +5069,7 @@ c----------------------------------------------------------------------
  
       include 'perplex_parameters.h'
 
-      integer ier,i,j
+      integer ier, i
  
       integer ipvt
       double precision a,b
@@ -5086,9 +5089,9 @@ c                                load the transpose of the
 c                                concentration matrix of the pseudo-
 c                                invariant assemblage.
       do i = 1, icp
-         do j = 1, icp
-            a(j,i) = cp(j,idv(i))
-         end do
+
+         a(1:icp,i) = cp(1:icp,idv(i))
+
       end do  
 c                                factor the matrix
       call factr1 (icp,ier)

@@ -17,7 +17,7 @@ c----------------------------------------------------------------------
 
       integer i, j, k, l, m, lu, id, inc, ct
 
-      double precision poiss, gcpd, zsite(m10,m11), zt
+      double precision poiss, gcpd, zsite(m10,m11), zt, gga(k5,3,m14)
  
       external gcpd, zbad
 
@@ -62,9 +62,6 @@ c----------------------------------------------------------------------
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
-
-      integer jtest,jpot
-      common/ debug /jtest,jpot
 
       character*8 vname,xname
       common/ csta2  /xname(k5),vname(l2)
@@ -112,15 +109,37 @@ c----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      double precision cp
+      common/ cst12 /cp(k5,k10)
+
+      integer icont
+      double precision dblk,cx
+      common/ cst314 /dblk(3,k5),cx(2),icont
+
       integer iam
       common/ cst4 /iam
-c---------------------------------------------------------------------- 
-
+c----------------------------------------------------------------------
+      mus = .false.
+c                                 test for non-NaN chemical potentials
+c                                 probably unnecessary?
+      mus = .false.
+      do i = 1, jbulk
+         if (.not.isnan(mu(i))) then
+            mus = .true.
+            exit 
+         end if 
+      end do 
+c                                 print standard potentials
       write (lu,1000)
 
       if (iam.eq.2) then 
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 1, ipot)
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 3, ipot)
+
+         do i = 2, icont
+            write (lu,1121) i, cx(i-1)
+         end do
+
       else 
          write (lu,1120) (vnm(i), var(i), i = 1, jvar)
       end if 
@@ -426,13 +445,8 @@ c                                 site multiplicity
 
             end do
 
-            if (zuffix(id).ne.' ') then
-
-               write (lu,'(11x,a,/)') 
+            if (zuffix(id).ne.' ') write (lu,'(11x,a,/)') 
      *                        'Non-mixing stoichiometry: '//zuffix(id)
-            else
-               write (lu,'(/)')
-            end if 
 
          end do
 
@@ -444,64 +458,144 @@ c                                 site multiplicity
       end if
 
       if (lopt(24).and.np.gt.0) then 
-
-         write (lu,'(/,a,/)') 'Pure species molar Gibbs energies*:'
+c                                 ouput endmember molar g, partial molar g, and activities:
 c                                 electrolyte fluid is a special
 c                                 case because the electrolyte energies
 c                                 depend on the solvent properties
          if (ksmod(id).eq.20) call solut0 (id)
 
-         do i = 1, np 
+         do m = 1, 3
 
-            id = kkp(i)
+            if (m.eq.1) then
+               write (lu,'(/,a,/)') 
+     *               'Species molar Gibbs energies*:'
+            else if (m.eq.2) then
+               write (lu,'(/,a,/)') 
+     *               'Species partial molar Gibbs energies:'
+            else
+               write (lu,'(/,a,/)') 'Species activities:'
+            end if
 
-            if (ksmod(id).eq.20.and.spct(id).gt.5) then
+            do i = 1, np
 
-               inc = 6
+               id = kkp(i)
 
-            else if (spct(id).gt.7) then 
-
-                inc = 7
-
-            end if 
-
-            do k = 1, lstot(id), inc
-
-               l = k + inc - 1
-               if (l.gt.lstot(id)) l = lstot(id)
-
-               if (ksmod(id).ne.20) then 
-
-                  write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(gcpd(jend(id,2+j),.true.)),
-     *                                           ', ', j = k, l)  
-
-               else
-
-                  write (text,'(20(a,a,i10,a))')
-     *            (spnams(j,id),': ',int(aqg(j)),', ', j = k, l)
-
-               end if 
-
-               call deblnk (text)
-
-               if (k.eq.1) then 
-
-                  write (lu,'(1x,a,4x,400a)') pname(i), 
-     *                                        chars(1:length)
+               if (spct(id).gt.5) then 
+                  inc = 6
                else 
+                  inc = spct(id)
+               end if
 
-                  write (lu,'(19x,400a)') chars(1:length)
+c                                 set internal dqf's
+               call setdqf(id)
 
-               end if 
+               do k = 1, lstot(id)
+
+                  if (m.eq.1) then
+
+                     if (ksmod(id).ne.20) then
+c                                 molar gibbs energies
+                        gga(i,m,k) = gcpd(jend(id,2+k),.true.)
+c                                 add internal dqf's if present
+                        do l = 1, jdqf(id)
+
+                           if (iq(l).eq.k) then 
+                              gga(i,m,k) = gga(i,m,k) + dq(l)
+                              exit 
+                           end if
+
+                        end do
+
+                     else
+
+                        gga(i,m,k) = aqg(k)
+
+                     end if
+
+                  else if (m.eq.2) then
+c                                 partial molar gibbs energy and activities
+                     if (mus) then
+
+                        gga(i,m,k) = 0
+
+                        do l = 1, icomp
+                           gga(i,m,k) = gga(i,m,k) 
+     *                                + cp(l,jend(id,2+k)) * mu(l)
+                        end do
+
+                        gga(i,3,k) = dexp((gga(i,m,k) - gga(i,1,k))
+     *                                /r/v(2))
+
+                     else
+
+                        gga(i,2:3,k) = nopt(7)
+
+                     end if
+
+                  end if
+
+               end do
+
+               do k = 1, lstot(id), inc
+
+                  l = k + inc - 1
+                  if (l.gt.lstot(id)) l = lstot(id)
+
+                  if (m.lt.3) then
+                     write (text,'(20(a,a,f16.3,a))') (spnams(j,id),': '
+     *                                       ,gga(i,m,j),', ', j = k, l)
+                  else
+                     write (text,'(20(a,a,g14.6,a))') (spnams(j,id),': '
+     *                                       ,gga(i,m,j),', ', j = k, l)
+                  end if
+
+                  call deblnk (text)
+
+                  if (k.eq.1) then 
+
+                     write (lu,'(1x,a,4x,400a)') pname(i), 
+     *                                           chars(1:length)
+                  else 
+
+                     write (lu,'(19x,400a)') chars(1:length)
+
+                  end if 
+
+               end do
 
             end do
 
          end do
 
-         write (lu,'(/,a,/)') '*these do not include internal DQFs'
+         write (lu,'(/,a,/)') '*these include internal DQFs if relevant'
 
-      end if 
+         write (lu,1161)
+c                                 excessive precision molar Gs:
+         do i = 1, ntot
+            write (lu,1171) pname(i),props(11,i)
+         end do
+c                                 bulk g is from averaged compositions, 
+c                                 compare to chemical potentials, discrepancy
+c                                 should be due to averaging
+         write (lu,'(/,''mass balance errors (mole)''/)') 
+
+         zt = 0d0
+
+         do i = 1, kbulk
+
+            write (lu,'(a,1pd12.3)') cname(i), fbulk(i) - cblk(i)
+
+            if (isnan(mu(i))) cycle
+
+            zt = zt + cblk(i)*mu(i)
+
+         end do
+
+         write (lu,'(/,''G_system (J/mol) = '',1pf16.3)') psys(11)
+         write (lu,'(  ''mu_i*n_i (J/mol) = '',1pf16.3)') zt
+         write (lu,'(  ''      difference = '',1pd12.3)') psys(11) - zt
+
+      end if
 
       write (lu,1160)
 c                                 phase/system summary, normal thermo:
@@ -662,21 +756,9 @@ c         end do
 
 c      end if
 c                                 chemical potentials variance
-      if (jpot.ne.1) then 
-         write (lu,1130) (cname(i), i = 1, kbulk)
-         write (lu,1140) (mu(i), i = 1, kbulk)
-         write (lu,1071) 2, jbulk - ntot + 2 
-c                                 test for non-NaN chemical potentials
-         mus = .false.
-         do i = 1, jbulk
-            if (.not.isnan(mu(i))) then
-               mus = .true.
-               exit 
-            end if 
-         end do 
-      else 
-         write (lu,1070) 2, jbulk - ntot + 2 
-      end if 
+      write (lu,1130) (cname(i), i = 1, kbulk)
+      write (lu,1140) (mu(i), i = 1, kbulk)
+      write (lu,1070) 2, jbulk - ntot + 2 
 
       if (laq.and.lopt(25)) then 
 
@@ -708,8 +790,7 @@ c                                 test for non-NaN chemical potentials
      *          ' Specific Entropy (J/K/m3) = ',g12.6,/,
      *          ' Heat Capacity (J/K/kg) = ',g12.6,/,
      *          ' Specific Heat Capacity (J/K/m3) = ',g12.6,/)
-1070  format ('Variance (c-p+',i1,') = ',i2,/)
-1071  format (/,'Variance (c-p+',i1,') = ',i2,/)
+1070  format (/,'Variance (c-p+',i1,') = ',i2,/)
 1080  format (/,21x,'Complete Assemblage',28x,'Solid+Melt Only',
      *        /,14x,'mol',8x,'g',8x,'wt %',5x,'mol/kg',
      *          10x,'mol',8x,'g',8x,'wt %',5x,'mol/kg')
@@ -721,13 +802,16 @@ c                                 test for non-NaN chemical potentials
      *          ' Solid Specific Heat Capacity (J/K/m3) (1) = ',g12.6,/)
 1110  format (1x,a8,2x,4(f8.3,2x),5x,4(f8.3,2x))
 1120  format (29x,a8,' = ',g12.6)
+1121  format (29x,'X(C',i1,')    = ',g12.6)
 1130  format (/,'Chemical Potentials (J/mol):',//,2x,20(4x,a,5x))
 1140  format (2x,20(1x,g13.6))
 1160  format (/,'Molar Properties and Density:'
      *        /,20x,'N(g)',10x,'G(J)',5x,'S(J/K)',5x,'V(J/bar)',6x,
      *         'Cp(J/K)',7x,'Alpha(1/K)',2x,'Beta(1/bar)',4x,'Cp/Cv',4x,
      *         'Density(kg/m3)')
+1161  format ('Excessive precision phase molar Gibbs energies (J):')
 1170  format (1x,a,1x,f9.2,3x,i12,1x,12(g12.5,1x),3x,f7.4)
+1171  format (1x,a,3x,f16.3)
 1190  format (/,'Seismic Properties:'
      *        /,17x,'Gruneisen_T',6x,'Ks(bar)',6x,'Mu(bar)',
      *        4x,'V0(km/s)',5x,'Vp(km/s)',5x,'Vs(km/s)',3x,
@@ -773,11 +857,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ii, i,j,k,l,m,ids,kd,lco(3),itri(4),jtri(4),ijpt
+      integer i,j,k,l,ids,kd,lco(3),itri(4),jtri(4),ijpt
 
       double precision wt(3), cst, xt 
 
-      logical sick(i8), nodata, ssick, ppois, bulkg, bsick, bad
+      logical sick(i8), nodata, ssick, ppois, bulkg, bsick
 c                                 x-coordinates for the assemblage solutions
       integer ld, na1, na2, na3, nat
       double precision x3, caq
@@ -820,9 +904,6 @@ c                                 bookkeeping variables
       double precision mu
       common/ cst330 /mu(k8),mus
 
-      integer jtest,jpot
-      common/ debug /jtest,jpot
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
@@ -839,12 +920,21 @@ c                                 bookkeeping variables
       double precision hsb
       common/ cst84 /hsb(i8,4),hs2p(6)
 
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+
       integer idaq, jdaq
       logical laq
       common/ cxt3 /idaq,jdaq,laq
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 c----------------------------------------------------------------------
 c                                 logarithmic_p option
 10    if (lopt(14)) p = 1d1**p 
+c                                 logarithmic_x option
+      if (lopt(37)) xco2 = 1d1**xco2
 
       nodata = .false. 
 
@@ -870,32 +960,26 @@ c                                 no data test
             kkp(i) = idasls(i,ias)
          end do 
 c                                 get the dependent potentials
-         if (jpot.ne.1) then
+         mu(1:kbulk) = 0d0
+ 
+         do i = 1, ijpt
 
-            do i = 1, jbulk
-               mu(i) = 0d0
+            kd = igrd(itri(i),jtri(i))
+
+            do j = 1, kbulk
+               mu(j) = mu(j) + wt(i) * amu(j,kd)
             end do 
 
-            do i = 1, ijpt
+         end do 
 
-               kd = igrd(itri(i),jtri(i))
+         mus = .false.
 
-               do j = 1, jbulk
-                  mu(j) = mu(j) + wt(i) * amu(j,kd)
-               end do 
-
-            end do 
-
-            mus = .false.
-
-            do i = 1, jbulk
-               if (.not.isnan(mu(i))) then 
-                  mus = .true.
-                  exit
-               end if
-            end do
-
-         end if
+         do i = 1, kbulk
+            if (.not.isnan(mu(i))) then 
+               mus = .true.
+               exit
+            end if
+         end do
 
       end if 
 c                                 initialize system props/flags
@@ -922,13 +1006,7 @@ c                                 solvent
 c                                 WERAMI, initialize
                props(16,i) = 0d0
 
-               do ii = 1, pop1(ids)
-                  do j = 1, istg(ids,ii)
-                     do k = 1, ispg(ids,ii,j)
-                        x3(i,ii,j,k) = 0d0
-                     end do 
-                  end do 
-               end do 
+               pa3(i,1:nstot(ids)) = 0d0
 
                if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation
@@ -953,13 +1031,11 @@ c                                 weighted molar amount
                      props(16,i) = props(16,i) + cst
                   end if 
 
-                  do ii = 1, pop1(ids)
-                     do j = 1, istg(ids,ii)
-                        do k = 1, ispg(ids,ii,j)
-                           lco(l) = lco(l) + 1
-                           x3(i,ii,j,k) = x3(i,ii,j,k) + cst*xco(lco(l))
-                        end do
-                     end do 
+                  xt = 0d0
+                  do j = 1, nstot(ids)
+                     lco(l) = lco(l) + 1
+                     xt = xt + xco(lco(l))
+                     pa3(i,j) = pa3(i,j) + cst*xco(lco(l))
                   end do
 
                   if (lopt(32).and.ksmod(ids).eq.39) then 
@@ -976,35 +1052,12 @@ c                                 renormalize the composition
                cst = props(16,i)
                if (cst.eq.0d0) cst = 1d0
 
-               do ii = 1, pop1(ids) 
+               xt = 0d0
+               do j = 1, nstot(ids)
+                  xt = xt + pa3(i,j)
+               end do
 
-                  do l = 1, istg(ids,ii)
-                  
-                     xt = 0d0
-
-                     do m = 1, ispg(ids,ii,l)
-
-                        x3(i,ii,l,m) = x3(i,ii,l,m)/cst
-
-                        if (x3(i,ii,l,m).gt.1d0) then 
-                           x3(i,ii,l,m) = 1d0
-                        else if (x3(i,ii,l,m).lt.0d0) then 
-                           x3(i,ii,l,m) = 0d0
-                        end if 
-
-                        xt = xt + x3(i,ii,l,m)
-
-                     end do
-
-                     if (xt.ne.1d0.and.xt.ne.0d0) then 
-                        do m = 1, ispg(ids,ii,l)
-                           x3(i,ii,l,m) = x3(i,ii,l,m)/xt
-                        end do
-                     end if
-
-                  end do
-
-               end do 
+               pa3(i,1:nstot(ids)) = pa3(i,1:nstot(ids)) / xt
 
                if (lopt(32).and.ksmod(ids).eq.39) then 
 c                               lagged speciation
@@ -1017,11 +1070,11 @@ c                               lagged speciation
             else 
 c                                 MEEMUM, molar amount
                props(16,i) = amt(i)
-c                                 recover x array from 
-c                                 x3 and convert to y array
-               call xtoy (ids,i,.false.,bad)
 
             end if
+
+            pa(1:nstot(ids)) = pa3(i,1:nstot(ids))
+            call makepp (ids)
 
          else
 c                                 a compound:
@@ -1059,6 +1112,8 @@ c                                 compute aggregate properties:
 
 99    if (lopt(14)) p = dlog10(p)
 
+      if (lopt(37)) xco2 = dlog10(xco2)
+
       end
 
       subroutine getspc (id,jd)
@@ -1083,6 +1138,9 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
       character specie*4
       integer isp, ins
       common/ cxt33 /isp,ins(nsp),specie(nsp)
@@ -1090,34 +1148,9 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 c----------------------------------------------------------------------
-
-      if (lorder(id)) then 
-
-         do k = 1, spct(id) 
-            ysp(k,jd) = pa(k)
-         end do 
-
-      else if (lrecip(id)) then 
-
-         do k = 1, spct(id) 
-            ysp(k,jd) = p0a(k)
-         end do
-
-      else if (simple(id).or.ksmod(id).eq.20.or.ksmod(id).ge.24.and.
-     *         ksmod(id).le.28.or.ksmod(id).eq.39.or.ksmod(id).eq.42) 
-     *        then
-c                                 macroscopic formulation for normal solutions (2,688) and
-c                                 hp melt model (24)
-c                                 ghiorso melt model (25)
-c                                 andreas salt model (26)
-c                                 high T melt model (28)
-c                                 generic hybrid fluid (39)
-c                                 Fe-S fluid Saxena & Eriksson (42)
-         do k = 1, spct(id)
-            ysp(k,jd) = y(k)
-         end do
-
-      else if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
+c                                 it's not clear if these remain special cases in 691, 
+c                                 they are left just in case...
+      if (ksmod(id).eq.29.or.ksmod(id).eq.32) then 
 c                                 BCC Fe-Si Lacaze and Sundman (29) 
 c                                 BCC Fe-Cr Andersson and Sundman (32)
          spct(id) = 4
@@ -1135,6 +1168,10 @@ c                                 hardwired binary/pseudo-binary (0)
          do k = 1, spct(id) 
             ysp(k,jd) = yf(ins(k))
          end do
+
+      else
+
+         ysp(1:spct(id),jd) = pa(1:spct(id))
 
       end if
 
@@ -1261,7 +1298,6 @@ c-----------------------------------------------------------------------
       integer make
       common / cst335 /make(k10)
 c-----------------------------------------------------------------------
-
       jd = make(id)
 
       mu = 0d0
@@ -1345,11 +1381,7 @@ c                                 partial molar volumes for volume fractions
                v0(i) = endvol(jend(ids,2+i), ok)
                if (.not.ok) return
 
-               if (lrecip(ids)) then 
-                  v = v + pp(i) * v0(i)
-               else 
-                  v = v + y(i) * v0(i)
-               end if
+               v = v + pp(i) * v0(i)
 
             end do
 
@@ -1362,14 +1394,7 @@ c                                 partial molar volumes for volume fractions
 
                if (pmu.eq.0d0) liq = .true.
 
-               if (lrecip(ids)) then 
-                  vf = pp(i) * v0(i) / v
-               else
-c                                 for solutions with no dependent endmembers
-c                                 the y coordinates can be used to compute 
-c                                 the composition.
-                  vf = y(i) * v0(i) / v
-               end if 
+               vf = pp(i) * v0(i) / v
 
                mu = mu + vf / pmu
                mut = mut + vf / pmut
@@ -1600,7 +1625,7 @@ c                                 redundant for frendly
       call getnam (pname(jd),id)
 c                                 if WERAMI recover composition
 c                                 logical arg is irrelevant
-      if (iam.eq.3) call getcmp (jd,jd,id,pois)
+      if (iam.eq.3) call getcmp (jd,id)
 c                                 component counter for frendly is different
 c                                 than for all other programs
       if (iam.ne.5) then 
@@ -1646,13 +1671,7 @@ c                                 mass % composition:
             pcomp(j,jd) = pcomp(j,jd)*atwt(j)*1d2/props(17,jd)
          end do  
 
-      end if
-c                                 ginc gets the speciation and also sets
-c                                 the pp-array which may be required by 
-c                                 moduli.
-      g0 = ginc(0d0,0d0,id)
-c                                 save the speciation.
-      if (id.gt.0) call getspc (id,jd)
+      end if 
 c                                 bulk modulus flag, if false use explicit form
       bulk = .true.
 c                                 shear modulus
@@ -1675,6 +1694,11 @@ c                                 explicit bulk modulus is allowed and used
          props(21,jd) = 0d0
 
       end if
+
+      g0 = ginc(0d0,0d0,id)
+c                                 get/save speciation, this has to be done after
+c                                 the call topn2 ginc for o/d speciation models. 
+      if (id.gt.0) call getspc (id,jd)
 c                                 set flag for multiple root eos's
       sroot = .true.
 c                                 compute g-derivatives for isostatic 
@@ -1842,7 +1866,6 @@ c                                 in frendly
             beta = -gpp/v
             alpha = gpt/v
             rho = props(17,jd)/v*1d2
-
 c                                 ideal gas beta = 1/p           
             if (beta.gt.v.or.beta.lt.0d0) then
                beta = nopt(7)
@@ -1952,9 +1975,9 @@ c                                 1) v < 0 and not a reaction or an ideal gas in
 c                                 2) alpha and beta are undefined
 c                                 3) cp or beta is < 0 or unreasonably large
 
-c                                 bulk is true if bulk modulus is computed thermodynamically
-c                                 volume is false only if sick and .not.bulk
-
+c                                 bulk - true if bulk modulus is computed thermodynamically
+c                                 volume - false only if sick and .not.bulk
+c                                 -------------------------------------
 c                                 seismic properties
       if (volume.and..not.rxn) then
 
@@ -2152,22 +2175,22 @@ c                                 max solid prop
       end if 
 c                                 check and warn if necessary for negative
 c                                 expansivity
-      if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.11
+      if (.not.sick(jd).and.v.gt.0d0.and.alpha.le.0d0.and.iwarn1.lt.6
      *    .and.pname(jd).ne.wname1.and..not.rxn) then
 
          write (*,1030) t,p,pname(jd)
          iwarn1 = iwarn1 + 1
          wname1 = pname(jd)
-         if (iwarn1.eq.11) call warn (49,r,179,'GETPHP') 
+         if (iwarn1.eq.6) call warn (49,r,179,'GETPHP') 
 
       end if
 
-      if (ppois.and.iwarn2.lt.11.and.pname(jd).ne.wname2.and.pois) then 
+      if (ppois.and.iwarn2.lt.6.and.pname(jd).ne.wname2.and.pois) then 
 
          iwarn2 = iwarn2 + 1
          wname2 = pname(jd)
          write (*,1040) t,p,pname(jd)
-         if (iwarn2.eq.11) call warn (49,r,178,'GETPHP')
+         if (iwarn2.eq.6) call warn (49,r,178,'GETPHP')
 
       end if 
 c                                 accumulate non-seismic totals 
@@ -2348,7 +2371,7 @@ c                                 temperature increments
 
                call getgtt (g0,dt0,dt1,dt2,s,gtt,id)
 
-               if (s.gt.0d0.and.gtt.lt.0.and.t-2d0*dt2.gt.0d0) then
+               if (s.gt.0d0.and.gtt.lt.0d0.and.t-2d0*dt2.gt.0d0) then
                   okt = .true.
                   exit 
                end if 
@@ -2373,6 +2396,8 @@ c                                 last good dt0
             xdt = dt0
 
             dt0 = dabs(fac*s/gtt)
+c                                 something has gone horribly wrong!
+            if (dt0.gt.t) dt0 = xdt
 
          else 
 c                                 something has gone horribly wrong! 
@@ -2585,7 +2610,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, iwarn, m
 
-      double precision chi, chi1, root, k, g, v, vs
+      double precision chi, chi1, root, k, g, v, vs, phi
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -2730,12 +2755,21 @@ c                                 accumulate aggregate totals, some
 c                                 totals may be incomplete if volume or 
 c                                 shear is false for an individual phase
 c                                 weighting scheme for seismic velocity
+      phi = 0d0 
+
       do i = 1, ntot 
 c                                 total volume fraction
          v = props(1,i)*props(16,i)/psys(1)
+
+         if (.not.fluid(i).and.aflu) then
 c                                 solid volume fraction
-         if (.not.fluid(i).and.aflu) 
-     *                    vs = props(1,i)*props(16,i)/psys1(1)
+            vs = props(1,i)*props(16,i)/psys1(1)
+
+         else if (fluid(i)) then
+c                                 total fluid fraction
+            phi = phi + v
+
+         end if
 c                                 for elastic properties use
 c                                 VRH if lopt(16), else HS
          if (lopt(16)) then 
@@ -2893,7 +2927,19 @@ c                                 HS
 
          end if 
  
-      end do 
+      end do
+
+      if (lopt(65).and.aflu) then
+c                                 fluid_shear_modulus model, compute the
+c                                 total aggregate shear modulus as the
+c                                 fluid_absent modulus * (1-sqrt(phi/phi_d))
+         if (phi.lt.nopt(65)) then
+            psys(5) = psys1(5)*(1d0-dsqrt(phi/nopt(65)))
+         else 
+            psys(5) = 0d0
+         end if
+
+      end if
 c                                 ----------------------------------
 c                                 aggregate velocities
       if (volume) then
@@ -3184,5 +3230,129 @@ c                                 total molar amounts
       end do
 
       end
+
+      subroutine getcmp (jd,ids)
+c-----------------------------------------------------------------------
+c getcmp gets the composition of pseudocompund jd, where:
+c  if ids < 0, -ids points to the composition of a true compound in array cp
+c  if ids > 0, id points to the composition of a solution defined in terms
+c              on endmember fractions
+
+c the composition is saved in arrays cp3 and pa3, entry jd
+
+c getcmp is called by FRENDLY, WERAMI.
+c-----------------------------------------------------------------------
+      implicit none
+ 
+      include 'perplex_parameters.h'
+
+      integer i, j, k, jd, ids
+
+      double precision scp(k5), xx
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      double precision cp
+      common/ cst12 /cp(k5,k10)
+
+      double precision cp0
+      common/ cst71 /cp0(k0,k5)
+
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+
+      integer ikp
+      common/ cst61 /ikp(k1)
+
+      integer iam
+      common/ cst4 /iam
+
+      integer npt,jdv
+      logical fulrnk
+      double precision cptot,ctotal
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+
+      integer jnd
+      double precision aqg,qq,rt
+      common/ cxt2 /aqg(m4),qq(m4),rt,jnd(m4)
+
+      integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+      common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer kd, na1, na2, na3, nat
+      double precision x3, caq
+      common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
+
+      double precision z, pa, p0a, x, w, y, wl, pp
+      common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
+     *              wl(m17,m18),pp(m4)
+c----------------------------------------------------------------------
+      kkp(jd) = ids
+
+      if (ids.lt.0) then
+c                                 simple compounds and endmembers:
+         if (iam.ne.5) then
+c                                 all programs except frendly
+            do i = 1, icomp
+               cp3(i,jd) = cp(i,-ids)
+            end do
+c                                 set solution composition 
+c                                 if it's a solution endmember
+c                                 1st argument on endpa is a dummy
+            if (ikp(-ids).ne.0) then 
+               call endpa (ids,-ids,ikp(-ids))
+               pa3(jd,1:nstot(ids)) = pa(1:nstot(ids))
+            end if
+
+         else
+c                                 frendly 
+            do i = 1, k0
+               cp3(i,jd) = cp0(i,-ids)
+            end do 
+
+         end if
+
+      else
+
+         if (caq(jd,na1).eq.0d0) then
+
+            rkwak = .true.
+c                                 solutions:
+            call getscp (scp,cptot(jd),ids,jd)
+
+            cp3(1:icomp,jd) = scp(1:icomp)
+
+         else
+
+            rkwak = .false.
+            cp3(1:icomp,jd) = 0d0
+c                                 lagged speciation:
+c                                 impure solvent
+            do i = 1, ns
+               do j = 1, icomp 
+                  cp3(j,jd) = cp3(j,jd) + caq(jd,i) * cp(j,jnd(i))
+               end do 
+            end do
+
+            do i = sn1, nsa
+
+               k = i - ns
+c                                 convert molality to mole fraction (xx)
+               xx = caq(jd,i)/caq(jd,na2)
+
+               do j = 1, icomp
+                  cp3(j,jd) = cp3(j,jd) + xx * aqcp(j,k)
+               end do  
+
+            end do
+
+         end if
+
+      end if
+
+      end 
+
 
  

@@ -53,55 +53,30 @@ FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
-MYOBJ = vertex690 meemum690 pssect690 werami690 unsplt690 actcor build fluids ctransf frendly meemum convex pstable pspts psvdraw pssect pt2curv vertex werami
+MYOBJ = actcor build fluids ctransf frendly meemum convex pstable pspts psvdraw pssect pt2curv vertex werami
 all: $(MYOBJ)
 
-LIBRARY_690 = pscom.o pslib.o rlib.o tlib.o flib.o olib.o resub.o nlib.o BLASlib.o
+LIBRARY = pscom.o pslib.o rlib.o tlib.o flib.o olib.o resub.o minime_blas.o blas2lib.o
 
-LIBRARY_691 = pscom.o pslib.o rlib_691.o tlib_691.o flib.o olib_691.o resub_691.o minime_blas.o blas2lib.o
-
-LIBRARY_PS  = cont_lib.o pscom.o pslib.o tlib_691.o
-
-clean: 
-	rm -f *.o $(MYOBJ)
-###################### TARGETS FOR 690- PROGRAMS #########################   
-# 
-# These 690- version programs have different file structure and must be used 
-# together. All other 690- programs are compatible with 690+
-#
-meemum690: meemum.o $(LIBRARY_690)
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o $(LIBRARY_690) -o meemum690
-
-pssect690: psect.o $(LIBRARY_690) 
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY_690) -o pssect690
-
-vertex690: vertex.o $(LIBRARY_690)
-	$(COMP77) $(FFLAGS) $(FLINK) vertex.o $(LIBRARY_690) -o vertex690
-
-werami690: werami.o $(LIBRARY_690)
-	$(COMP77) $(FFLAGS) $(FLINK) werami.o $(LIBRARY_690) -o werami690
-
-unsplt690: unsplt.o $(LIBRARY_690)
-	$(COMP77) $(FFLAGS) $(FLINK) unsplt.o $(LIBRARY_690) -o unsplt690
+LIBRARY_PS = cont_lib.o pscom.o pslib.o tlib.o
 
 ###################### TARGETS FOR 691+ PROGRAMS ######################### 
-#  
-# These 691+ targets, the 690- versions can be made by swapping in LIBRARY_690
 #
-convex: convex_691.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) convex_691.o $(LIBRARY_691) -o $@
+#
+convex: convex.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) convex.o $(LIBRARY) -o $@
 
-meemum: meemum_691.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) meemum_691.o $(LIBRARY_691) -o $@
+meemum: meemum.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o $(LIBRARY) -o $@
 
-vertex: vertex_691.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) vertex_691.o $(LIBRARY_691) -o $@
+vertex: vertex.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) vertex.o $(LIBRARY) -o $@
 
-werami: werami.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+werami: werami.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
-pssect: psect.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY_691) -o $@
+pssect: psect.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY) -o $@
 
 pstable: pstable.o $(LIBRARY_PS)
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
@@ -115,23 +90,23 @@ psvdraw: psvdraw.o $(LIBRARY_PS)
 pt2curv: pt2curv.o $(LIBRARY_PS)
 	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
 
-actcor: actcor.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+actcor: actcor.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
-build: build.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+build: build.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
-fluids: fluids.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+fluids: fluids.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
-ctransf: ctransf.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+ctransf: ctransf.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
-DEW_2_ver: DEW_2_ver.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+DEW_2_ver: DEW_2_ver.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
-frendly: frendly.o $(LIBRARY_691)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_691) -o $@
+frendly: frendly.o $(LIBRARY)
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
 
 #hptover: hptover.o
 #	$(COMP77) $(FFLAGS) $@.o -o $@
@@ -164,8 +139,6 @@ fluids.o: fluids.f
 	$(COMP77) $(FFLAGS) -c fluids.f
 convex.o: convex.f
 	$(COMP77) $(FFLAGS) -c convex.f
-convex_691.o: convex_691.f
-	$(COMP77) $(FFLAGS) -c convex_691.f
 cont_lib.o: cont_lib.f
 	$(COMP77) $(FFLAGS) -c cont_lib.f
 ctransf.o: ctransf.f
@@ -193,42 +166,24 @@ pstable.o: pstable.f
 
 pt2curv.o: pt2curv.f
 	$(COMP77) $(FFLAGS) -c pt2curv.f
-resub.o: resub.f
-	$(COMP77) $(FFLAGS) -c resub.f
-meemum.o: meemum.f
-	$(COMP77) $(FFLAGS) -c meemum.f
-unsplt.o: unsplt.f
-	$(COMP77) $(FFLAGS) -c unsplt.f
-vertex.o: vertex.f
-	$(COMP77) $(FFLAGS) -c vertex.f
 werami.o: werami.f
 	$(COMP77) $(FFLAGS) -c werami.f
 flib.o: flib.f
 	$(COMP77) $(FFLAGS) -c flib.f
 pslib.o: pslib.f
 	$(COMP77) $(FFLAGS) -c pslib.f
-nlib.o: nlib.f
-	$(COMP77) $(FFLAGS) -c nlib.f
-rlib.o: rlib.f
-	$(COMP77) $(FFLAGS) -c rlib.f
+vertex.o: vertex.f
+	$(COMP77) $(FFLAGS) -c vertex.f
+meemum.o: meemum.f
+	$(COMP77) $(FFLAGS) -c meemum.f
+resub.o: resub.f
+	$(COMP77) $(FFLAGS) -c resub.f
 tlib.o: tlib.f
 	$(COMP77) $(FFLAGS) -c tlib.f
 olib.o: olib.f
 	$(COMP77) $(FFLAGS) -c olib.f
-vertex_691.o: vertex_691.f
-	$(COMP77) $(FFLAGS) -c vertex_691.f
-meemum_691.o: meemum_691.f
-	$(COMP77) $(FFLAGS) -c meemum_691.f
-resub_691.o: resub_691.f
-	$(COMP77) $(FFLAGS) -c resub_691.f
-tlib_691.o: tlib_691.f
-	$(COMP77) $(FFLAGS) -c tlib_691.f
-olib_691.o: olib_691.f
-	$(COMP77) $(FFLAGS) -c olib_691.f
-rlib_691.o: rlib_691.f
-	$(COMP77) $(FFLAGS) -c rlib_691.f
-BLASlib.o: BLASlib.f
-	$(COMP77) $(FFLAGS) -c BLASlib.f
+rlib.o: rlib.f
+	$(COMP77) $(FFLAGS) -c rlib.f
 blas2lib.o: blas2lib.f
 	$(COMP77) $(FFLAGS) -c blas2lib.f
 minime_blas.o: minime_blas.f
