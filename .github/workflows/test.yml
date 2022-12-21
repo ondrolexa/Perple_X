@@ -13,6 +13,6 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y gfortran
-    - name: Test with pytest
+    - name: Compile sources
       run: |
         make -C src -f LINUX_makefile
