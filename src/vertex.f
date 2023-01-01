@@ -79,6 +79,9 @@ c-----------------------------------------------------------------------
       character prject*100,tfname*100
       common/ cst228 /prject,tfname
 
+      integer count
+      common/ cstcnt /count
+
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -174,6 +177,8 @@ c                                 clean up intermediate results
       if (lopt(61)) call cumtim
 c                                 end of job msg
       write (*,1020) prject
+c                                 dynamic objective function calls
+      write (*,*) count
 
 1000  format ('** Starting ',a,' computational stage **',/)
 1020  format (80('-'),//,'End of job: ',a,//,80('-'),/)
@@ -1205,13 +1210,10 @@ c                                 instantaneous column mass
 c                                 end of the k index loop
          end do
 
-
-
             do i = 1, icp
                ccerr(i) = ccerr(i) + icerr(i)
                if (k.eq.ncol) cfmass(i) = cfmass(i) + dcomp(i)
             end do 
-
 
          if (flsh) then 
             write (*,'(/,a,f9.0)') 'Average Layer Compositions at '

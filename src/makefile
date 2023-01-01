@@ -1,5 +1,5 @@
 #
-# makefile for Perple_X 6.9.1+/-
+# makefile for Perple_X 6.9.2+
 #
 # To compile the Perple_X programs with this file first edit the compiler
 # variables so that they are consistent with the fortran installation on 
@@ -46,9 +46,9 @@ COMP77 = gfortran
 # and substitute the directory name you find for LQMDIR.  En garde choosing
 # 32/64 bit libraries.
 # G. Helffrich/30 Nov. '15
-# FFLAGS =  -O3 -static-libgfortran
+# FFLAGS =  -O3 -static-libgfortran -Wpedantic
 
-FFLAGS = -O3 -Wpedantic
+FFLAGS = -O3
 FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
@@ -60,53 +60,53 @@ LIBRARY = pscom.o pslib.o rlib.o tlib.o flib.o olib.o resub.o minime_blas.o blas
 
 LIBRARY_PS = cont_lib.o pscom.o pslib.o tlib.o
 
-###################### TARGETS FOR 691+ PROGRAMS ######################### 
+###################### TARGETS FOR 692+ PROGRAMS ######################### 
 #
 #
 convex: convex.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) convex.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) convex.o $(LIBRARY) -o $@$(EXT)
 
 meemum: meemum.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) meemum.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) meemum.o $(LIBRARY) -o $@$(EXT)
 
 vertex: vertex.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) vertex.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) vertex.o $(LIBRARY) -o $@$(EXT)
 
 werami: werami.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 pssect: psect.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) psect.o $(LIBRARY) -o $@$(EXT)
 
 pstable: pstable.o $(LIBRARY_PS)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@$(EXT)
 
 pspts: pspts.o $(LIBRARY_PS) 
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@$(EXT)
 
 psvdraw: psvdraw.o $(LIBRARY_PS)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@$(EXT)
 
 pt2curv: pt2curv.o $(LIBRARY_PS)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY_PS) -o $@$(EXT)
 
 actcor: actcor.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 build: build.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 fluids: fluids.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 ctransf: ctransf.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 DEW_2_ver: DEW_2_ver.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 frendly: frendly.o $(LIBRARY)
-	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@
+	$(COMP77) $(FFLAGS) $(FLINK) $@.o $(LIBRARY) -o $@$(EXT)
 
 #hptover: hptover.o
 #	$(COMP77) $(FFLAGS) $@.o -o $@
