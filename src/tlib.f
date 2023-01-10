@@ -12395,7 +12395,7 @@ c g = a + b*T + c*T*lnT + d/T + e/T**2 + f/T**3 + g/T**9 +
 c         h*T**2 + i*T**3 + j*T**4 + k*T**7
 c
 c EOS after Brosh et al., 2007, 2008:
-c v0 volume at pr,tr; nn number of atoms; gam0 Grüneisen parameter;
+c v0 volume at pr,tr; nn number of atoms; gam0 Grï¿½neisen parameter;
 c tet0 Enstein temperature; b1,dd1,b0,dd0 fitting coefficients;
 c Bo bulk modulus; Bpo pressure derivative of bulk modulus
 c                                 -------------------------------
@@ -12941,7 +12941,7 @@ c
 c G0 and S0 are loaded into thermo(31...) and thermo(32...) via
 c the ic2p pointer array.
 
-c v0 volume at pr,tr; nn number of atoms; gam0 Grüneisen parameter;
+c v0 volume at pr,tr; nn number of atoms; gam0 Grï¿½neisen parameter;
 c tet0 Enstein temperature; b1,dd1,b0,dd0 fitting coefficients;
 c Bo bulk modulus; Bpo pressure derivative of bulk modulus
 
