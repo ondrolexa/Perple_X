@@ -19,10 +19,9 @@ jobs:
       - name: Compile sources
         run: |
           make -C src -f LINUX_makefile
-          VERS=`grep 'Perple_X version' src/tlib.f | awk -F"version " '{print $2}' | awk -F"," '{print $1}'`
           mkdir binary
           find src/ -executable -type f -exec cp {} binary \;
-          tar -pczf Perple_X_${VERS}_Linux_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
+          tar -pczf Perple_X_Linux_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@master
         env:
