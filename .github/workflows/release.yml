@@ -2,7 +2,7 @@ name: Handle Release
 
 on:
   release:
-    types: [created, edited, published]
+    types: [created]
 
 jobs:
   generate:
