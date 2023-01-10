@@ -472,6 +472,9 @@ c                                  save the old count
 
       end do
 
+c     write (*,*) count
+c     count = 0
+
 c     write (*,*) 'end of reopt'
 
       end
@@ -487,7 +490,7 @@ c----------------------------------------------------------------------
 
       logical swap, bad
 
-      integer i, ids, lds, id, kd, iter, idif, ifail
+      integer i, ids, lds, id, kd, iter, idif, ifail, help
 
       double precision gg, gsol1
 
@@ -575,6 +578,8 @@ c                                 point to solution models
                if (ids.eq.0) cycle 
 
                if (nrf(ids)) cycle
+
+               rkds = id
 c                                 endmember refinement point:
                call endpa (kd,-id,ids)
 
@@ -615,39 +620,9 @@ c                                 amount can be initialized
 
             if (lopt(61)) call begtim (15)
 c                                  normal solution
-            call minfrc (ifail)
+            call minfrc
 
             if (lopt(61)) call endtim (15,.false.,'minfrc')
-
-            if (ifail.eq.0) then
-               
-               igood(ids) = igood(ids) + 1
-            
-               if (iter.eq.1.and..not.ststbl(id)) then
-c                 write (*,*) 'not good now good ',id,ids
-               end if 
-            
-            else
-            
-               ibad(ids) = ibad(ids) + 1
-            
-               if (ifail.eq.1) then
-c                 write (*,*) 'and i am outta here 0 iter',ids
-               else if (ifail.eq.2) then
-c                 write (*,*) 'bounded w/<0 fraction',ids
-               else if (ifail.eq.3) then 
-c                 write (*,*) 'bad site fraction',ids
-               else if (ifail.eq.4) then 
-c                 write (*,*) 'never happens',ids
-               end if
-            
-               if (iter.eq.1.and.ststbl(id)) then
-c                 write (*,*) 'not good',id,ids
-               else if (iter.eq.1.and..not.ststbl(id)) then
-c                 write (*,*) 'not good & not good',id,ids
-               end if 
-            
-            end if
 
          end if
 
@@ -2366,13 +2341,15 @@ c                                 dump iteration details
 
          else if (jkp(i).gt.0) then
 c                                 a metastable solution cpd
-            if (clamda(i).lt.clam(id)) then
+            if (id.gt.0) then
+c                                 and not an endmember
+               if (clamda(i).lt.clam(id)) then
 c                                 keep the least metastable point
-                  jmin(id) = i
-                  clam(id) = clamda(i)
+                     jmin(id) = i
+                     clam(id) = clamda(i)
 
+               end if
             end if
-
          end if
 
       end do
