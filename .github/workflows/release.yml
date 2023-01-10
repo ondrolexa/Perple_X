@@ -2,10 +2,11 @@ name: Handle Release
 
 on:
   release:
-    types: [created]
+    types: [created, edited, published]
 
 jobs:
   generate:
+
     name: Create release-artifacts
     runs-on: ubuntu-latest
     steps:
