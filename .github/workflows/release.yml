@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  generate_LINUX:
+  generate:
 
     name: Create LINUX release-artifacts
     runs-on: ubuntu-latest
