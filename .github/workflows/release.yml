@@ -7,7 +7,7 @@ on:
 jobs:
   generate:
 
-    name: Create LINUX release-artifacts
+    name: Create release-artifacts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
