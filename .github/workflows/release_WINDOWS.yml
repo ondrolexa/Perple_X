@@ -7,7 +7,7 @@ on:
 jobs:
   generate:
 
-    name: Create WINDOWS release-artifacts
+    name: Create release-artifacts
     runs-on: windows-latest
     steps:
       - name: Checkout the repository
