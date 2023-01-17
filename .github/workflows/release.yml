@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  generate LINUX:
+  generate_LINUX:
 
     name: Create LINUX release-artifacts
     runs-on: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
           args: '*.tar.gz'
 
 
-  generate WINDOWS:
+  generate_WINDOWS:
 
     name: Create WINDOWS release-artifacts
     runs-on: windows-latest
