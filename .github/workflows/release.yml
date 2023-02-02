@@ -1,30 +1,52 @@
-name: Handle Release
+name: Create release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*"
 
 jobs:
-  generate:
 
-    name: Create release-artifacts
-    runs-on: ubuntu-latest
+  build_binaries:
+    name: Build binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            zip_name: Perple_X_Linux_64_gfortran
+            makefile: LINUX_makefile
+          - os: windows-latest
+            zip_name: Perple_X_Windows_64_gfortran
+            makefile: WINDOWS_makefile
+
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
-      - name: Install dependencies
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
           sudo apt install -y gfortran
+
+      - name: Install Windows dependencies
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install mingw cmake
+
       - name: Compile sources
         run: |
-          make -C src -f LINUX_makefile
+          make -C src -f ${{ matrix.makefile }}
           mkdir binary
           find src/ -executable -type f -exec cp {} binary \;
-          tar -pczf Perple_X_Linux_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
-      - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tar -pczf ${{ matrix.zip_name }}.tar.gz binary datafiles optionfiles matlab_scripts
+
+      - name: add binary asset
+        uses: softprops/action-gh-release@v1
         with:
-          args: '*.tar.gz'
+          draft: false
+          fail_on_unmatched_files: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Perple_X_${{ github.ref_name }}
+          files: ${{ matrix.zip_name }}.tar.gz
