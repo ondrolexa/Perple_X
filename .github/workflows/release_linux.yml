@@ -1,4 +1,4 @@
-name: Create release
+name: Linux release
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 jobs:
 
   build_win_binaries:
-    name: Build Windows binaries
+    name: Build binaries
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +25,7 @@ jobs:
         make -C src -f LINUX_makefile
         mkdir binary
         find src/ -executable -type f -exec cp {} binary \;
-        tar -pczf Perple_X_Linux_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
+        tar -pczf Perple_X_${{ github.ref_name }}_Linux_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
 
     - name: Release Linux binary
       uses: softprops/action-gh-release@v1
@@ -34,5 +34,5 @@ jobs:
         fail_on_unmatched_files: true
         token: ${{ secrets.GITHUB_TOKEN }}
         name: Perple_X_${{ github.ref_name }}
-        files: Perple_X_Linux_64_gfortran.tar.gz
+        files: Perple_X_${{ github.ref_name }}_Linux_64_gfortran.tar.gz
 
