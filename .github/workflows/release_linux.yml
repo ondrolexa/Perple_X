@@ -1,0 +1,38 @@
+name: Create release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+
+  build_win_binaries:
+    name: Build Windows binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Linux dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y gfortran
+
+    - name: Compile Linux binaries
+      run: |
+        make -C src -f LINUX_makefile
+        mkdir binary
+        find src/ -executable -type f -exec cp {} binary \;
+        tar -pczf Perple_X_Linux_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
+
+    - name: Release Linux binary
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        fail_on_unmatched_files: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Perple_X_${{ github.ref_name }}
+        files: Perple_X_Linux_64_gfortran.tar.gz
+

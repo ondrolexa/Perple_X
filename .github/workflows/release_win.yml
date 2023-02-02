@@ -1,0 +1,38 @@
+name: Create release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+
+  build_win_binaries:
+    name: Build Windows binaries
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install:  mingw-w64-ucrt-x86_64-make mingw-w64-ucrt-x86_64-gcc-fortran
+
+    - shell: msys2 {0}
+      run: |
+        mingw32-make.exe -C src -f WINDOWS_makefile
+        mkdir binary
+        find src/ -executable -type f -exec cp {} binary \;
+        tar -pczf Perple_X_Windows_64_gfortran.tar.gz binary datafiles optionfiles matlab_scripts
+
+    - name: Release Windows binary
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        fail_on_unmatched_files: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Perple_X_${{ github.ref_name }}
+        files: Perple_X_Windows_64_gfortran.tar.gz
