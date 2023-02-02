@@ -26,7 +26,7 @@ jobs:
         mingw32-make.exe -C src -f WINDOWS_makefile
         mkdir binary
         find src/ -executable -type f -exec cp {} binary \;
-        7z.exe a -r Perple_X_{{ github.ref_name }}_Windows_64_gfortran.zip binary datafiles optionfiles matlab_scripts
+        7z.exe a -r Perple_X_${{ github.ref_name }}_Windows_64_gfortran.zip binary datafiles optionfiles matlab_scripts
 
     - name: Release Windows binary
       uses: softprops/action-gh-release@v1
@@ -35,4 +35,4 @@ jobs:
         fail_on_unmatched_files: true
         token: ${{ secrets.GITHUB_TOKEN }}
         name: Perple_X_${{ github.ref_name }}
-        files: Perple_X_{{ github.ref_name }}_Windows_64_gfortran.zip
+        files: Perple_X_${{ github.ref_name }}_Windows_64_gfortran.zip
