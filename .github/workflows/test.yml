@@ -7,12 +7,21 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+
     - name: Checkout code
       uses: actions/checkout@v3
+
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y gfortran
+
     - name: Compile sources
       run: |
-        make -C src -f LINUX_makefile
+        make -k -C src -f LINUX_makefile | tee compilation_output.txt
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: compilation_output.txt
+        path: compilation_output.txt
