@@ -48,7 +48,7 @@ COMP77 = gfortran
 # G. Helffrich/30 Nov. '15
 # FFLAGS =  -O3 -static-libgfortran
 
-#FARCH= -m64
+FARCH= -m64
 FFLAGS = -O3 $(FARCH)
 #FLINK = -static-libgfortran -m64 -lgfortran -lgcc -lm
 # make static linking 02/2023 by LX
