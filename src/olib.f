@@ -123,7 +123,7 @@ c                                 print standard potentials
          write (lu,1120) (vname(jv(i)),v(jv(i)), i = 3, ipot)
 
          do i = 2, icont
-            write (lu,1121) i, cx(i-1)
+            write (lu,1121) i-1, cx(i-1)
          end do
 
       else 
