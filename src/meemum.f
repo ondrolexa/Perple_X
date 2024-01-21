@@ -2,7 +2,7 @@ c Please do not distribute any part of this source.
  
 c Copyright (c) 1987-2020 by James A. D. Connolly, Institute for Mineralogy
 c & Petrography, Swiss Federal Insitute of Technology, CH-8092 Zurich,
-c SWITZERLAND. All rights reserved.
+c SWITZERLAND. All rights reserved. 
 
       program meemm
 c----------------------------------------------------------------------
@@ -21,9 +21,8 @@ c----------------------------------------------------------------------
       external readyn
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       double precision atwt
       common/ cst45 /atwt(k0) 
@@ -34,14 +33,12 @@ c----------------------------------------------------------------------
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       character*5 cname
       common/ csta4 /cname(k5)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -52,10 +49,6 @@ c----------------------------------------------------------------------
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------- 
@@ -64,15 +57,15 @@ c                                 iam is a flag indicating the Perple_X program
 c                                 initialization, read files etc.
       call iniprp
 
-      write (*,1000)
+      bulk = .false.
 
-      if (readyn()) then 
+      if (icont.eq.1) then 
+c                                 prompt for bulk composition if compostional variables
+c                                 are not explicit
+         write (*,1000)
 c                                 bulk is true, user enters composition and p-t conditions
-         bulk = .true.
 
-      else 
-c                                 else user enters only p-t and composition read from input file.
-         bulk = .false.
+         if (readyn())  bulk = .true.
 
       end if
 c                                 iwt is set by input, it is only used below to determine
@@ -81,8 +74,6 @@ c                                 computations are done solely in molar units.
       amount = 'molar '
 
       if (iwt.eq.1) amount = 'weight'
-
-      if (lopt(28)) open (666,file='times.txt')
 c                                 computational loop
       do 
 c                                 read potential variable values    
@@ -116,19 +107,22 @@ c                                 convert mass to molar
          else if (icont.gt.1) then 
 c                                 files set up for bulk compositional variables
             do i = 2, icont
-               write (*,1010) i
+               write (*,1010) i-1
                read (*,*) cx(i-1)
             end do
 
             call setblk
 
          end if 
-c                                 meemum does the minimization and outputs
-c                                 the results to the print file.
+c                                 meemum does the minimization and
+c                                 via getloc computes system and derivative
+c                                 properties, these computations are costly 
+c                                 and can be streamlined for specific applications.
          call meemum (bad)
 
          if (.not.bad) then
-c                                 print summary to LUN 6
+c                                 calpr0 outputs the results to console 
+c                                 and, if requested, the print file (n3)
             call calpr0 (6)
 
             if (io3.eq.0) call calpr0 (n3)
@@ -152,4 +146,4 @@ c                                 print summary to LUN 6
 1060  format (/,'Enter ',a,' amounts of the components:')
 1070  format (/,'Enter (zeroes to quit) ',7(a,1x))
 
-      end 
+      end

@@ -16,14 +16,15 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer liw,lw,k,idead,inc,lphct,jter, lpprob
+      integer k, idead, inc, lphct, jter, lpprob
 
-      parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)  
+c     parameter (liw=2*k1+3,lw=2*(k5+1)**2+7*k1+5*k5)
 
-      double precision ax(k5),x(k1),w(lw),oldt,oldp,gtot,
+      double precision ax(k5),x(k1),oldt,oldp,gtot,
      *                 tol,oldx,clamda(k1+k5)
 
-      integer iw(liw)
+c     integer iwbig(liwbig)
+c     double precision wbig(lwbig)
 
       logical quit, abort
 
@@ -60,27 +61,12 @@ c-----------------------------------------------------------------------
       double precision g2, cp2, c2tot
       common/ cxt12 /g2(k21),cp2(k5,k21),c2tot(k21),tphct
 
-      double precision units, r13, r23, r43, r59, zero, one, r1
-      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
-
       double precision wmach
       common/ cstmch /wmach(10)
 
-      save ax, x, clamda, w, iw
+      save ax, x, clamda
+c     save ax, x, clamda, w, iw
 c-----------------------------------------------------------------------
-      idegen = 0
-      jdegen = 0
-c                                 degeneracy test
-      do k = 1, icp 
-         if (b(k).eq.0d0) then 
-            idegen = idegen + 1
-            idg(idegen) = k
-         else 
-            jdegen = jdegen + 1
-            jdg(jdegen) = k
-         end if
-      end do
-
       inc = istct - 1
 
       oldt = t
@@ -115,8 +101,8 @@ c                                 load the bulk into the constraint array
 
       if (lopt(61)) call begtim (13)
 
-      call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,
-     *            clamda,iw,liw,w,lw,idead,istart,tol,lpprob)
+      call lpsol (jphct,hcp,a,k5,bl,bu,c,is,x,jter,gtot,ax,clamda,
+     *            iwbig,liwbig,wbig,lwbig,idead,istart,tol,lpprob)
 c                                 set istart according to static_LP_start
       if (istart.ne.0) istart = iopt(39)
 
@@ -143,6 +129,7 @@ c                                 find discretization points for refinement
          call yclos1 (x,clamda,jphct,quit)
 c                                 returns quit if nothing to refine
          if (quit) then 
+
 c                                 final processing, .true. indicates static
             call rebulk (abort,.true.)
 
@@ -156,11 +143,20 @@ c                                 reoptimize with refinement
 c                                 final processing, .false. indicates dynamic
                call rebulk (abort,.false.)
 
-               if (abort) then
+               if (abort.or.abort1) then
+
+                  if (abort) then 
 c                                 abort is set for bad lagged speciation 
 c                                 solutions in avrger when pure and impure 
 c                                 phases with same solvent composition coexist
-                  idead = 102
+                     idead = 102
+
+                  else
+c                                 gaqlagd couldn't speciate a previously 
+c                                 speciated composition
+                     idead = 104
+
+                  end if
 
                   call lpwarn (idead,'LPOPT0')
 
@@ -204,7 +200,7 @@ c-----------------------------------------------------------------------
       parameter (liw=2*k21+3,lw=2*(k5+1)**2+7*k21+5*k5)
 
       double precision ax(k5), clamda(k21+k5), w(lw), tot(k5), gtot,
-     *                 ogtot, bl(k21+k5), bu(k21+k5), d2g(3), tol
+     *                 ogtot, bl(k21+k5), bu(k21+k5), tol
 
       integer is(k21+k5), iw(liw)
 
@@ -237,7 +233,6 @@ c                                 are identified in jdv(1..npt)
       quit = .false.
       opt = npt
       idead1 = 0
-      d2g(1) = ogtot
 
       jphct = jpoint
 c                                 global composition coordinate counter
@@ -249,6 +244,7 @@ c                                 iteration from static arrays
 c                                 resub can set idead 103 for out-of-bounds
 c                                 HKF-gfunc
       if (idead.gt.0) then
+         call lpwarn (idead,'REOPT')
          return
       end if
 c                                  initialization
@@ -288,14 +284,12 @@ c                                  set constraint states
 
       end if
 
-      iter = 2
+      iter = 1
 
       do
 c                                 iter is incremented before the operations,
 c                                 i.e., on the nth iteration, iter is n+1
          iter = iter + 1
-c                                 set quit flag
-         if (iter.gt.iopt(20)) quit = .true.
 c                                 cold 0/warm 1 start
          if (iopt(38).eq.2) then
             jstart = 1
@@ -318,10 +312,13 @@ c                                  and bounds
      *               clamda,iw,liw,w,lw,idead,jstart,tol,lpprob)
 
          if (lopt(61)) call endtim (14,.false.,'dynamic optimization ')
+c                                 set quit flag, the idead = 3 case 
+c                                 resets quit to .false.
+         if (iter.gt.iopt(20)) quit = .true.
 
          if (idead.gt.0) then
 
-            if (idead.ne.3.or.quit) then 
+            if (idead.ne.3.or.idead.eq.3.and.idead1.ne.0) then 
 
                call lpwarn (idead,'REOPT')
                exit 
@@ -337,7 +334,7 @@ c                                  just in case:
 
                if (is(i).eq.1) cycle
 
-               do j = 1, icp 
+               do j = 1, icp
                   tot(j) = tot(j) - x(i)*cp2(j,i)
                end do
 
@@ -353,9 +350,9 @@ c                                  just in case:
 
                else if (dabs(tot(i)).gt.zero) then 
 
-c                  write (*,'(/,a,/)') '**warning ver333** '//
-c     *                   'You''ve got to ask yourself one '//
-c     *                   'question: Do I feel lucky? Well, do ya, punk?'
+                  write (*,'(/,a,/)') '**warning ver333** '//
+     *                   'You''ve got to ask yourself one '//
+     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
                   idead1 = 3
 
@@ -365,53 +362,33 @@ c     *                   'question: Do I feel lucky? Well, do ya, punk?'
 
             if (idead1.eq.1) then
 c                                 let's blow this joint
-c              write (*,'(/,a,/)') 'bad result on idead = 3, let''s '//
-c    *                'blow this joint, the mass balance errors are:'
-c              write (*,'(4(g14.6,2x))') (tot(i),i=1,icp)
-               idead = 3
+               write (*,'(/,a,/)') 'bad result on idead = 3, let''s '//
+     *                'blow this joint, the mass balance errors are:'
+               write (*,'(4(g14.6,2x))') (tot(i),i=1,icp)
 
                call lpwarn (idead,'REOPT/MASS BALANCE')
 
                exit
 
-c           else if (idead.eq.3) then
-
-c              write (*,'(/,a,/)') '**warning ver333** '//
-c    *                   'You''ve got to ask yourself one '//
-c    *                   'question: Do I feel lucky? Well, do ya, punk?'
+            else if (idead1.eq.3) then
+c                                 do another iteration
+               if (quit)  quit = .false.
 
             end if
 
             idead = 0
 
+         else
+
+            idead1 = 0
+
          end if
 
-         if (dabs(gtot-ogtot).lt.nopt(21)) then 
+         if (dabs(gtot-ogtot).lt.nopt(21).and.iter.gt.2) then 
             quit = .true.
          else
             ogtot = gtot
          end if
-
-c        if (iter.le.3) then 
-c           d2g(iter) = gtot
-c        else
-c           d2g(1) = d2g(2)
-c           d2g(2) = d2g(3)
-c           d2g(3) = gtot
-c        end if
-
-c        if (iter.ge.3) then 
-c           curve = d2g(3) + d2g(1) - 2d0*d2g(2)
-c           write (*,'(g12.6,1x,i2,1x,g12.6)') curve, iter,gtot-ogtot
-c           write (*,'(g12.6,1x,i2,1x,g12.6)') curve/dabs(gtot), iter,
-c    *                                         (gtot-ogtot)/dabs(gtot)
-
-c           if (dabs(curve/gtot).eq.0d0.or.
-c    *          dabs((gtot-ogtot)/gtot).eq.0d0) then
-c              quit = .true.
-c           end if
-
-c        end if
 c                                 idead is zero coming into yclos2:
 c                                 analyze solution, get refinement points
          call yclos2 (clamda,x,is,iter,opt,idead,quit)
@@ -431,7 +408,7 @@ c                                 save the id and compositions
 c                                 of the refinement points, this
 c                                 is necessary because resub rewrites
 c                                 the zco array.
-         call savpa
+         call savpa (.false.)
 
          if (quit) exit
 c                                 save old counter 
@@ -448,30 +425,7 @@ c                                  save the old count
 
       end do
 
-c     if (count.gt.8000) then
-
-c     write (*,*) ' '
-c     write (*,*) 'function calls ',count
-c     write (*,*) 'iterations ',rcount(1)
-c     if (rcount(1).gt.0) 
-c    *   write (*,*) 'function calls/iteration ',count/rcount(1)
-c     write (*,*) 'good : bad ',rcount(2), rcount(3), 
-c    *                          rcount(2) + rcount(3)
-c     if (rcount(1).gt.0)  
-c    *   write (*,*) 'iter/opt ', rcount(1)/(rcount(2) + rcount(3))
-c     write (*,*) ' '
-
-c     call prtptx
-
-c     end if
-
-c     rcount = 0
-
-      
-c     count = 0
-c     write (*,*) count
-
-c     write (*,*) 'end of reopt'
+      if (iter.gt.iopt(20).and.idead.eq.0) call lpwarn (108,'REOPT')
 
       end
 
@@ -609,7 +563,8 @@ c                                 whether the solvent is pure by calculation.
 
             gg = gsol1 (ids,.true.)
 
-            if (lopt(32).and.ksmod(ids).eq.39.and.nstot(ids).eq.1) then
+            if (lopt(32).and.ksmod(ids).eq.39.and.nstot(ids).eq.1.and.
+     *          abort1) then
 c                                 HKF g-func out-of-range error, only tested
 c                                 for pure H2O solvent
                idead = 103
@@ -731,7 +686,7 @@ c----------------------------------------------------------------------
 
       end 
 
-      subroutine savpa
+      subroutine savpa (statik)
 c----------------------------------------------------------------------
 c subroutine to save a copy of adaptive pseudocompound endmember fractions
 c in the temporary array ycoor (also lcoor) used by resub to generate
@@ -740,8 +695,9 @@ c----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
-c                                 -------------------------------------
-c                                 local variables
+
+      logical statik, bad
+
       integer i, kcoct, id, ids
 
       double precision z, pa, p0a, x, w, y, wl, pp
@@ -773,24 +729,38 @@ c----------------------------------------------------------------------
          ids = jkp(id)
          lkp(i) = ids
 c                                 cycle on a compound
-         if (ids.lt.0.or.id.le.jpoint) cycle
+         if (ids.lt.0) then 
+            write (*,*) 'something molto rotten in denmark'
+         end if 
 
          lcoor(i) = kcoct
 c                                 it's a solution:
-         ycoor(kcoct+1:kcoct+nstot(ids)) = 
+         if (.not.statik) then 
+c                                 get the composition from zco and, optionally
+c                                 save the composition in the auto-refine lst
+c                                 (savdyn)
+            ycoor(kcoct+1:kcoct+nstot(ids)) = 
      *                            zco(icoz(id)+1:icoz(id)+nstot(ids))
 
-         kcoct = kcoct + nstot(ids)
+            if (lopt(58).and.(.not.refine.or.lopt(55))) then
 
-         if (lopt(58).and.(.not.refine.or.lopt(55))) then
-
-            pa(1:nstot(ids)) = zco(icoz(id)+1:icoz(id)+nstot(ids))
+               pa(1:nstot(ids)) = zco(icoz(id)+1:icoz(id)+nstot(ids))
 c                                 only for pp comparison
-            if (lorder(ids)) call makepp (ids)
+               if (lorder(ids)) call makepp (ids)
 
-            call savdyn (ids)
+               call savdyn (ids)
+
+            end if
+
+         else
+
+            call setxyp (ids,id+jiinc,bad)
+
+            ycoor(kcoct+1:kcoct+nstot(ids)) = pa(1:nstot(ids))
 
          end if
+
+         kcoct = kcoct + nstot(ids)
 
       end do 
 
@@ -915,7 +885,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical check, bad, quit, notaq, abort
+      logical check, quit, notaq, abort
 
       integer idsol(k19),ksol(k19,k19),ids,xidsol,xksol,irep,jlist(k5),
      *        i,j,jdsol(k19,k19),jd,k,l,nkp(k19),xjdsol(k19),kk
@@ -974,6 +944,7 @@ c                                  x-coordinates for the final solution
       common/ cxt26 /refine,lresub,tname
 c-----------------------------------------------------------------------
       abort = .false.
+      abort1 = .false.
 c                                first check if solution endmembers are
 c                                among the stable compounds:
       do i = 1, ntot
@@ -1046,15 +1017,25 @@ c                                 solvent molar weight
                   end do
 c                                 total molality
                   caq(i,na2) = 1d0/msol
+c                                 solvent molar mass
                   caq(i,na3) = msol
 
                else
 c                                 impure solvent, get speciation
-c                                 ximp, xb, sum, and msol are dummies
-                  call gaqlgd (ximp,xb,sum,msol,i,bad,.true.)
+c                                 ximp is a dummy
+                  call gaqlgd (ximp,i,.true.)
 
-                  if (bad) then
-                     call errdbg ('shouldnt happen, please report')
+                  if (rkwak.and.lopt(74)) then
+c                                 how/why this happens isn't clear to 
+c                                 me, since the present aqlgd calculation
+c                                 should be identical to one used to generate
+c                                 the point? at least for pure water, for 
+c                                 more complex solvents it's conceivable the
+c                                 composition was generated with a different
+c                                 set of chemical potentials.
+                     abort1 = .true.
+                     return
+
                   end if
 
                end if
@@ -1089,6 +1070,7 @@ c                                  check pure and impure solvent coexist
      *                      caq(i,na1).ne.0d0.and.caq(kk,na1).eq.0d0) 
      *                                                              then 
 c                                  pure solvent and impure solvent coexist
+c                                  signals error ver102
                             abort = .true.
                             return
 
@@ -1652,7 +1634,7 @@ c                                 reload final arrays from temporary
       if (.not.match) then 
 c                                 the assemblage is new:
          iasct = iasct + 1
-         if (iasct.gt.k3) call error (184,0d0,k3,'SORTER')
+         if (iasct.gt.k3-1) call error (184,0d0,k3,'SORTER')
 
          do i = 1, ntot
             idasls(i,iasct) = kkp(i)
@@ -1699,6 +1681,12 @@ c                                 x-coordinates for the final solution
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
+
+      integer ipot,jv,iv
+      common/ cst24 /ipot,jv(l2),iv(l2)
+
+      double precision v,tr,pr,r,ps
+      common/ cst5  /v(l2),tr,pr,r,ps
 c----------------------------------------------------------------------
 c                                graphics output  
       write (n5,'(3(i8,1x))') ic,jc,iap(ibulk)
@@ -1717,6 +1705,9 @@ c                                lagged speciation
       end do
 c                                dependent potentials
       write (n5,1010) (mu(i),i=1,kbulk)
+c                                for liquidus/solidus calcs output the
+c                                the additional "dependent" potential
+      if (icopt.eq.2) write (n5,1010) v(iv(1))
 
 1010  format (10(g16.8,1x))
 
@@ -1746,9 +1737,6 @@ c----------------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -1844,13 +1832,25 @@ c                                 new point, add to list
             npt = npt + 1
             jdv(npt) = i
             amt(npt) = x(i)
-            if (id.gt.ipoint) then 
+c                                 post processing assume dynamic
+c                                 composition pointers, create those
+c                                 here in case there's no further iteration.
+            if (id.gt.ipoint) then
+
                jkp(i) = ikp(id)
-            else if (x(i).gt.zero) then
+
+            else
+
+               jkp(i) = -id
+
+            end if
+
+            if (x(i).gt.zero) then
 c                                 save compound amts for starting guess
                lcpt = lcpt + 1
                ldv(lcpt) = i
                lamt(lcpt) = x(i)
+
             end if
 
             if (lopt(34)) then
@@ -1862,11 +1862,9 @@ c                                 save compound amts for starting guess
                   write (*,'(/,a,i2,a,i7)') 'iteration ',0,' jphct = ',
      *                  jphct
                end if 
-               if (ikp(id).ne.0) then 
-                  call dumper (1,i,0,ikp(id),x(i),clamda(i))
-               else 
-                  call dumper (1,i,0,-id,x(i),clamda(i))
-               end if 
+
+               call dumper (1,i,0,jkp(i),x(i),clamda(i))
+
             end if
 
          end if 
@@ -2464,28 +2462,19 @@ c                                 get mu's for lagged speciation
 
       else
 c                                 test is only set T for aqueous fluid
-         if (test) abort = .true.
+         if (test.and.lopt(71)) then
+            abort = .true.
+         else 
+            abort = .false.
+         end if
 
          call getmus (iter,iter-1,is,solvnt,abort)
 c                                 getmus sets abort T only if aqueous fluid
+c                                 and lopt(71) and a solute component is 
+c                                 undersaturated
          if (abort) then
-c                                 undersaturated solute component
-            if (lopt(71)) then
 c                                 report as error, no output
                idead = 101
-
-            else
-c                                 use the last mu's for output purposes
-               if (.not.mus) then
-                  call muwarn (quit,iter)
-                  mu(1:icp) = xmu(1:icp)
-               else
-                  quit = .true.
-               end if
-
-            end if
-
-            return
 
          else if (.not.mus) then
 
@@ -2762,11 +2751,7 @@ c                                 index for stoichiometric compounds,
 c                                 endmembers, and static compositions
          id = jdv(i) + jiinc
 
-         if (stic) then
-            jds = ikp(id)
-         else
-            jds = jkp(jdv(i))
-         end if
+         jds = jkp(jdv(i))
 
          if (jdv(i).le.jpoint) then
 c                                 load compositional data
@@ -2810,7 +2795,7 @@ c                                 each iteration:
 
             end if
 
-            call chkpa (jds)
+c           call chkpa (jds)
 c                                 save endmember fractions
             pa3(i,1:nstot(jds)) = pa(1:nstot(jds))
 c                                 get and save the composition
@@ -2922,9 +2907,8 @@ c----------------------------------------------------------------------
       common/ cst52  /hcp,idv(k7) 
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 c----------------------------------------------------------------------
       do i = 1, npt
 
@@ -2989,9 +2973,8 @@ c----------------------------------------------------------------------
       common/ cst330 /mu(k8),mus
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
@@ -3045,13 +3028,6 @@ c                                 a component is present only in the solvent
 c                                 iteration will become unstable
                abort = .true.
 
-               write (*,*) 'disolved_non-solvent_component (GETMUS)'
-               write (*,*) 'Please report this case! Continue (Y/N)?'
-c                                 this code is useful, delete call errdbg
-               if (.not.readyn()) 
-     *            call errdbg ('disolved_non-solvent_component')
-c                                 otherwise delete this test and eliminate
-c                                 aq_error_ver101 test!
                write (n13,'(i4,1x,4(g14.6,1x),a)') 1000+solc(j), 
      *                                             x, y, t, p,
      *                                'disolved_non-solvent_component'
@@ -3296,6 +3272,78 @@ c                                 failed
 
       end
 
+
+      subroutine chkblk (idead)
+c-----------------------------------------------------------------------
+c chkblk - checks that the bulk composition generated for (pseudo-)ternary 
+c gridded minimization for degeneracy and bounds, if out of bounds the
+c optimization will be counted as a bad result.
+c------------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer idead, k
+
+      integer iam
+      common/ cst4 /iam
+
+      integer hcp,idv
+      common/ cst52  /hcp,idv(k7)
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer is
+      double precision a,b,c
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+c------------------------------------------------------------------------
+      idead = 0
+c                                 bounds test
+      do k = 1, hcp
+
+         if (b(k).gt.0d0) then 
+
+            cycle
+
+         else if (dabs(b(k)).lt.zero) then
+
+            b(k) = 0d0
+
+         else 
+
+            idead = 2
+c                                 allow negative compositions in meemum
+            if (iam.eq.1) return
+
+         end if
+
+      end do
+
+      idegen = 0
+      jdegen = 0
+c                                 degeneracy test
+      do k = 1, icp
+
+         if (b(k).eq.0d0) then 
+
+            idegen = idegen + 1
+            idg(idegen) = k
+
+         else 
+
+            jdegen = jdegen + 1
+            jdg(jdegen) = k
+
+         end if
+
+      end do
+
+      end
+
       subroutine meemum (bad)
 c----------------------------------------------------------------------
       implicit none
@@ -3308,16 +3356,13 @@ c----------------------------------------------------------------------
 
       integer itri(4),jtri(4),ijpt
 
-      double precision wt(3), cum
+      double precision wt(3)
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
-
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
 
       character*5 cname
       common/ csta4 /cname(k5)
@@ -3327,9 +3372,8 @@ c----------------------------------------------------------------------
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -3349,30 +3393,33 @@ c                                 is necessary for reasons of stupidity (lpopt0)
       end do
 c                                 set dependent variables
       call incdp0
+c                                 check for degeneracy and out of bounds 
+c                                 compositions (idead ~0, but nothing is done).
+      call chkblk (idead)
 c                                 lpopt does the minimization and outputs
 c                                 the results to the print file.
-      if (lopt(28)) call begtim(30)
+c     if (lopt(28)) call begtim(30)
 
       call lpopt0 (idead)
 
-      if (lopt(28)) then 
+c     if (lopt(28)) then 
 
-         call endtim (30,.true.,'Total Opt ') 
+c        call endtim (30,.true.,'Total Opt ') 
 
-         cum = 0d0 
+c        cum = 0d0 
 
-         do i = 1, 29
+c        do i = 1, 29
 
-            cum = cum + times(i)
+c           cum = cum + times(i)
 
-         end do
+c        end do
 
-         write (*,'(/,a,2x,g14.7,//,a)') 'sum of timed intervals ',cum,
-     *                                 '----------------------------'
-         write (666,'(/,a,2x,g14.7,//,a)') 'sum of timed intervals ',cum
-     *                                ,'----------------------------'
+c        write (*,'(/,a,2x,g14.7,//,a)') 'sum of timed intervals ',cum,
+c    *                                 '----------------------------'
+c        write (666,'(/,a,2x,g14.7,//,a)') 'sum of timed intervals ',cum
+c    *                                ,'----------------------------'
 
-      end if 
+c     end if 
 
       if (idead.eq.0) then
 c                                 compute derivative properties

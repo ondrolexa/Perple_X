@@ -101,9 +101,6 @@ c---------------------------------------------------------------------
 
       external readyn
 
-      character vname*8, xname*8
-      common / csta2 /xname(k5),vname(l2)
-
       double precision buf
       common/ cst112 /buf(5)
 
@@ -527,8 +524,8 @@ c-----------------------------------------------------------------------
 
       integer jfug, i
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
+      integer iam
+      common/ cst4 /iam
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -586,8 +583,9 @@ c                                 standard COHS species
             ins(7) = 11
 
          else if (jfug.eq.27) then
-c                                 C-O-H free
-            vname(4) = 'Y(C)    '
+c                                 C-O-H with no constraints, 
+c                                 if FLUIDS rename v(4)
+            if (iam.eq.11) vname(4) = 'Y(C)    '
 
             isp = 6
             ins(6) = 7

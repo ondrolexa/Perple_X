@@ -32,17 +32,16 @@ c-----------------------------------------------------------------------
      *          mname(k5)*5, oname(k5)*5, pname(k5)*5, cfname*100,
      *          uname(k0)*5, group*28, aname(i9)*6, amount*5, new*3, 
      *          text*256, dtext*200, title*162, lname(i9)*22,
-     *          sname(i9)*10, tn1*6, tn2*22, fname(i9)*10
+     *          sname(i9)*10, tn1*6, tn2*22, fname(i9)*10,
+     *          liqs*240
 
       integer i, k, l, iind, im, idum, ivct, jcth, j, ier, idep, 
-     *        gct(i9), gid(i9,i9), ict, idsol, inames
+     *        gct(i9), gid(i9,i9), ict, idsol, inames, nblen
 
-      logical eof, good, oned, findph, first, feos, chksol, readyn
+      logical eof, good, oned, findph, first, feos, chksol, readyn, 
+     *        liqdus
 
-      external chksol, findph, readyn
-
-      character prject*100,tfname*100
-      common/ cst228 /prject,tfname
+      external chksol, findph, readyn, nblen
 
       character tname*10
       logical refine, lresub
@@ -89,9 +88,6 @@ c-----------------------------------------------------------------------
       integer eos
       common/ cst303 /eos(k10)
 
-      character*8 vname, xname
-      common/ csta2 /xname(k5),vname(l2)
-
       double precision buf
       common/ cst112 /buf(5)
 
@@ -110,11 +106,8 @@ c-----------------------------------------------------------------------
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
 
       integer ic
-      common/ cst42 /ic(k0)
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
+      common/ cst42 /ic(k0)
 
       integer cl
       character cmpnt*5, dname*80
@@ -128,17 +121,6 @@ c-----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      double precision mcomp
-      character mknam*8
-      integer nmak
-      logical mksat
-      common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
-
-      double precision mkcoef, mdqf
-      integer mknum, mkind, meos
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
 
       integer iam
       common/ cst4 /iam
@@ -190,6 +172,7 @@ c                                 initialization:
       isoct = 0 
       jmuct = 0
       first = .true. 
+      liqdus = .false.
 
       call redop1 (.false.,opname)
 
@@ -212,13 +195,20 @@ c                                 changed to 10 in varich if fileio.
          call mertxt (tfname,prject,'.aux',0)
          write (*,1500) tfname
 
+      else if (icopt.eq.8) then 
+c                                 liquidus diagrams are a special case of
+c                                 2d gridded minimization
+         liqdus = .true.
+         icopt = 2
+         write (*,1200) 
+
       end if
 c                                 choose chemical components
       call compch (ivct,feos,mname,pname,oname,uname)
 c                                 physical variable choices and ranges
 c                                 set icopt to its internal value:
-      call varich (c,ivct,iind,oned,idep,iord,jcth,
-     *             amount,dtext,opname,pname,cfname)
+      call varich (c,ivct,iind,oned,idep,iord,jcth,amount,dtext,opname,
+     *             pname,cfname,liqdus)
 c                                 warn about the use of chemical potentials
 c                                 in different types of calculations
       if (jmct.gt.0) then 
@@ -394,9 +384,14 @@ c                               got one, get the EoS
 
       end if 
 c                                read solution phases.
-      write (*,2500)
+      if (.not.liqdus) then
+         write (*,2500)
+         good = readyn()
+      else
+         good = .true.
+      end if
 
-      if (readyn()) then
+      if (good) then
 c                                 get the file containing the solution models
          do
  
@@ -555,6 +550,7 @@ c                                 check if name in list
                write (*,2310) tname
 
             end do  
+
          end if
 
       else 
@@ -597,7 +593,7 @@ c                                 option file name
       write (n1,'(a)') text 
 c                                 computational mode:
       write (n1,1010) icopt,'calculation type: 0- composition,'//
-     *                ' 1- Schreinemakers, 3- Mixed, 4- swash,'//
+     *    ' 1- Schreinemakers, 2 - liquidus/solidus, 3- Mixed,'//
      *                ' 5- gridded min, 7- 1d fract, 8- gwash,'//
      *                ' 9- 2d fract, 10- 7 w/file input,'//
      *                ' 11- 9 w/file input, 12- 0d infiltration'
@@ -712,12 +708,78 @@ c                                 output variable choices and values:
      *  'indices of 1st & 2nd independent & sectioning variables'
       else
          write (n1,1310) (iv(i), i = 1, l2),
-     *  'independent variables indices'
+     *  'independent variable indices'
       end if 
+
+      if (liqdus) then
+
+         liqs = ' '
+c                                 liquidus or solidus
+         write (*,1000)
+         call rdnumb (c(0),0d0,i,1,.false.)
+
+         if (i.lt.1.or.i.gt.2) i = 1
+
+         if (i.eq.1) then 
+            liqs = 'liquidus |'
+         else 
+            liqs = 'solidus |'
+         end if 
+c                                 get the "liquid" assemblage
+         write (*,'(2(/,a))') 'Specify the solution models or compoun'//
+     *                       'ds that comprise the "liquid" phase',
+     *                       'enter 1 per line, press <enter> to finish'
+
+         i = 0 
+
+         do
+
+            read (*,'(a)') tname
+            if (tname.eq.' ') exit
+
+            good = .false.
+c                                 check if in the solution list
+            do i = 1, isoct
+               if (tname.eq.sname(i)) then 
+                  good = .true.
+                  exit
+               end if
+            end do
+
+            if (.not.good) then 
+c                                 check in the compound list
+               do i = 1, ipoint
+                  if (tname.eq.names(i)) then 
+                     good = .true.
+                     exit
+                  end if
+               end do
+
+            end if
+
+            if (good) then
+
+               i = i + 1
+               k = index(liqs,'|')
+               liqs(k:) = tname // ' |'
+               call deblnk(liqs)
+
+            else
+
+               write (*,2310) tname
+
+            end if
+
+         end do
+
+         if (i.eq.0) write (*,2530)
+
+         write (n1,1350) liqs(1:nblen(liqs)),
+     *                'liquidus/solidus keyword and "liquid" phase(s)'
+
+      else if (icopt.eq.0) then
 c                                 get conditions for composition
 c                                 diagrams:
-      if (icopt.eq.0) then
-
          if (ifct.eq.1) write (*,7150) 'fluid', vname(3) 
 
          i = 0
@@ -761,6 +823,8 @@ c                                 diagrams:
  
 999   stop
 
+1000  format ('Specify computational mode:',//,
+     *    5x,'1 - liquidus [default]',/,5x,'2 - solidus',/)
 1010  format (i5,1x,a,a,a,a,a)
 1020  format (a,' does not exist in the selected data base')
 1120  format (a,1x,i2,' component transformation')
@@ -772,9 +836,23 @@ c                                 diagrams:
 1180  format (/,'For details on these models see: ',
      *        'www.perplex.ethz.ch/perplex_solution_model_glossary.html'
      *      /,'or read the commentary in the solution model file.',/)
+1200  format (/,'In this mode the liquidus or solidus surface of a pha',
+     *        'se is mapped by VERTEX over a 2-d',/,'composition space',
+     *       ' as a function a thermodynamic potential (e.g., T or P).',
+     *        //,'The composition space is defined as a mixture of 3 ',
+     *        'multi-component compositions.',//,'The following prompt',
+     *        's are for the components, indpendent potential, and the',
+     *       ' 3 compositions.',//'Ordinarily solidus/liquidus refers ',
+     *        'to melt stability, in Perple_X this usage is broad',
+     *        'ened:',//,2x,'- liquidus is the condition at which a ',
+     *        'phase or phase assemblage first makes up the',/,4x,'ent',
+     *        'irety of a system.',
+     *         /,2x,'- solidus is the saturation point for a phase or ',
+     *        'phase assemblage.',/)
 1310  format (/,5(i2,1x),2x,a,/)
 1330  format (i2,1x,i2,1x,g13.6,1x,g13.6,1x,a)
 1340  format (5(g13.6,1x))
+1350  format (a,1x,a)
 1490  format ('Specify computational mode:',//,
      *    5x,'1 - Convex-Hull minimization',/, 
      *    5x,'2 - Constrained minimization on a 2d grid [default]',/,
@@ -783,7 +861,8 @@ c                                 diagrams:
      *    5x,'5 - 1-d Phase fractionation',/,
      *    5x,'6 - 0-d Infiltration-reaction-fractionation',/,
      *    5x,'7 - 2-d Phase fractionation (FRAC2D and TITRATE ',
-     *               'reactive transport models)',//,
+     *               'reactive transport models)',/
+     *    5x,'8 - (pseudo-)Ternary liquidus/solidus surfaces',//,
      *        'Use Convex-Hull minimization for Schreinemakers ',
      *        'projections or phase diagrams',/,
      *        'with > 2 independent variables. ',
@@ -805,6 +884,12 @@ c                                 diagrams:
 2500  format (/,'Include solution models (Y/N)?')
 2510  format (/,'Select models from the following list, enter',
      *        ' 1 per line, press <enter> to finish',/)
+2520  format (/,'Melt phase(s) for liquidus finding.',/,
+     *        'Select models from the solution model list, enter',
+     *        ' 1 per line, press <enter> to finish',/)
+2530  format (/,'**warning ver419** No liquid phase; the calculation ',
+     *          'can''t be done.',/,'Edit the problem definition file ',
+     *          'to specify liquid phase(s).')
 3000  format (a,1x,i1,1x,3(g12.6,1x),a,' amount')
 3010  format ('Enter the solution model file name [default = ',
      *        'solution_model.dat]: ')
@@ -850,13 +935,11 @@ c---------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character xname*8, dtext*200, vname*8
+      character dtext*200
 
       integer i, j1, j2, ivct, iind, idep, iord, ier
 
       double precision c(0:4)
- 
-      common/ csta2 /xname(k5),vname(l2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -941,9 +1024,6 @@ c----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      character*8 vname, xname
-      common/ csta2 /xname(k5),vname(l2)
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 c----------------------------------------------------------------------
@@ -1015,9 +1095,6 @@ c----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      character*8 vname, xname
-      common/ csta2 /xname(k5),vname(l2)
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 c----------------------------------------------------------------------
@@ -1056,7 +1133,9 @@ c                                 imaf = 3, warn on activity > 1.
 
       end if 
 
-      if (numbad.and..not.readyn()) numbad = .false.
+      if (numbad) then
+         if (.not.readyn()) numbad = .false.
+      end if
 
       end 
 
@@ -1182,9 +1261,6 @@ c---------------------------------------------------------------------------
 
       character*8 name
       common/ csta6 /name
-
-      character*8 vname, xname
-      common/ csta2 /xname(k5),vname(l2)
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -1637,8 +1713,10 @@ c                                 component pointers for chkphi
      *        'the EoS to be used for ',/,'the ',
      *        'corresponding composants and mixtures thereof. To over',
      *        'ride this behavior, ',/,'e.g., to use a generic hybrid ',
-     *        'fluid EoS, delete the special_component section ',/,
-     *        'from the thermodynamic data file header.',/)
+     *        'fluid EoS (GFSM) either:',//,
+     *        '  set/add the GFSM option to T in your option file',//,
+     *        '  or delete the special_component section ',
+     *        'from the thermodynamic data file header.')
 1025  format ('NOTE: the EoS choice specified here will override the ',
      *        'EoS choice specified by',/,'the hybrid_EoS option, to',
      *        'override this behavior delete the special_component',/,
@@ -1690,8 +1768,8 @@ c                                 component pointers for chkphi
 
       end 
 
-      subroutine varich (c,ivct,iind,oned,idep,iord,jcth,
-     *                   amount,dtext,opname,pname,cfname)
+      subroutine varich (c,ivct,iind,oned,idep,iord,jcth,amount,dtext,
+     *                   opname,pname,cfname,liqdus)
 c---------------------------------------------------------------------------
 c interatctively choose physical variables for build.
 c---------------------------------------------------------------------------
@@ -1699,10 +1777,10 @@ c---------------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, ivct, ier, iind, idep, iord, kvct, jc, icth,
+      integer i, j, ivct, ier, iind, idep, iord, jc, icth,
      *        jcth, loopx, loopy, ind, ix, jst, jvct
 
-      logical oned, readyn
+      logical oned, readyn, liqdus, fileio
 
       character dtext*(*), amount*5, stext*11, nc(3)*2, 
      *          opname*(*), pname(*)*5, cfname*100
@@ -1720,21 +1798,11 @@ c---------------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
-      character prject*100,tfname*100
-      common/ cst228 /prject,tfname
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
-
-      character*8 vname, xname
-      common/ csta2 /xname(k5),vname(l2)
 
       integer grid
       double precision rid 
@@ -1745,9 +1813,11 @@ c-----------------------------------------------------------------------
       nc(3) = 'C2'
       iwt = 0
       jcth = 0
+      idep = 0
       amount = 'molar '
       dtext = ' '
       cfname = ' '
+      fileio = .false.
 c                                 coming in icopt has the following values
 
 c                                 1 - convex
@@ -1769,9 +1839,14 @@ c                                 fractionation from a file
             write (*,1080)
          else 
             write (*,1090)
-         end if 
+         end if
+c                                 default for fractionation is isochemical
+c                                 bulk, may be changed by varich.
+         icont = 1
 
          if (readyn()) then
+
+            fileio = .true.
 
             write (*,1100) (vname(iv(i)),i=1,ivct)
             write (*,'(/)')
@@ -1788,10 +1863,7 @@ c                                 fractionation from a file
                icopt = 11
             else
                icopt = 10
-            end if 
-
-            oned = .false.
-            icont = 1
+            end if
 
          end if
 
@@ -1825,10 +1897,10 @@ c                                 3 - swash
 c                                 4 - 1d frac - no fileio (oned true)
 c                                 6 - 0d frac
 c                                 9 - frac2d - no fileo
-c                                10 - 1d - with fileio (oned false)
+c                                10 - 1d - with fileio (oned true)
 c                                11 - frac2d - with fileio (oned false)
 
-      if (icopt.ne.9) then 
+      if (icopt.ne.9.and..not.fileio) then 
 c                                 ====================================
 c                                 ask if p = f(T) or vice versa for all
 c                                 phase diagram calculations:
@@ -1857,10 +1929,8 @@ c                                 pointer to iv(ivct), iind points to the
 c                                 position of the independent variable in 
 c                                 the array v, idep to the dependent v.  
                   call depend (ivct,idep,iind,iord,c,dtext)
-c                                 kvct is the number of independent potentials
-                  kvct = ivct - 1
 
-                  if (icp.eq.1.and.kvct.eq.1) oned = .true.
+                  if (icp.eq.1.and.ivct.eq.1) oned = .true.
 
                end if
 
@@ -1876,20 +1946,27 @@ c                                 kvct is the number of independent potentials
 
       end if 
 
-      if (oned) then 
-
-         icont = 1
+      if (oned.and..not.fileio) then 
 c                                 ======================================
 c                                 for 1d calculations get the independent
-c                                 variable, currently composition is not
-c                                 allowed. 
-         call getxvr (ivct,jvct,icont,jc,oned,'the independent')
+c                                 variable. It is assumed that if a potential
+c                                 has been made dependent on another potential, 
+c                                 that potential is the independent variable
+         if (idep.ne.0) then 
+c                                 redvar uses the iv pointer for the independent potential 
+            call redvar (1,1)
+
+         else 
+c                                 otherwise allow the choice of variables:
+            call getxvr (ivct,jvct,jc,oned,'the independent')
 c                                 get sectioning variables values:
-         do j = 1, ivct
-            if (iv(j).eq.jc) cycle 
-            call redvar (j,2)
-            vmax(iv(j)) = vmin(iv(j))
-         end do     
+            do j = 1, ivct
+               if (iv(j).eq.jc) cycle 
+               call redvar (j,2)
+               vmax(iv(j)) = vmin(iv(j))
+            end do
+
+         end if
 c                                  set the icopt flag to its final value
          if (icopt.eq.2) then
 c                                  1-d minimization
@@ -1903,18 +1980,16 @@ c                                  fractionation, also write the grid blurb
          end if
 
       else if (icopt.eq.10) then
-c                                  1-d "gridded min" from a file, only allow p-t
+c                                  1-d "gridded min" from a file, no choices
          icont = 1
-
-         call getxvr (ivct,jvct,icont,jc,oned,
-     *                                'the independent path')
 
       else if (icopt.eq.9.or.icopt.eq.11) then
 c                                  2-d fractionation, only allow p and t
          ivct = 2
+         jvct = 1
          icont = 0 
 c                                  choose the primary variable (IV(1)):
-         call getxvr (ivct,jvct,icont,jc,oned,
+         call getxvr (ivct,jvct,jc,oned,
      *                'the primary (usually pressure)')
 
       else if (icopt.eq.6) then 
@@ -1941,70 +2016,89 @@ c                                  swash, not a lot to do
       else if (icopt.eq.2) then
 c                                  =====================
 c                                  gridded minimization:
-         icopt = 5
          jvct = 0
-         icont = 1
+
+         if (.not.liqdus) then
+
+            icont = 1
+            icopt = 5
 c                                  Select the x variable
-         call getxvr (ivct,jvct,icont,jc,oned,'x-axis')
+            call getxvr (ivct,jvct,jc,oned,'x-axis')
 
-
-         if (ivct.eq.2.and.icont.eq.1) then 
+            if (ivct.eq.2.and.icont.eq.1) then 
 c                                 there is no C variable and there 
 c                                 are only 2 potentials, 
 c                                 the y variable must be iv(2)     
-            call redvar (2,1)
-            jvct = ivct   
-
-         else 
-c                                 select the y variable 
-            if (ivct.gt.1.or.icont.eq.2.and.icp.gt.2) then
-               jst = 2
-               if (icont.eq.2) jst = 1
-
-               do 
-
-                  write (*,2130)
-
-                  do 
-                     write (*,2140) (j,vname(iv(j)), j = jst, ivct)
-                     if (icp.gt.2.and.icont.eq.2) write (*,1480) j
-                     write (*,*) ' '
-                     read (*,*,iostat=ier) jc
-                     if (ier.eq.0) exit
-                     call rerr
-                  end do
- 
-                  if (jc.gt.ivct+1.or.jc.lt.jst) then
-                     write (*,1150)
-                     cycle 
-                  else if (jc.eq.ivct+1) then
-                     icont = 3
-                  end if
-
-                  exit 
-
-               end do 
-
-            else if (icont.eq.2) then
- 
-               jc = 1 
+               call redvar (2,1)
+               jvct = ivct
 
             else 
+c                                  select the y variable 
+               if (ivct.gt.1.or.icont.eq.2.and.icp.gt.2) then
 
-               jc = 2
+                  jst = 2
+
+                  if (icont.eq.2) jst = 1
+
+                  do 
+
+                     write (*,2130)
+
+                     do 
+                        write (*,2140) (j,vname(iv(j)), j = jst, ivct)
+                        if (icp.gt.2.and.icont.eq.2) write (*,1480) j
+                        write (*,*) ' '
+                        read (*,*,iostat=ier) jc
+                        if (ier.eq.0) exit
+                        call rerr
+                     end do
  
+                     if (jc.gt.ivct+1.or.jc.lt.jst) then
+                        write (*,1150)
+                        cycle 
+                     else if (jc.eq.ivct+1) then
+                        icont = 3
+                     end if
+
+                     exit 
+
+                  end do 
+
+               else if (icont.eq.2) then
+ 
+                  jc = 1 
+
+               else 
+
+                  jc = 2
+ 
+               end if
+
+               if (icont.lt.3) then 
+                  ind = 2
+                  if (icont.eq.2) ind = 1
+                  ix = iv(ind)
+                  iv(ind) = iv(jc)
+                  iv(jc) = ix
+                  jvct = jvct + 1
+                  call redvar (ind,1)
+               end if
+
             end if
 
-            if (icont.lt.3) then 
-               ind = 2
-               if (icont.eq.2) ind = 1
-               ix = iv(ind)
-               iv(ind) = iv(jc)
-               iv(jc) = ix
-               jvct = jvct + 1
-               call redvar (ind,1)
-            end if  
+         else 
+c                                 liquidus diagram, temporary values to trick
+c                                 getxvar
+            icont = icp
+            icp = 0
+c                                 get the independent potential
+            call getxvr (ivct,jvct,jc,oned,'independent potential')
+c                                 reset icp, icont
+            icp = icont
+            icont = 3
+
          end if
+
 c                                 get sectioning variables values:
          do j = jvct+1, ivct
             call redvar (j,2) 
@@ -2048,7 +2142,7 @@ c                                  convert to internal values
 
          if (icopt.eq.1) then
 c                                  Select the x variable (IV(1)):
-            call getxvr (ivct,jvct,icont,jc,oned,'x-axis')
+            call getxvr (ivct,jvct,jc,oned,'x-axis')
 c                                  select the y variable (iv(2)):
             if (ivct.gt.2) then
  
@@ -2092,7 +2186,7 @@ c                                  specify sectioning variables (iv(3)):
 
          else if (icopt.eq.3) then
 c                                  select the y variable (iv(1)):
-            call getxvr (ivct,jvct,icont,jc,oned,'y-axis')
+            call getxvr (ivct,jvct,jc,oned,'y-axis')
 c                                  specify sectioning variable (iv(2)):
             do j = 2, ivct
                call redvar (j,2) 
@@ -2120,7 +2214,7 @@ c                                11 - frac2d - with fileio (oned false)
 
       icth = icp + isat
       
-      if (icopt.gt.4) then 
+      if (icopt.gt.4 .or. icopt.eq.2) then 
 c                                 =========================
 c                                 Compositional constraints, only
 c                                 for constrained minimization
@@ -2344,7 +2438,7 @@ c                                 open c-space
       end 
 
 
-      subroutine getxvr (ivct,jvct,icont,jc,oned,text)
+      subroutine getxvr (ivct,jvct,jc,oned,text)
 c----------------------------------------------------------------------
 c read primary variable 
 c----------------------------------------------------------------------
@@ -2356,16 +2450,13 @@ c----------------------------------------------------------------------
 
       logical oned
 
-      integer j,ivct, ier, ix, jc, icont, jvct, jcont
+      integer j, ivct, ier, ix, jc, jvct, jcont
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      character*8 vname, xname
-      common/ csta2 /xname(k5),vname(l2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -2438,7 +2529,7 @@ c                                 normal variable, swap positions
             iv(1) = iv(jc)
             iv(jc) = ix
 c                                 read limits
-            call redvar (1,1)
+            if (icopt.lt.9.or.icopt.gt.11) call redvar (1,1)
 
          end if
 

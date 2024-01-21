@@ -2526,6 +2526,14 @@ transition = 1 type = 2 t1  = 1400   t4  = 39.896 t5 = 92.427d-3 t6 = -38.222d5 
 transition = 2 type = 2 t1  = 3400   t4  = 127.129  t5 = 12.005d-3 t6 = -354.785d5 t7 = -1.550d-6  
 end
 
+
+|C2H6*     EoS = 116 ideal gas from Chao et al J Phys Chem Ref Data 1973, Cp from fit by NASA 
+|H2(3)C(2)
+|G0 = -32802.56  S0 = 229.11584
+|c1 = 9.401448  c2 = 0.15983298  c4 = -4.6229016d-5
+|end
+
+
 syvL      EoS = 9  
 K(1)Cl2(.5)
 GH = -445585.2  S0 = 94.5  V0 = 3.822  

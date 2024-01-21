@@ -278,9 +278,6 @@ c----------------------------------------------------------------------
  
       integer ier, i, j
 
-      character*8 vname,xname
-      common/ csta2 /xname(k5),vname(l2)
-
       double precision delv
       common/ cst63 /delv(l2)
 
@@ -385,14 +382,8 @@ c----------------------------------------------------------------------
       integer inc,jpot
       common/ cst101 /inc(l2),jpot
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
       double precision delv
       common/ cst63 /delv(l2)
-
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -793,9 +784,6 @@ c-----------------------------------------------------------------------
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
-
-      character*8 vname,xname
-      common/ csta2 /xname(k5),vname(l2)
 
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
@@ -1780,7 +1768,7 @@ c----------------------------------------------------------------------
       logical eof, first, match, readyn
 
       integer inames, jcmpn, i, j, k, l, ier,
-     *        isct, jj, itic, jphct
+     *        isct, jj, itic, jphct, mkst, mkend
 
       external readyn
 
@@ -1826,25 +1814,8 @@ c----------------------------------------------------------------------
       double precision vnu
       common/ cst25 /vnu(k7),idr(k7),ivct
 
-      double precision mcomp
-      character mknam*8
-      integer nmak
-      logical mksat
-      common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
-
-      double precision mkcoef, mdqf
-      integer mknum, mkind, meos
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
-
-      integer make, mkst, mkend
-      common / cst335 /make(k10)
-
       integer jcv,jvct,jpv,jtv,jf
       common / mu2f1 /jcv(2),jvct,jpv,jtv,jf(2)
-
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
 
       character tname
       common/ csta10 /tname(2)
@@ -2351,9 +2322,6 @@ c----------------------------------------------------------------------
 
       integer inc,jpot
       common/ cst101 /inc(l2),jpot
-
-      character*8 vname,xname
-      common/ csta2 /xname(k5),vname(l2)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)

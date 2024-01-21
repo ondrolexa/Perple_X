@@ -315,9 +315,6 @@ c-------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
 
@@ -416,14 +413,12 @@ c-----------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -603,9 +598,6 @@ c-----------------------------------------------------------------------
 
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
-
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
 
       character cname*5
       common/ csta4  /cname(k5) 
@@ -855,8 +847,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -937,8 +930,9 @@ c----------------------------------------------------------------------
       double precision g
       common/ cst2  /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer hcp,id
       common/ cst52 /hcp,id(k7)
@@ -979,8 +973,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer iflag
       common/ cst7 /iflag
@@ -1053,8 +1048,9 @@ c-----------------------------------------------------------------------
 
       logical bad
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -1319,8 +1315,9 @@ c-----------------------------------------------------------------------
       double precision vuf,vus
       common/ cst201 /vuf(2),vus(h5),iffr,isr
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer idr,ivct
       double precision vnu
@@ -1429,8 +1426,9 @@ c----------------------------------------------------------------------------
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer idcf,icfct
       common/ cst96 /idcf(k5,j9),icfct
@@ -2266,9 +2264,6 @@ c-----------------------------------------------------------------------
 
       integer i
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       character cname*5
       common/ csta4  /cname(k5) 
 
@@ -2360,8 +2355,9 @@ c-----------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -2517,9 +2513,6 @@ c-----------------------------------------------------------------------
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
@@ -2608,8 +2601,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -2797,9 +2791,6 @@ c----------------------------------------------------------------------
 
       common/ cst81 /icp2
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       integer ipid,ipct
       common/ cst29 /ipid(k2,k8),ipct
  
@@ -2811,9 +2802,6 @@ c----------------------------------------------------------------------
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-
-
 
       integer ivarrx,ivarip,isudo,ivar
       common/ cst62 /ivarrx(k2),ivarip(k2),isudo,ivar
@@ -2895,9 +2883,6 @@ c-----------------------------------------------------------------------
       character rxnstr*(kd2)
       common/ cst104 /rxnstr(k2)
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
- 
       double precision vip
       common/ cst28 /vip(l2,k2)
 
@@ -3371,8 +3356,9 @@ c-----------------------------------------------------------------------
       double precision delt,dtol,utol,ptol
       common/ cst87 /delt(l2),dtol,utol,ptol
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3439,8 +3425,9 @@ c--------------------------------------------------------------------
 
       integer k
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -3487,8 +3474,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer iflag
       common/ cst7 /iflag
@@ -3566,8 +3554,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer iflag
       common/ cst7 /iflag
@@ -3632,9 +3621,6 @@ c----------------------------------------------------------------------
 
       double precision v,tr,pr,r,ps
       common/ cst5 /v(l2),tr,pr,r,ps
-
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
 
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
       double precision a,b
@@ -5078,8 +5064,9 @@ c----------------------------------------------------------------------
       integer hcp,idv
       common/ cst52  /hcp,idv(k7) 
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5157,8 +5144,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
  
       double precision a,b
       integer ipvt,idv,iophi,idphi,iiphi,iflg1
@@ -5227,8 +5215,9 @@ c----------------------------------------------------------------------
       common/ cst23  /a(k8,k8),u(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       character*5 cname
       common/ csta4 /cname(k5)
@@ -5363,8 +5352,9 @@ c-----------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5855,8 +5845,9 @@ c----------------------------------------------------------------------------
       double precision g
       common/ cst2 /g(k1)
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       open (n8,file='xsystem.dat')
 
@@ -5891,8 +5882,9 @@ c---------------------------------------------------------------------
       double precision cp
       common/ cst12 /cp(k5,k10)
 
+      integer is
       double precision a,b,c
-      common/ cst313 /a(k5,k1),b(k5),c(k1)
+      common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
@@ -5927,8 +5919,9 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
+      integer is
       double precision cp, bbb, ccc
-      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1)
+      common/ cst313 /cp(k5,k1),bbb(k5),ccc(k1),is(k1+k5)
 
       double precision dcp,soltol
       common/ cst57 /dcp(k5,k19),soltol

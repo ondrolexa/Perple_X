@@ -190,9 +190,6 @@ c---------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer make
-      common / cst335 /make(k10)
-
       integer eos
       common/ cst303 /eos(k10)
 
@@ -647,7 +644,7 @@ c----------------------------------------------------------------------
 
       end
 
-      subroutine loadit (id,make,nchk)
+      subroutine loadit (id,lmake,nchk)
 c---------------------------------------------------------------------
 c loadit loads descriptive data for phases and species (name,comp,
 c and therm) into the appropriate arrays (names,comps,thermo,vf,
@@ -662,7 +659,7 @@ c---------------------------------------------------------------------
 
       integer id,i,j,k
 
-      logical make, nchk
+      logical lmake, nchk
 
       double precision gzero
       external gzero
@@ -858,7 +855,7 @@ c                               and just mobile components
          vnumu(i,id) = comp(ic(i+jprct))
       end do
 
-      if (make) return
+      if (lmake) return
 c                               if aqueous solute species store name and
 c                               compositional data in special arrays (in
 c                               principle may need vnumu as well).
@@ -1617,7 +1614,7 @@ c                                 ref stuff
 
       subroutine incdep (ind)
 c-----------------------------------------------------------------------
-c either indep or incdp0 are called whenever any primary potential
+c either incdep or incdp0 are called whenever any primary potential
 c variables are changed to reevaluate secondary variables. this
 c cumbersome structure is necessitated by the fact that computational
 c variables were mapped directly to the thermodynamic variables in
@@ -2063,9 +2060,10 @@ c                                 locate end of keyword
                   if (ibeg.ge.com) exit
 
                   jend = iscan (ibeg,com,'=') - 1
-                  if (jend.ge.com) exit
+                  if (jend.ge.com .or. ibeg.gt.jend) exit
 c                                 write keyword
                   write (key,'(22a)',iostat=ier) chars(ibeg:jend)
+                  if (key(1:1).eq.'|') exit
                   if (ier.ne.0) call error (23,wg(1,1),ier,key)
 c                                 locate data
                   ibeg = iscnlt (jend+2,com,' ')
@@ -3090,15 +3088,23 @@ c volume of water in j/bar [HKF_epsilon.mws].
 c----------------------------------------------------------------------
       implicit none
 
-      double precision v
+      double precision v, sqrtt
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
+
+      if (t.ge.273.15d0) then 
+         sqrtt = dsqrt(t - 273.15d0)
+      else
+c                            assume no-one is seriously doing anything at T < 273
+         sqrtt = 0d0
+      end if
+
       epsh2o = dexp(-0.8016651D-4 * t + 0.4769870482D1 - 0.6871618D-1 *
-     *         dsqrt(t - 0.27315D3)) * (0.1801526833D1 / v) **
+     *         sqrtt) * (0.1801526833D1 / v) **
      *         (-0.1576377D-2 * t + 0.1185462878D1 + 0.6810288D-1 *
-     *         dsqrt(t - 0.27315D3))
+     *         sqrtt)
 
       end
 
@@ -3681,7 +3687,7 @@ c                                 scan for blanks:
 
       end
 
-      subroutine sattst (ifer,make,good)
+      subroutine sattst (ifer,lmake,good)
 c----------------------------------------------------------------------
 c sorts phases into the appropriate saturated phase list called by
 c input2. returns good if data is valid
@@ -3692,7 +3698,7 @@ c----------------------------------------------------------------------
 
       integer j,ifer,idc
 
-      logical good, make
+      logical good, lmake
 
       character name*8
       common/ csta6 /name
@@ -3755,7 +3761,7 @@ c                               the saturated component idc:
                if (iphct.gt.k1) call error (72,1d0,k1,
      *                            'SATTST increase parameter k1')
                ids(j,isct(j)) = iphct
-               call loadit (iphct,make,.true.)
+               call loadit (iphct,lmake,.true.)
 c                                set ltemp1 if a GFSM endmember
                if (ieos.gt.100.and.ieos.lt.200) ltemp1 = .true.
                good = .true.
@@ -3787,13 +3793,7 @@ c-----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      integer mknum, mkind, meos
-      double precision mkcoef, mdqf
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
 
-      integer make
-      common / cst335 /make(k10)
 c-----------------------------------------------------------------------
 
       jd = make(id)
@@ -4791,7 +4791,13 @@ c                                 create arrays of convenience, where j = 1, jst
 c                                 set kill flag:
 c                                 don't reset ikp if it has been set for
 c                                 another model.
-                  if (iend(i).ne.0.and.ikp(h).eq.0) ikp(h) = -1
+                  if (iend(i).ne.0.and.ikp(h).eq.0) then 
+                     if (icopt.ne.2) then
+                        ikp(h) = -1
+                     else
+                        write (*,1010) names(h),tname,names(h), tname
+                     end if
+                  end if
 
                   if (eos(h).eq.15.or.eos(h).eq.16) then
 
@@ -4870,6 +4876,10 @@ c                                missing endmember warnings:
 
 1000  format (/,'**warning ver114** the following endmembers',
      *          ' are missing for ',a,//,4(8(2x,a)))
+1010  format (/,'**warning ver115** endmember ',a,' is flagged in sol',
+     *       'ution model ',a,/,'flagging is disabled for solidus/liq',
+     *       'uidus calculations.',/,a,'will be treated as a normal e',
+     *       'ndmember of ',a)
 
       end
 
@@ -5610,7 +5620,7 @@ c-----------------------------------------------------------------------
 
       integer id
 
-      logical order, bad
+      logical order
 
       double precision gg
 
@@ -5715,23 +5725,22 @@ c                                 BCC Fe-Cr Andersson and Sundman
          gg =  gfecr1(pa(1),g(jend(id,3)),g(jend(id,4)))
 
       else if (ksmod(id).eq.39) then
-
-         bad = .true.
 c                                 -------------------------------------
 c                                 generic hybrid EoS
          if (lopt(32)) then 
 c                                 lagged speciation
 c                                 the last argument cancels recalc, in
-c                                 which case id is a dummy. smo the total
-c                                 species molality it is necessary for 
-c                                 renormalization.
-            call gaqlgd (gg,rcp,rsum,rsmo,id,bad,.false.)
-
-            if (.not.bad) rkwak = .false.
-
+c                                 which case id is a dummy.
+            call gaqlgd (gg,id,.false.)
+c                                 gaqlgd sets rkwak to false if everything 
+c                                 is ok, otherwise, i.e., if 
+c                                 1) fails to converge
+c                                 2) gfunc out of range for water solvent
+c                                 3) epsilon < vapor value for impure solvent
+c                                 then rkwak remains true
          end if
-c                                 if bad OR molecular:
-         if (bad) gg = ghybrid(pa) + gmech(id)
+c                                 if its a quack:
+         if (rkwak) gg = ghybrid(pa) + gmech(id)
 
       else if (ksmod(id).eq.41) then
 c                                 hybrid MRK ternary COH fluid
@@ -6423,7 +6432,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, k, l, i1, i2, id, j
+      integer i, k, i1, i2, id, j
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -6431,9 +6440,6 @@ c                                 excess energy variables
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
-
-      double precision wgl, wkl, vlar
-      common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6441,9 +6447,6 @@ c                                 working arrays
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
-c                                 bookkeeping variables
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 c----------------------------------------------------------------------
       if (extyp(id).eq.1) then
 c                                 redlich kistler is a special case
@@ -6507,17 +6510,6 @@ c                                     wk(6) = wP0 coefficient on P
 c                                 set higher order derivatives for
 c                                 speciation
          dt(1:nord(id)) = 0d0
-         d2gx(1:nord(id),1:nord(id)) = 0d0
-c                                 for both laar and regular need
-c                                 the d(gex)/dy(k)/dy(l)
-         do i = 1, jterm(id)
-            do k = 1, nord(id)
-               do l = 1, nord(id)
-                  d2gx(l,k) = d2gx(l,k) + w(i) * dppp(l,k,i,id)
-               end do
-            end do
-         end do
-
 
          if (llaar(id)) then
 c                                 for laar also need:
@@ -6701,12 +6693,6 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
-      double precision wgl, wkl, vlar
-      common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
 c                                 endmember pointers
@@ -6783,6 +6769,7 @@ c                                 initialize autorefine arrays
       stable(im) = .false.
       limit(im) = .false.
       lorch(im) = modres
+      mcflag(im) = .false.
 c                                 initialize compositional distances
       do i = 1, icp
          dcp(i,im) = 0d0
@@ -7627,7 +7614,7 @@ c                                 idependent species
 
       end do
 
-      call chkpa (id)
+c     call chkpa (id)
 c                                 convert the ordered species to 
 c                                 the stoichiometric equivalent 
 c                                 amounts of disordered species.
@@ -7859,9 +7846,6 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
       double precision p,tk,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,tk,xc,u1,u2,tr,pr,r,ps
 
@@ -7916,7 +7900,7 @@ c                                 order cases are considered here:
                i2 = jsub(2,i,id)
                i3 = jsub(3,i,id)
 
-               g = g + w(i) * pa(i1) * pa(i2) * pa(i2)
+               g = g + w(i) * pa(i1) * pa(i2) * pa(i3)
 
                do k = 1, norder
 
@@ -7928,7 +7912,8 @@ c                                 order cases are considered here:
      *                                   + pa(i2)*pa(i3)*dydy(i1,k,id) )
 
                   do l = k, norder
-
+c                                 the inner terms can probably be replaced
+c                                 by dppp()...
                      d2g(l,k) = d2g(l,k) + w(i) * (
      *                            pa(i1)*(dydy(i2,l,id)*dydy(i3,k,id) +
      *                                    dydy(i2,k,id)*dydy(i3,l,id))
@@ -8070,9 +8055,6 @@ c                                 working arrays
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
       logical pin
       common/ cyt2 /pin(j3)
@@ -8391,7 +8373,7 @@ c                                 set starting point
 c                                 iteration counter
          itic = 0
          gold = 1d99
-         xdp = 1d0
+         xdp = 1d99
 c                                 newton raphson iteration
          do
 
@@ -8410,6 +8392,9 @@ c                                 or dp < tolerance.
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
+c                                  apply the increment
+               pa(jd) = pnew
+               call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 
                exit
 
@@ -8420,9 +8405,11 @@ c                                 tolerance, else flag as error
      *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
 
                   call spewrn (id,101,itic,iwarn,.false.,'SPECI1')
+c                                  don't apply the increment
+                  g = gold
 
                else
-c                                 oscillating but bad:
+c                                 oscillating and bad:
                   error = .true.
 
                   call spewrn (id,102,itic,iwarn,.true.,'SPECI1')
@@ -8437,6 +8424,9 @@ c                                 oscillating but bad:
      *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
 c                                 accept bad result
                   call spewrn (id,103,itic,iwarn,.false.,'SPECI1')
+c                                 apply the increment
+                  pa(jd) = pnew
+                  call pincs (pa(jd)-p0a(jd),dy,ind,jd,nr)
 
                else
 
@@ -8496,9 +8486,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical error, minfx
+      logical error, minfx, oscil
 
-      integer i,k,id,lord,itic
+      integer i, k, id, lord, itic, iwarn
 
       double precision g,dp(j3),tdp,gold,xtdp,scp(k5),scptot
 
@@ -8517,6 +8507,9 @@ c----------------------------------------------------------------------
       character tname*10
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
+
+      save iwarn
+      data iwarn/0/
 c---------------------------------------------------------------------
       if (idegen.gt.1000.and.nord(id).gt.1.and.icase(id).ne.0) then
 c                                 compositional degeneracy can have the consequence
@@ -8533,6 +8526,7 @@ c                                 for non-elemental components:
                end if
             end do
          end do
+
       end if
 c                                 get initial p values
       if (refine) then 
@@ -8554,14 +8548,6 @@ c                                 species are necessary to describe the ordering
          do i = 1, nord(id)
             if (.not.pin(i)) cycle
             call speci1 (g,id,i)
-
-
-c           call opeci1 (oldg,id,i)
-
-c           if (dabs(oldg-g).gt.1d-6) then 
-c              write (*,*) 'oink',id,i,oldg-g,oldg,g
-c           end if 
-
             exit
          end do
 
@@ -8586,9 +8572,10 @@ c                                 for non-elemental components:
 c                                 check if an odered species contains the
 c                                 degenerate component:
          itic = 0
-         gold = 0d0
-         xtdp = 0d0
+         gold = 1d99
+         xtdp = 1d99
          minfx = .false.
+         oscil = .false.
 
          do
 
@@ -8643,29 +8630,50 @@ c                                  just continue, minfx set T by pinc.
 
             end do
 
+            if (dabs(tdp/xtdp).gt.1d0.and.gold.lt.g) then
+               oscil = .true.
+            end if
+
             if ((tdp.lt.nopt(50).or.
      *          dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50))
      *         .and.itic.gt.1) then
-
+c                                 all clear to go
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
                exit
 
-            else if (itic.gt.5.and.gold.lt.g) then
+            else if (oscil) then 
+c                                 oscillating
+               if (dabs(xtdp).lt.nopt(40).or.
+     *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
+c                                 acceptable 
+                  call spewrn (id,101,itic,iwarn,.false.,'SPECI2')
+c                                 in principle should revert to gold
+               else
+c                                  switch to minfx
+                  call spewrn (id,102,itic,iwarn,.true.,'SPECI1')
 
-               minfx = .true.
+                  minfx = .true.
+
+               end if
+
                exit
 
             else if (itic.gt.iopt(21)) then 
 
-c              write (*,*) 'div2 ',gold-g,id,itic,g,tdp,tdp-xtdp
-               minfx = .true. 
-               exit
+               if (dabs(xtdp).lt.nopt(40).or.
+     *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
+c                                 accept bad result
+                  call spewrn (id,103,itic,iwarn,.false.,'SPECI2')
 
-            else if (itic.gt.5.and.tdp.eq.xtdp) then 
+               else
 
-               minfx = .true. 
-c              write (*,*) 'wroink67 ',dp(1:lord),id,g
+                  minfx = .true.
+
+                  call spewrn (id,104,itic,iwarn,.true.,'SPECI2')
+
+               end if
+
                exit
 
             end if
@@ -9080,7 +9088,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i,k,i1,i2,id
+      integer i, k, i1, i2, i3, id
 
       double precision g,dg,d2g,t,s,ds,d2s
 c                                 working arrays
@@ -9095,9 +9103,6 @@ c                                 excess energy variables
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
 
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
-
       double precision enth
       common/ cxt35 /enth(j3)
 
@@ -9108,18 +9113,46 @@ c                                 initialize, d2gx has been set in setw
       g = 0d0
 
       dg = g
-      d2g = d2gx(k,k)
+
+      d2g = 0d0
 
       if (lexces(id)) then
 
          do i = 1, jterm(id)
-c                                 assuming regular terms
-           i1 = jsub(1,i,id)
-           i2 = jsub(2,i,id)
 
-           g = g + w(i) * pa(i1) * pa(i2)
-           dg = dg + w(i) * (pa(i1)*dydy(i2,k,id)
-     *                     + pa(i2)*dydy(i1,k,id))
+            i1 = jsub(1,i,id)
+            i2 = jsub(2,i,id)
+
+            if (rko(i,id).eq.2) then
+c                                regular models
+               g = g + w(i) * pa(i1) * pa(i2)
+
+               dg = dg + w(i) * (pa(i1)*dydy(i2,k,id)
+     *                         + pa(i2)*dydy(i1,k,id))
+
+              d2g = d2g + w(i) * dppp(k,k,i,id)
+
+            else if (rko(i,id).eq.3) then
+c                                3rd order subregular
+               i3 = jsub(3,i,id)
+
+               g = g + w(i) * pa(i1) * pa(i2) * pa(i3)
+
+               dg = dg + w(i) * (
+     *                           pa(i1)*pa(i2)*dydy(i3,k,id)
+     *                         + pa(i1)*pa(i3)*dydy(i2,k,id)
+     *                         + pa(i2)*pa(i3)*dydy(i1,k,id) )
+c                                 the inner terms can probably be replaced
+c                                 by dppp()...
+               d2g = d2g + w(i) * (
+     *                        pa(i1)*2d0*dydy(i2,k,id)*dydy(i3,k,id)
+     *                      + pa(i2)*2d0*dydy(i1,k,id)*dydy(i3,k,id)
+     *                      + pa(i3)*2d0*dydy(i1,k,id)*dydy(i2,k,id) )
+            else
+
+               call errdbg ('o > 3 gderi1')
+
+            end if
 
          end do
 c                                 get derivative of excess function
@@ -9184,9 +9217,6 @@ c                                 working arrays
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 c----------------------------------------------------------------------
       s = 0d0
       ds = 0d0
@@ -9406,9 +9436,6 @@ c-----------------------------------------------------------------------
       double precision zt
 
       external chksol
-
-      character prject*100,tfname*100
-      common/ cst228 /prject,tfname
 
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
@@ -9839,9 +9866,6 @@ c--------------------------------------------------------------------------
       integer jterm, jord, extyp, rko, jsub
       common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
      *               jsub(m2,m1,h9)
-
-      double precision wgl, wkl, vlar
-      common/ cxt2r /wgl(m3,m1,h9),wkl(m16,m17,m18,h9),vlar(m3,m4,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -10430,6 +10454,85 @@ c---------------------------------------------------------------------
 
       end
 
+      subroutine initlq
+c--------------------------------------------------------------------
+c decode george's phase list which are stored by input1 in the space
+c delimited text string meltph
+c---------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      logical sol
+
+      integer i, k, itis
+
+      integer ipot,jv,iv1,iv2,iv3,iv4,iv5
+      common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
+c---------------------------------------------------------------------
+      nliq = 0
+      sol = .false.
+c                                 decode meltph
+      do 
+
+         k = index(meltph,' ') - 1
+         if (k.eq.0) exit
+c                                 check against known entities
+         call matchj (meltph(1:k),itis)
+
+         if (itis.ne.0) then 
+c                                 itis ~0 count the phase
+            nliq = nliq + 1
+            liqlst(nliq) = itis
+
+         else
+c                                 itis = 0 may indicate solidus/liquidus flag
+            if (meltph(1:k) .eq. 'solidus') then
+               sol = .true.
+            else if (meltph(1:k) .eq. 'liquidus') then
+               sol = .false.
+            else
+               write (*,*) '**',meltph(1:k),' not recognized.'
+            end if
+
+         end if
+c                                 blank the string and get the next
+         meltph(1:k) = ' '
+
+         call getstg(meltph)
+
+      end do
+
+      if (nliq.eq.0) call errdbg ('**No liquids, no liquidus/solidus'//
+     *                            'no plot: simple!')
+c                               force closed composition
+      lopt(1) = .true.
+c                               force linear_model on
+      iopt(18) = 1
+c                               save <cr> character
+      cr = char(13)
+c                               set george's opts variable
+      if (sol) then
+         whatlq = 'solidus'
+         opts = 1
+      else
+         whatlq = 'liquidus'
+         opts = 0
+      end if
+c                               extract units for search from 
+c                               independent variable name
+      i = index (vname(iv1),'(')
+      k = index (vname(iv1),')')
+      if (i.gt.0.and.k.gt.i) then
+         unitlq = vname(iv1)(i+1:k-1)
+      else
+         unitlq = '(?)'
+      end if
+c                               increment opts if pressure search
+      if (iv1.eq.1) opts = opts + 2
+
+      end 
+
       subroutine initlp 
 c--------------------------------------------------------------------
 c initialize arrays and constants for lp minimization of static
@@ -10481,10 +10584,15 @@ c                                 locate last point in dynamic/static lp arrays
          ctotal = ctotal + cblk(i)
       end do 
 c                                 composition constraint, normalized for reasons
-c                                 of stupidity
-      do i = 1, icp
-         b(i) = cblk(i)/ctotal
-      end do 
+c                                 of stupidity. fractionation calculations may 
+c                                 call initlp before initializing cblk
+      if (ctotal.ne.0d0) then 
+
+         do i = 1, icp
+            b(i) = cblk(i)/ctotal
+         end do
+
+      end if
 c                                 static/dynamic composition arrays for solutions
 c                                 are loaded in soload/reload/loadgx. stoichiometric
 c                                 compounds/endmembers loaded here:
@@ -12108,6 +12216,7 @@ c                                 lagged model
                   do j = 1, kbulk
 
                      if (i.lt.sn1) then
+c                                 this needs to be checked
                         dn = pa(i)/caq(jd,na3) * cp(j,jnd(i))
                      else
                         dn = caq(jd,i) * aqcp(j,i-ns)
@@ -12318,9 +12427,6 @@ c-----------------------------------------------------------------------
       double precision tot
 
       character name*100
-
-      character prject*100, tfname*100
-      common/ cst228 /prject,tfname
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -12579,9 +12685,6 @@ c-----------------------------------------------------------------------
       integer iasmbl
       common/ cst27  /iasmbl(j9)
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       character cname*5
       common/ csta4  /cname(k5)
 
@@ -12707,7 +12810,7 @@ c                          excluded phases
       end if
 c                          solution models
       if (isoct.ne.0) then 
-         write (n3,1140)
+         write (n3,1130)
          write (n3,'(6(1x,a,1x))') (fname(i), i = 1, isoct)
       end if
 
@@ -13110,10 +13213,10 @@ c-----------------------------------------------------------------------
       double precision gval, dg, g0(m14)
 
       double precision gex, gfesi, gfesic, gerk, gproj, ghybrid, gzero,
-     *                 gfecr1, gcpd, gfes, gmech, gexces
+     *                 gfecr1, gcpd, gfes, gmech, gexces, omega, gdqf
 
       external gerk, gzero, gex, gfesi, gfesic, gproj, ghybrid, gexces,
-     *         gcpd, gfes, gmech
+     *         gcpd, gfes, gmech, omega, gdqf
 
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
@@ -13227,6 +13330,22 @@ c                                 are computed for the p0 mass, this is
 c                                 ok, because the g will be normalized by 
 c                                 the static ctot value.
                g(id) = gexces(id) + dg + gmech(i)
+
+               id = id + 1
+
+            end do
+
+         else if (mcflag(i)) then
+
+c                                 initialize margules, enthalpy of
+c                                 ordering, internal dqfs (last for minfxc)
+            call ingsol (i)
+
+            do j = 1, jend(i,2)
+
+               call setxyp (i,id,bad)
+
+               g(id) = gdqf(i) - t * omega(i,pa) + gex(i,pa) + gmech(i)
 
                id = id + 1
 
@@ -14165,7 +14284,7 @@ c                                 composite polytope
       end
 
 
-      subroutine gaqlgd (gtot,blk,totm,smo,id,bad,recalc)
+      subroutine gaqlgd (gtot,id,recalc)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 c configured to be called from resub with output to the (molar normalized)
@@ -14176,12 +14295,12 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, id
+      integer i, j, id, iwarn
 
-      logical bad, recalc, lmus, feos
+      logical recalc, lmus, feos, bad
 
-      double precision mo(l9), blk(*), gamm0, totm, g0(l9), lmu(k8),
-     *                 tmu(k8),is, gso(nsp), lnkw, gtot, smo, err,
+      double precision mo(l9), gamm0, g0(l9), lmu(k8),
+     *                 tmu(k8),is, gso(nsp), lnkw, gtot, err,
      *                 slvmo(nsp), solmol, negox, posox
 
       integer ion, ichg, jchg
@@ -14253,20 +14372,18 @@ c                                 adaptive coordinates
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      logical abort
-      common/ cstabo /abort
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 
-      save lmu, lmus
+      save lmu, lmus, iwarn
+
+      data iwarn/0/
 c----------------------------------------------------------------------
       if ((.not.mus .and..not.recalc).or.
      *    (.not.lmus.and.recalc)) then
 
          lmus = .false.
-         bad = .true.
          return
 
       else
@@ -14292,12 +14409,7 @@ c                                 check that the solvent does not contain
 c                                 the absent component
                   do j = 1, ns
 
-                     if (pa(j).gt.0d0.and.cp(i,jnd(j)).gt.0d0) then
-
-                        bad = .true.
-                        return
-
-                     end if
+                     if (pa(j).gt.0d0.and.cp(i,jnd(j)).gt.0d0) return
 
                   end do
 
@@ -14311,24 +14423,33 @@ c                                 the absent component
 
          call slvnt3 (gso,.false.,feos,id)
 
-         if (epsln.lt.nopt(34).or.abort) then
+         if (epsln.lt.nopt(34).or.abort1) then
 c                                 eos is predicting vapor phase
 c                                 solvent densities
-            bad = .true.
+            if (.not.abort1.and.iwarn.lt.iopt(1)) then
+
+               iwarn = iwarn + 1
+
+               call conwrn (301,' ')
+
+               if (iwarn.eq.iopt(1)) call warn (49,p,93,'GAQLGD')
+
+            end if
+
             return
 
          end if
-
-         bad = .false.
 
       end if
 c                                 iterate on speciation
       call aqsolv (g0,gso,mo,tmu,is,gamm0,lnkw,bad)
 
       if (bad) return
+
+      rkwak = .false.
 c                                 back calculated bulk composition
-      blk(1:kbulk) = 0d0
-      smo = 0d0
+      rcp(1:kbulk) = 0d0
+      rsmo = 0d0
       gtot = 0d0
       err = 0d0
 c                                 everything on a molal basis
@@ -14341,15 +14462,15 @@ c                                 charge balance error
 c                                 total g
          gtot = gtot + mo(i) * (g0(i) + rt*dlog(mo(i)*gamm0**q2(i)))
 c                                 total molality
-         smo = smo + mo(i)
+         rsmo = rsmo + mo(i)
 c                                 accumulate component moles
          do j = 1, kbulk
-            blk(j) = blk(j) + mo(i)*aqcp(j,i)
+            rcp(j) = rcp(j) + mo(i)*aqcp(j,i)
          end do
 
       end do
 
-      solmol = smo
+      solmol = rsmo
 c                                 for the solvent mole fractions
 c                                 need to accumulate total
 c                                 molality first
@@ -14357,23 +14478,23 @@ c                                 molality first
 c                                 solvent molality:
          slvmo(i) = yf(ins(i))/msol
 c                                 total molality
-         smo = smo + slvmo(i)
+         rsmo = rsmo + slvmo(i)
 c                                 moles/kg-solvent
          do j = 1, kbulk
-            blk(j) = blk(j) + slvmo(i)*cp(j,jnd(i))
+            rcp(j) = rcp(j) + slvmo(i)*cp(j,jnd(i))
          end do
 
       end do
 
       do i = 1, ns
 c                                 solvent bulk mole fraction:
-         if (recalc) caq(id,i) = slvmo(i)/smo
+         if (recalc) caq(id,i) = slvmo(i)/rsmo
          if (slvmo(i).le.0d0) cycle
-         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(slvmo(i)/smo))
+         gtot = gtot + slvmo(i) * (gso(i) + rt*dlog(slvmo(i)/rsmo))
 
       end do
 c                                 bulk fluid composition
-      totm = 0d0
+      rsum = 0d0
 
       err = dabs(err)*1d1
 
@@ -14384,26 +14505,25 @@ c                                check on charge imbalance
 
          do j = 1, kbulk
             if (cox(j).gt.0) then
-               posox = posox + cox(j)*blk(j)
+               posox = posox + cox(j)*rcp(j)
             else
                i = j
-               negox = negox + cox(j)*blk(j)
+               negox = negox + cox(j)*rcp(j)
             end if
          end do
 
-         blk(i) = blk(i) - (posox+negox)/cox(i)
+         rcp(i) = rcp(i) - (posox+negox)/cox(i)
 
       end if
 
       do j = 1, kbulk
 c                                zero bulk compositions below chg balance error
-         if (blk(j).lt.err) blk(j) = 0d0
-c                                totm is the total number of moles of themodynamic components
-c                                components in a solution of smo moles of
-c                                species
+         if (rcp(j).lt.err) rcp(j) = 0d0
+c                                rsum is the total number of moles of themodynamic components
+c                                components in a solution of smo moles of species
          if (j.gt.icp) cycle
 
-         totm = totm + blk(j)
+         rsum = rsum + rcp(j)
 
       end do
 
@@ -14415,7 +14535,7 @@ c                                 stuff needed for output:
 c                                 ionic strength
          caq(id,na1) = is
 c                                 total molality
-         caq(id,na2) = smo
+         caq(id,na2) = rsmo
 c                                 solvent mass
          caq(id,na3) = msol
 c                                 error in log10(Kw)
@@ -14433,12 +14553,12 @@ c                                  net charge
          if (oxchg) then
 c                                check on charge imbalance
             do j = 1, kbulk
-               posox = posox + cox(j)*blk(j)
+               posox = posox + cox(j)*rcp(j)
             end do
 
          end if
 
-         caq(id,na3+5) = posox/smo
+         caq(id,na3+5) = posox/rsmo
 c                                  dielectric cst
          caq(id,nat) = epsln
 
@@ -14446,13 +14566,12 @@ c                                  dielectric cst
 c                                 stuff need for optimization:
 c                                 legendre transform for saturated/mobile components
          do j = icp+1, kbulk
-            gtot = gtot - blk(j) * mu(j)
+            gtot = gtot - rcp(j) * mu(j)
          end do
 
       end if
 
       end
-
 
       subroutine slvnt3 (gso,whysp,feos,id)
 c-----------------------------------------------------------------------
@@ -14618,19 +14737,20 @@ c-----------------------------------------------------------------------
       double precision yf,g,v
       common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
-      logical abort
-      common/ cstabo /abort
-
       double precision units, r13, r23, r43, r59, zero, one, r1
       common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
 
       save iwarn, iwarn0
       data iwarn, iwarn0 /0,0/
 c----------------------------------------------------------------------
-      if (epsln.lt.nopt(34).or.abort.or.yf(1).eq.0d0) then
+      if (epsln.lt.nopt(34).or.abort1.or.yf(1).eq.0d0) then
 c                                  vapor, same as checking lnkw
          bad = .true.
          return
+
+      else
+
+         bad = .false.
 
       end if
 c                                  set default charge balance ion (aq_ion_H+, lopt(44)
@@ -14900,9 +15020,8 @@ c----------------------------------------------------------------------
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 c----------------------------------------------------------------------
       call getnam (name,ukp)
 
@@ -15315,7 +15434,7 @@ c----------------------------------------------------------------------
       logical error, done, oscil
 
       double precision g, qmax, qmin, q, q0, dqq, rqmax, rqmin, gold, 
-     *                 xdq, qnew
+     *                 xdq, qold
 
       double precision omega, gex
       external omega, gex
@@ -15428,9 +15547,9 @@ c                                 newton raphson iteration
 
             call gpder1 (k,id,q-q0,dqq,g,.false.)
 
-            qnew = q
+            qold = q
 
-            call pcheck (qnew,qmin,qmax,dqq,done)
+            call pcheck (q,qmin,qmax,dqq,done)
 
             if (dabs(dqq/xdq).gt.1d0.and.gold.lt.g) then
                oscil = .true.
@@ -15440,9 +15559,8 @@ c                                 done is just a flag to quit
 
                goodc(1) = goodc(1) + 1d0
                goodc(2) = goodc(2) + dfloat(itic)
-c                                 in principle the p's could be incremented
-c                                 here and g evaluated for the last update.
-               return
+
+               exit
 
             else if (oscil) then
 c                                 oscillating, accept if within reduced
@@ -15451,6 +15569,9 @@ c                                 tolerance, else flag as error
      *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
 
                   call spewrn (id,101,itic,iwarn,.false.,'GPMLT1')
+c                                 reset to previous solution (qold,gold)
+                  q = qold
+                  call gpder1 (k,id,q-q0,dqq,g,.false.)
 
                else
 c                                 oscillating but bad:
@@ -15481,7 +15602,6 @@ c                                 fails to converge.
 
             end if
 
-            q = qnew
             xdq = dqq
             gold = g
             itic = itic + 1
@@ -15586,9 +15706,9 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer k, id, itic, lord
+      integer k, id, itic, lord, iwarn
 
-      logical error, minfx
+      logical error, minfx, oscil
 
       double precision g, dqmax(j3), dqmin(j3), dqq(j3), ddq(j3), gold,
      *                 tdp, xtdp
@@ -15618,6 +15738,9 @@ c----------------------------------------------------------------------
 
       double precision goodc, badc
       common/ cst20 /goodc(3),badc(3)
+
+      save iwarn
+      data iwarn/0/
 c----------------------------------------------------------------------
       error = .false.
       minfx = .false.
@@ -15652,9 +15775,10 @@ c                                 set each to 0.9*qmax as in speci2
       if (lord.gt.0) then
 
          itic = 0
-         gold = 0d0
-         xtdp = 0d0
+         gold = 1d99
+         xtdp = 1d99
          minfx = .false.
+         oscil = .false.
 
          do
 
@@ -15684,6 +15808,10 @@ c                                 increment q's
                tdp = tdp + dabs(ddq(k))
 
             end do
+
+            if (dabs(tdp/xtdp).gt.1d0.and.gold.lt.g) then
+               oscil = .true.
+            end if
 c                                 check for convergence
             if ((tdp.lt.nopt(50).or.
      *          dabs((gold-g)/(1d0+dabs(g))).lt.nopt(50))
@@ -15693,21 +15821,38 @@ c                                 check for convergence
                goodc(2) = goodc(2) + dfloat(itic)
                exit
 
-            else if (itic.gt.25.and.gold.lt.g) then
+            else if (oscil) then 
+c                                 oscillating
+               if (dabs(xtdp).lt.nopt(40).or.
+     *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
+c                                 acceptable 
+                  call spewrn (id,101,itic,iwarn,.false.,'SPECI2')
+c                                 in principle should revert to gold
+               else
+c                                  switch to minfx
+                  call spewrn (id,102,itic,iwarn,.true.,'SPECI1')
 
-               minfx = .true.
+                  minfx = .true.
+
+               end if
+
                exit
 
             else if (itic.gt.iopt(21)) then 
 
-c              write (*,*) 'div2 ',gold-g,id,itic,g,tdp,tdp-xtdp
-               minfx = .true. 
-               exit
+               if (dabs(xtdp).lt.nopt(40).or.
+     *             dabs((gold-g)/(1d0+dabs(g))).lt.nopt(40)) then
+c                                 accept bad result
+                  call spewrn (id,103,itic,iwarn,.false.,'SPECI2')
 
-            else if (itic.gt.5.and.tdp.eq.xtdp) then 
+               else
 
-               minfx = .true. 
-c              write (*,*) 'wroink67 ',dp(1:lord),id,g
+                  minfx = .true.
+
+                  call spewrn (id,104,itic,iwarn,.true.,'SPECI2')
+
+               end if
+
                exit
 
             end if
@@ -15785,9 +15930,6 @@ c                                 excess energy variables
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
       double precision alpha,dt0
       common/ cyt0  /alpha(m4),dt0(j3)
@@ -16202,9 +16344,6 @@ c                                 excess energy variables
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 
       double precision alpha,dt0
       common/ cyt0  /alpha(m4),dt0(j3)
@@ -16841,6 +16980,8 @@ c----------------------------------------------------------------------
 
          call readnm (i,index,com,ier,name)
          if (ier.ne.0) goto 90
+c                                 eliminate flagging for liqdus calculations
+         if (icopt.eq.2) cycle
 
          index = match (idim,ier,name)
          if (ier.ne.0) goto 90
@@ -18377,10 +18518,6 @@ c----------------------------------------------------------------------
       character name*8
       common/ csta6 /name
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
@@ -18426,20 +18563,6 @@ c----------------------------------------------------------------------
 
       integer imaf,idaf
       common/ cst33 /imaf(i6),idaf(i6)
-
-      double precision mcomp
-      character mknam*8
-      integer nmak
-      logical mksat
-      common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
-
-      double precision mkcoef, mdqf
-      integer mknum, mkind, meos
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
-
-      integer make
-      common / cst335 /make(k10)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -19079,8 +19202,7 @@ c                                 got one
      *      /,'is a fluid. Possible courses of action are:',//,4x,
      *        '1) exclude ',a,' and restart.',/,4x,
      *        '2) remove the phase saturation constraint and restart.',/
-     *    ,4x,'3) ignore this warning and continue execution.',//,
-     *        'Continue (Y/N)?')
+     *    ,4x,'3) ignore this warning and continue execution.',//)
 1070  format (/,'**warning ver534** ',a,' is a molecular fluid species '
      *       ,'the presence of which is ',/,'inconsistent with existe',
      *        'nce of molecular fluid species in the saturated ',/,
@@ -19126,10 +19248,6 @@ c---------------------------------------------------------------------
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
-
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
 c----------------------------------------------------------------------
 
       if (icont.eq.1) then 
@@ -19193,13 +19311,10 @@ c---------------------------------------------------------------------
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 
       integer iam
       common/ cst4 /iam
@@ -19280,10 +19395,6 @@ c---------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer i
-
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
 c----------------------------------------------------------------------
 
       do i = 1, jbulk
@@ -19422,6 +19533,11 @@ c                                 potentials
 
          end if
 
+         if (icopt.eq.2) then 
+            read (n5,*,iostat=ier) tliq(ibulk)
+            if (ier.ne.0) goto 99
+         end if
+
       end do
 
 99    ibulk = ibulk - 1
@@ -19449,9 +19565,6 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
       integer jlow,jlev,loopx,loopy,jinc
       common/ cst312 /jlow,jlev,loopx,loopy,jinc
 
@@ -19464,9 +19577,10 @@ c----------------------------------------------------------------------
       character*100 cfname
       common/ cst227 /cfname
 
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 
       integer idsol,nrep,nph
       common/ cst38/idsol(k5,k3),nrep(k5,k3),nph(k3)
@@ -19496,14 +19610,23 @@ c                                 top of plot file
       read (n4,*,iostat=ier) loopx, loopy, jinc
 c                                 check if the file was generated by unsplt
 c                                 if so set unsplt flag for sample_on_grid
+      jlev = grid(3,2)
+
       if (jinc.eq.-1) then
 
          jinc = 1
-         jlev = grid(3,2)
          lopt(47) = .true.
 
       else
+c                                 intermediate results may be for a low 
+c                                 level grid, get the grid from jinc
          lopt(47) = .false.
+
+         do i = 1, jlev
+           if (jinc.eq.2**(jlev-i)) exit
+         end do
+
+         jlev = i
 
       end if
 
@@ -19639,11 +19762,13 @@ c                                 arrays
       end do
 c                                 close n8 for assemblage list (plopt(3), PSSECT)
       close (n8) 
-c                                 make the "null" assemblage
-      iap(k2) = k3
-      iavar(1,k3) = 0
-      iavar(2,k3) = 0 
-      iavar(3,k3) = 0 
+c                                 make the "null" assemblages
+      do i = 0, 1
+         iap(k2-i) = k3-i
+         iavar(1,k3-i) = 0
+         iavar(2,k3-i) = 0 
+         iavar(3,k3-i) = 0
+      end do
 
       if (icopt.eq.7.and.fileio) then 
 c                                 if coodinates from a file, read
@@ -20839,9 +20964,6 @@ c---------------------------------------------------------------------
 
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-
-      double precision dppp,d2gx,sdzdp
-      common/ cxt28 /dppp(j3,j3,m1,h9),d2gx(j3,j3),sdzdp(j3,m11,m10,h9)
 c                                 endmember pointers
       integer jend
       common/ cxt23 /jend(h9,m14+2)
@@ -21325,9 +21447,6 @@ c-----------------------------------------------------------------------
 
       external readyn
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
       character tname*10
       logical refine, lresub
       common/ cxt26 /refine,lresub,tname
@@ -21588,9 +21707,6 @@ c-----------------------------------------------------------------------
       integer ier
 
       logical err
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 
       integer iam
       common/ cst4 /iam

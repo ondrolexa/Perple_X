@@ -20,6 +20,11 @@ c You should have received a copy of the GNU General Public License
 c along with Perple_X (file license.txt). If not see
 c <http://www.gnu.org/licenses/>.
 
+c To find definitions in code for common block names, use pattern below:
+c egrep 'common/ *[a-z0-9][a-z0-9]* */' *.[fh] |
+c    sed -e 's;^.*/ *\([a-z0-9][a-z0-9]*\) */.*$;\1;' |
+c    sort -u
+
 c----------------------------------------------------------------------
 
       subroutine vrsion (n)
@@ -31,7 +36,7 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X release 7.0.10, May 1, 2023.',
+     *     'Perple_X release 7.1.5, Dec 1, 2023.',
 
      *     'Copyright (C) 1986-2023 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
@@ -86,6 +91,51 @@ c special internal values for lopt, iopt, nopt
 c               lop_28-30 
 c               iop_28-30
 c               nop_28-30
+
+c references in code to nopt as of May 15, 2023 (use pattern below to find them:
+c egrep 'nopt\([0-9][0-9]*\)' *.f |
+c    sed -e 's/^.*\(nopt([0-9]*)\).*$/\1/' |
+c    sort -u
+c )
+c
+c nopt: (x = unused; max i10)
+c  1  2  x  4  5  6  7  8  9 10
+c 11 12 13 14 15 16 17 18 19 20
+c 21  x  x  x 25 26 27 28 29 30
+c 31 32 33 34 35 36 37 38  x 40
+c 41 42  x  x  x  x  x 48 49 50
+c 51 52  x 54 55 56 57  x  x  x
+c  x  x  x  x 65
+
+c option variables - keyword associations
+
+c lopt(1)  - closed_c_space -> T = closed compositional variables
+c lopt(2)  - set in getprp -> T = cumulative modes
+c lopt(3)  - hard_limits -> T = on
+c lopt(4)  - Anderson-Gruneisen -> Helffrich Murnaghan correction
+c lopt(5)  - site_check -> T = reject invalid site fractions
+c lopt(6)  - melt_is_fluid -> T = classify melts as fluids in output
+c lopt(7)  - saturated phase in data base, set by topN2
+c lopt(8)  - approx_alpha -> T = approx exp(x)=1+x in volume integral
+c lopt(9)  - automatic solvus tolerance -> T
+c lopt(10) - pseudocompound_glossary
+c lopt(11) - auto_refine_file
+c lopt(12) - option_list_files
+c lopt(13) - true if user set finite zero mode check
+c lopt(14) - logarithmic_p
+c lopt(15) - spreadsheet format -> T = explicit output of independent variables
+c lopt(16) - bounds, T -> VRH averaging, F -> HS
+c lopt(17) - explicit_bulk_modulus, T-> use if available.
+c lopt(18) - refine_bad_nodes
+c lopt(19) - pause_on_error
+c lopt(20) - poisson_test
+c lopt(21) - species_output
+c lopt(22) - composition_constant
+c lopt(23) - composition_system
+c nopt(2)  - liquidus temperature resolution
+c nopt(5)  - speciation_tolerance
+c nopt(8)  - solvus_tolerance
+c nopt(20) - T_melt - kill melt endmembers at T < nopt(20)
 c----------------------------------------------------------------------
       implicit none
 
@@ -101,9 +151,6 @@ c----------------------------------------------------------------------
       double precision r2, dnan
 
       external dnan, readyn
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 
       integer grid
       double precision rid 
@@ -153,6 +200,8 @@ c                                 loop to find machine precision (mainly
 c                                 for nag)
       r1 = 1d-12
       r2 = 0d0
+
+c     write (*,*) k1, k21
 
       do
          if (1d0+r1.eq.1d0) exit
@@ -219,6 +268,8 @@ c                                 reserved for temporary use:
          iopt(i) = 0
       end do 
 c                                 -------------------------------------
+c                                 liquidus_resolution
+      nopt(2) = 1d0
 c                                 minimum replicate label distance
       nopt(4) = 0.025
 c                                 speciation_factor
@@ -339,8 +390,12 @@ c                                 aq_error_ver102 - exit on pure + impure solven
       lopt(72) = .true.
 c                                 aq_error_ver103 - exit on extrapolation of HKF g-func
       lopt(73) = .true.
+c                                 aq_error_ver104 - exit on failed respeciation in avrger
+      lopt(74) = .true.
 c                                 error_ver109 - exit on bad endmember EoS involved in a stable solution
       lopt(79) = .true.
+c                                 do_not_reset_options
+      lopt(80) = .false.
 c                                 solution_names 0 - model, 1 - abbreviation, 2 - full
       iopt(24) = 0
       valu(22) = 'mod'
@@ -644,9 +699,18 @@ c                                 don't abort on coexisting pure and impure solv
 c                                  don't abort if HKF-gfunc is out of range
             if (val.eq.'F') lopt(73) = .false.
 
+         else if (key.eq.'aq_error_ver104') then
+c                                  don't abort on failed respeciation
+            if (val.eq.'F') lopt(74) = .false.
+
          else if (key.eq.'error_ver109') then
 c                                  don't abort if bad EoS phase is stable
             if (val.eq.'F') lopt(79) = .false.
+
+         else if (key.eq.'do_not_reset_options') then
+c                                  prevent automatic option resets, i.e., use 
+c                                  options as set.
+            if (val.eq.'T') lopt(80) = .true.
 
          else if (key.eq.'refine_endmembers') then 
 
@@ -800,6 +864,10 @@ c               obsolete
          else if (key.eq.'speciation_precision') then 
 
             read (strg,*) nopt(5)
+
+         else if (key.eq.'liquidus_resolution') then
+
+            read (strg,*) nopt(2)
 
          else if (key.eq.'optimization_precision') then 
 
@@ -1734,10 +1802,6 @@ c----------------------------------------------------------------------
       logical oned
       common/ cst82 /oned
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -1785,7 +1849,8 @@ c                                 solvus tolerance text
      *    nopt(37), lopt(55), lopt(57), lopt(58), lopt(59)
 c                                 only vertex:
 c                                 context specific parameters:
-         if (icopt.le.3.and.(iam.eq.1.or.iam.eq.15)) then 
+         if ((icopt.eq.3.or.icopt.eq.1) .and.
+     *       (iam.eq.1.or.iam.eq.15)) then 
 c                                 non-adaptive calculations
 c                                 reaction format and lists
             if (icopt.gt.0) write (n,1160) grid(5,1),grid(5,2),rid(1,1),
@@ -1803,7 +1868,7 @@ c                                 1d multilevel grid
      *                  (grid(2,2)-1) * 2**(grid(3,2)-1) + 1,
      *                  grid(3,1),grid(3,2),l8
 
-            else if (iam.eq.1.and.icopt.eq.5) then
+            else if (iam.eq.1.and.(icopt.eq.5.or.icopt.eq.2)) then
 c                                 2d multilevel grid
                write (n,1200) grid(1,1),grid(1,2),l7,
      *                  (grid(1,1)-1) * 2**(grid(3,1)-1) + 1,
@@ -1812,6 +1877,8 @@ c                                 2d multilevel grid
      *                  (grid(2,1)-1) * 2**(grid(3,1)-1) + 1,
      *                  (grid(2,2)-1) * 2**(grid(3,2)-1) + 1,
      *                  grid(3,1),grid(3,2),l8,valu(18)
+
+               if (icopt.eq.2) write (n,1205) nopt(2)
 
             else if (iam.eq.1.and.icopt.eq.7) then 
 c                                 1d fractionation grid
@@ -1831,7 +1898,8 @@ c                                 generic subdivision parameters:
      *                     lopt(38),valu(13),lopt(39)
          end if 
 c                                 generic thermo parameters:
-         write (n,1012) nval1,nopt(12),nopt(20),lopt(8),lopt(4),nopt(5),
+         write (n,1012) nval1,
+     *                  nopt(12),nopt(20),lopt(8),lopt(4),nopt(5),
      *                  iopt(21),nopt(10),lopt(63),
      *                  iopt(25),iopt(26),iopt(27),
      *                  lopt(32),lopt(44),lopt(36),lopt(46),
@@ -1907,9 +1975,10 @@ c                                 info file options
       end if
 
       write (n,1005) lopt(19), iopt(1), lopt(56), lopt(70), lopt(71),
-     *               lopt(72), lopt(73), lopt(31), lopt(79)
+     *               lopt(72), lopt(73), lopt(74), lopt(31), lopt(79),
+     *               lopt(80)
 
-      write (n,1020) 
+      write (n,1020)
 
 1000  format (/,'Perple_X computational option settings for ',a,':',//,
      *      '    Keyword:               Value:     Permitted values ',
@@ -1934,10 +2003,16 @@ c                                 lopt(72)
 c                                 lopt(73)
      *        4x,'aq_error_ver103         ',l1,9x,
      *           '[T] F, out-of-range HKF g abort',/,
+c                                 lopt(74)
+     *        4x,'aq_error_ver104         ',l1,9x,
+     *           '[T] F, abort on failed respeciation',/,
 c                                 lopt(31)
      *        4x,'warning_ver637          ',l1,9x,'[T] F',/,
 c                                 lopt(79)
-     *        4x,'error_ver109            ',l1,9x,'[T] F')
+     *        4x,'error_ver109            ',l1,9x,'[T] F',/,
+c                                 lopt(80)
+     *        4x,'do_not_reset_options    ',l1,9x,
+     *           '[F] T, prevents automatic resets')
 
 1010  format (/,2x,'Solution subdivision options:',//,
      *        4x,'initial_resolution:     ',f6.4,4x,
@@ -1971,7 +2046,7 @@ c                                 generic thermo options
      *        4x,'speciation_precision   ',g7.1E1,4x,
      *           '[1d-5] <1; absolute',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
-     *        4x,'function_tolerance_exp ',f3.1,7x,
+     *        4x,'function_tolerance_exp  ',f3.1,7x,
      *           '[0.8] sets x in tol = epsmch^x',/,
      *        4x,'GFSM                    ',l1,9x,
      *           '[F] T GFSM/special_component toggle',/,
@@ -2064,6 +2139,7 @@ c                                 thermo options for frendly
      *        4x,'grid_levels             ',i1,' /',i2,5x,'[1/4] >0, '
      *          ,'<',i2,/,
      *        4x,'linear_model            ',a3,7x,'[on] off')
+1205  format (4x,'liquidus_resolution    ',f4.2,7x,'[1] K or bar')
 1210  format (/,2x,'Fractionation path options:',//,
      *        4x,'1d_path               ',i3,' /',i3,4x,
      *           '[20/150] >0, <',i4)
@@ -2410,6 +2486,76 @@ c                                 read data from card
             inumb = idef
          end if 
       end if 
+
+      end
+
+      subroutine rdnum1 (numb,rmn,rmx,def,inumb,imn,imx,idef,reel)
+c----------------------------------------------------------------------
+c rdnumb - reads a line from terminal input for numeric input, if blank
+c assigns default (def, idef); if non numeric prompts for new value.
+c----------------------------------------------------------------------    
+      implicit none
+
+      integer inumb, imn, imx, idef, ier
+
+      double precision numb, rmn, rmx, def
+
+      logical defalt, reel
+
+      character card*80
+c----------------------------------------------------------------------
+      defalt = .true.
+
+      do 
+c                                 read input
+         read (*,'(a)',iostat=ier) card
+c                                 user enters a blank
+         if (ier.ne.0.or.card.eq.' ') exit
+c                                 read data from card
+         if (reel) then 
+            read (card,*,iostat=ier) numb
+         else 
+            read (card,*,iostat=ier) inumb
+         end if 
+
+         if (ier.ne.0) then
+
+            call rerr
+
+         else
+c                                 somethings been entered
+            if (reel) then 
+               if (numb.gt.rmx.or.numb.lt.rmn) then
+                  write (*,1000) rmn, rmx
+                  cycle
+               end if
+            else
+               if (inumb.gt.imx.or.inumb.lt.imn) then
+                  write (*,1010) imn, imx
+                  cycle
+               end if
+            end if
+
+            defalt = .false.
+
+            exit
+
+         end if 
+
+      end do
+
+      if (defalt) then 
+         if (reel) then 
+            numb = def
+         else 
+            inumb = idef
+         end if 
+      end if 
+
+1000  format (/,'invalid value, enter a number between ',g12.6,' and ',
+     *        g12.6,/)
+1010   format (/,'invalid value, enter a number between ',i6,' and ',
+     *        i6,/)
 
       end
 
@@ -2882,7 +3028,7 @@ c                                 accordingly:
 49    format (/,'**error ver049** the order of solution model ',a,
      *        ' is too high, increase parameter m2 (',i2,').',/)
 50    format (/,'**error ver050** requested resolution ',
-     *          '(',f6.0,') for a component in solution:',a,/,
+     *          '(',1pg8.0,') for a component in solution:',a,/,
      *          'exceeds 1/MRES (MRES=',i5,') ',
      *          'reduce requested resolution or inrease',/,
      *          'MRES in routine CARTES',/)
@@ -3430,7 +3576,7 @@ c                                 generic warning, also 99
 41    format (/,'**warning ver040** ',a,' occurs ',i1,' times in an as',
      *       'semblage, properties will be',/,'reported for its last i',
      *       'nstance. To avoid this problem do not use multi-property',
-     *       /,'choices to extract the properties of this solution.',/)
+     *       /,'choices to extract the properties of this solution.')
 42    format (/,'**warning ver042** an optimization failed due ',
      *          'to numerical instability',/,
      *          'or because the phases of the system do not span ',
@@ -3445,7 +3591,7 @@ c                                 generic warning, also 99
      *          4x,'see: www.perplex.ch/perplex_options.html for ',
      *          'explanation.',//,
      *          4x,'In the 2nd case (rare): ',
-     *          'change the bulk composition or add phases.',/)
+     *          'change the bulk composition or add phases.')
 43    format (/,'**warning ver043** ',a,' is the base 10 log of the',
      *       ' activity, values > 0 imply',/
      *       'supersaturation with respect to the reference species.',/,
@@ -3519,9 +3665,10 @@ c                                 generic warning, also 99
      *       'MatLab or PYWERAMI.',//,'program/routine: ',a,/)
 62    format (/,'**warning ver062** ',a,' is an electrolytic fluid, th',
      *        'e default value of',/,'aq_error_ver101 has been changed',
-     *        'to F to allow fractionation to completely',/,
+     *        ' to F to allow fractionation to completely',/,
      *        'deplete solute components from the condensed phase asse',
-     *        'mblage',/)
+     *        'mblage.',/,'To prevent automatic option changes set do_',
+     *        'not_reset_options to T',/)
 63    format (/,'**warning ver063** wway, invariant point on an edge?',
      *        /)
 64    format (/,'**warning ver064** AQSOLV failed to converge on ionic',
@@ -3564,9 +3711,9 @@ c                                 generic warning, also 99
      *        'composition at all physical',/,'conditions and the prob',
      *        'lem can only be remedied by increasing the range of',/,
      *        'compositions spanned by the possible phases of the ',
-     *        'system.',/)
+     *        'system.')
 91    format (/,'**warning ver091** optimization failed. Change ',
-     *        'minimnization method',/)
+     *        'minimnization method.')
 92    format (/,'**warning ver092** you have requested ',i4,
      *        ' grid points. Current',/,'dimensioning is for ',
      *        i4,' points. To obtain the requested resolution',/,
@@ -3668,17 +3815,6 @@ c----------------------------------------------------------------------
       double precision rnum, nums(m3)
 
       character tname*8, name*8, rec*(lchar), tag*3
-
-      double precision mcomp
-      character mknam*8
-      integer nmak
-      logical mksat
-      common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
-
-      double precision mkcoef, mdqf
-      integer mknum, mkind, meos
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
 
       integer ixct,ifact
       common/ cst37 /ixct,ifact 
@@ -5299,9 +5435,6 @@ c------------------------------------------------------------------------
 
       external readyn
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
       integer iam
       common/ cst4 /iam
 
@@ -5419,9 +5552,6 @@ c----------------------------------------------------------------------
  
       integer kscan, iscnlt, ierr, siz
 
-      character*100 prject, tfname
-      common/ cst228 /prject,tfname
-
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
@@ -5509,9 +5639,6 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
  
       integer kscan, siz
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 
       integer length,com
       character chars*1
@@ -5853,9 +5980,6 @@ c----------------------------------------------------------------------
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
-  
-      character vname*8, xname*8
-      common/ csta2 /xname(k5),vname(l2)
 
       integer cl
       character cmpnt*5, dname*80
@@ -6805,7 +6929,8 @@ c                                 strip out new double blanks
 c---------------------------------------------------------------------- 
 c getstg - subroutine to get first non-blank string  
 c          
-c     text - character string on input, first non-blank strg on output
+c     text - character string on input, first non-blank strg on output,
+c            with rest of text of line following.
 c----------------------------------------------------------------------
       implicit none
 
@@ -6832,11 +6957,12 @@ c                                 scan for blanks:
          exit 
       end do 
 
-      do i = ist, nchar
-         if (chars(i).ne.' ') cycle 
-         nchar = i-1
-         exit 
-      end do 
+c                                 left justify; don't remove rest of line
+c     do i = ist, nchar
+c        if (chars(i).ne.' ') cycle 
+c        nchar = i-1
+c        exit 
+c     end do 
 
       text = ' '
 
@@ -7097,14 +7223,8 @@ c-----------------------------------------------------------------------
       logical fp
       common/ cxt32 /ifp(k10), fp(h9)
 
-      integer make
-      common / cst335 /make(k10)
-
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      character prject*100,tfname*100
-      common/ cst228 /prject,tfname
 c-----------------------------------------------------------------------
       call mertxt (tfname,prject,'_seismic_data.txt',0)
 
@@ -7296,9 +7416,6 @@ c----------------------------------------------------------------------
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 
       character tname*10
       logical refine, lresub
@@ -7512,26 +7629,20 @@ c---------------------------------------------------------------------
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
       integer jvar
       double precision var,dvr,vmn,vmx
       common/ cxt18 /var(l3),dvr(l3),vmn(l3),vmx(l3),jvar
 
       character vnm*8
-      common/ cxt18a /vnm(l3)   
-
-      character vname*8, xname*8
-      common / csta2 /xname(k5),vname(l2)  
+      common/ cxt18a /vnm(l3)
 
       logical oned
       common/ cst82 /oned
 
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 
       integer iind, idep
       double precision c0,c1,c2,c3,c4,c5
@@ -7558,7 +7669,23 @@ c                                 use nodal coordinates:
 
          do i = 2, jvar
             vnm(i) = vname(jv(i-1))
-         end do  
+         end do
+
+      else if (icopt.eq.7.and.idep.ne.0) then
+c                                 1d calculation, assume if a 
+c                                 potential is dependent on another
+c                                 that this other potential is the
+c                                 independent variable
+         oned = .true.
+
+         jvar = ipot
+
+         do i = 1, jvar
+            vnm(i) = vname(jv(i))
+            vmx(i) = vmax(jv(i))
+            vmn(i) = vmin(jv(i))
+            var(i) = vmin(jv(i))
+         end do
 
       else if (icopt.lt.9) then 
 
@@ -7614,13 +7741,6 @@ c                                 use nodal coordinates:
             end if 
 
          end if 
-
-         if (oned) then 
-c                                 make a fake y-axis for 1-d plots
-            vmx(2) = 1d0
-            vmn(2) = 0d0
-
-         end if
 
       else if (icopt.eq.9) then 
 c                                using non-thermodynamic coordinate frame
@@ -7685,7 +7805,14 @@ c                                  set y = 0 ti be the top
             var(i) = vmin(jv(i-2))
          end do
 
-      end if 
+      end if
+
+      if (oned) then 
+c                                 make a fake y-axis for 1-d plots
+         vmx(2) = 1d0
+         vmn(2) = 0d0
+
+      end if
 
       end
 
@@ -8119,10 +8246,17 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer jd
+      integer jd, i
 
       double precision p,t,xco2,u1,u2,tr,pr,rc,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,rc,ps
+
+      character specie*4
+      integer isp, ins
+      common/ cxt33 /isp,ins(nsp),specie(nsp)
+
+      double precision yf,g,v
+      common/ cstcoh /yf(nsp),g(nsp),v(nsp)
 
       character eos*(*)
 c----------------------------------------------------------------------
@@ -8142,7 +8276,7 @@ c                                 volume EoS
             write (*,1060)
          end if
 
-      else 
+      else if (jd.lt.200) then
 c                                 speciation calcs
          write (*,2000) eos, p, t
 
@@ -8159,6 +8293,11 @@ c                                 speciation calcs
          else if (jd.eq.106) then
             write (*,2070)
          end if
+
+      else
+c                                 set up fails
+         write (*,3000) p, t, (specie(ins(i)),yf(ins(i)), i = 1, isp)
+         write (*,3010) 
 
       end if
 
@@ -8190,6 +8329,13 @@ c                                 speciation calcs
 2060  format ('Speciation stoichiometrically frustrated, result will ',
      *        'be rejected')
 2070  format ('bad species Eos, result will be rejected')
+3000  format (/,'**warning ver093** aqueous speciation terminated:',/,
+     *        /,4x,'P(bar) = ',g12.6,/,4x,'T(K) = ',g12.6,//,
+     *          'for solvent composition:',/,
+     *          20(4x,'y(',a4,') = ',g12.6,/))
+3010  format (/,'Because solvent dielectic constant < aq_vapor_epsilo',
+     *          'n.',/)
+
       end
 
       subroutine lpwarn (idead,char)
@@ -8203,17 +8349,17 @@ c----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer idead, iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, 
-     *        iwarn03, iwarn00, iwarn09, iwarn58
+     *        iwarn03, iwarn00, iwarn09, iwarn58, iwarn04, iwarn08
 
       character char*(*)
 
       double precision c
 
       save iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
-     *     iwarn58, iwarn00, iwarn09
+     *     iwarn58, iwarn00, iwarn09, iwarn04, iwarn08
 
       data iwarn91, iwarn42, iwarn90, iwarn01, iwarn02, iwarn03, 
-     *     iwarn00, iwarn09, iwarn58/9*0/
+     *     iwarn00, iwarn09, iwarn58, iwarn04, iwarn08/11*0/
 c----------------------------------------------------------------------
 c                                             look for errors
       if (idead.eq.2.or.idead.gt.4.and.idead.lt.8.and.
@@ -8289,7 +8435,7 @@ c                                 triggered by coexistence of pure and impure
 c                                 solvent in avrger after lpopt0
          call warn (100,c,102,'pure and impure solvent phases '//
      *             'coexist within aq_solvent_solvus_tol. '//
-     *             'To output result set aq_error_ver102 to T.')
+     *             'To output result set aq_error_ver102 to F.')
 
          call prtptx
 
@@ -8309,13 +8455,41 @@ c                                 triggered by reopt/resub, aq_error_ver103
 
          iwarn03 = iwarn03 + 1
 
+      else if (idead.eq.104.and.iwarn04.le.iopt(1)) then
+c                                 triggered by reopt/resub, aq_error_ver103
+         call warn (100,c,104,'failed to recalculate speciation.'//
+     *           'Probable cause undersaturated solute component'//
+     *           'To output result set aq_error_ver104 to F.')
+
+         call prtptx
+
+         if (iwarn04.eq.iopt(1)) call warn (49,c,104,char)
+
+         iwarn04 = iwarn04 + 1
+
+      else if (idead.eq.108) then
+c                                 triggered by yclos2, error_ver109
+         if (iwarn08.le.iopt(1)) then
+
+            call warn (100,c,108,'Did not converge to optimization_pr'//
+     *                           'ecision within optimizaton_max_it. '//
+     *                         'The low quality result will be output.')
+
+            call prtptx
+
+            if (iwarn08.eq.iopt(1)) call warn (49,c,108,'LPWARN')
+
+            iwarn08 = iwarn08 + 1
+
+         end if
+
       else if (idead.eq.109) then
 c                                 triggered by yclos2, error_ver109
          if (iwarn09.le.iopt(1)) then
 
             call warn (100,c,109,'Valid otimization result includes '//
-     *                           'invalid phase/endmember. '//
-     *             'To output result set error_ver109 to F.')
+     *                                 'an invalid phase/endmember. '//
+     *                        'To output result set error_ver109 to F.')
 
             call prtptx
 
@@ -8380,20 +8554,13 @@ c----------------------------------------------------------------------
 
       character tag*8
 
-      character*8 vname,xname
-      common/ csta2  /xname(k5),vname(l2)
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
 c----------------------------------------------------------------------
-      write (*,'(a,/)') 'Current conditions:'
+      write (*,'(/,a,/)') 'Current conditions:'
 
       if (icopt.ne.12) then
 c                                 for 0-d infiltration (icopt = 10)
@@ -8528,9 +8695,6 @@ c-----------------------------------------------------------------------
 
       integer io3,io4,io9
       common / cst41 /io3,io4,io9
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 
       integer iam
       common/ cst4 /iam
@@ -8682,9 +8846,6 @@ c----------------------------------------------------------------------
       logical readyn
 
       external readyn
-
-      character prject*100,tfname*100
-      common/ cst228 /prject,tfname
 c                                 solution model names
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -8979,7 +9140,7 @@ c-----------------------------------------------------------------------
 
       end if 
 c                                 set auto-refine dependent parameters
-      if (icopt.eq.5) then 
+      if (icopt.eq.5 .or. icopt.eq.2) then 
 c                                 gridded minimization
          if (oned) then 
 c                                 this should be only for non-path 
@@ -9047,9 +9208,10 @@ c-----------------------------------------------------------------------
 
       integer idum, nstrg, i, j, k, ierr, icmpn, jcont, kct
 
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 
       character*100 cfname
       common/ cst227 /cfname
@@ -9068,9 +9230,6 @@ c-----------------------------------------------------------------------
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      character*8 xname,vname
-      common/ csta2 /xname(k5),vname(l2)
 
       character*5 cname
       common/ csta4 /cname(k5) 
@@ -9094,10 +9253,6 @@ c-----------------------------------------------------------------------
       double precision c0,c1,c2,c3,c4,c5
       common/ cst316 /c0,c1,c2,c3,c4,c5,iind,idep
 
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
-
       integer ibuf,hu,hv,hw,hx 
       double precision dlnfo2,elag,gz,gy,gx
       common/ cst100 /dlnfo2,elag,gz,gy,gx,ibuf,hu,hv,hw,hx
@@ -9116,10 +9271,7 @@ c-----------------------------------------------------------------------
       common/ cst208 /ifct,idfl
 
       integer ixct,ifact
-      common/ cst37 /ixct,ifact 
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
+      common/ cst37 /ixct,ifact
 
       character*8 exname,afname
       common/ cst36 /exname(h8),afname(2)
@@ -9147,6 +9299,7 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
+
 
       save blank
       data blank/' '/
@@ -9187,6 +9340,8 @@ c                                 use error condition to determine which:
       read (n1,'(a)') tfname
 c                                 get first non-blank string 
       call getstg (tfname)
+      i = index(tfname,' ')
+      if (i.gt.1) tfname(i:) = ' '
 
       read (tfname,'(i2)',iostat=ierr) icopt 
 
@@ -9212,7 +9367,7 @@ c                                 file, get name:
 
          if (icopt.eq.10) then 
             icopt = 7
-         else 
+         else
             icopt = 9
          end if
 
@@ -9563,12 +9718,10 @@ c                             t = 2, and xco2 = 3, respectively.
       read (n1,*,err=998) (iv(i), i = 1, 5)
 c                             check variable ranges are consistent,
 c                             variable iv(1), UNLESS:
-c                             normal calculations w/o limits
-      if (icopt.ne.0.and.icopt.ne.4.and.icopt.ne.12.and.
-c                             fractionation calculations
-     *    icopt.ne.7.and.icopt.le.9.
-c                              MEEMUM
-     *    and.iam.ne.2) then
+c                             normal calculations w/o limits,
+c                             fractionation calculations, or
+c                             MEEMUM
+      if (icopt.ne.0.and.icopt.ne.4.and.icopt.le.6.and.iam.ne.2) then
 
          if (iv(1).eq.3.and.ifct.eq.0) call error (110,r,i,'I')
 
@@ -9576,7 +9729,7 @@ c                              MEEMUM
 
             if (icopt.ne.7.and.iv(2).ne.3) call error (111,r,i,'I')
 
-         end if 
+         end if
 
          if (vmin(iv(1)).ge.vmax(iv(1)).and.icopt.lt.5) then 
 
@@ -9593,7 +9746,7 @@ c                              MEEMUM
 
       end if
 c                             variable iv(2):
-      if (iam.ne.2.and.(icopt.eq.1.or.
+      if (iam.ne.2.and.icopt.le.6.and.(icopt.eq.1.or.
      *                  (icopt.eq.5.and.icont.eq.1.and..not.oned))) then
 
          if (iv(2).eq.3.and.ifct.eq.0) call error (110,r,i,'INPUT1')
@@ -9682,6 +9835,25 @@ c                                 set convergence criteria for routine univeq
 c                                 0-d infiltration
          read (n1,*,err=998) iopt(36), nopt(36)
 
+      end if
+
+      if (icopt.eq.2) then
+c                                 liquidus finding - read melt phase names
+c                                 skip blank lines
+         do 
+            read (n1,'(a)',iostat=ierr) meltph
+            if (ierr.ne.0) then
+               write(*,*) '**Bad/missing melt phase name(s)'
+               call error (27,r,i,n2name)
+            end if
+            i = index(meltph,'|')
+            if (i.ne.0) meltph(i:) = ' '
+            if (meltph.ne.blank) exit
+         end do
+c                                 one line list of melt phases should be OK;
+c                                 remove leading blanks
+         call getstg(meltph)
+
       end if 
 
       if (icopt.ne.0) close (n1)
@@ -9716,17 +9888,12 @@ c-----------------------------------------------------------------------
       integer i,j
 
       integer npt,jdv
-      logical fulrnk
       double precision cptot,ctotal
-      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt,fulrnk
+      common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
       integer is
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
-
-      integer icont
-      double precision dblk,cx
-      common/ cst314 /dblk(3,k5),cx(2),icont
 
       integer hcp,idv
       common/ cst52  /hcp,idv(k7)
@@ -9753,7 +9920,7 @@ c                                 closed composition
 c                                 modify cblk here to change the 
 c                                 composition before minimization.
       ctotal = 0d0 
-c                                 get total moles to compute mole fractions             
+c                                 get total moles to compute mole fractions 
       do i = 1, hcp
          ctotal = ctotal + cblk(i)
       end do
@@ -9815,7 +9982,7 @@ c----------------------------------------------------------------------
 
       integer i, itis
  
-      character*10 unnown
+      character unnown*(*)
  
       include 'perplex_parameters.h'
 
@@ -9825,24 +9992,24 @@ c----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c---------------------------------------------------------------------- 
- 
+
       itis = 0
 
       do i = 1, isoct
          if (unnown.eq.fname(i)) then
              itis = i
-             goto 99
+             return
          end if
       end do
 
       do i = 1, iphct
          if (unnown.eq.names(i)) then
             itis = -i
-            goto 99
+            return
          end if
       end do 
 
-99    end
+      end
 
       subroutine maktit 
 c-----------------------------------------------------------------------
@@ -9862,9 +10029,6 @@ c-----------------------------------------------------------------------
 
       character*162 title
       common/ csta8 /title(4)
-
-      character*8 vname,xname     
-      common/ csta2  /xname(k5),vname(l2)
 
       integer ivfl
       common/ cst102 /ivfl
@@ -9921,9 +10085,6 @@ c-----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
 
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
@@ -9948,12 +10109,16 @@ c-----------------------------------------------------------------------
       common/ cst23  /a(k8,k8),b(k8),ipvt(k8),idv(k8),iophi,idphi,
      *                iiphi,iflg1
 
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 
       character*100 cfname
       common/ cst227 /cfname
+
+      integer ids,isct,icp1,isat,io2
+      common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 c-----------------------------------------------------------------------
 c                                 look for input data from a file 
 c                                 of type aux
@@ -9972,6 +10137,7 @@ c                                 can only be pressure and temperature
       ipot = 1
 
       jbulk = icp
+      kbulk = icp
 c                                 true => flush model, ~true => subducting column
       read (n8,*) dynam
 c                                 this is just a trick to avoid changing the variable 
@@ -9982,9 +10148,16 @@ c                                 true => basal mass flux
 c                                 true => anneal the column
       read (n8,*) anneal
 c                                 true => don't output console info on the fractionated phase
-      read (n8,*) short
+      read (n8,*) verbos
+c                                 true => in frac2d, don't pass fluid through overlying nodes
+      read (n8,*) siphon
 c                                 true => p-t field from file/internal function
       read (n8,*) pzfunc
+c                                 true => dump final column compositions to my_project_***.cmp 
+c                                      => *** z0 coodinate in km
+      read (n8,*) colcmp
+c                                 true => initialize column compositions from my_project_***.cmp
+      read (n8,*) usecmp
 c                                 Perple_X assumes upward directed depth, but to 
 c                                 make the input intuitive, the input is specified
 c                                 in downward coordinates, hence the sign changes 
@@ -10092,6 +10265,8 @@ c                                 end of data indicated by zero
      *                               'increase lay in common cst66')
 
          read (n8,*) (iblk(ilay,i),i=1,icp)
+c                                 initialize charge deficit to zero
+         iblk(ilay,icp1) = 0d0
 
          irep(ilay) = idint(zlayer/vz(1)) 
 
@@ -10114,7 +10289,8 @@ c                                 read aliquot composition
             call errpau
          else 
             read (n8,*) (iblk(ilay+1,i),i=1,icp)
-         end if 
+         end if
+
       end if 
 
       close (n8)
@@ -10173,9 +10349,10 @@ c----------------------------------------------------------------------
       double precision vn
       common/ cst31 /vn(k2,k7),irct,ird
 
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
@@ -10309,11 +10486,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, nv(2), nvar, ivar, n
+      integer i, nv(*), nvar, ivar, n
 
-      double precision vmn(2), dv(2)
+      double precision vmn(*), dv(*)
 
-      character*100 n6name, n5name, vname(l3)*14
+      character*100 n6name, n5name, colnam(l3)*14
 
       integer inv
       character dname*14, title*162
@@ -10333,9 +10510,10 @@ c----------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      logical fileio, flsh, anneal, short
+      logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
-      common/ cst226 /ncol,nrow,fileio,flsh,anneal,short
+      common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
+     *                usecmp, colcmp
 c------------------------------------------------------------------------
 c                                 generate a file name and
 c                                 open the file on n5
@@ -10380,15 +10558,15 @@ c                                 number of pseudo-dependent variables,
       end if
 c                                 convert a8 names to a14
       do i = 1, ivar
-         vname(i) = vnm(i)
-         call unblnk (vname(i))
+         colnam(i) = vnm(i)
+         call unblnk (colnam(i))
       end do
 c                                 output the dependent variable counter and list
       if (kcx(1).eq.999) then
 c                                  phemgp file
          write (n,*) ivar + iprop + 2
          write (n,'(200(a20,1x))') 'Name','Counter',
-     *                             (vname(i), i = 1, ivar),
+     *                             (colnam(i), i = 1, ivar),
      *                             (dname(i),i = 1, iprop)
 
       else
@@ -10396,7 +10574,7 @@ c                                  tab file
          if (lopt(15).or.nvar.eq.1) then
 c                                  with pseudo-dependent variables
             write (n,*) ivar + iprop
-            write (n,'(200(a14,1x))') (vname(i), i = 1,ivar),
+            write (n,'(200(a14,1x))') (colnam(i), i = 1,ivar),
      *                                (dname(i), i = 1,iprop)
 
 
@@ -10432,9 +10610,6 @@ c----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               first,kfl(i11),tname
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 c----------------------------------------------------------------------
 c                                 make plot file
       do i = 1, 1000
@@ -10490,9 +10665,6 @@ c----------------------------------------------------------------------
       integer i, ier, n
 
       character string*(*)
-
-      character*100 prject,tfname
-      common/ cst228 /prject,tfname
 c----------------------------------------------------------------------
 
       call mertxt (tfname,prject,string,0)
@@ -11101,17 +11273,6 @@ c----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      double precision mcomp
-      character mknam*8
-      integer nmak
-      logical mksat
-      common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
-
-      double precision mkcoef, mdqf
-      integer mknum, mkind, meos
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
-
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
@@ -11369,17 +11530,6 @@ c----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
-
-      double precision mcomp
-      character mknam*8
-      integer nmak
-      logical mksat
-      common / cst333 /mcomp(k16,k0),nmak,mksat(k16),mknam(k16,k17)
-
-      double precision mkcoef, mdqf
-      integer mknum, mkind, meos
-      common / cst334 /mkcoef(k16,k17),mdqf(k16,k17),mkind(k16,k17),
-     *                 mknum(k16),meos(k16)
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -13756,4 +13906,18 @@ c--------------------------------------------
          readyn = .true.
       end if
 
+      end
+
+      integer function nblen(str)
+c--------------------------------------------------------------- 
+c george's function for psgrid, 
+c replicates a function already in perple_x
+c nblen - function to return nonblank length of a string
+      character str*(*)
+      integer i
+
+      do i=len(str),1,-1
+         if (str(i:i) .ne. ' ') exit
+      end do
+      nblen = i
       end

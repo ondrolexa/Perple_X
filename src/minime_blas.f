@@ -394,7 +394,7 @@ c-----------------------------------------------------------------------
       ltot = lstot(rids)
       ttot = tstot(rids)
 
-      call chkpa (rids)
+c     call chkpa (rids)
 
       idif = 0
 
@@ -592,9 +592,11 @@ c                                 save the normalized g
       g2(idif) = g/rsum
 c                                 renormalize the bulk to a mole of solvent
 c                                 it's no longer clear to me why this is desireable.
-      c2tot(idif) = rsum/rsmo
-c                                 if it quacks like a duck...
-      quack(idif) = rkwak
+      if (rsmo.ne.0d0) then 
+         c2tot(idif) = rsum/rsmo
+      else 
+         call errdbg ('rsmo = 0 in savkwk')
+      end if
 c                                 save the endmember fractions
       zco(icoz(idif)+1:icoz(idif)+ltot) = pa(1:ltot)
 
@@ -1091,18 +1093,18 @@ c                                 convert the y's to x's
      *       'closure by ',f5.1,'%, the result',/,'will not be used t',
      *       'o compute compositional ranges, large violations may ind',
      *       'icate that',/,'the compositional polyhedron for the mode',
-     *       'l does not span all possible model compositions.',/)
+     *       'l does not span all possible model compositions.')
 1010  format (/,'**warning ver202** p2y inversion for ',a,' failed, ',
      *       'idead = ',i2,', the result',/,'will not be used t',
-     *       'o compute compositional ranges.',/)
+     *       'o compute compositional ranges.')
 1020  format (/,'**warning ver203** negative vertex fraction y(',i2,
      *       ') = ',g8.1,' for ',a,'.',/,'Large negative values may ',
      *       'indicate that the compositional polyhedron for the model',
      *     /,'does not span all possible model compositions.',/)
 1030  format ('y(',i2,') will be zeroed for computing compositional ',
-     *       'ranges.',/)
+     *       'ranges.')
 1040  format ('The composition will not be used to compute',
-     *       ' compositional ranges.',/)
+     *       ' compositional ranges.')
 
       end
 
