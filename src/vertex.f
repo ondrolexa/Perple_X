@@ -95,6 +95,9 @@ c                                    iam = 13 - unsplt (global)
 c                                    iam = 14 - unsplt (local)
 c                                    iam = 15 - convex
       iam = 1
+c                                 perplexwrap.f flags
+      getInput = .true.
+      sWarn = .false.
 c                                 initialization
       call iniprp
 c                                 start the total timer (30)
@@ -320,14 +323,8 @@ c-----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
-      character cname*5
-      common/ csta4 /cname(k5)
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      character*100 cfname
-      common/ cst227 /cfname
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -339,9 +336,6 @@ c-----------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
      *                usecmp, colcmp
-
-      double precision dcomp
-      common/ frct2 /dcomp(k5)
 
       integer is
       double precision a,b,c
@@ -356,12 +350,12 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      integer jlow,jlev,loopx,loopy,jinc1
-      common/ cst312 /jlow,jlev,loopx,loopy,jinc1
-
       integer fmode,ifrct,ifr
       logical gone
       common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
+
+      integer jlow,jlev,loopx,loopy,jinc1
+      common/ cst312 /jlow,jlev,loopx,loopy,jinc1
 c-----------------------------------------------------------------------
 
       iasct = 0
@@ -561,14 +555,8 @@ c-----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
-      character cname*5
-      common/ csta4 /cname(k5)
-
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      character*100 cfname
-      common/ cst227 /cfname
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -580,9 +568,6 @@ c-----------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
      *                usecmp, colcmp
-
-      double precision dcomp
-      common/ frct2 /dcomp(k5)
 
       integer is
       double precision a,b,c
@@ -698,9 +683,6 @@ c-----------------------------------------------------------------------
 
       external readyn
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
       double precision x, y
       common/ cxt46 /x, y
 
@@ -720,9 +702,6 @@ c-----------------------------------------------------------------------
       integer is
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
-
-      double precision dcomp
-      common/ frct2 /dcomp(k5)
 
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
@@ -755,9 +734,6 @@ c-----------------------------------------------------------------------
       common/ cst77 /prop(i11),prmx(i11),prmn(i11),
      *               kop(i11),kcx(i11),k2c(i11),iprop,
      *               tirst,kfl(i11),tname
-
-      character cname*5
-      common/ csta4  /cname(k5)
 
       integer jvar
       double precision var,dvr,vmn,vmx
@@ -2565,7 +2541,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      character string*(*), pname*14
+      character string*(*), char14*14
 
       integer i, ist, iend
 
@@ -2589,11 +2565,11 @@ c----------------------------------------------------------------------
 
       do i = 1, npt
 
-         call getnam (pname,jkp(jdv(i)))
+         call getnam (char14,jkp(jdv(i)))
 
          ist = iend + 1
          iend = ist + 14
-         read (pname,'(400a)') chars(ist:iend)
+         read (char14,'(400a)') chars(ist:iend)
 
          call ftext (ist,iend)
 
@@ -2778,7 +2754,7 @@ c                               increments at each level
 
       call setvar
 c                               init progress info
-      dinc = 1d2/real(loopx/kinc + 1)
+      dinc = 1d2/real((loopx-1)/kinc + 1)
       tot = 0d0
 
 c     if (lopt(28)) call begtim (11)
@@ -2790,11 +2766,13 @@ c                               do all points on lowest level
          end do
 c                               progress info
          tot = tot + dinc
-         write (*,1030) tot
+         write (*,1030) tot,char(13)
 c                               flush stdout for paralyzer
          flush (6)
 
       end do
+
+      write (*,1030)
 
 c     if (lopt(28)) call endtim (11,.true.,'low level grid')
 c                               output interim plt file
@@ -2984,8 +2962,8 @@ c                               output interim plt file
 c                                 ouput grid data
 10    if (outprt) call outgrd (loopx,loopy,1,n4,0)
 
-1030  format (f5.1,'% done with low level grid.')
-1050  format (/,'Beginning grid refinement stage.',/)
+1030  format (f5.1,'% done with low level grid.',a,$)
+1050  format (//,'Beginning grid refinement stage.',/)
 1060  format (i6,' grid cells to be refined at grid level ',i1)
 1070  format (7x,'refinement at level ',i1,' involved ',i6,
      *        ' minimizations')
@@ -3258,7 +3236,6 @@ c          ifrct - number of phases to be fractionated
 c          ifr(ifract) - 0 if cpd, else ikp (solution pointer)
 c          jfr(ifract) - cpd pointer
 c----------------------------------------------------------------------
-
       implicit none
  
       include 'perplex_parameters.h'
@@ -3396,9 +3373,11 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i
+      integer i, nblen
 
       character phase*10
+
+      external nblen
 c-----------------------------------------------------------------------
  
       tfname = '_'//phase//'.dat'
@@ -3407,7 +3386,7 @@ c-----------------------------------------------------------------------
 
       call mertxt (tfname,prject,tfname,0)
 
-      write (*,1010) phase, tfname
+      write (*,1010) phase(1:nblen(phase)), tfname(1:nblen(tfname))
 
       open (n0+i,file=tfname,status='unknown')
 
@@ -3431,25 +3410,16 @@ c-----------------------------------------------------------------------
       logical there(k23), warn, output, quit, liquid, verbos
 
       double precision mass(k23), tmass, x, errr(k5)
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
-      double precision dcomp
-      common/ frct2 /dcomp(k5)
-
-      integer fmode,ifrct,ifr
-      logical gone
-      common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
  
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
 
+      integer fmode,ifrct,ifr
+      logical gone
+      common/ frct1 /fmode,ifrct,ifr(k23),gone(k5)
+
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
-
-      character*5 cname
-      common/ csta4 /cname(k5)
 
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
@@ -3578,6 +3548,9 @@ c                                 do fractionation
 c                                 the phase to be fractionated
 c                                 is present, remove from bulk
                      there(i) = .true.
+c                                 simple back calculated speciation
+c                                 is being used for fractionation:
+                     if (lopt(67)) call aqrxdo (j,-1,.false.)
 
                      if (amt(j).lt.0d0) amt(j) = 0d0
 
@@ -3715,13 +3688,13 @@ c                                 warn on complete depletion of a component
 
       end 
 
-      character*22 function lgname (pname,ids)
+      character*22 function lgname (char14,ids)
 c----------------------------------------------------------------------
       implicit none
  
       include 'perplex_parameters.h'
 
-      character pname*14
+      character char14*(*)
 
       integer ids
 
@@ -3731,14 +3704,14 @@ c----------------------------------------------------------------------
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
 c----------------------------------------------------------------------
-      call getnam (pname,ids)
+      call getnam (char14,ids)
 
       if (ids.lt.0) then 
 
          if (ikp(-ids).gt.0) then 
             lgname = lname(ikp(-ids))
          else if (ids.gt.0) then 
-            lgname = pname
+            lgname = char14
          end if 
 
       else 

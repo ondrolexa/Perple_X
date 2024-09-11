@@ -29,9 +29,6 @@ c------------------------------------------------------------------------
 
       external gcpd, readyn
 
-      double precision props,psys,psys1,pgeo,pgeo1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
-
       integer ifct,idfl
       common/ cst208 /ifct,idfl
 
@@ -54,6 +51,9 @@ c------------------------------------------------------------------------
 c----------------------------------------------------------------------- 
 c                                 iam flag indicates the Perple_X program
       iam = 5
+c                                 perplexwrap.f flags
+      getInput = .true.
+      sWarn = .false.
 c                                 version info
       call vrsion (6)
 c                                 assign data files
@@ -1152,9 +1152,6 @@ c---------------------------------------------------------------------
       double precision tm,td
       common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
 
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       integer idf
       double precision act
       common/ cst205 /act(k7),idf(3)
@@ -1483,7 +1480,7 @@ c                                 b1-b12
 c                                 b13 on return
      *            thermo(23,id),
 c                                 ref stuff
-     *            tr,pr,r,0)
+     *            tr,0)
 
                   exit 
 
@@ -1783,9 +1780,6 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
-
       character*8 name
       common/ csta6 /name
 
@@ -1820,17 +1814,8 @@ c----------------------------------------------------------------------
       character tname
       common/ csta10 /tname(2)
 
-      double precision props,psys,psys1,pgeo,pgeo1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -2255,9 +2240,6 @@ c----------------------------------------------------------------------
 
       logical sick(i8), ssick, ppois, bulkg, bsick
 
-      double precision props,psys,psys1,pgeo,pgeo1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
-
       integer icomp,istct,iphct,icp
       common/ cst6 /icomp,istct,iphct,icp
 
@@ -2312,10 +2294,7 @@ c----------------------------------------------------------------------
 
       double precision lgk
 
-      logical table 
-
-      double precision props,psys,psys1,pgeo,pgeo1
-      common/ cxt22 /props(i8,k5),psys(i8),psys1(i8),pgeo(i8),pgeo1(i8)
+      logical table
 
       double precision v,tr,pr,r,ps
       common/ cst5 /v(l2),tr,pr,r,ps

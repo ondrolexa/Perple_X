@@ -17,9 +17,9 @@ c Please do not distribute any part of this source.
 
       logical readyn
 
-      integer ier
+      integer ier, nblen
 
-      external readyn
+      external readyn, nblen
 
       integer iphct
       common/ ln4 /iphct
@@ -29,6 +29,9 @@ c Please do not distribute any part of this source.
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 8
+c                                 perplexwrap.f flags
+      getInput = .true.
+      sWarn = .false.
 c                                 version info
       call vrsion (6)
 c                                 default no modification prompts
@@ -46,7 +49,7 @@ c                                 get input file
 
          if (ier.ne.0) then
        
-            write (*,1010) tfname
+            write (*,1010) tfname(1:nblen(tfname))
 
             if (readyn()) cycle 
 

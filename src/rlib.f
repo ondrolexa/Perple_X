@@ -176,7 +176,8 @@ c---------------------------------------------------------------------
 
       logical proj
 
-      double precision ialpha, vt, trv, pth, vdp, vdpbm3, gsixtr,
+      double precision ialpha, vt, trv, pth, vdp, vdpbm3, vdpbmt,
+     *                 gsixtr,
      *                 gstxgi, fs2, fo2, kt, gval, gmake, gkomab, kp,
      *                 a, b, c, gstxlq, glacaz, v1, v2, gmet, gmet2,
      *                 gterm2, km, kmk, lnfpur, gaq, ghkf, lamla2
@@ -206,12 +207,6 @@ c---------------------------------------------------------------------
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
-      double precision vnumu
-      common/ cst44 /vnumu(i6,k10)
-
-      double precision mmu
-      common/ cst39 /mmu(i6)
-
       save kt,trv,iwarn,oldid
       data kt,trv,iwarn,oldid/0d0,1673.15d0,0,0/
 c---------------------------------------------------------------------
@@ -230,28 +225,8 @@ c                                 sixtrude 05 JGR EoS
       else if (eos(id).eq.6) then
 c                                 stixrude JGI '05 Eos
          gval = gstxgi (id)
-c                                 landau O/D
-         if (ltyp(id).eq.4) then 
-c                                 in the 2011 data this is only qtz, 
-c                                 but neglects the effect of the clapeyron 
-c                                 slope on the transition T. This gives 
-c                                 nonsensical results if extrapolated to high
-c                                 pressure, therefore the transition effect
-c                                 was commented out Feb 9, 2022. Apparently
-c                                 the effect was not accounted for from the 
-c                                 initial implementation in perple_X and was
-c                                 added April 3, 2021.
-c           call lamla4 (dg,lmda(id))
-c           gval = gval + dg
-
-         else if (ltyp(id).eq.7) then 
-c                                 in the 2021 relative to the low T phase,
-c                                 used pointlessly for magnetic entropy of
-c                                 almost all Fe-bearing endmembers. 
-            gval = gval + lamla2(lmda(id))
-
-         end if
-
+c                                 check for transitions and Landau O/D:
+         if (ltyp(id).ne.0) call mtrans (gval,vdp,id)
          goto 999
 
       else if (eos(id).eq.11) then
@@ -487,6 +462,12 @@ c                                 temperature
 c                                 destabilize the phase
             vdp = thermo(3,id)**2*p
 
+         else if (lopt(68)) then
+c                                 finite strain alpha handling
+            vdp = vdpbmt (
+     *         thermo(3,id),ialpha,thermo(16,id),thermo(18,id)
+     *      )
+
          else
 
             vdp = vdpbm3 (vt,kt,thermo(18,id))
@@ -547,10 +528,10 @@ c                                 real O fluid (O and O2 species)
 c                                 this is -RT(lnk2+lnk3)/2 (rksi5 k's)
 c    *         -0.3213822427D7 / t + 0.6464888248D6 - 0.1403012026D3*t
 
-         else if (eos(id).ge.610.and.eos(id).le.637) then
+         else if (eos(id).ge.610.and.eos(id).le.654) then
 c                                 lacaze & Sundman (1990) EoS for Fe-Si-C alloys and compounds
 c                                 Xiong et al., 2011 for Fe-Cr alloys
-            gval = gval + glacaz(eos(id)) + vdp + thermo(1,id)
+            gval = gval + glacaz(eos(id))
 
 c        else if (eos(id).eq.800) then
 
@@ -566,6 +547,12 @@ c              write (*,'(a,g14.6)') 'from interpolator, v = ',vt
 c              write (*,'(a,g14.6)') 'from interpolator, g = ',a
 c              write (*,'(a,g14.6)') 'from interpolator, g = ',b
 c           end if
+
+         else
+
+            write (*,'(a,1x,i3)')
+     *         'what the **** am i doing here in gcpd for EOS',eos(id)
+            call errpau
 
          end if
 
@@ -666,9 +653,6 @@ c---------------------------------------------------------------------
 
       double precision z(14),smax,t0,qr2,vmax,dt,g1,g2
 
-      double precision therdi, therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
@@ -728,9 +712,6 @@ c---------------------------------------------------------------------
       double precision delta
       common/ cst325 /delta(11)
 
-      double precision vnumu
-      common/ cst44 /vnumu(i6,k10)
-
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
 
@@ -740,18 +721,9 @@ c---------------------------------------------------------------------
       integer iam
       common/ cst4 /iam
 
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
-
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
 c---------------------------------------------------------------------
 
       if (id+1.gt.k10) call error (1,0d0,id+1,'k10')
@@ -941,7 +913,7 @@ c                               b1-b12
 c                               b13 on return
      *             thermo(23,id),
 c                               ref stuff
-     *             tr,pr,r,eos(id))
+     *             tr,eos(id))
 
       if (tr.eq.0d0) then
          thermo(1,id) = thermo(1,k10)
@@ -977,29 +949,25 @@ c                                 f
 c                                 holland and powell, landau model:
 c                                 4 - relative to the high T phase
 c                                 7 - relative to the low T phase (stixrude 2021).
-            do j = 1, ilam
+            smax = tm(2,1)
+            t0 = tm(1,1)
+            vmax = tm(3,1)
 
-               smax = tm(2,j)
-               t0 = tm(1,j)
-               vmax = tm(3,j)
-
-               therlm(1,j,lamin) = t0
-               therlm(2,j,lamin) = smax
+            therlm(1,1,lamin) = t0
+            therlm(2,1,lamin) = smax
 c                                 this makes therlm(3) dt/dp
-               therlm(3,j,lamin) = vmax/smax
+            therlm(3,1,lamin) = vmax/smax
 
-               if (jlam.eq.4) then 
-                  qr2 = dsqrt (1d0 - tr/t0)
+            if (jlam.eq.4) then 
+               qr2 = dsqrt (1d0 - tr/t0)
 c                                 PX ds5 landau
-                  therlm(4,j,lamin) = (2d0*t0 + tr)*qr2/3d0
+               therlm(4,1,lamin) = (2d0*t0 + tr)*qr2/3d0
 c                                 TC ds6 landau
-                  therlm(7,j,lamin) = t0*(qr2 - qr2**3/3d0)
-                  therlm(8,j,lamin) = qr2
+               therlm(7,1,lamin) = t0*(qr2 - qr2**3/3d0)
+               therlm(8,1,lamin) = qr2
 c                                 Vdp coefficient
-                  therlm(6,j,lamin) = vmax*qr2/thermo(3,k10)
-               end if
-
-            end do
+               therlm(6,1,lamin) = vmax*qr2/thermo(3,k10)
+            end if
 
          else if (jlam.eq.1) then
 c                              ubc:
@@ -1012,8 +980,8 @@ c                              ubc:
                do k = 3, 8
                   therlm(k,j,lamin)=tm(k,j)
                end do
-            end do
 
+            end do
 
          else if (jlam.eq.2.or.jlam.eq.3) then
 c                              helgeson:
@@ -1075,7 +1043,7 @@ c                                 dummies (b1-b12)
      *                     z(14),z(2),z(3),z(4),z(5),z(6),z(7),z(8),
      *                     z(9),z(10),z(11),z(12),z(13),
 c                                 ref stuff
-     *                     tm(1,k),pr,r,0)
+     *                     tm(1,k),0)
 
             end do
 
@@ -1104,12 +1072,30 @@ c                              JADC, 12/3/2017.
 
            end do
 
+        else if (jlam.eq.8) then
+c                              magnetic transitions a la Hillert & Jarl (1978)
+c                              load into therlm: Tc, B, p
+              therlm(1,1,lamin) = thermo(25,id)
+              therlm(2,1,lamin) = thermo(26,id)
+              therlm(3,1,lamin) = thermo(27,id)
+
+        else if (jlam.eq.9) then
+c                              magnetic transitions a la Hillert & Jarl (1978)
+c                              + Stixrude & L-B, 2024, load into therlm: Tc, S_D, p
+              therlm(1,1,lamin) = tm(1,1)
+              therlm(2,1,lamin) = tm(2,1)
+              therlm(3,1,lamin) = tm(3,1)
+
          else
 
-            write (*,*) 'no such transition model'
-            call errpau
+            call errdbg ('no such transition model, reading '//name)
 
          end if
+
+         if ((jlam.eq.4.or.jlam.eq.5.or.jlam.eq.7.or.jlam.eq.8
+     *       .or.jlam.eq.9).and.ilam.gt.1) call errdbg (
+     *            'only 1 transition of the specified type allowed for '
+     *             //name)
 
          lmda(id) = lamin
          lct(id)  = ilam
@@ -1508,9 +1494,6 @@ c---------------------------------------------------------------------
 
       external gcpd
 
-      double precision therdi, therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
@@ -1681,12 +1664,6 @@ c-----------------------------------------------------------------------
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
-
-      integer imaf,idaf
-      common/ cst33 /imaf(i6),idaf(i6)
-
-      double precision mmu
-      common/ cst39 /mmu(i6)
 c----------------------------------------------------------------------
       do i = 1, jmct
 
@@ -1711,7 +1688,8 @@ c                                 activity
 
                end if
 
-               mmu(i) = gref + r*v(2)*v(3+i)*2.302585093d0
+               mmu(i) =  (gref + r*v(2)*v(3+i)*2.302585093d0) /
+     *                   vnumu(i,idaf(i))
 
              end if
 
@@ -3316,7 +3294,8 @@ c-----------------------------------------------------------------------
      *           plg, c1, c2, c3, f1, aiikk, aiikk2, nr9t,
      *           root, aii, etas, a, ethv, gamma, da, nr9t0,
      *           fpoly, fpoly0, letht, letht0, z, aii2,
-     *           v23, t1, t2, a2f
+     *           v23, t1, t2, a2f, beta, gammel, delt2,
+     *           fel, dfel, d2fel
 
       double precision nr9, d2f, tht, tht0, etht, etht0, df1,
      *                 dtht, dtht0, d2tht, d2tht0,
@@ -3345,6 +3324,8 @@ c                                 assign local variables:
       aiikk2 = thermo(18,id)
       aii2   = thermo(19,id)
       nr9t0  = thermo(20,id)
+      beta   = thermo(23,id)
+      gammel = thermo(24,id)
 
       t1     = thermo(6,id)/t
       t2     = t/tr
@@ -3359,6 +3340,7 @@ c                                 constant.
       gamma0 = thermo(7,id)
       k00    = thermo(4,id)
       k0p    = thermo(5,id)
+      delt2  = t**2 - tr**2
 
       dfth   = nr9t*gamma0/v0*(3d0*plg(tht)/tht**3
      *         - dlog(1d0-exp(-tht)))
@@ -3391,6 +3373,10 @@ c                                 f, and derivatives
 c                                 cold part derivatives
          dfc = (c3*f+c1)*f*df
          d2fc = (2d0*c3*f+c1)*df**2+(c3*f+c1)*f*d2f
+c                                 electric part derivatives F_el(T) - F_el(Tr)
+         fel = -beta/2d0 * (v/v0)**gammel * delt2
+         dfel = fel*gammel/v
+         d2fel = dfel*(gammel - 1d0)/v
 c                                 debye T/T (tht)
          z  = 1d0+(aii+aiikk2*f)*f
 
@@ -3433,9 +3419,9 @@ c                                 thermal part derivatives:
          d2fth0 = ((4d0*dtht0**2/tht0-d2tht0)*(fpoly0-letht0)
      *          + dtht0**2*etht0/(1d0-etht0))*nr9t0/tht0
 
-         f1  = -dfc - dfth + dfth0 - p
+         f1  = -dfc - dfth + dfth0 - dfel - p
 
-         df1 = -d2fc - d2fth + d2fth0
+         df1 = -d2fc - d2fth + d2fth0 - d2fel 
 
          dv = f1/df1
 
@@ -3489,9 +3475,10 @@ c                                 helmoltz energy:
 c                                 final estimate for tht
       tht   = t1*root
       tht0  = tht*t2
-c                                 helmholtz enery
+c                                 helmholtz energy
       a = thermo(1,id) + c1*f**2*(0.5d0 + c2*f)
      *    + nr9*(t/tht**3*plg(tht ) -tr/tht0**3*plg(tht0))
+     *    - beta/2d0*(v/v0)**gammel * delt2
 
       gstxgi = a + p*v - t*thermo(10,id)
 c                                 z = (theta/theta0)^2
@@ -3546,6 +3533,106 @@ c                                 45/Pi
       end do
 
 c     call endtim (3,.false.,'plg')
+      end
+
+      double precision function vdpbmt (v0,ai,k,kprime)
+c-----------------------------------------------------------------------
+c vdpbmt computes the vdp integral of a compound identified by id
+c that is described by Birch-Murnaghan 3rd order EoS, but with the
+c modification that the thermal expansivity will not become negative.
+c this is accomplished by avoiding a model for K(T) [bulk modulus behavior
+c with changing temperature].
+c    v0 - is the volume at Pr & Tr
+c    ai - is the integral(alpha(T),Tr..T)
+c    k  - is the bulk modulus at Pr & Tr
+c    kprime - is -K' at Pr and Tr
+c-----------------------------------------------------------------------
+      implicit none
+
+      include 'perplex_parameters.h'
+
+      integer itic, jerk
+
+      double precision k, kt, v0, vt, vpt, ai, rat, rat2, c0, c1, c2,
+     *                 c3, c4, c5, a0, a1, v, df, f, ft, af, dv, kprime
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      double precision units, r13, r23, r43, r59, zero, one, r1
+      common/ cst59 /units, r13, r23, r43, r59, zero, one, r1
+
+      save jerk
+      data jerk /0/
+c----------------------------------------------------------------------
+c                                 constants:
+      a0 = 0.375d0 * v0 * k
+      a1 = -0.125d0 * v0**2 * k
+      c0 = (-28d0 -6d0 * kprime) * v0 * a0
+      c1 = (12d0 + 3d0 * kprime) * v0**2 * a0
+      c2 = (16d0 + 3d0 * kprime) * a0
+      c3 = a1 * v0 * (-196d0 - 42d0 * kprime)
+      c4 = a1 * (80d0 + 15d0 * kprime)
+      c5 = a1 * v0 * (108d0 + 27d0 * kprime)
+c                                 use murnaghan guess for volume. GH, 6/23/16
+c                                 initial guess for volume:
+      dv = 1d0
+      v = v0 * (1d0 - kprime*p/k)**(dv/kprime)
+      itic = 0
+
+      do while (dabs(dv/(1d0+v)).gt.nopt(51))
+
+         itic = itic + 1
+         rat = (v0/v)**r13
+         rat2 = rat**2
+         f = p  + ((c0*v*rat+c1+c2*v**2*rat2)/v**3)
+         df = (c3/rat2+c4*v/rat+c5)/v**4
+         dv = f/df
+         v = v - dv
+
+         if (v.le.0d0.or.v.gt.1d6.or.itic.gt.20) then
+
+            if (jerk.lt.iopt(1)) then
+
+               jerk = jerk + 1
+               write (*,1000) t,p
+
+               if (jerk.eq.iopt(1)) call warn (49,r,369,'VDPBMT')
+
+            end if
+
+            vdpbmt = 1d2*p
+
+            return
+
+         end if
+
+      end do
+c                                 finite strain parameter to calculate decrease
+c                                 of alpha with p; see Helffrich (2017) AM 102
+c                                 1690-1695; based on Murnaghan EOS, which might
+c                                 be questionable.
+      f = 0.5d0*((v0/v)**r23-1d0)
+      af = (1d0 + 2d0*f)**(-2.5d0) * 
+     *     (1d0 + 1d0/(1d0 + 2d0*f)**2) * 0.5d0
+c                                 V(p,t)
+      vpt = v*exp(af*ai)
+c                                 V(0,t)
+      vt = v0*exp(ai)
+c                                 effective f from V(P=0,T) to V(P,T)
+      ft = ((vt/vpt)**r23-1d0) * 0.5d0
+      kt = (p-pr) /
+     *   (3d0*ft*(1d0 + 2d0*ft)**2.5d0 * (1d0-ft*3d0*(4d0+kprime)/4d0))
+c                                 and the vdp integral is:
+c                                 checked in BM3_integration.mws
+      vdpbmt = p*vpt - vt*(pr-4.5d0*kt*ft**2*(1d0-ft*(4d0+kprime)))
+
+1000  format (/,'**warning ver369** failed to converge at T= ',f8.2,' K'
+     *       ,' P=',f9.1,' bar',/,'Using Birch-Murnaghan ',
+     *        'EoS, probably for Ghiorso et al. MELTS/PMELTS endmember',
+     *        ' data.',/,
+     *        'The affected phase will be destabilized.',/)
+
       end
 
       double precision function vdpbm3 (vt,k,kprime)
@@ -3719,9 +3806,6 @@ c----------------------------------------------------------------------
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
-
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
 
       integer ifct,idfl
       common/ cst208 /ifct,idfl
@@ -4668,8 +4752,6 @@ c---------------------------------------------------------------------
       integer ixct,ifact
       common/ cst37 /ixct,ifact
 
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -6436,10 +6518,6 @@ c---------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 c                                 working arrays
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
@@ -6452,10 +6530,10 @@ c----------------------------------------------------------------------
 c                                 redlich kistler is a special case
 c                                     wk(1) = w0 cst
 c                                     wk(2) = wT coefficient on T
-c                                     wk(3) = wP some term in brosh's murnaghan-like excess term
+c                                     wk(3) = wP0 some term in brosh's murnaghan-like excess term
 c                                     wk(4) = wP1 some term in brosh's murnaghan-like excess term
 c                                     wk(5) = wP2 some term in brosh's murnaghan-like excess term
-c                                     wk(6) = wP0 coefficient on P
+c                                     wk(6) = wP coefficient on P
          do i = 1, jterm(id)
             do j = 1, rko(i,id)
 
@@ -6546,10 +6624,6 @@ c------------------------------------------------------------------------
       double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -6688,10 +6762,6 @@ c                                 GLOBAL SOLUTION PARAMETERS:
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -7080,7 +7150,7 @@ c                                 arbitrary expansion
             end do
 
          else
-c                                 redlich-kistler
+c                                 redlich-kister
             do k = 1, rkord(i)
                do j = 1, m16
                   wkl(j,k,i,im) = wk(j,k,i)
@@ -7841,10 +7911,6 @@ c                                 working arrays
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 
       double precision p,tk,xc,u1,u2,tr,pr,r,ps
       common/ cst5 /p,tk,xc,u1,u2,tr,pr,r,ps
@@ -9098,10 +9164,6 @@ c                                 working arrays
 
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 
       double precision enth
       common/ cxt35 /enth(j3)
@@ -9603,7 +9665,7 @@ c                                 vertex/meemum need static pseudocompounds
             do i = 1, kstot
 
                id = kdsol(knsp(i,im))
-               if (iend(knsp(i,im)).eq.0) ikp(id) = im
+               if (iend(iorig(knsp(i,im))).eq.0) ikp(id) = im
 
             end do
 
@@ -9641,23 +9703,25 @@ c                                 indicate site_check_override and refine endmem
             end if
 
          end if
-c                               read next solution
+c                                 read next solution
       end do
-c                               make lists of found/not-found solutions
+c                                 make lists of found/not-found solutions
       infnd = 0
       ifnd = 0
-
+c                                 check if fname was included:
       do i = 1, isoct
 
          ok = .false.
-c                                 check if fname was included:
+
          do j = 1, im
+
             if (fname(i).eq.sname(j)) then 
                ok = .true.
                ifnd = ifnd + 1
                solptr(ifnd) = j
                exit
             end if
+
          end do
 
          if (ok) cycle
@@ -9862,10 +9926,6 @@ c--------------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -10122,7 +10182,7 @@ c                                 like LAAR
                      end if
 
                      exces(l,iphct) = exces(l,iphct)
-     *                                + zpr * wkl(l,j,i,im)
+     *                                + zpr * wkl(h,j,i,im)
 
                   end do
 
@@ -10675,7 +10735,10 @@ c---------------------------------------------------------------------
 
       integer id
 
-      double precision hserfe, hsersi, crbcc, hserc, fefcc
+      double precision hserfe, hsersi, crbcc, hserc, fefcc, febcc
+      double precision hserh2, gtmp
+
+      external hserh2, hsersi, crbcc, hserc, fefcc, febcc
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -10879,6 +10942,94 @@ c                                 Fe7C3 after Djurkovic et al., 2011
      *            0.2975999679D3 * t * dlog(t) - 0.3148668241D-3 *
      *            t ** 2 + 0.1708400854D7 / t - 0.1762000881D9 /
      *            t ** 2 + 0.8000004D10 / t ** 3
+
+      else if (id.eq.643) then
+c                            Fe-hcp Dinsdale 1991
+         if (t.lt.1811d0) then
+            glacaz = -2480.08d0 + 136.725d0*t - 24.6643d0*t*dlog(t)
+     *          - .00375752d0*t**2 - 5.89269d-8*t**3 + 77358.5d0/t
+         else
+            glacaz = -29340.78d0 + 304.56206d0*t - 46d0*t*dlog(t)
+     *          + 2.78854d31/t**9
+         end if
+
+      else if (id.eq.648) then
+c                            FCC FeH Helffrich '21
+         if (t.lt.1811d0) then
+            gtmp = -1462.4d0 + 8.282d0*t - 1.15d0*t*dlog(t)
+     *           + 6.4d-4*t**2
+         else
+            gtmp = -1713.815d0 + 0.94001d0*t + 4.9251d30/t**9
+         end if
+         glacaz = gtmp + febcc(t) + 0.5d0*hserh2(t)
+     *     + 25746.7209d0 + 48.1250165d0*t
+c    *     + 32171.069d0 + 43.509d0*t
+c    *     - 10556.19d0 + 29.42d0*t
+
+      else if (id.eq.649) then
+c                            liquid FeH(1) Helffrich '21
+         if (t.lt.1811d0) then
+            gtmp = 12040.17d0 - 6.55843d0 * t - 3.67516d-21 * t**7
+     *               + febcc(t)
+         else
+            gtmp = -10838.83d0 + 291.302d0 * t - 46d0 * t*dlog(t)
+         end if
+         glacaz = gtmp + 0.5d0*hserh2(t) + 28172.583d0 + 40.004166d0*t
+
+      else if (id.eq.650) then
+c                            BCC FeH Helffrich '21
+         if (t.lt.1811d0) then
+            glacaz = febcc(t) + 0.5d0*hserh2(t)
+c    *       + 71098.3995d0 - 986.034062d0*t + 155.942278d0*t*dlog(t)
+c    *       - 0.0894166963d0*t**2
+     *       + 48986.67d0 - 183.6735d0*t + 33.3078d0*t*log(t)
+     *       - 0.01682617*t**2
+         else
+c           glacaz = 80393.95d0 + 16.72144d0*t
+            glacaz = 112509.5112d0 + 32.8105280102615d0*t
+         end if
+
+      else if (id.eq.651) then
+c                            HCP FeH Helffrich '21
+         if (t.lt.1811d0) then
+            gtmp = -3705.78d0 + 12.591d0*t - 1.15d0*t*dlog(t)
+     *       + 6.4d-4*t**2
+         else
+            gtmp = -3957.199d0 + 5.24951d0*t + 4.9251d30/t**9
+         end if
+         glacaz = gtmp + febcc(t) + 0.5d0*hserh2(t)
+c        Zinkevich'02 original
+c    *      + 34000d0 + 42.7d0*t
+c        antonov.R fit
+c    *      + 17269d0 + 61.28d0*t
+c        guess S similar to FCC FeHx
+     *      - 10000d0 + 88.0d0*t
+
+      else if (id.eq.653) then
+c                            HCP Fe for use with HCP FeH Helffrich '23
+         if (t.lt.1811d0) then
+            gtmp = -3705.78d0 + 12.591d0*t - 1.15d0*t*log(t)
+     *           + 6.4d-4*t**2
+         else
+            gtmp = -3957.199d0 + 5.24951d0*t + 4.9251d30/t**9
+         end if
+         glacaz = gtmp + febcc(t)
+
+      else if (id.eq.654) then
+c                            FCC Fe for use with FCC FeH Helffrich '23
+         if (t.lt.1811d0) then
+            gtmp = -1462.4d0 + 8.282d0*t - 1.15d0*t*log(t)
+     *           + 6.4d-4*t**2
+         else
+            gtmp = -1713.815d0 + 0.94001d0*t + 4.9251d30/t**9
+         end if
+         glacaz = gtmp + febcc(t)
+
+      else
+
+         write (*,'(a,1x,i3)')
+     *      'what the **** am i doing here in glacaz for EOS',id
+         call errpau
 
       end if
 
@@ -11419,9 +11570,6 @@ c-----------------------------------------------------------------------
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision fwt
-      common/ cst338 /fwt(k10)
-
       integer jnd
       double precision aqg,q2,rt
       common/ cxt2 /aqg(m4),q2(m4),rt,jnd(m4)
@@ -11595,9 +11743,6 @@ c-----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
 
       integer jnd
       double precision aqg,q2,rt
@@ -11808,7 +11953,7 @@ c-----------------------------------------------------------------------
 
       end
 
-      subroutine aqrxdo (jd,lu)
+      subroutine aqrxdo (jd,lu,xin)
 c-----------------------------------------------------------------------
 c given chemical potentials solve for rock dominated aqueous speciation
 
@@ -11822,7 +11967,7 @@ c-----------------------------------------------------------------------
 
       integer i, j, k, l, ind(l9), lu, jd, badct
 
-      logical bad, output
+      logical bad, output, xin
 
       character text*200
 
@@ -11842,9 +11987,6 @@ c-----------------------------------------------------------------------
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      character cname*5
-      common/ csta4  /cname(k5)
-
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
@@ -11855,12 +11997,6 @@ c-----------------------------------------------------------------------
 
       double precision cp
       common/ cst12 /cp(k5,k10)
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
@@ -11903,6 +12039,13 @@ c-----------------------------------------------------------------------
       double precision x3, caq
       common/ cxt16 /x3(k5,h4,mst,msp),caq(k5,l10),na1,na2,na3,nat,kd
 
+      integer kkp,np,ncpd,ntot
+      double precision cp3,amt
+      common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+
+      integer iam
+      common/ cst4 /iam
+
       save badct
       data badct/0/
 c----------------------------------------------------------------------
@@ -11926,6 +12069,12 @@ c                                 solvent mole fractions to the true
 c                                 values
             ysp(i,jd) = caq(jd,i)
 
+         end do
+
+      else if (iam.eq.1) then 
+c                                 fractionation with simple back-calc
+         do i = 1, ns
+            ysp(i,jd) = pa3(jd,i)
          end do
 
       end if
@@ -11958,6 +12107,38 @@ c                                 back calculated bulk composition
          return
 
       end if
+
+      if (iam.eq.1.or.xin) then
+c                                 XIN is a flag that can be set by MEEMUM for fractionation
+c                                 of simple back-calculated fluid, the consequences are 
+c                                 the same as if AQRXDO is called by VERTEX from routine
+c                                 FRACTR and options must be set accordingly. Currently there
+c                                 is no instance of a call to AQRXDO with XIN = .true. within
+c                                 Perple_X.
+         
+c                                 aqrxdo is being called by VERTEX this is only done
+c                                 for fractionation calculations when lagged speciation is
+c                                 off. In this case AQRXDO computes a 
+c                                 pseudo composition by simple back-calculation
+c                                 to be fractionated. The resulting calculations
+c                                 will not conserve mass, additionally all other
+c                                 phase properties will be those of the pure solvent.
+
+c                                 want molar composition in units of moles/mol-solvent-species
+c                                 cp3(j,jd) is already loaded with solvent composition
+c                                 msol is the mass of 1 mole of pure solvent computed 
+c                                 by slvnt3, ergo
+         do i = 1, aqct
+c                                 total solute molality
+            do j = 1, kbulk
+               cp3(j,jd) = cp3(j,jd) + msol*mo(i)*aqcp(j,i)
+            end do
+
+         end do
+
+         return
+
+      end if
 c                                 compute charge balance error
       err = 0d0
 
@@ -11966,12 +12147,10 @@ c                                 compute charge balance error
       end do
 c                                 neutral pH
       ph0 = -lnkw/2d0/2.302585d0
-
-      do i = 1, kbulk
-         blk(i) = 0d0
-      end do
 c                                 total molality
       smot = 0d0
+
+      blk(1:kbulk) = 0d0
 c                                 compute mole fractions, total moles first
       do i = 1, ns
 c                                 moles/kg-solvent
@@ -12541,7 +12720,7 @@ c                                 no solution model found:
 c                                 turn off lagged speciation just to be sure
          lopt(32) = .false.
 
-        if (.not.lopt(25)) aqct = 0
+         if (.not.lopt(25)) aqct = 0
 
 c                                 else look for H2O
          do i = 1, ipoint
@@ -12574,6 +12753,28 @@ c                                refine_endmembers to true.
          end if 
 
       end if
+
+      if (lopt(67).and.icopt.gt.6) then
+
+         if (aqct.eq.0) then
+            lopt(25) = .false.
+            lopt(67) = .false.
+         end if
+c                                aq_fractionation_simpl is T, then for 
+c                                fractionation calculations shut off 
+c                                lagged speciation
+         if (lagged.and.lopt(67)) then
+
+            call warn (99,0d0,0,'aq_lagged_speciation is inconsistent w'
+     *            //'ith aq_fractionation_simpl and will be disabled'//
+     *              ' (AQIDST)')
+
+            if (lopt(56)) call wrnstp
+
+         end if
+
+      end if
+
 c                                open a bad point file for lagged and
 c                                back-calculated speciation calculations
       if (lagged.and.iam.le.2) then
@@ -12685,18 +12886,12 @@ c-----------------------------------------------------------------------
       integer iasmbl
       common/ cst27  /iasmbl(j9)
 
-      character cname*5
-      common/ csta4  /cname(k5)
-
       integer cl
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
       integer ixct,ifact
       common/ cst37 /ixct,ifact
-
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
 
       double precision cp
       common/ cst12 /cp(k5,k10)
@@ -13250,9 +13445,6 @@ c                                 working arrays
       double precision p,t,xco2,mu1,mu2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,mu1,mu2,tr,pr,r,ps
 
-      double precision mmu
-      common/ cst39 /mmu(i6)
-
       logical mus
       double precision mu
       common/ cst330 /mu(k8),mus
@@ -13606,12 +13798,6 @@ c----------------------------------------------------------------------
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
-      double precision mmu
-      common/ cst39 /mmu(i6)
-
-      double precision vnumu
-      common/ cst44 /vnumu(i6,k10)
-
       integer eos
       common/ cst303 /eos(k10)
 
@@ -13653,9 +13839,6 @@ c---------------------------------------------------------------------
       integer ld
 
       double precision dg,h,w
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -14314,9 +14497,6 @@ c                                 adaptive coordinates
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
 
-      character cname*5
-      common/ csta4  /cname(k5)
-
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
@@ -14327,12 +14507,6 @@ c                                 adaptive coordinates
 
       double precision cp
       common/ cst12 /cp(k5,k10)
-
-      double precision fwt
-      common/ cst338 /fwt(k10)
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
@@ -14367,8 +14541,8 @@ c                                 adaptive coordinates
       common/ cxt7 /y(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
 
-      double precision p,t,xco2,mmu,tr,pr,r,ps
-      common/ cst5 /p,t,xco2,mmu(2),tr,pr,r,ps
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -15923,10 +16097,6 @@ c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -16337,10 +16507,6 @@ c                                 working arrays
       double precision zz, pa, p0a, x, w, y, wl, pp
       common/ cxt7 /y(m4),zz(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-c                                 excess energy variables
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
@@ -18512,9 +18678,6 @@ c----------------------------------------------------------------------
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp  
 
-      character cname*5
-      common/ csta4 /cname(k5)
-
       character name*8
       common/ csta6 /name
 
@@ -18542,9 +18705,6 @@ c----------------------------------------------------------------------
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
-      double precision atwt
-      common/ cst45 /atwt(k0) 
-
       integer ixct,ifact
       common/ cst37 /ixct,ifact 
 
@@ -18552,17 +18712,11 @@ c----------------------------------------------------------------------
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
 
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
-
       integer ipoint,kphct,imyn
       common/ cst60 /ipoint,kphct,imyn
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
-
-      integer imaf,idaf
-      common/ cst33 /imaf(i6),idaf(i6)
 
       integer eos
       common/ cst303 /eos(k10)
@@ -18570,18 +18724,12 @@ c----------------------------------------------------------------------
       integer ikp
       common/ cst61 /ikp(k1)
 
-      double precision vnumu
-      common/ cst44 /vnumu(i6,k10)
-
       integer iam
       common/ cst4 /iam
 
       integer ihy, ioh
       double precision gf, epsln, epsln0, adh, msol
       common/ cxt37 /gf, epsln, epsln0, adh, msol, ihy, ioh
-
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
 c                               initialization for each data set
 c                               for k10 endmembers
@@ -18609,13 +18757,14 @@ c                               transformations, read make definitions.
       call topn2 (0)
 c                               general input data for main program
 
-c                               reorder thermodynamic components
-c                               if the saturated phase components are 
-c                               present
+c                               reorder thermodynamic components if 
+c                               they include special components, this 
+c                               is archaic
       if (lopt(7)) then
 
          do k = 1, ispec 
-                             
+c                               check for special components in the the
+c                               thermodynamic composition space.
             do i = 1, icp
 
                if (cname(i).eq.cmpnt(idspe(k))) then 
@@ -19556,11 +19705,13 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, j, k, jst, irep, kd, jend, ier, iend
+      integer i, j, k, jst, irep, kd, jend, ier, iend, nblen
 
       logical kount, err
 
       character text*(lchar)
+
+      external nblen
 
       integer iam
       common/ cst4 /iam
@@ -19573,9 +19724,6 @@ c----------------------------------------------------------------------
 
       double precision vip
       common/ cst28 /vip(l2,k2)
-
-      character*100 cfname
-      common/ cst227 /cfname
 
       logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
@@ -19597,10 +19745,10 @@ c                                 open assemblage list for PSSECT
          open (n8, file = tfname, status = 'unknown', iostat = ier)
 
          write (*,'(a,a)') 'Assemblage list will be written to file: ',
-     *                     tfname
+     *                     tfname(1:nblen(tfname))
 
          if (ier.ne.0) then 
-            write (*,*) 'error cannot open: ',tfname
+            write (*,*) 'error cannot open: ',tfname(1:nblen(tfname))
             write (*,*) 'file is probably open in an editor'
             call errpau
          end if
@@ -20250,10 +20398,6 @@ c                                 configurational entropy variables:
       integer lterm, ksub
       common/ cxt1i /lterm(m11,m10,h9),ksub(m0,m11,m10,h9)
 
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
-
       integer iam
       common/ cst4 /iam
 c----------------------------------------------------------------------
@@ -20266,7 +20410,7 @@ c----------------------------------------------------------------------
       else if (extyp(ids).eq.1) then 
 
           deriv(ids) = .false.
-          reason = 'redlich-kistler ex'
+          reason = 'redlich-kister ex'
 
       else if (.not.equimo(ids)) then
 
@@ -20499,10 +20643,6 @@ c----------------------------------------------------------------------
       double precision z, pa, p0a, x, w, yy, wl, pp
       common/ cxt7 /yy(m4),z(m4),pa(m4),p0a(m4),x(h4,mst,msp),w(m1),
      *              wl(m17,m18),pp(m4)
-
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 c                                 local alpha
       double precision alpha,dt
       common/ cyt0  /alpha(m4),dt(j3)
@@ -20976,10 +21116,6 @@ c                                 endmember pointers
 
       character mname*8
       common/ cst18a /mname(m4)
-
-      integer jterm, jord, extyp, rko, jsub
-      common/ cxt2i /jterm(h9),jord(h9),extyp(h9),rko(m1,h9),
-     *               jsub(m2,m1,h9)
 
       integer ideps,icase,nrct
       common/ cxt3i /ideps(j4,j3,h9),icase(h9),nrct(j3,h9)
@@ -22002,15 +22138,12 @@ c----------------------------------------------------------------------
 
       integer id
 
-      double precision gval, dg, vdp, tc, b, pee, gmags
+      double precision gval, dg, vdp, gmags, lamla2, stxhil
 
-      external gmags
+      external gmags, lamla2, stxhil
 
       integer eos
       common/ cst303 /eos(k10)
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
@@ -22033,7 +22166,21 @@ c                                 supcrt q/coe lambda transition
 
          else if (ltyp(id).eq.4) then
 
-            if (eos(id).ne.8.and.eos(id).ne.9) then
+            if (eos(id).eq.6) then
+c                                 Stixrude 2011:
+c                                 in the 2011 data this is only qtz, 
+c                                 but neglects the effect of the clapeyron 
+c                                 slope on the transition T. This gives 
+c                                 nonsensical results if extrapolated to high
+c                                 pressure, therefore the transition effect
+c                                 was commented out Feb 9, 2022. Apparently
+c                                 the effect was not accounted for from the 
+c                                 initial implementation in perple_X and was
+c                                 added April 3, 2021.
+c              call lamla4 (dg,lmda(id))
+c              gval = gval + dg
+
+            else if (eos(id).ne.8.and.eos(id).ne.9) then
 c                                 putnis landau model as implemented incorrectly
 c                                 in hp98 (ds5)
                call lamla0 (dg,vdp,lmda(id))
@@ -22053,12 +22200,30 @@ c                                 holland and powell bragg-williams model
             gval = gval + dg
 
          else if (ltyp(id).eq.7) then
-c                                 George's Hillert & Jarl magnetic transition model
-            if (lct(id).gt.1) write(0,*)'**>1 type = 7 trans.!?'
-            tc = therlm(1,1,lmda(id))
-            b = therlm(2,1,lmda(id))
-            pee = therlm(3,1,lmda(id))
-            gval = gval + gmags (tc,b,pee)
+c                                 SLB 2021 landau relative to the low T phase,
+c                                 used pointlessly for magnetic entropy of
+c                                 almost all Fe-bearing endmembers.
+c                                 Stixrude also introduces an adhoc fix that
+c                                 limits q <= qmax.
+            gval = gval + lamla2(lmda(id))
+
+         else if (ltyp(id).eq.9) then
+c                                 SLB 2024 version of Hillert & Jarl.
+            gval = gval + stxhil (therlm(1,1,lmda(id)),
+     *                            therlm(2,1,lmda(id)))
+
+         else if (ltyp(id).eq.8) then
+c                                 George's version of the Hillert & Jarl magnetic transition 
+c                                 model, arguments are tc, b, pee. Needs to pass parameters
+c                                 because of call to gmag2 by special FeCr model.
+            gval = gval + gmags (therlm(1,1,lmda(id)),
+     *                           therlm(2,1,lmda(id)),
+     *                           therlm(3,1,lmda(id)), ltyp(id))
+
+         else if (ltyp(id).eq.9) then
+c                                 SLB 2024 version of Hillert & Jarl.
+            gval = gval + stxhil (therlm(1,1,lmda(id)),
+     *                            therlm(2,1,lmda(id)))
 
          else
 

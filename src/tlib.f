@@ -36,9 +36,9 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X release 7.1.6, Jan 21, 2024.',
+     *     'Perple_X release 7.1.7 Sep 11, 2024.',
 
-     *     'Copyright (C) 1986-2023 James A D Connolly '//
+     *     'Copyright (C) 1986-2024 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
 
       end
@@ -141,7 +141,7 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer ier, jer, i, loopx, loopy, ibeg, iend, ik1, ik21
+      integer ier, jer, i, loopx, loopy, ibeg, iend, ik1, ik21, nblen
 
       logical output, readyn
 
@@ -150,7 +150,7 @@ c----------------------------------------------------------------------
 
       double precision r2, dnan
 
-      external dnan, readyn
+      external dnan, readyn, nblen
 
       integer grid
       double precision rid 
@@ -568,6 +568,10 @@ c                                 fluid_shear_modulus
       lopt(65) = .true.
 c                                 compute_FD_increments for MINFRC
       lopt(66) = .false.
+c                                 aq_fractionation_simpl
+      lopt(67) = .false.
+c                                 finite_strain_alpha
+      lopt(68) = .false.
 c                                 phi_d
       nopt(65) = 0.36
 c                                 initialize mus flag lagged speciation
@@ -646,6 +650,10 @@ c                                 phase composition key
          else if (key.eq.'aq_lagged_speciation') then 
 
             if (val.eq.'T') lopt(32) = .true.
+
+         else if (key.eq.'aq_fractionation_simpl') then 
+
+            if (val.eq.'T') lopt(67) = .true.
 
          else if (key.eq.'aq_oxide_components') then 
 
@@ -1026,8 +1034,7 @@ c                                 zero_mode key
          else if (key.eq.'iteration'.or.
      *            key.eq.'resolution_factor') then
 c                                 how fast resolution improves with iteration
-            write (*,'(a)') 'iteration and resolution_factor are obso'//
-     *                      'lete options, 6.9.1+'
+            write (*,1190) 'iteration and resolution_factor','are'
 
          else if (key.eq.'initial_resolution') then
 c                                 initial_resolution key
@@ -1051,7 +1058,7 @@ c                                  686+ read second value as arf value
 
                if (ier.ne.0) then
 c                                  special backward compatibility msg
-                  write (*,1010) opname
+                  write (*,1010) opname(1:nblen(opname))
                   call errpau
 
                end if 
@@ -1069,8 +1076,7 @@ c                                  special backward compatibility msg
 
          else if (key.eq.'final_resolution') then
 c                                 final_resolution keys 
-            write (*,'(a)') 'final_resolution is an obso'//
-     *                      'lete option, 6.9.1+'
+            write (*,1190) 'final_resolution','is an'
 
          else if (key.eq.'fd_expansion_factor') then 
 
@@ -1084,8 +1090,7 @@ c                                 p fraction
 
          else if (key.eq.'global_reach_increment') then
           
-            write (*,'(a)') 'global_reach_increment is an obso'//
-     *                      'lete option, 6.9.1+'
+            write (*,1190) 'global_reach_increment','is an'
 
          else if (key.eq.'seismic_output') then 
 c                                 seismic data output WERAMI/MEEMUM/FRENDLY
@@ -1116,6 +1121,10 @@ c                                 refinement points for stable solutions.
  
             if (val.ne.'T') lopt(50) = .false.
 
+         else if (key.eq.'site_check'.or.
+     *            key.eq.'speciation_tolerance') then 
+            write (*,1190) key(1:nblen(key)),'is an'
+
          else if (key.eq.'structural_formulae') then
 
             if (val.ne.'T') lopt(51) = .false. 
@@ -1135,8 +1144,7 @@ c                                 back-calculated and lagged speciation
 
          else if (key.eq.'reach_increment_switch') then 
 c                                 reach_increment_switch
-            write (*,'(a)') 'reach_increment_switch is an obso'//
-     *                      'lete option, 6.9.1+'
+            write (*,1190) 'reach_increment_switch','is an'
 
          else if (key.eq.'stretch_factor') then
 c                                 stretch_factor key = b - 1       
@@ -1277,8 +1285,7 @@ c                                 default autorefine relative increment
 
          else if (key.eq.'dependent_potentials') then 
 
-            write (*,'(a)') 'dependent potentials is an obso'//
-     *                      'lete option, 6.9.1+'
+            write (*,1190) 'dependent potentials','is an'
 
          else if (key.eq.'hard_limits') then 
 
@@ -1406,6 +1413,10 @@ c                                 handle missing shear moduli
                valu(15) = val
                iopt(16) = 2
             end if   
+
+         else if (key.eq.'finite_strain_alpha') then 
+c                                 finite strain alpha handling
+            lopt(68) = 0 .ne. index('tT',val(1:1))
           
          else if (key.eq.'lop_28') then
 c                                 reserved values for debugging, etc
@@ -1454,9 +1465,9 @@ c                                 refinement points
 c                                 write and optional file choices
       if (iam.ne.14) then 
          if (jer.ne.0) then 
-            write (*,1120) opname
+            write (*,1120) opname(1:nblen(opname))
          else 
-            write (*,1130) opname
+            write (*,1130) opname(1:nblen(opname))
          end if
       end if 
 
@@ -1471,7 +1482,7 @@ c                                 vertex only files:
                tfname = 'not requested'
             end if 
 
-            write (*,1170) tfname
+            write (*,1170) tfname(1:nblen(tfname))
 
          end if 
 c                                 auto refine summary
@@ -1483,7 +1494,7 @@ c                                 auto refine summary
                tfname = 'not requested'
             end if 
 
-            write (*,1150) tfname
+            write (*,1150) tfname(1:nblen(tfname))
 
          end if
 
@@ -1497,7 +1508,8 @@ c                                 auto refine summary
             tfname = 'not requested'
          end if 
 
-         write (*,'(a)') 'Writing seismic data options to: '//tfname
+         write (*,'(a)') 'Writing seismic data options to: '//
+     *                   tfname(1:nblen(tfname))
 
       end if 
 c                                 pseudocompound glossary
@@ -1509,7 +1521,7 @@ c                                 pseudocompound glossary
             tfname = 'not requested'
          end if 
 
-         write (*,1140) tfname
+         write (*,1140) tfname(1:nblen(tfname))
 
       end if 
 c                                 computational options this is redundant
@@ -1528,7 +1540,7 @@ c                                 computational options this is redundant
             tfname = 'not requested'
          end if 
  
-         write (*,1160) tfname
+         write (*,1160) tfname(1:nblen(tfname))
 
       end if 
 c                                 -------------------------------------
@@ -1620,7 +1632,7 @@ c                                 file version, create the file name
             call outopt (n8)
             close (n8) 
 
-            write (*,1000) tfname
+            write (*,1000) tfname(1:nblen(tfname))
 
          end if 
 
@@ -1692,6 +1704,7 @@ c                                 consequent value for k1
 1180  format (/,'Error: value ',a,' is invalid for Perple_X option ',
      *        'keyword ',a,/,'see www.perplex.ch/perplex_options.html ',
      *        'for a list of valid values',/)
+1190  format (a,1x,a,1x,'obsolete option, 6.9.1+')
       end 
 
       subroutine lpset
@@ -1899,10 +1912,10 @@ c                                 generic subdivision parameters:
          end if 
 c                                 generic thermo parameters:
          write (n,1012) nval1,
-     *                  nopt(12),nopt(20),lopt(8),lopt(4),nopt(5),
-     *                  iopt(21),nopt(10),lopt(63),
+     *                  nopt(12),nopt(20),lopt(8),lopt(4),lopt(68),
+     *                  nopt(5),iopt(21),nopt(10),lopt(63),
      *                  iopt(25),iopt(26),iopt(27),
-     *                  lopt(32),lopt(44),lopt(36),lopt(46),
+     *                  lopt(32),lopt(67),lopt(44),lopt(36),lopt(46),
      *                  nopt(38),nopt(34)
 c                                 for meemum add fd stuff
          if (iam.eq.2) write (n,1017) nopt(31),nopt(26),nopt(27)
@@ -1932,7 +1945,8 @@ c                                 WERAMI input/output options
 c                                 WERAMI info file options
          write (n,1241) lopt(12)       
 c                                 WERAMI thermodynamic options
-         write (n,1016) lopt(8),lopt(4),iopt(25),iopt(26),iopt(27)
+         write (n,1016) lopt(8),lopt(4),lopt(68),
+     *                  iopt(25),iopt(26),iopt(27)
          write (n,1017) nopt(31),nopt(26),nopt(27)
 
       else if (iam.eq.2) then 
@@ -1959,7 +1973,8 @@ c                                 seismic property options
 
       if (iam.eq.5) then 
 c                                 FRENDLY thermo options
-         write (n,1016) lopt(8),lopt(4),iopt(25),iopt(26),iopt(27)
+         write (n,1016) lopt(8),lopt(4),lopt(68),
+     *                  iopt(25),iopt(26),iopt(27)
          write (n,1017) nopt(31),nopt(26),nopt(27)
 
       end if 
@@ -2043,6 +2058,7 @@ c                                 generic thermo options
      *        4x,'T_melt (K)             ',f6.1,5x,'[873]',/,
      *        4x,'approx_alpha            ',l1,9x,'[T] F',/,
      *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
+     *        4x,'finite_strain_alpha     ',l1,9x,'[F] T',/,
      *        4x,'speciation_precision   ',g7.1E1,4x,
      *           '[1d-5] <1; absolute',/,
      *        4x,'speciation_max_it      ',i4,7x,'[100]',/,
@@ -2054,6 +2070,7 @@ c                                 generic thermo options
      *        4x,'hybrid_EoS_CO2          ',i1,9x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4          ',i1,9x,'[0] 0-1, 7',/,
      *        4x,'aq_lagged_speciation    ',l1,9x,'[F] T',/,
+     *        4x,'aq_fractionation_simpl  ',l1,9x,'[F] T',/,
      *        4x,'aq_ion_H+               ',l1,9x,'[T] F => use OH-',/,
      *        4x,'aq_oxide_components     ',l1,9x,'[F] T',/,
      *        4x,'aq_solvent_solvus       ',l1,9x,'[T] F',/,
@@ -2079,12 +2096,13 @@ c                                 thermo options for frendly
 1016  format (/,2x,'Thermodynamic options:',//,
      *        4x,'approx_alpha            ',l1,9x,'[T] F',/,
      *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
+     *        4x,'finite_strain_alpha     ',l1,9x,'[F] T',/,
      *        4x,'hybrid_EoS_H2O          ',i4,6x,'[4] 0-2, 4-7',/,
      *        4x,'hybrid_EoS_CO2          ',i4,6x,'[4] 0-4, 7',/,
      *        4x,'hybrid_EoS_CH4          ',i4,6x,'[0] 0-1, 7')
 1017  format (4x,'fd_expansion_factor     ',f3.1,7x,'[2] >0',/,
-     *        4x,'finite_difference_p     ',g7.1,3x,'[1d4] >0; ',
-     *           'fraction = ',g7.1,3x,'[1d-2]')
+     *        4x,'finite_difference_p     ',1pg7.1,0p,3x,'[1d4] >0; ',
+     *           'fraction = ',1pg7.1,0p,3x,'[1d-3]')
 1020  format (/,'To change these options see: ',
      *        'www.perplex.ethz.ch/perplex_options.html',/)
 1100  format (/,2x,'Adapative minimization will be done with: ',
@@ -2629,7 +2647,7 @@ c---------------------------------------------------------------------
 
       character msg*(*)
 
-      write (*,'(/,a,/)') msg
+      write (*,'(/,a,/)') '**error ver999** '//msg
 
       call errpau
 
@@ -3817,10 +3835,7 @@ c----------------------------------------------------------------------
       character tname*8, name*8, rec*(lchar), tag*3
 
       integer ixct,ifact
-      common/ cst37 /ixct,ifact 
-
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
+      common/ cst37 /ixct,ifact
 
       integer length,com
       character chars*1
@@ -4025,7 +4040,10 @@ c                                 there is a non-blank data character
 
          do i = 2, com
 c                                 strip out '+' and '*' chars
-            if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
+c                                 except for e+.. d+.. (number exponents)
+c           if (chars(i).eq.'+'.or.chars(i).eq.'*') chars(i) = ' '
+            if ((chars(i).eq.'+'.and.0.eq.index('eEdD',chars(i-1)))
+     *          .or.chars(i).eq.'*') chars(i) = ' '
 c                                 eliminate blanks after '/' and '-'
 c                                 and double blanks
             if ((chars(ict).eq.'/'.and.chars(i  ).ne.' ') .or. 
@@ -4322,7 +4340,7 @@ c                                 tags for thermo data i/o
 c     data estrg/'eG0','eS0','eV0','ec1','ec2','ec3','ec4','ec5','ec6',
 c    *           'ec7','eb1','eb2','eb3','eb4','eb5','eb6','eb7','eb8'/
 c                                 tags for interaction coefficients (Redlich-Kister polynomial)
-      data wstrg/'w0 ','wT ','wP ','wP1','wP2','wP0'/
+      data wstrg/'w0 ','wT ','wP0','wP1','wP2','wP '/
 c                                 fluid eos species
       data specie /
      *      'H2O ','CO2 ','CO  ','CH4 ','H2  ','H2S ','O2  ',
@@ -4361,9 +4379,6 @@ c----------------------------------------------------------------------
       integer ictr, itrans
       double precision ctrans
       common/ cst207 /ctrans(k0,k0),ictr(k0),itrans
-
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
 
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
@@ -4477,9 +4492,6 @@ c----------------------------------------------------------------------
       character*2 strgs*3, mstrg, dstrg, tstrg*3, wstrg*3, e16st*3
       common/ cst56 /strgs(k4),mstrg(6),dstrg(m8),tstrg(m7),wstrg(m16),
      *               e16st(13)
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
 
       integer ic
       common/ cst42 /ic(k0)
@@ -4647,6 +4659,18 @@ c                                 convert HSC G0 to SUP G0
                   end if 
 
                end do 
+
+c                                 could have magnetic transition info
+               if (.not.ok) then
+                  do i = 25, 27
+                     if (key.eq.strgs(i)) then
+                        read (values,*,iostat=ier) thermo(i,k10)
+                        if (ier.ne.0) call error (23,tot,ier,strg)
+                        ok = .true.
+                        exit
+                     end if
+                  end do
+               end if
 
             end if 
 
@@ -4952,17 +4976,11 @@ c----------------------------------------------------------------------
       integer ltyp,lct,lmda,idis
       common/ cst204 /ltyp(k10),lct(k10),lmda(k10),idis(k10)
 
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       integer eos
       common/ cst303 /eos(k10)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5  /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision atwt
-      common/ cst45 /atwt(k0)
 
       character*80 commnt
       common/delet/commnt
@@ -5787,7 +5805,7 @@ c----------------------------------------------------------------------
 
       integer i,j,jopt,ict,ier,jscan
  
-      character*5 pname, rname
+      character*5 char5, rname
 
       double precision sum, ssum
 
@@ -5804,15 +5822,9 @@ c----------------------------------------------------------------------
       character cmpnt*5, dname*80
       common/ csta5 /cl(k0),cmpnt(k0),dname
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
-
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
 c-----------------------------------------------------------------------
 c                                 recombine components:
       do 
@@ -5823,11 +5835,11 @@ c                                 recombine components:
          if (.not.readyn()) exit
 
          write (*,1060)
-         read (*,'(a)') pname
-         if (pname.eq.' ') exit
+         read (*,'(a)') char5
+         if (char5.eq.' ') exit
 c                                 get the identity of the real comp
 c                                 to be replaced.
-50       write (*,1070) pname
+50       write (*,1070) char5
          read (*,'(a)') rname
 
          do i = 1, icmpn
@@ -5848,7 +5860,7 @@ c                                 phase components
 c                                 ctransf, ask the user if the 
 c                                 new component will be a special 
 c                                 component
-                     write (*,1010) cmpnt(i),pname
+                     write (*,1010) cmpnt(i),char5
 
                      if (readyn()) cycle
                      idspe(j) = 0 
@@ -5871,7 +5883,7 @@ c                                 components in the new component:
          ict = 1
          if (itrans.gt.k0) call error (999,atwt(1),ict,'GETTRN')
        
-         write (*,4050) k5-1,pname
+         write (*,4050) k5-1,char5
 30       read (*,'(a)') rname
          if (rname.eq.'     ') goto 80
 
@@ -5887,7 +5899,7 @@ c                                 no match, try again message
          goto 30
 c                                 get the component stoichiometries:
 80       write (*,4030) (cmpnt(icout(i)),i=1,ict)
-         write (*,4040) pname
+         write (*,4040) char5
 
          do 
             read (*,*,iostat=ier) (ctrans(icout(i),itrans), i= 1, ict)
@@ -5895,7 +5907,7 @@ c                                 get the component stoichiometries:
             call rerr
          end do 
  
-         write (*,1100) pname,(ctrans(icout(i),itrans),
+         write (*,1100) char5,(ctrans(icout(i),itrans),
      *                      cmpnt(icout(i)), i = 1, ict)
          write (*,1110)
 
@@ -5909,9 +5921,9 @@ c                                 get the component stoichiometries:
             end do 
             atwt(icout(1)) = sum
             sel(icout(1)) = ssum
-            cmpnt(icout(1)) = pname
-            cl(icout(1)) = jscan(1,5,' ',pname) - 1
-            tcname(itrans) = pname
+            cmpnt(icout(1)) = char5
+            cl(icout(1)) = jscan(1,5,' ',char5) - 1
+            tcname(itrans) = char5
             ictr(itrans) = icout(1)
          else
             itrans = itrans - 1
@@ -5988,21 +6000,12 @@ c----------------------------------------------------------------------
       character tcname*5,xcmpnt*5
       common/ csta9 /tcname(k0),xcmpnt(k0)
 
-      double precision atwt
-      common/ cst45 /atwt(k0)
-
       integer length,com
       character chars*1
       common/ cst51 /length,com,chars(lchar)
 
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
-
       integer ipot,jv,iv1,iv2,iv3,iv4,iv5
       common/ cst24 /ipot,jv(l2),iv1,iv2,iv3,iv4,iv5
-
-      integer imaf,idaf
-      common/ cst33 /imaf(i6),idaf(i6)
 
       integer jfct,jmct,jprct,jmuct
       common/ cst307 /jfct,jmct,jprct,jmuct
@@ -7235,8 +7238,8 @@ c-----------------------------------------------------------------------
       lmake = .false.
 
       write (n8,1233) valu(19),nopt(6),lopt(17),valu(15),nopt(1),
-     *                valu(14),lopt(20),lopt(4),.false.,lopt(65),
-     *                nopt(65)
+     *                valu(14),lopt(20),lopt(4),lopt(68),.false.,
+     *                lopt(65),nopt(65)
 
       write (n8,1030)
 
@@ -7386,6 +7389,7 @@ c-----------------------------------------------------------------------
      *        4x,'seismic_output          ',a3,7x,'[some] none all',/,
      *        4x,'poisson_test            ',l1,9x,'[F] T',/,
      *        4x,'Anderson-Gruneisen      ',l1,9x,'[F] T',/,
+     *        4x,'finite_strain_alpha     ',l1,9x,'[F] T',/,
      *        4x,'Tisza_test              ',l1,9x,'[F] T',/,
      *        4x,'fluid_shear_modulus     ',l1,9x,'[T] F',/,
      *        4x,'phi_d                   ',f4.2,6x,'[0.36] 0->1',/)
@@ -7845,9 +7849,6 @@ c----------------------------------------------------------------
 
       integer icomp,istct,iphct,icp
       common/ cst6  /icomp,istct,iphct,icp
-
-      character cname*5
-      common/ csta4  /cname(k5)
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -8598,7 +8599,7 @@ c id identifies the assemblage
 
       include 'perplex_parameters.h'
 
-      character string*(*), pname*14
+      character string*(*), char14*14
 
       integer i, ist, iend, id, ids
 
@@ -8620,11 +8621,11 @@ c----------------------------------------------------------------------
              
          ids = idasls(i,id)
 
-         call getnam (pname,ids) 
+         call getnam (char14,ids) 
 
          ist = iend + 1
          iend = ist + 14
-         read (pname,'(400a)') chars(ist:iend)
+         read (char14,'(400a)') chars(ist:iend)
 
          call ftext (ist,iend)
 
@@ -9208,19 +9209,15 @@ c-----------------------------------------------------------------------
 
       integer idum, nstrg, i, j, k, ierr, icmpn, jcont, kct
 
+      double precision tot
+
       logical fileio, flsh, anneal, verbos, siphon, colcmp, usecmp
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
      *                usecmp, colcmp
 
-      character*100 cfname
-      common/ cst227 /cfname
-
       integer ipot,jv,iv
       common/ cst24 /ipot,jv(l2),iv(l2)
-
-      integer imaf,idaf
-      common/ cst33 /imaf(i6),idaf(i6)
 
       character*162 title
       common/ csta8 /title(4)
@@ -9230,9 +9227,6 @@ c-----------------------------------------------------------------------
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
-
-      character*5 cname
-      common/ csta4 /cname(k5) 
 
       integer icp2
       common/ cst81 /icp2
@@ -9273,9 +9267,6 @@ c-----------------------------------------------------------------------
       integer ixct,ifact
       common/ cst37 /ixct,ifact
 
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
-
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
@@ -9299,7 +9290,6 @@ c-----------------------------------------------------------------------
 
       integer iam
       common/ cst4 /iam
-
 
       save blank
       data blank/' '/
@@ -9460,6 +9450,9 @@ c                                 read to the beginning of the component list
 c                                 count (icp) and save names (cname)
       icp = 0
       jbulk = 0
+ 
+
+      tot = 0
 
       do 
 
@@ -9507,6 +9500,7 @@ c                                 check for compositional constraints
          if (k.ne.0) then 
             jbulk = jbulk + 1
             read (strg,*,err=998) j, (dblk(i,jbulk), i = 1, k)
+            tot = tot + dblk(1,jbulk)
          end if 
 
       end do
@@ -9523,7 +9517,7 @@ c                                 isat is the saturated component counter
       do 
          read (n1,'(a)',end=998) rname
          if (rname.eq.'begin') exit
-      end do 
+      end do
 
       do 
 
@@ -9643,7 +9637,7 @@ c                                 chemical potential
                
          end if 
 
-      end do 
+      end do
 c                             the ifct flag can probably be set later if fluid
 c                             is in the thermodynamic composition space.   
       jfct = icp + isat 
@@ -9699,7 +9693,15 @@ c                             io9 is a flag = 0 no solution file
          if (isoct.gt.h9) call error (25,r,i,'BUILD')
          fname(isoct) = sname
 
-      end do  
+      end do
+c                               check that a solution model has not been
+c                               entered twice
+      do i = 1, isoct 
+         do j = i+1, isoct
+            if (fname(i).eq.fname(j)) call errdbg ('solution model '//
+     *         fname(i)//' is specified more than once in your input.')
+         end do
+      end do
 c                             read the maximum pressure, temper-
 c                             ature, xco2, u1, and u2; the minimum
 c                             pressure temperature, xco2, u1, and u2;
@@ -10033,9 +10035,6 @@ c-----------------------------------------------------------------------
       integer ivfl
       common/ cst102 /ivfl
 
-      character*5 cname
-      common/ csta4 /cname(k5)
-
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
 
@@ -10113,9 +10112,6 @@ c-----------------------------------------------------------------------
       integer ncol, nrow
       common/ cst226 /ncol,nrow,fileio,flsh,anneal,verbos,siphon,
      *                usecmp, colcmp
-
-      character*100 cfname
-      common/ cst227 /cfname
 
       integer ids,isct,icp1,isat,io2
       common/ cst40 /ids(h5,h6),isct(h5),icp1,isat,io2
@@ -10662,9 +10658,11 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer i, ier, n
+      integer i, ier, n, nblen
 
       character string*(*)
+
+      external nblen
 c----------------------------------------------------------------------
 
       call mertxt (tfname,prject,string,0)
@@ -10674,7 +10672,8 @@ c----------------------------------------------------------------------
       open (n, file=string, status='replace', iostat=ier)
 
       if (ier.ne.0) call error (999,0d0,i,
-     *             'file '//tfname//' is in use by another application')
+     *             'file '//tfname(1:nblen(tfname))//
+     *             ' is in use by another application')
 
       end
 
@@ -10902,7 +10901,7 @@ c---------------------------------------------------------------------
 
       subroutine conver (g,s,v,a,b,c,d,e,f,gg,c8,
      *                   b1,b2,b3,b4,b5,b6,b7,b8,
-     *                   b9,b10,b11,b12,b13,tr,pr,r,ieos)
+     *                   b9,b10,b11,b12,b13,tr,ieos)
 c---------------------------------------------------------------------
 c convert thermodynamic equation of state from a pr tr reference state
 c to minimize references to to reference conditions and constants.
@@ -10914,12 +10913,19 @@ c---------------------------------------------------------------------
       integer ieos
 
       double precision g,s,v,a,b,c,d,e,f,gg,c8,b1,b2,b3,b4,b5,b6,b7,b8,
-     *                 b9,b10,b11,b12,b13,tr,pr,n,v0,k00,k0p, dadt0,
-     *                 gamma0,q0,etas0,g0,g0p,r,c1,c2, alpha0, beta0,
-     *                 yr,theta,psi,eta
+     *                 b9,b10,b11,b12,b13,tr,n,v0,k00,k0p, dadt0,
+     *                 gamma0,q0,etas0,g0,g0p,c1,c2, alpha0, beta0,
+     *                 yr, theta, psi, eta
 
       double precision emodu
       common/ cst318 /emodu(k15)
+c                                raw transition data for STX 24:
+      integer ilam,jlam,idiso,lamin,idsin
+      double precision tm,td
+      common/ cst202 /tm(m7,m6),td(m8),ilam,jlam,idiso,lamin,idsin
+c                                T for STX 24
+      double precision p,t,xco2,u1,u2,trx,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,trx,pr,r,ps
 c                                constants for anderson electrolyte extrapolation (ieos = 15)
       save alpha0, beta0, dadt0
       data alpha0, beta0, dadt0 /25.93d-5,45.23d-6,9.5714d-6/
@@ -11013,6 +11019,43 @@ c                              stixrude & lithgow-bertelloni GJI '05
          etas0  = f
          g0     =  emodu(1)
          g0p    =  emodu(2)
+c                                 =====================================
+c                                 STX 24 additions:
+c                                 F_electric for backward compatability beta_el and 
+c                                 gamma_el are read under b1 and b2, move them to b13 
+c                                 and c8 (thermo 23/24 on return).
+         b13 = b1
+         c8 = b2
+
+c        if (jlam.eq.9) then
+c                                 According to B Myhill, Stixrude zero's the H&J 0 K 
+c                                 entropy, this and corrections would be computed here.
+c                                 This would make sense if STX24 used H&J but
+c                                 actually it uses a modified fit that goes
+c                                 to zero at T=0 with dg/dT = 0 (function stxhil).
+c           oldt = t
+
+c           t = 0d0
+
+c           ds = stxhil (tm(1,1),tm(2,1))
+
+c           t = 1d-12
+
+c           ds = (stxhil (tm(1,1),tm(2,1)) - ds) / t
+c                                 ds is now the negative of the nominal (numeric)
+c                                 0 K J&H entropy, subtract from the configurational
+c                                 entropy in gg (c7)
+c           gg = gg + ds
+c                                 next "correct" g0 (F0) to account for the spurious 0K
+c           t = oldt
+
+c           ds = stxhil (tm(1,1),tm(2,1))
+
+c           g = g + gg*tr -ds
+
+c        end if
+c                                 end of STX 24 additions.
+c                                 =====================================
 c                                 nr9
          b1 = 9d0*n*r
 c                                 c1
@@ -11218,11 +11261,12 @@ c                                 used for the BM3.
          b12 = b8 - 1d0
 c                                 anderson-gruneisen parameter is assumed = K' (abs(b8)) except for
 c                                 special EoS forms
-         if (ieos.gt.300) then
-            b11 = -s
-         else
+         if (ieos.gt.300.and.ieos.lt.600) then
 c                                 special EoS, anderson-gruneisen stored in
 c                                 s-position.
+            b11 = -s
+         else
+c                                 otherwise, is same as K'
             b11 = dabs(b8)
          end if
 
@@ -11751,15 +11795,9 @@ c-----------------------------------------------------------------------
       integer ixct,ifact
       common/ cst37 /ixct,ifact
 
-      character*8 exname,afname
-      common/ cst36 /exname(h8),afname(2)
-
       integer ikind,icmpn,icout,ieos
       double precision comp,tot
       common/ cst43 /comp(k0),tot,icout(k0),ikind,icmpn,ieos
-
-      integer idspe,ispec
-      common/ cst19 /idspe(2),ispec
 
       integer cl
       character cmpnt*5, dname*80
@@ -11955,10 +11993,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id,j
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
+      integer id, j
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -11981,10 +12016,7 @@ c---------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      integer id,j
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
+      integer id, j
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12026,9 +12058,6 @@ c---------------------------------------------------------------------
       double precision t,g,gtrans,vdp,trtp,p,dt,pstar
 
       external gtrans
-
-      double precision therlm,therdi
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -12106,9 +12135,6 @@ c---------------------------------------------------------------------
 
       external gclpht
 
-      double precision therlm,therdi
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 c----------------------------------------------------------------------
@@ -12173,9 +12199,6 @@ c---------------------------------------------------------------------
 
       double precision p,t,ps,g,pdv
 
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       double precision trt, tr, pr, s, aa, ba, ca , vb
 
       save trt, tr, pr, s, aa, ba, ca , vb
@@ -12236,9 +12259,6 @@ c---------------------------------------------------------------------
       double precision gspk,ctrans,aspk2,bspk2,ct2,ct3,a1,b1,c1,t92,t93,
      *                 tr92,tr93,dhspk,dsspk,t9,tr,teq,tq1bar,p,tr9,
      *                 dvdtr,dvdp,dstr,abspk,t
-
-      double precision therdi, therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 c---------------------------------------------------------------------
       gspk=0d0
 
@@ -12317,10 +12337,7 @@ c---------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
+c---------------------------------------------------------------------
       trr = therdi(8,id)
       if (t .lt. trr) return
 
@@ -12373,9 +12390,6 @@ c---------------------------------------------------------------------
 
       double precision dg,tc,tc0,q2,intvdp
 
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
@@ -12425,9 +12439,6 @@ c---------------------------------------------------------------------
       integer ld
 
       double precision dg,tc,tc0,q2,intvdp
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12482,9 +12493,6 @@ c---------------------------------------------------------------------
 
       double precision tc,tc0,q2
 
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
-
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
 c----------------------------------------------------------------------
@@ -12495,6 +12503,13 @@ c----------------------------------------------------------------------
       if (t.lt.tc) then
 c                                 partially disordered:
          q2 = dsqrt((tc-t)/tc0)
+c                                 HeFESTO code landauqr.f comments
+c                                 state q2 is limited to < qmax2 = 1.5^2 to prevent
+c                                 nepheline from becoming stable at super-earth 
+c                                 pressures; however qmax2 is actually set to 2,
+c                                 which suffices to prevent quartz from becoming 
+c                                 a stable hi-p pyrolite phase.
+         if (q2.gt.4d0) q2 = 4d0 
 
       else
 
@@ -12529,9 +12544,6 @@ c---------------------------------------------------------------------
       integer ld
 
       double precision dg,tc,tc0,q2,vlan
-
-      double precision therdi,therlm
-      common/ cst203 /therdi(m8,m9),therlm(m7,m6,k9)
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
@@ -12804,7 +12816,7 @@ c        b = 0.2228D1 * x - 0.8D-2 - 0.85D0 * (1d0 - x) * x
          tc = 1043d0 * xfe + (-311.5d0) * xcr +
      *        xfe * xcr * (1650d0 + 550d0*(xcr-xfe))
          b = 2.22d0 * xfe + (-0.008d0) * xcr + xfe*xcr*(-0.008d0)
-         gmag2 = gmags (tc,b,0.40d0)
+         gmag2 = gmags (tc,b,0.40d0,8)
 
       end if
 
@@ -13572,9 +13584,52 @@ c -----------
       xn = 1d0/(1d0 - an + an*(1d0 + n/(3*an) * p/Bo)**(1d0/real(n)))
       end function xn
 
-      double precision function gmags (tc,b,pee)
+      double precision function stxhil (tc,smax)
+c----------------------------------------------------------------------
+c this subroutine is modified from Lar Stixrude's hillert.f routine.
+c Expression for the magnetic terms according to Hillert's book, pg. 523.  
+c See also dorogokupetsetal_17 Eqs. 20,21.
+c p is the fraction of the total magnetic enthalpy that is absorbed at T>T_c, 
+c Stixrude's routine is hardwired for p = 0.4, hence the variable is eliminated
+c here. 
+
+c jacobsschmidfetzer_10 (Eqs. 20a,20b) provide approximate numerical 
+c values of coefficients by evaluating the exact expressions given in 
+c the references above and assuming p=0.40.
+c Recast so that the Gibbs free energy is zero at zero temperature.
+
+      double precision tc,t0,smax,gfunc,afe,bfe,cfe
+
+      double precision p,t,xco2,u1,u2,tr,pr,r,ps
+      common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
+
+      save afe, bfe, cfe
+      data afe, bfe, cfe/0.9052993827d0,0.9180500783d0,0.641731208d0/
+c----------------------------------------------------------------------
+c     denom = 518./1125. + 11692./15975.*(1./pee - 1.)
+c     afe = 79./(140.*pee)/denom
+c     bfe = 474./497.*(1./pee - 1.)/denom
+c     cfe = 1./denom
+
+      t0 = t/tc
+
+      if (t0 .le. 1d0) then
+         gfunc =  -bfe*(t0**3/6d0 + t0**9/135d0 + t0**15/600d0)
+      else
+         gfunc = -cfe*(t0**(-5)/10d0 + t0**(-15)/315d0 
+     *           + t0**(-25)/1500d0) - 1d0 + afe/t0
+      end if
+
+      stxhil = smax*t*gfunc
+
+      end function stxhil
+
+      double precision function gmags (tc,b,pee,itype)
 c-----------------------------------------------------------------------
-c gmags returns the magnetic contribution to G parameterized as in
+c gmags returns the magnetic contribution to G parameterized as in either
+
+c itype = 8
+
 c Sundman 1991 J. Ph. Equil. v12, 127-140.
 c     tc - transition temperature
 c     b - Bohr magneton value
@@ -13591,10 +13646,26 @@ c structures, divide tc and b by -1; for fcc & hcp (p=0.28) antiferromagnetic
 c structures, divide tc and b by -3.
 
 c                                      G. Helffrich, ELSI, 8 Apr. 2016.
+
+c or itype = 9
+
+c Stixrude & Lithgow-Bertelloni (GJI 2024, Eqs A5-A7) where
+c     tc - transition temperature
+c     b - entropy of disordering (R*ln(b+1))
+c     pee - structural magnetic parameter
+
+c there's no fundamental reason for having two transition flags for the same 
+c model, but for some reason parameters for type 8 are read into thermo
+c for CALPHAD EoS, whereas they are read as transition data for Stx-GJI
+c EoS having two flags makes it easy to maintain backward compatability.
+
+c                                      JADC, June 11, 2024
 c-----------------------------------------------------------------------
       implicit none
 
       include 'perplex_parameters.h'
+
+      integer itype
 
       double precision a0,a1,t5,t15,t25,f1,f0,f3,f9,f15
 
@@ -13607,23 +13678,31 @@ c-----------------------------------------------------------------------
 
       double precision p,t,xco2,u1,u2,tr,pr,r,ps
       common/ cst5 /p,t,xco2,u1,u2,tr,pr,r,ps
-
+c-----------------------------------------------------------------------
       if (tc.lt.0d0) then
+
          if (pee.lt.0.4d0) then
+
             bc = -b/3
             t0 = -3*t/tc
+
          else
+
             bc = -b
             t0 = -t/tc
-         endif
+
+         end if
+
       else
+
          t0 = t/tc
          bc = b
-      endif
 
+      endif
+c                                 stixrude's D
       a = a0 + a1*(1d0/pee - 1d0)
 
-      if (t0.lt.1d0) then
+      if (t0.le.1d0) then
 
          f = t - (f1*tc/pee + t * f0 * (1d0/pee - 1d0) *
      *       (f3 + t0**6 * (f9 + t0**6 * f15)) * t0**3) / a
@@ -13634,7 +13713,15 @@ c-----------------------------------------------------------------------
 
       end if
 
-      gmags = r*f*dlog(bc+1)
+      if (itype.eq.8) then 
+c                                 r*ln(beta+1) is S_max
+         gmags = r*f*dlog(bc+1)
+
+      else if (itype.eq.9) then
+
+         gmags = f*b
+
+      end if
 
       end
 
@@ -13696,6 +13783,26 @@ c----------------------------------------------------------------------
       else
          hserfe = -25384.451d0 + (299.31255d0 - 46d0*dlog(t))*t
      *          + 2.2960305e31/t**9
+      end if
+
+      end
+
+      double precision function febcc(t)
+c-----------------------------------------------------------------------
+c febcc returns the BCC(Fe) function of Zinkevitch et al. 2002.  Slight
+c difference from hserfe.
+c-----------------------------------------------------------------------
+      implicit none
+
+      double precision t
+c----------------------------------------------------------------------
+
+      if (t.lt.1811d0) then
+         febcc  = 1225.7d0 + 124.134d0*t -23.5143d0*t*dlog(t)
+     *           -.00439752d0*t**2 -5.8927d-8*t**3 + 77 359d0/t
+      else
+         febcc = -25 383.581d0 + 299.31255d0*t - 46d0*t*dlog(t)
+     *          + 2.29603d31/t**9
       end if
 
       end
@@ -13787,6 +13894,25 @@ c-----------------------------------------------------------------------
      #           - 0.4723D-3 * t ** 2 + 0.2562600D7 / t -
      #             0.2643D9 / t ** 2 + 0.12D11 / t ** 3
 
+      end if
+      end
+
+      double precision function hserh2 (t)
+c-----------------------------------------------------------------------
+c hserh2 returns the reference Gibbs energy of H2(g)
+c-----------------------------------------------------------------------
+      implicit none
+      double precision t
+
+      if (t.lt.1000d0) then
+         hserh2 = -9522.9741d0 + 78.5273879d0*t - 31.35707d0*t*dlog(t)
+     *      + 0.0027589925d0*t**2 - 7.46390667d-7*t**3 + 56582.3/t
+      else if (t.lt.2100d0) then
+         hserh2 = 180.108664d0 - 15.6128256d0*t - 17.84857d0*t*dlog(t)
+     *      - 0.00584168d0*t**2 + 3.14618667d-7*t**3 - 1280036d0/t
+      else
+         hserh2 = -18840.1663d0 + 92.3120255d0*t - 32.05082d0*t*dlog(t)
+     *      - 0.0010728235d0*t**2 + 1.14281783d-8*t**3 + 3561002.5d0/t
       end if
       end
 

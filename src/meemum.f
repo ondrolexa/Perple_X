@@ -24,17 +24,11 @@ c----------------------------------------------------------------------
       double precision cptot,ctotal
       common/ cst78 /cptot(k19),ctotal,jdv(k19),npt
 
-      double precision atwt
-      common/ cst45 /atwt(k0) 
-
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
 
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
-
-      character*5 cname
-      common/ csta4 /cname(k5)
 
       integer is
       double precision a,b,c
@@ -54,6 +48,9 @@ c----------------------------------------------------------------------
 c----------------------------------------------------------------------- 
 c                                 iam is a flag indicating the Perple_X program
       iam = 2
+c                                 perplexwrap.f flags
+      getInput = .true.
+      sWarn = .false.
 c                                 initialization, read files etc.
       call iniprp
 

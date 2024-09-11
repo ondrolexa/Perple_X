@@ -154,25 +154,25 @@ c pspygn - subroutine to generate closed polygons, abs. coordinates.
 1030  format (/,'Begin %I Poly')
       end
 c----------------------------------------------------------------
-      subroutine pspyln (x,y,npts,rline,width,ifill)
+      subroutine pspyln (x,y,npts,rline,width,icol)
  
 c pspyln - subroutine to generate open polylines.
 
       implicit none
 
-      integer npts,ifill
+      integer npts,icol
  
       double precision x(npts),y(npts),width,rline
 
       integer nps
       double precision xscale,yscale,xmn,ymn
       common/ scales /xscale,yscale,xmn,ymn,nps
- 
+
       write (nps,1030)
  
       call psolin (rline,width)
-      call psoclr
-      call psofil (ifill)
+      call psocfg (icol,icol)
+      call psofil (0)
       call psotrn
       call psopts (x,y,npts)
  
@@ -599,7 +599,10 @@ c psopen - subroutine to open LUN nps, write prologue
 
       include 'perplex_parameters.h'
 
-      integer nps
+      integer nps, nblen
+
+      external nblen
+
       double precision xscale, yscale, xmn, ymn
       common/ scales /xscale,yscale,xmn,ymn,nps
 c----------------------------------------------------------------------
@@ -611,7 +614,7 @@ c----------------------------------------------------------------------
 c                                 output eps prolog
       call psprol (nps)       
 c                                 write output file name
-      write (*,1010) tfname
+      write (*,1010) tfname(1:nblen(tfname))
  
 1010  format (/,'PostScript will be written to file: ',a)
  
@@ -628,12 +631,12 @@ c psprol - subroutine to write (EPS) postscript prolog.
 
       integer i,nps
 
-      character props(191)*63
+      character cprops(191)*63
 
       character font*40
       common/ myfont /font
 
-      data (props(i),i=1,95)/
+      data (cprops(i),i=1,95)/
      *'%!PS-Adobe-2.0 EPSF-1.2',
      *'%%Pages: 1','%%EndComments',
      *'50 dict begin','/arrowHeight 8 def','/arrowWidth 4 def',
@@ -722,7 +725,7 @@ c psprol - subroutine to write (EPS) postscript prolog.
      *'/ishow{0 begin gsave fgred fggreen fgblue setrgbcolor',
      *'/fontDict printFont findfont printSize scalefont dup ',
      *'setfont def'/
-      data (props(i),i=96,189)/
+      data (cprops(i),i=96,189)/
      *'/descender fontDict begin 0 [FontBBox] 1 get FontMatrix end',
      *'transform exch pop def',
      *'/vertoffset 0 descender sub printSize sub printFont/Courier ne',
@@ -808,10 +811,10 @@ c psprol - subroutine to write (EPS) postscript prolog.
      *'[ .8 0 0 .8 0 0 ] concat',
      *'/originalCTM matrix currentmatrix def'/
 
-      write (nps,'(a)') (props(i),i=1,2)
+      write (nps,'(a)') (cprops(i),i=1,2)
       write (nps,1000) font
       write (nps,1010) bbox
-      write (nps,'(a)') (props(i),i=3,189)
+      write (nps,'(a)') (cprops(i),i=3,189)
 
 1000  format ('%%IncludeFont: ',a)
 1010  format ('%%BoundingBox: ',4(i4,1x))
