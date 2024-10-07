@@ -229,14 +229,22 @@ f3clin = 1 clin - 1/2 gr + 1/2 andr
        DQF(J/mol) = 2d3 0 0  
 kho1 = 1 py - 1 gr + 1 andr
        DQF(J/mol) = 27d3  
-sil8L = 8/5 silL               
-       DQF(J/mol) = -23d3  
-fo8L = 2 foL                    
-       DQF(J/mol) = -10d3 
-fa8L = 2 faL                              
-       DQF(J/mol) = -9d3 0 -1.3 
-q8L = 4 qL    
-       DQF(J/mol) = -20                           | a small DQF is added to stabilize q8L relative to qL
+|--------------------------------------------------------------------------------
+                                 | Generic 8-oxygen HP liquid endmembers. Because 
+                                 | these occur in many melts models they are created
+                                 | here with a nominal DQF, the true model specific
+                                 | DQF must be added in the solution model. JADC 2/2024
+sil8L = 8/5 silL
+       DQF(J/mol) = -10  | a small DQF added to stabilize the made endmember
+fo8L = 2 foL
+       DQF(J/mol) = -10  | a small DQF added to stabilize the made endmember
+fa8L = 2 faL
+       DQF(J/mol) = -10  | a small DQF added to stabilize the made endmember
+q8L = 4 qL
+       DQF(J/mol) = -10  | a small DQF added to stabilize the made endmember
+wi8L = 2 wiL
+       DQF(J/mol) = -10  | a small DQF added to stabilize the made endmember
+|--------------------------------------------------------------------------------
 fmu = 1 mu + 1/2 andr - 1/2 gr
        DQF(J/mol) = 25d3
 ma1_dqf = 1 ma
@@ -293,12 +301,7 @@ fajL = 1 faL
 hmjL = 0.5 hemL
        DQF(J/mol) = 0       +  0.20 * p_bar  
 ekjL = 0.5 eskL
-       DQF(J/mol) = 21d3     
-                                  | Make definitions for Green et al., JMG, 2016 melt
-foTL = 2 foL
-   dqf = -4d3 
-faTL = 2 faL
-   dqf = -8.2d3  - 1.4 * P
+       DQF(J/mol) = 21d3
                                   | Make definitions for Green et al., JMG, 2016 clinoamphibole
 mrbG  = 1 gl - 1 gr + 1 andr
    DQF = 0
@@ -2383,11 +2386,11 @@ transition = 2 type = 2 t1  = 3400   t4  = 127.129  t5 = 12.005d-3 t6 = -354.785
 end
 
 
-!C2H6*     EoS = 116 ideal gas from Chao et al J Phys Chem Ref Data 1973, Cp from fit by NASA 
-!H2(3)C(2)
-!G0 = -32802.56  S0 = 229.11584
-!c1 = 9.401448  c2 = 0.15983298  c4 = -4.6229016d-5
-!end
+|C2H6*     EoS = 116 ideal gas from Chao et al J Phys Chem Ref Data 1973, Cp from fit by NASA 
+|H2(3)C(2)
+|G0 = -32802.56  S0 = 229.11584
+|c1 = 9.401448  c2 = 0.15983298  c4 = -4.6229016d-5
+|end
 
 
 O2        EoS = 107
@@ -2401,7 +2404,6 @@ H2        EoS = 105
 H2(1)
 GH = -38968.2  S0 = 130.7  
 c1 = 23.3  c2 = .4627E-2  c5 = 76.3  
-b5 = 148.1543  
 end
 
  
@@ -2409,7 +2411,6 @@ S2        EoS = 1
 S2(1)
 GH = 59667.35  S0 = 231  
 c1 = 37.1  c2 = .2398E-2  c3 = -161000  c5 = -65  
-b5 = 87.22322  
 end
 
  
