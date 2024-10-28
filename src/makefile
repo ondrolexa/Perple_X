@@ -48,7 +48,9 @@ COMP77 = gfortran
 # G. Helffrich/30 Nov. '15
 # FFLAGS =  -O3 -static-libgfortran -Wpedantic
 
-FFLAGS = -O3
+FARCH= -m64
+FFLAGS = -O3 $(FARCH)
+FLINK = -static-libgfortran $(FARCH) -lgfortran -lgcc -lm 
 
 #-Wstrict-overflow -Wstringop-overflow=2 removed for 690
 # WFM Added 2007Sep05, PAPPEL 2010SEPT08: for 6.6.0
