@@ -365,13 +365,21 @@ c                                 specify "saturated phase" eos.
          write (*,1005)
       end if
 
+      err = .true.
+
       do i = 0, nrk
          if (i.eq.4.or.i.eq.6.or.i.eq.9.or.i.eq.18.or.i.eq.21.or.    
      *       i.eq.3.or.i.eq.22.or.i.eq.23.or.i.eq.7.or.i.eq.11) cycle 
 
-         if (eosok(i)) write (*,1070) i,rkname(i)
+         if (eosok(i)) then 
+            write (*,1070) i,rkname(i)
+            err = .false.
+         end if
 
-      end do 
+      end do
+
+      if (err) call errdbg ('there is no valid internal fluid EoS for'//
+     *                      ' your choice of components')
 c                                 write hybrid eos blurb
       call hybout (-1,6)
 

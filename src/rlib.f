@@ -7436,6 +7436,8 @@ c                                 obsolete test 7.1.8+
 
                call errpau
 
+               k = k - 200
+
             else if (k.gt.100) then
                k = k - 100
             else
@@ -14921,7 +14923,7 @@ c                                 g(i) = gs0(i) + RT ln x(i).
       else
 c                                  solvent is pure water
          pa(1) = 1d0
-         ysp(1,id) = 1d0
+         if (whysp) ysp(1,id) = 1d0
 
          call slvnt0 (gso(1),dum)
 
@@ -14951,6 +14953,9 @@ c-----------------------------------------------------------------------
       integer ion, ichg, jchg
       double precision q, q2, qr
       common/ cstaq /q(l9),q2(l9),qr(l9),jchg(l9),ichg,ion
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
 
       integer nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
       common/ cst337 /nq,nn,ns,ns1,sn1,nqs,nqs1,sn,qn,nq1,nsa
@@ -15030,7 +15035,7 @@ c                                 this check is necessary because lp may
 c                                 give a zero-amount solution for the chemical
 c                                 potential of an absent component. the test
 c                                 cannot be made with oxide components.
-                  if (aqcp(j,i).ne.0d0.and.j.le.jbulk) then
+                  if (aqcp(j,i).ne.0d0.and.j.le.icp) then
                      kill = .true.
                      exit
                   end if

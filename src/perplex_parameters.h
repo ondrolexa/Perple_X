@@ -1,4 +1,4 @@
-
+  
       integer h4,h5,h6,h8,h9,h0
       integer i6,i7,i8,i9,i10,i11
       integer j3,j4,j5,j6,j9
@@ -564,50 +564,57 @@ c                                 LP workspace into common
 
       integer  iop0 
       common / basic /iop0
+c                                 -------------------------------------
 c                                 project name, temporary file name
       character prject*100,tfname*100
       common/ cst228 /prject,tfname
-
+c                                 -------------------------------------
       double precision pmode, emode
       common/ cst67 /pmode(k5), emode(k5)
+c                                 -------------------------------------
 c                                 MC_fit common block:
       logical mcpert, mcflag, oprt, grh, invxpt, fprint, grdsch, seed, 
-     *        mcgrid, grhobj, bayes, better, vital, consol
+     *        mcgrid, grhobj, bayes, vital, consol, mcbulk, newstt,
+     *        limcmp, relerr, mchot, lmass, nomiss, missng, nogood, kiso
 
-      integer mxpt, cxpt, random, cextra, optct,
+      integer mxpt, cxpt, random, cextra, optct, idxtra, ptry,
      *        xptids, xptptr, xptnph, xpterr, mccpd, mcsol, mcid, 
      *        mcids, msloc, msolct, nparm, nunc, mcpct, mcpid, mctrm,
-     *        mcj, mccoef, mccoid
+     *        mcj, mccoef, mccoid, lsqchi, redox, blkptr, bstout
 
       character xptnam*18
 
       double precision xptpt, xptblk, xptc, xpte, cprng, sprng, wcomp, 
-     *                 wextra, wmiss, oktol, scores, plow, pdelta
+     *                 wextra, wmiss, oktol, scores, plow, pdelta, 
+     *                 cmpmin,cmpmax
 
       common/ cst68 /xptpt(l11,l2), xptblk(l11,k5),
      *               xptc(k5*l11), xpte(k5*l11), xpterr(l11),
      *               cprng(k5,3,3),sprng(k5,m1,m3,3), wcomp, wextra,
      *               wmiss, oktol, scores(l11), plow(l2 + k5), 
-     *               pdelta(l2 + k5),
-c                                  integer
+     *               pdelta(l2 + k5), cmpmin(k5), cmpmax(k5), 
+c                                 integer
      *               mccpd, mcsol, mxpt, cxpt, nparm, nunc(2),
-     *               mctrm(k5), cextra, optct, 
+     *               mctrm(k5), cextra, optct, idxtra, lsqchi,
      *               xptids(l11,k5), xptptr(l11,k5), xptnph(l11),
-     *               mcid(k5), mcids(k5), msolct(l11,h9), 
-     *               msloc(l11,k5), mcpct(k5), mcpid(k5,3),
+     *               mcid(k5), mcids(k5), msolct(l11,h9), ptry,
+     *               msloc(l11,k5), mcpct(k5), mcpid(k5,3), redox,
      *               mccoef(k5,m1), mcj(k5,m1), mccoid(k5,m1,m3),
-c                                  logical
+     *               blkptr(l11), bstout,
+c                                 logical
      *               mcpert, oprt, mcflag(h9), random(3), grh, invxpt,
-     *               fprint, grdsch, seed, mcgrid, grhobj, bayes, 
-     *               better, vital, consol,
-c                                  character
+     *               fprint, grdsch, seed, mcgrid, grhobj, bayes,
+     *               vital, consol, mcbulk, limcmp, newstt, kiso,
+     *               relerr, mchot, lmass, nomiss, missng, nogood,
+c                                 character
      *               xptnam(l11)
-
+c                                 -------------------------------------
 c                                 minim parameters
       integer mtry, conchk, jprint, iquad, kcount 
       double precision invtol, simplx, frac
       common/ cminim /invtol, simplx, frac,
      *                mtry, conchk, jprint, iquad, kcount
+c                                 -------------------------------------
 c                                 make definitions
       double precision mcomp
       character mknam*8

@@ -1285,7 +1285,7 @@ c                                 count component
                   if (ifct.eq.2) then 
                      write (*,*)
                      exit 
-                  end if   
+                  end if
 
                else
 c                                 blank input 
@@ -1296,8 +1296,14 @@ c                                 blank input
             end do 
 
             if (ifct.ne.0) then
+
                iv(3) = 3
                ivct = 3
+
+            else
+
+               write (*,1060)
+
             end if
 
          end if
@@ -1691,6 +1697,9 @@ c                                 component pointers for chkphi
      *          'specify special components. Saturated phase',/,
      *          'constraints are NOT equivalent to saturated component',
      *          ' constraints.')
+1060  format (/,'**warning ver615** no saturated phase constraint will',
+     *          ' be implemented because',/,'no saturated phase compon',
+     *          'ents have been specified.')
 1070  format ('Ok, but don''t say i didn''t warn you.')
 1080  format ('Wise move, choose another component.')
 1190  format (/,'**warning ver064** in general it is wise to exclude ',

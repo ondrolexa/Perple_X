@@ -593,6 +593,8 @@ c                                 a normal solution or multicomponent solvent
 c                                 a speciated electrolytic fluid, skip
 c                                 pure 1-species solvent, this may cause
 c                                 bad warm start behavior
+               idif = jdv(kd)
+
                call savkwk (gg,0d0,swap,idif)
 
             end if

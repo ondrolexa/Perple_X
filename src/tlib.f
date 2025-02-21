@@ -36,9 +36,9 @@ c----------------------------------------------------------------------
       integer n
 
       write (n,'(/,a,//,a)') 
-     *     'Perple_X release 7.1.10 Dec 21, 2024.',
+     *     'Perple_X release 7.1.11 Feb 17, 2025.',
 
-     *     'Copyright (C) 1986-2024 James A D Connolly '//
+     *     'Copyright (C) 1986-2025 James A D Connolly '//
      *     '<www.perplex.ethz.ch/copyright.html>.'
 
       end
@@ -4432,6 +4432,17 @@ c                                 on the off chance of a loose end keyword
 c                                 EoS
          read (nval2,*,iostat=ier) ieos
          if (ier.ne.0) exit
+c                                 check for obsolete internal EoS flag.
+         if (ieos.eq.201.or.ieos.eq.202) then 
+
+            write (*,1010) n2name(1:nblen(n2name)),name(1:nblen(name)),
+     *                     name(1:nblen(name)),ieos,ieos - 100
+
+            call errdbg ('Read the preceding text, it is likely that '//
+     *                   'this error will occur for a second entry '//
+     *                   'with 200 < Eos < 202')
+
+         end if 
 c                                 look for comments
          j = index(card,'|')
          commnt = ' '
@@ -4501,10 +4512,14 @@ c                                 inappropriate EoS
       end do
 
 1000  format (/,'**error ver967** ',a,' is a name reserved for fluid ',
-     *        'species but the EoS flag',/,'specified for this entity ',
+     *        'species but the',/,'EoS flag specified for this entity ',
      *        'in ',a,' is not a fluid EoS. Remedies:',//,
      *        4x,'1 - rename/delete the entity',/,
      *        4x,'2 - update/correct the EoS flag of the entity')
+
+1010  format ('Data file: ',a,' invokes an out-of-date EoS code for ',a,
+     *      '. To update the file edit the',/,'entry for ',a,
+     *      ' replacing EoS = ',i3,' with Eos = ',i3)
 
       end
 
@@ -8091,7 +8106,7 @@ c                                show the user the composition:
                write (*,1070)   
 
                if (spec(jcomp)) then
-                  write (text,1120) a0(jcomp,1),(rcps(i,jcomp),
+                  write (text,1130) a0(jcomp,1),(rcps(i,jcomp),
      *                               spnams(icps(i,jcomp),ids),
      *                               i = 1, jcx(jcomp))
                else           
@@ -8548,7 +8563,7 @@ c                                 triggered by reopt/resub, aq_error_ver103
       else if (idead.eq.104.and.iwarn04.le.iopt(1)) then
 c                                 triggered by reopt/resub, aq_error_ver103
          call warn (100,c,104,'failed to recalculate speciation.'//
-     *           'Probable cause undersaturated solute component'//
+     *           'nProbable cause undersaturated solute component'//
      *           'To output result set aq_error_ver104 to F.')
 
          call prtptx
@@ -8852,7 +8867,7 @@ c                                 open print/plot files if requested
 c                                 plt output file
             io4 = 0
             call mertxt (name,prject,'.plt',0)
-            if (iam.ne.13) write (*,1180) name(1:nblen(name))
+            if (iam.ne.13) write (*,1190) name(1:nblen(name))
 
             open (n4, file = name, iostat = ier, status = 'new')
             if (ier.ne.0) then 

@@ -50,6 +50,8 @@ c                                 version info
       write (*,1000)
 c                                 assign data files
       call sopen 
+
+      write (*,1030)
 c                                 Read THERMODYNAMIC DATA file (N2):
 c                                 read the data base header
       call topn2 (5)
@@ -98,6 +100,8 @@ c                                 output new data
      *          'format data',/,'the data for ',a,' will not be ',
      *          'written to ctransf.dat',//)
 1020  format (/,'The transformed dataset has been written to file: ',
-     *          'ctransf.dat')
+     *          'ctransf.dat',/)
+1030  format (/,'The transformed dataset will be written to file: ',
+     *          'ctransf.dat',/)
 
       end
