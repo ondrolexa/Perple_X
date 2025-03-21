@@ -575,36 +575,37 @@ c                                 -------------------------------------
 c                                 MC_fit common block:
       logical mcpert, mcflag, oprt, grh, invxpt, fprint, grdsch, seed, 
      *        mcgrid, grhobj, bayes, vital, consol, mcbulk, newstt,
-     *        limcmp, relerr, mchot, lmass, nomiss, missng, nogood, kiso
+     *        relerr, mchot, lmass, nomiss, missng, nogood, kiso, mcfit
 
-      integer mxpt, cxpt, random, cextra, optct, idxtra, ptry,
+      integer mxpt, cxpt, random, cextra, optct, idxtra, ptry, unmeas,
      *        xptids, xptptr, xptnph, xpterr, mccpd, mcsol, mcid, 
      *        mcids, msloc, msolct, nparm, nunc, mcpct, mcpid, mctrm,
-     *        mcj, mccoef, mccoid, lsqchi, redox, blkptr, bstout
+     *        mcj, mccoef, mccoid, lsqchi, blkptr, bstout, uncomp,
+     *        skp
 
       character xptnam*18
 
       double precision xptpt, xptblk, xptc, xpte, cprng, sprng, wcomp, 
      *                 wextra, wmiss, oktol, scores, plow, pdelta, 
-     *                 cmpmin,cmpmax
+     *                 cmpmin, cmpmax, xskp
 
-      common/ cst68 /xptpt(l11,l2), xptblk(l11,k5),
+      common/ cst68 /xptpt(l11,l2), xptblk(l11,k5), xskp(h5),
      *               xptc(k5*l11), xpte(k5*l11), xpterr(l11),
      *               cprng(k5,3,3),sprng(k5,m1,m3,3), wcomp, wextra,
      *               wmiss, oktol, scores(l11), plow(l2 + k5), 
-     *               pdelta(l2 + k5), cmpmin(k5), cmpmax(k5), 
+     *               pdelta(l2 + k5), cmpmin(k5,k5), cmpmax(k5,k5), 
 c                                 integer
-     *               mccpd, mcsol, mxpt, cxpt, nparm, nunc(2),
+     *               mccpd, mcsol, mxpt, cxpt, nparm, nunc(2), unmeas,
      *               mctrm(k5), cextra, optct, idxtra, lsqchi,
      *               xptids(l11,k5), xptptr(l11,k5), xptnph(l11),
      *               mcid(k5), mcids(k5), msolct(l11,h9), ptry,
-     *               msloc(l11,k5), mcpct(k5), mcpid(k5,3), redox,
+     *               msloc(l11,k5), mcpct(k5), mcpid(k5,3),
      *               mccoef(k5,m1), mcj(k5,m1), mccoid(k5,m1,m3),
-     *               blkptr(l11), bstout,
+     *               blkptr(l11), bstout, uncomp(k5), skp(h5),
 c                                 logical
      *               mcpert, oprt, mcflag(h9), random(3), grh, invxpt,
      *               fprint, grdsch, seed, mcgrid, grhobj, bayes,
-     *               vital, consol, mcbulk, limcmp, newstt, kiso,
+     *               vital, consol, mcbulk, newstt, kiso, mcfit,
      *               relerr, mchot, lmass, nomiss, missng, nogood,
 c                                 character
      *               xptnam(l11)
@@ -704,3 +705,46 @@ c                                 kphct - index of last saturated component/phas
 c                                 imyn - flag indicating mobile components
       integer ipoint, imyn, kphct
       common/ cst60 /ipoint,kphct,imyn
+c                                 uncertainty analysis error sources, sets jnvrnd :
+c                                 invunc = 1 = > perturb all data
+c                                 invunc = 2 = > perturb analytical data only
+c                                 invunc = 3 = > perturn thermodynamic data only
+c
+c                                 works in concert with invrnd set in subroutine bstmod
+c                                 invprt = F = > not uncertainty analysis(no pertrubations)
+c                                 invprt = T = > uncertainty analysis
+      logical invprt, uncrty
+      integer invunc
+      common / cstinv / invunc, invprt, uncrty
+c                                 error on enthalpy for MC calculations with H&P data
+      integer imkend, mkptr
+      double precision deltah, hinc
+      common/ cst33 /deltah(k10), hinc(k10), mkptr(k10), imkend
+c                                 sids - composant ids for n'th component saturation constraint
+c                                 isct - number of composants for n'th ...
+c                                 icp1 - icp + 1
+c                                 isat - number of component saturation constraints
+c                                 io2  - special pointer to O2, for GCOH internal EoS
+      integer sids,isct,icp1,isat,io2
+      common/ cst40 /sids(h5,h6),isct(h5),icp1,isat,io2
+
+      integer icomp,istct,iphct,icp
+      common/ cst6  /icomp,istct,iphct,icp
+
+      integer ifct,idfl
+      common/ cst208 /ifct,idfl
+
+      integer ivfl
+      common/ cst102 /ivfl
+
+      integer iffr,isr
+      double precision vuf,vus
+      common/ cst201 /vuf(2),vus(h5),iffr,isr
+
+      integer idf
+      double precision act
+      common/ cst205 /act(k7),idf(3)
+
+      integer eos
+      common/ cst303 /eos(k10)
+

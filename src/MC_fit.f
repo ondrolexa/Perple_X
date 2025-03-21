@@ -24,6 +24,8 @@ c                                 set to molar output regardless of
 c                                 option file, mass input units in the imc
 c                                 file allowed via lmass flag
       iopt(2) = 0
+
+      mcfit = .true.
 c                                 -------------------------------------
 c                                 open inversion problem file
       call opnimc
@@ -38,10 +40,16 @@ c----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
+      logical tictoc
+
       character key*22, val*3, nval1*12, nval2*12, nval3*12,
      *          strg*40, strg1*40
 
-      integer ier
+      integer i, j, ier, noerr(k10)
+
+      save tictoc
+
+      data tictoc/.true./
 c----------------------------------------------------------------------- 
 c                                 open inversion problem file
       call mertxt (tfname,prject,'.imc',0)
@@ -49,6 +57,10 @@ c                                 open inversion problem file
 
       if (ier.ne.0) call errdbg 
      *   ('can''t open assemblage composition file: '//tfname)
+c                                 rewind in case, n8 hasn't been closed
+c                                 by mccomp (e.g., thermo-only error
+c                                 analysis)
+      rewind (n8)
 c----------------------------------------------------------------------- 
 c                                 IMC file input Section 1
 c                                 read compositional input units
@@ -273,6 +285,69 @@ c
      *               //key)
 
       end if
+c                                 uncertainty analysis error sources, sets jnvrnd :
+c                                 invunc = 1 = > perturb all data
+c                                 invunc = 2 = > perturb analytical data only
+c                                 invunc = 3 = > perturn thermodynamic data only
+c
+c                                 works in concert with invrnd set in subroutine bstmod
+c                                 invprt = F = > not uncertainty analysis(no pertrubations)
+c                                 invprt = T = > uncertainty analysis
+      call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
+
+      if (key.eq.'all_unc'.or.key.eq.'analytical'.or.
+     *                        key.eq.'thermodynamic') then
+
+         if (key.eq.'all_unc') then
+            invunc = 1
+         else if (key.eq.'analytical') then
+            invunc = 2
+         else
+            invunc = 3
+         end if
+
+         if (.not.uncrty.and.(invunc.eq.1.or.invunc.eq.3)) then
+
+            call errdbg ('all_unc or thermodynamic *.imc file options'//
+     *       ' require a thermodynamic data file with uncertainty data')
+
+         else if (tictoc.and.(invunc.eq.1.or.invunc.eq.3)) then
+
+            j = 0
+
+            tictoc = .false.
+
+            do i = 1, imkend
+
+               if (make(i).ne.0) then
+                  cycle
+               else if (mkptr(i).eq.0) then
+                  if (deltah(i).eq.0d0) then
+                     j = j + 1
+                     noerr(j) = i
+                   end if
+               else if (deltah(mkptr(i)).eq.0d0) then
+                  j = j + 1
+                  noerr(j) = i
+               end if
+
+            end do
+
+            if (j.gt.0) then
+               write (*,1000)
+               write (*,1010) (names(noerr(i)), i = 1,j)
+               write (*,'(/)')
+               call wrnstp
+            end if
+
+         end if
+
+      else
+
+         call errdbg ('expecting all_unc, analytical or thermodynamic'//
+     *                ' tag, found: '//key)
+
+      end if
 c----------------------------------------------------------------------- 
 c                                 IMC file input Section 
 c                                 composition scoring function choice
@@ -290,8 +365,7 @@ c                                 composition scoring function choice
 
       else
 
-         call errdbg ('expecting LSQ, Chi, or wChi tag, found: '
-     *               //key)
+         call errdbg ('expecting LSQ, Chi, or wChi tag, found: '//key)
 
       end if
 c                                 quadratic/linear objective function
@@ -307,8 +381,7 @@ c                                 quadratic/linear objective function
 
       else
 
-         call errdbg ('expecting quadratic or linear tag, found: '
-     *               //key)
+         call errdbg ('expecting quadratic or linear tag, found: '//key)
 
       end if
 
@@ -366,6 +439,8 @@ c                                 georges additional parameter
 c                                 error evaluation loop counter
       call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
       read (key,*) ptry
+
+      if (.not.newstt) ptry = 1
 c----------------------------------------------------------------------- 
 c                                 IMC file input Section 4
 c                                 Nelder-Meade parameters
@@ -388,6 +463,10 @@ c                                 Nelder-Meade parameters
      *     ' is probably too small -','  check wcomp, wextra, wmiss'
       end if
 
+1000  format (/,'**warning ver503** the following entitities have no ',
+     *          'associated thermodynamic uncertainty:',/)
+1010  format (8(a,1x))
+
       end
 
       subroutine invers 
@@ -403,17 +482,27 @@ c----------------------------------------------------------------------
       double precision bstx(l2+k5), x(200,l2+k5), sx(l2+k5), ss(l2+k5), 
      *                 bstobj
 c----------------------------------------------------------------------- 
-c                                 best model statistics for error evaluation
+c                                 output summary files, output to these files 
+c                                 is dependent on bayes/liklihood, best/better/all,
+c                                 and miss_ok/no_miss choices
+c                                 likelihood models
       call mertxt (tfname,prject,'.lik',0)
       open (n7,file=tfname)
+c                                 best model and uncertainty
       call mertxt (tfname,prject,'.bst',0)
       open (n13,file=tfname)
+c                                 likelihood models
       call mertxt (tfname,prject,'.bay',0)
       open (n9,file=tfname)
+c                                 all coverged results 
       call mertxt (tfname,prject,'_central.pts',0)
       open (n0,file=tfname)
       call mertxt (tfname,prject,'_perturbed.pts',0)
       open (n11,file=tfname)
+c                                  all models that fit withing observational 
+c                                  uncertainty
+      call mertxt (tfname,prject,'.fit',0)
+      open (n12,file=tfname)
 c                                 meemum output file
       call mertxt (tfname,prject,'.out',0)
 c                                 in case the user has set print, detach the file
@@ -460,8 +549,11 @@ c                                 arguments: init, uncert, randm, n6out, x
       do i = 1, nunc(1)
 
          write (*,1040) i, nunc(1)
-
-         call opnimc 
+c                                 opnimc opens n8 and reads to the end of section 4
+c                                 of the imc file, mccomp then reads section 5 and
+c                                 closes (n8), for invptx this is only necessary 
+c                                 for inunc < 3
+         if (invunc.lt.3) call opnimc 
 c                                 suppress any grid search at this point
          if (random(1).ge.2) then
             random(1) = random(1)/10
@@ -519,12 +611,12 @@ c                                 sum of squares
 
          end do
 
-         if (m.gt.1) then 
+         if (m.gt.1) then
+
             do k = 1, nparm
 c                                 standard deviation
-c                                 mean standard deviation
                ss(k) = dsqrt(ss(k)/(m-1d0))
-   
+
             end do
 
          end if 
@@ -537,17 +629,17 @@ c                                 mean standard deviation
             write (lu,1080) m
             write (lu,1030) 'Central model parameter and OBJF values: ',
      *                       (x(1,k), k = 1, nparm)
-            write (lu,1030) 'Peturbed central model parameter and OBJF'
-     *                      //' values: ',
-     *                       (x(m,k), k = 1, nparm)
-            write (lu,1030) 'Mean parameter values: ',
+c           write (lu,1030) 'Peturbed central model parameter and OBJF'
+c    *                      //' values: ',
+c    *                       (x(m,k), k = 1, nparm)
+            write (lu,1030) 'Mean peturbed parameter values: ',
      *                       (sx(k)/m, k = 1, nparm)
             if (m.gt.1) then
 
                write (lu,1030) 'Parameter standard errors: ',
      *                       (ss(k), k = 1, nparm)
-               write (lu,1030) 'Standard errors on the mean parameter v'
-     *                         //'alues: ',(ss(k)/(m-1d0), k = 1, nparm)
+c              write (lu,1030) 'Standard errors on the mean parameter v'
+c    *                         //'alues: ',(ss(k)/(m-1d0), k = 1, nparm)
             end if 
 
             lu = n13
@@ -562,6 +654,7 @@ c                                 mean standard deviation
       close (n7)
       close (n9)
       close (n11)
+      close (n12)
 
       stop
 
@@ -623,9 +716,6 @@ c-----------------------------------------------------------------------
       double precision a,b,c
       common/ cst313 /a(k5,k1),b(k5),c(k1),is(k1+k5)
 
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
       integer ipot,jv,iv
       common / cst24 /ipot,jv(l2),iv(l2)
 
@@ -638,6 +728,8 @@ c                                 ouput for invptx
 c                                 flag to signal whether any acceptable
 c                                 models were found 
       nogood = .true.
+c                                 randm -> uncertainty analysis
+      invprt = randm
 
       if (randm) then 
          write (strg,'(a,i3)') 'Central model peturbation ',ipert
@@ -683,8 +775,36 @@ c                                 for each coefficient
 
       else
 c                                 ptx inversion:
+         if (invprt) then
+c                                 doing uncertainty analysis:
+c                                 all sources or just analytic
+            if (invunc.eq.1.or.invunc.eq.2) call mccomp (invprt)
+
+            if (invunc.eq.1.or.invunc.eq.3) then 
+c                                 make the thermodynamic data 
+c                                 peturbations
+               do i = 1, imkend
+
+                  if (mkptr(i).eq.0) then
+c                                 real data or a make entity that
+c                                 has been excluded:
+                     hinc(i) = pertrb (1d0,deltah(i))
+                  else 
+c                                 data has already been perturbed
+c                                 in the real data list
+                     hinc(i) = hinc(mkptr(i))
+                  end if
+
+               end do
+
+            end if
+
+         else
+c                                 doing central model
 c                                 read phase compositions
-         call mccomp (randm)
+            call mccomp (invprt)
+
+         end if
 c                                 set george's "weight"
          xptpt(1,5) = 1d0
 c                                 for phase simplex and bulk cases, the first 
@@ -694,9 +814,7 @@ c                                 ipot variables are the same
 c                                 phase simplex case
          if (.not.mcbulk) n = ipot + xptnph(1)
 
-         if (redox.gt.0) then 
-            n = n + 1
-         end if
+         if (unmeas.gt.0) n = n + unmeas
 
          do k = 1, n
             if (k.le.ipot) then
@@ -736,7 +854,41 @@ c                                 unscale step size for search
       bstbay = 1d99
       jbest = 0
       point5 = 0.5d0
+c------------------------------------------------------------------------------------------------------
+c     x(1) = 15616.2     
+c     x(2) =  756.562  
+c     x(3) =  0.541329 
+c     x(4) =     0.702942  
+c     x(5) =     0.773550 
+c     x(6) =      0.830524E-02
+c     x(7) =   0.689348   
+c     x(8) =  0.601786  
+c     x(9) = 0.456933      
+c     x(10) = 0.586190
 
+
+c   11727.2       752.816      0.569036      0.874363      0.412340E-01  0.455304E-02
+c  0.979959      0.712777      0.859474      0.616171
+c     x(1) = 11727.2     
+c     x(2) =  752.816 
+c     x(3) =  0.569036
+c     x(4) =   0.874363 
+c     x(5) =    0.412340E-01
+c     x(6) = 0.455304E-02 
+c     x(7) = 0.979959  
+c     x(8) = 0.712777
+c     x(9) =   0.859474 
+c     x(10) =  0.616171
+
+
+c        do j = 1, n
+c           sx(j) = (x(j) - plow(j))/pdelta(j) 
+c        end do
+
+c            fprint = .true.
+c             call mcobj2 (x,objf,bad)
+c             fprint = .false.
+c-----------------------------------------------------------------------------------------------------
       if (init) return
 
       do i = 1, mtry
@@ -835,7 +987,8 @@ c                                  got a legitimate result
             end if 
 c                                 write all successful results to 
 c                                 *_central.pts file
-            write (n0,1025) 3, (x(j),j=1,nparm), objf
+            if (.not.invprt) write (n0,1025) 3, (x(j),j=1,nparm), objf
+
 c                                 count and check if model improved
 c                                 bstlik - best likelihood objective f value
 c                                 bstlx  - best likelihood x
@@ -844,7 +997,6 @@ c                                 bstbay - best bayesian ojective f value
 c                                 bstbx  - best bayesian x
 c                                 bstbx0 - ... initial x
 c                                 bay    - current bayesian objective f
-
             call savbst (x,objf,bstlik,bstlx,bay,ssp,x0,bstlx0,bstbx0,
      *                   bstbay,bstbx,n,i,ibest,jbest,igood)
 
@@ -932,10 +1084,10 @@ c                                 set choice for statistics computation
 c                                 on return to invers
       if (bayes) then
          x(1:n) = bstbx(1:n)
-         objf = bstlik
+         objf = bstbay
       else
          x(1:n) = bstlx(1:n)
-         objf = bstbay
+         objf = bstlik
       end if
 
       if (bstout.eq.3.and..not.randm) then 
@@ -1008,23 +1160,25 @@ c                                observation (mxpt = 1).
       mxpt = 1
 c                                 number of phase compositions
       cxpt = 0
-c                                 unmeasured redox component pointer
-      redox = 0
-c                                 limits on unmeasured component flag
-      limcmp = .false.
+c                                 unmeasured component counter
+      unmeas = 0
 c                                 effect bulk specification
       mcbulk = .false.
 c                                 look for thermobarometry problem in
 c                                 my_project.imc
-      call mertxt (tfname,prject,'.imc',0)
-      open (n8,file=tfname,status='old',iostat=ier)
+c     call mertxt (tfname,prject,'.imc',0)
+c     open (n8,file=tfname,status='old',iostat=ier)
 
-      if (ier.ne.0) call errdbg 
-     *   ('can''t open assemblage composition file: '//
-     *   tfname(1:nblen(tfname)))
+c     if (ier.ne.0) call errdbg 
+c    *   ('can''t open assemblage composition file: '//
+c    *   tfname(1:nblen(tfname)))
 
-      if (random(1).ge.2) call errdbg
-     *   ('can''t use grid search option (yet)')
+c     if (random(1).ge.2) call errdbg
+c    *   ('can''t use grid search option (yet)')
+c                                 this subroutine has been hacked for 
+c                                 invptx, since mccomp may be called 
+c                                 multiple times, rewind and find the
+c                                 begin_assemblage tag
 c                                 -------------------------------------
 c                                 IMC file input Section 5
       call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
@@ -1066,84 +1220,52 @@ c                                 temperature range
      *               //key)
 
       end if
-c                                 read optional unmeasured redox component
-      call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
 
-      if (key.eq.'redox_component') then
-
-         write (*,'(a)') 'reading redox_component'
-
-         do i = 1, kbulk
-            if (val.eq.cname(i)) redox = i
-         end do
-
+      do 
+c                                 read optional unmeasured components
          call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
+
+         if (key.eq.'redox_component'.or.key.eq.'unmeasured_component') 
+     *                                                             then
+
+            write (*,'(a)') 'reading '//key
+
+            unmeas = unmeas + 1
+
+            do i = 1, kbulk
+               if (val.eq.cname(i)) uncomp(unmeas) = i
+            end do
+
+            call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
 c                                 look for limiting components
-         if (key.eq.'begin_limits') then
+            if (key.eq.'begin_limits') then
 
-            write (*,'(a)') 'reading limiting components'
+               write (*,'(a)') 'reading limiting components'
 
-            call gtcomp (comp,ecomp,.false.,'limits',bad,.false.)
+               call gtcomp (comp,ecomp,.false.,'limits',bad,.false.)
 
-            if (bad) call errdbg ('error reading limiting components')
+               if (bad) call errdbg (
+     *                              'error reading limiting components')
 
-            limcmp = .true.
+               do i = 1, kbulk
+                  cmpmin(unmeas,i) = comp(i)
+                  cmpmax(unmeas,i) = ecomp(i)
+               end do
 
-            cmpmin = comp
+            else
 
-            cmpmax = ecomp
+               call errdbg ('expecting begin_limits tag found: '//key)
+
+            end if
 
          else
-
-            call errdbg ('expecting begin_limits tag found: '//key)     
-
+c                                 no limiting component specifications
             backspace (n8)
+            exit
 
          end if
-
-      else
-c                                 no limiting component specifications
-         backspace (n8)
-
-      end if 
-c                                 read optional unmeasured component
-      call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
-
-      if (key.eq.'unmeasured_component') then
-
-         write (*,'(a)') 'reading unmeasured component'
-
-         call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
-
-         if (key.ne.'begin_comp') call errdbg ('expecting begin_comp'//
-     *                            ' tag, found :'//key)
-
-         call gtcomp (comp,ecomp,randm,'comp',bad,.false.)
-
-         if (bad) call errdbg ('error reading unmeasured_component '//
-     *                         'composition')
-
-         do i = 1, kbulk
-            xptc(cxpt+i) = comp(i)
-            xpte(cxpt+i) = ecomp(i)
-         end do
-c                                 pointer to the composition of phase nph in expt mexpt 
-         xptptr(mxpt,k5) = cxpt
-c                                 increment composition pointer
-         cxpt = cxpt + kbulk
-
-         call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
-
-      else if (key.eq.'phase_name'.or.key.eq.'begin_bulk') then
-
-         backspace (n8)
-
-      else
-
-         call errdbg ('expecting unmeasured_component, phase_name, or b'
-     *              //'egin_bulk tag, found: '//key)
-
-      end if
+c                                 end of unmeasured component loop
+      end do
 c                                 read optional effective bulk
       call redcd1 (n8,ier,key,val,nval1,nval2,nval3,strg,strg1)
 
@@ -1215,9 +1337,6 @@ c-----------------------------------------------------------------------
 
       integer jend
       common/ cxt23 /jend(h9,m14+2)
-
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
 
       character fname*10, aname*6, lname*22
       common/ csta7 /fname(h9),aname(h9),lname(h9)
@@ -1697,9 +1816,9 @@ c                                 next experiment
 
       close (n8)
 
-1000  format (/,'warning ver502** observation: ',a,/,'has been rejecte',
-     *          'd because it includes a component not specified in: ',
-     *          a,//,80('-'))
+1000  format (/,'**warning ver502** observation: ',a,/,'has been rejec',
+     *          'ted because it includes a component not specified in: '
+     *         ,a,//,80('-'))
 1010  format (/,a,1x,a)
 1020  format (/,a,1x,'has ',a,' magnetic transitions')
 1030  format ('or because it has > 1 composition with no uncertainty')
@@ -1734,7 +1853,7 @@ c-----------------------------------------------------------------------
 
       logical ok, bad, randm, absent(k5)
 
-      integer i, ids, nph, ier, nblen
+      integer i, j, ids, nph, ier, nblen
 
       character key*22, val*3, nval1*12, nval2*12, nval3*12,
      *          strg*40, strg1*40, tag*(*)
@@ -1809,7 +1928,27 @@ c                                 check name
          call matchj (tname,ids)
 c                                 instead of making this an error 
 c                                 could just set bad to reject the xpt
-         if (ids.eq.0) call errdbg ('no such entity as: '//tname)
+         if (ids.eq.0) then 
+
+            call errdbg ('no such entity as: '//tname)
+
+         else if (ids.lt.0) then
+c                                 check that the phase doesn't match a
+c                                 composant
+            do i = 1, isat
+               do j = 1, isct(i)
+                  if (sids(i,j).eq.-ids) then
+
+                     write (*,1020) tname(1:nblen(tname)),
+     *                              cname(icp+i)(1:nblen(cname(icp+i))),
+     *                              tname(1:nblen(tname))
+                     call errpau
+
+                  end if
+               end do
+            end do
+
+         end if
 c                                 all clear, save id
          xptids(mxpt,nph) = ids
 c                                 look for optional modal data, only 
@@ -1862,16 +2001,11 @@ c                                write phase name for molar composition output
          call gtcomp (comp,ecomp,randm,'comp',bad,.true.)
 
          do i = 1, kbulk
-            
+c                               check for non-zero components
             if (comp(i).ne.0d0) absent(i) = .false.
-
-            if (absent(i).and.redox.ne.i) then 
-               if (xptc(xptptr(1,k5)+i).ne.0) absent(i) = .false. 
-            end if
-
             xptc(cxpt+i) = comp(i)
             xpte(cxpt+i) = ecomp(i)
-            
+
          end do
 c                                 pointer to the composition of phase nph in expt mexpt 
          xptptr(mxpt,nph) = cxpt
@@ -1890,11 +2024,25 @@ c                                 increment composition pointer
 
          ok = .true.
 
-         do i = 1, kbulk
-            if (absent(i).and.redox.ne.i) then
-               write (*,1000) cname(i)
-               ok = .false.
-            end if
+         do i = 1, icp
+c                                 don't bother with saturated/mobile
+c                                 components.
+            bad = .false.
+
+            do j = 1, unmeas
+c                                 don't bother with unmeasured components
+               if (uncomp(j).eq.i) then
+                  bad = .true.
+                  exit
+               end if
+
+            end do
+
+            if (.not.absent(i).or.bad) cycle
+
+            write (*,1000) cname(i)
+            ok = .false.
+
          end do
 
          write (*,'(/)')
@@ -1909,6 +2057,11 @@ c                                 increment composition pointer
      *       ,'avoid bad practice delete the absent component.')
 1010  format (/,'molar composition of ',a,
      *          'follow, with RELATIVE error:',/)
+1020  format (/,'**error ver778** the stability of ',a,' is determined',
+     *          ' by the saturated component',/,'constraint on ',a,' ei'
+     *         ,'ther eliminate the constraint from the *.dat file or',
+     *        /,'remove ',a,' from the list of observed phases in the ',
+     *          '*.imc file.',/)
 
       end 
 
@@ -2150,7 +2303,7 @@ c-----------------------------------------------------------------------
 
       double precision x(*), cmax, cmin
 
-      integer i, j, k
+      integer i, j, k, l
 
       integer npt,jdv
       double precision cptot,ctotal
@@ -2187,7 +2340,7 @@ c                                 composition pointer
             cxpt = xptptr(1,i)
 c                                 compositional var pointer
             k = ipot + i
-            if (redox.gt.0) k = k + 1
+            if (unmeas.gt.0) k = k + unmeas
 
             do j = 1, kbulk
                cblk(j) = cblk(j) + x(k) * xptc(cxpt+j)
@@ -2200,27 +2353,29 @@ c                                 compositional var pointer
 
       end if
 
-      if (redox.gt.0) then
-c                                redox, assume limiting expressions are available
-         k = ipot + 1
+      if (unmeas.gt.0) then
+c                                unmeasured components
+         do l = 1, unmeas
+c                                 
+            cmax = 0d0
+            cmin = 0d0
 
-         cmax = 0d0
-         cmin = 0d0
+            do j = 1, kbulk
+               if (j.eq.uncomp(l)) cycle
+               cmin = cmin + cblk(j)*cmpmin(l,j)
+               cmax = cmax + cblk(j)*cmpmax(l,j)
+            end do
 
-         do j = 1, kbulk
-            if (j.eq.redox) cycle
-            cmin = cmin + cblk(j)*cmpmin(j)
-            cmax = cmax + cblk(j)*cmpmax(j)
+            cblk(uncomp(l)) = cmin + (cmax - cmin) * x(ipot+l)
+
          end do
 
-         cblk(redox) = cmin + (cmax - cmin) * x(k)
-
       end if
-c                                 normalize
+c                                 normalize, should be to icp?
       ctotal = 0d0 
 
       do j = 1, kbulk
-         ctotal = ctotal + cblk(k)
+         ctotal = ctotal + cblk(j)
       end do
 
       b(1:kbulk) = cblk(1:kbulk) / ctotal
@@ -2312,7 +2467,7 @@ c                         value after initial evidence of convergence.
 c                     > 0 as for iprint = 0 plus progress reports after
 c                         every iprint evaluations, plus printing for the
 c                         initial simplex.
-c     stopcr  = input, stopping criterion
+c     stopcr  = input, stopping criterion, rms of obj function on the vertices
 c     nloop   = input, the stopping rule is applied after every nloop
 c               function evaluations.
 c     iquad   = input, = 1 if the fitting of a quadratic surface is required
@@ -3301,22 +3456,24 @@ c
   100 return
       end
 
-      double precision function score (kd,id,j)
+      double precision function score (kd,id,j,fit)
 c-----------------------------------------------------------------------
 c a function to evaluate the distance between oberved and candidate 
 c compositions for MC, parameters are:
 c     kd - phase indicator
 c     id - experiment number
 c     j  - phase number in experiment
+c     fit - true if model fits within error
 c-----------------------------------------------------------------------
       include 'perplex_parameters.h'
 
       integer id, kd, j, k, l, m
 
+      logical fit, skip
+
       double precision total, term
 c-----------------------------------------------------------------------
       score = 0d0
-
       total = 0d0
       m = 0
 c                                 normalization depends on whether any
@@ -3331,8 +3488,17 @@ c                                 compositional uncertainty given
       if (m.eq.0) then
 c                                 calculate residual
          do l = 1, kbulk
-c                                 skip unmeasured redox component
-            if (redox.eq.l) cycle
+c                                 skip unmeasured components
+            skip = .false.
+
+            do k = 1, unmeas
+               if (uncomp(k).eq.l) then
+                  skip = .true.
+                  exit
+               end if
+            end do
+
+            if (skip) cycle
 
             k = xptptr(id,j)+l
 
@@ -3340,9 +3506,9 @@ c                                 skip unmeasured redox component
 
             term = dabs(pcomp(l,kd)/total - xptc(k))
 
-            if (isnan(term)) then 
-               write (*,*) 'oink'
-            end if 
+            if (term.gt.2d0*xpte(k)) then
+               fit = .false.
+            end if
 
             if (.not.grhobj) then
 
@@ -3361,6 +3527,11 @@ c                                 pseudo Chi-square
 
                else if (lsqchi.eq.3) then 
 c                                 weighted Chi-square compositional obj
+c                                 this case arises if someone doesn't 
+c                                 put a value for a component that exists
+c                                 in the solution model
+                  if (xpte(k)*xptc(k).eq.0d0) cycle
+c
                   term = (term / (xpte(k)*xptc(k)))**2
 
                end if
@@ -3371,10 +3542,6 @@ c                                 anything but this
                term = term**2
 
             end if
-
-            if (isnan(term).or.isnan(score)) then 
-               write (*,*) 'oink 3'
-            end if 
 
             score = score + term
 
@@ -3417,9 +3584,6 @@ c-----------------------------------------------------------------------
       double precision x(*)
 
       character name*14
-
-      integer eos
-      common/ cst303 /eos(k10)
 c-----------------------------------------------------------------------
       n = 0
 c                                 compounds
@@ -3603,17 +3767,19 @@ c-----------------------------------------------------------------------
 
       include 'perplex_parameters.h'
 
-      logical ok, imout(k5), imin(k5), used(k5), jmiss(k5)
+      logical ok, imout(k5), imin(k5), used(k5), jmiss(k5), fit, tfit,
+     *        ftbst, outnph(k5), jused(k5), skip
 
       character bdname(k5)*14
 
       integer id, jd, ids, i, j, k, kct(k5), ksol(k5,k5), ibest, mpred,
-     *        idextr(k5), jmin(k5), mextra, jdbest, kd, lu, kmin(k5), l
+     *        idextr(k5), jmin(k5), mextra, jdbest, kd, lu, kmin(k5), l,
+     *        nmiss, jj, jbest, jds(h5), istsat, nblen
 
       double precision score, best, res, mode, tot, extra, comp, miss, 
      *                 cscor(k5), x(*), sres(k5)
 
-      external score
+      external score, nblen
 
       double precision v,tr,pr,r,ps
       common/ cst5  /v(l2),tr,pr,r,ps
@@ -3624,12 +3790,12 @@ c-----------------------------------------------------------------------
       double precision vmax,vmin,dv
       common/ cst9  /vmax(l2),vmin(l2),dv(l2)
 
-      integer icomp,istct,iphct,icp
-      common/ cst6  /icomp,istct,iphct,icp
-
       integer kkp,np,ncpd,ntot
       double precision cp3,amt
       common/ cxt15 /cp3(k0,k19),amt(k19),kkp(k19),np,ncpd,ntot
+
+      double precision cp
+      common/ cst12 /cp(k5,k10)
 
       logical mus
       double precision mu
@@ -3641,27 +3807,51 @@ c                                 compute the observation objective function
       imin = .false.
       used = .false.
       jmiss = .true.
+      outnph = .false.
+      fit = .true.
       ksol = 0
       jmin = 0
       optct = optct + 1
 
-      do i = 1, ntot
+      do i = 1, xptnph(id)
 
-         do j = 1, xptnph(id)
+         do j = 1, ntot
 
-            if (kkp(i).eq.xptids(id,j)) then
-
-               imout(i) = .false.
+            if (kkp(j).eq.xptids(id,i)) then
 c                                 kct(j) is the number of times a predicted
 c                                 solution model occurs in the observed assemblage
-               kct(j) = kct(j) + 1
+               kct(i) = kct(i) + 1
 c                                 ksol(j,...) points to the positions of the
 c                                 the predicted solution model in the observed assemblage
-               ksol(j,kct(j)) = i
+               ksol(i,kct(i)) = j
 
             end if
 
          end do
+
+      end do
+c                                 classify cases
+      do j = 1, xptnph(id)
+
+         if (kct(j).eq.0) cycle
+
+         ids = kkp(ksol(j,1))
+
+         if (ids.lt.0) then 
+
+            outnph(j) = .true.
+
+         else if (kct(j).ge.msolct(id,ids)) then
+c                                 the predicted sollution occurs .le. times than
+c                                 in the observed assemblage, a doudble loop with 
+c                                 outer index xptnph will function for matching
+            outnph(j) = .true.
+
+         else 
+
+c           outnph(j) = .false.
+
+         end if
 
       end do
 
@@ -3670,57 +3860,37 @@ c                                 the predicted solution model in the observed a
       miss = 0d0
       mpred = 0
       mextra = 0
-c                                 first extraneous phases:
-      do i = 1, ntot
-c                                 penalty is wextra * mass_fraction^2
-         if (imout(i)) then
-
-            mextra = mextra + 1
-            idextr(mextra) = i
-            extra = extra + wextra * 
-     *                             (props(17,i)*props(16,i)/psys(17))**2
-
-         end if
-
-      end do
 c                                 potential target phases:
       do j = 1, xptnph(id)
 
-         if (kct(j).eq.0) cycle
+         if (kct(j).eq.0.or..not.outnph(j)) cycle
 
          jd = ksol(j,1)
          ids = kkp(jd)
 
-         if (kct(j).eq.1.and.ids.lt.0) then
-c                                 a compound, just count
-            mpred = mpred + 1
-            imin(jd) = .true.
-            jmiss(j) = .false.
-c                                 jmin(i) points to the phase entered 
-c                                 in the observed phase list
-            jmin(mpred) = j
-c                                 kmin(i) points to the phase in the
-c                                 predicted assemblage list
-            kmin(mpred) = jd
+         if (ids.lt.0) then
+c                                 a compound, cycle and count in the next 
+c                                 loop
+            cycle 
 
          else if (kct(j).eq.1.and.msolct(id,ids).eq.1) then
 c                                 found solution and no ambiguity
             mpred = mpred + 1
-            imin(jd) = .true.
+c                                 flag that the phase is not missing in the observed list
             jmiss(j) = .false.
 c                                 observed list pointer
             jmin(mpred) = j
 c                                 predicted list pointer
             kmin(mpred) = jd
 
-            cscor(mpred) = score (jd,id,j)
+            cscor(mpred) = score (jd,id,j,fit)
 c                                 compute and add residual
             comp = comp + wcomp * cscor(mpred)
+c                                 flag that the phase has been used in the predicted list
+            used(jd) = .true.
 
-         else if (kct(j).gt.1) then
-c                                 if there are multiple appearances of a
-c                                 solution in an assemblage, use the
-c                                 best fit
+         else 
+
             best = 1d99
             ok = .false.
 
@@ -3733,15 +3903,111 @@ c                                 jd
 
                if (used(jd)) cycle
 
-               res = score (jd,id,j)
+               tfit = .true.
+
+               res = score (jd,id,j,tfit)
+
+               if (res.lt.best) then
+                  best = res
+                  jdbest = jd
+                  ftbst = tfit
+                  ok = .true.
+               end if
+c                                 end phase loop over kct(j)
+            end do
+
+            if (ok) then
+c                                 the best available match for observed phase j, 
+c                                 i.e., predicted phase ibest, has been found.
+               mpred = mpred + 1
+c                                 used flags that a phase has been matced in the 
+c                                 
+               used(jdbest) = .true.
+c                                 jmiss flags that the observed phase has been matched
+               jmiss(j) = .false.
+c                                 jmin points to the matched phase in the observed
+c                                 assemblage
+               jmin(mpred) = j
+c                                 kmin points to the matching phase in the predicted
+c                                 assemblage
+               kmin(mpred) = jdbest
+
+               if (fit) fit = ftbst
+
+               cscor(mpred) = best
+
+               comp = comp + wcomp * best
+
+            else
+c                                  the number of observed versions of the solution is
+c                                  less than the number of predicted versions
+               call errdbg ('wroink wroink')
+
+            end if
+
+         end if
+
+      end do
+
+      jused = .false.
+
+      do k = 1, xptnph(id)
+c                                 count compounds in this loop to maintain cpd last ordering for output
+         if (kct(k).eq.0) cycle
+
+         ids = kkp(ksol(k,1))
+
+         if (kkp(ksol(k,1)).lt.0) then
+
+            jd = ksol(k,1)
+c                                 a compound, just count
+            mpred = mpred + 1
+            jmiss(k) = .false.
+c                                 jmin(i) points to the phase entered 
+c                                 in the observed phase list
+            jmin(mpred) = k
+c                                 kmin(i) points to the phase in the
+c                                 predicted assemblage list
+            kmin(mpred) = jd
+
+            used(jd) = .true.
+
+            cycle
+
+         end if
+
+         if (outnph(k)) cycle
+c                                 if here then there are more occurences of the 
+c                                 observed solution than the prediced, so need
+c                                 an outer over the predicted phases
+         do i = 1, kct(k)
+
+            jd = ksol(k,i)
+            if (used(jd)) cycle
+            ids = kkp(jd)
+
+            best = 1d99
+            ok = .false.
+
+            do jj = 1, msolct(id,ids)
+c                                 j points to the location of the observed solution
+               j = msloc(1,jj)
+
+               if (jused(j)) cycle
+
+               tfit = .true.
+
+               res = score (jd,id,j,tfit)
 
                if (res.lt.best) then
                   best = res
                   ibest = i
+                  jbest = j
                   jdbest = jd
+                  ftbst = tfit
                   ok = .true.
                end if
-
+c                                 end of inner solution loop
             end do
 
             if (ok) then
@@ -3750,7 +4016,9 @@ c                                 i.e., predicted phase ibest, has been found.
                mpred = mpred + 1
 c                                 used prevents subsequent use of the predicted
 c                                 phase for matching observed phases
-               used(ibest) = .true.
+               used(jdbest) = .true.
+
+               jused(jbest) = .true.
 c                                 imin flags that the predicted phase is in, redundant
 c                                 with used?
                imin(jdbest) = .true.
@@ -3763,39 +4031,43 @@ c                                 kmin points to the matching phase in the predi
 c                                 assemblage
                kmin(mpred) = jdbest
 
+               if (fit) fit = ftbst
+
                cscor(mpred) = best
 
                comp = comp + wcomp * best
 
             end if
-
-         end if
+c                                  end of outer solution loop.
+         end do
 
       end do
-c                                 score remaining extraneous phaes
-      do j = 1, xptnph(id)
 
-         if (kct(j).lt.2) cycle
+      istsat = 0
+c                                  score extraneous predicted phases:
+      do i = 1, ntot
 
-         do i = 1, kct(j)
+         skip = .false.
+c                                  skip saturated component phases:
+         do j = 1, isat
+            if (skp(j).eq.kkp(i)) then
+               istsat = istsat + 1
+               jds(istsat) = i
+               skip = .true.
+               exit
+            end if
+         end do
 
-            jd = ksol(j,i)
-
-            if (used(jd)) cycle
-c                                 set used to avoid double counting,
-c                                 this seems unnecessary
-            used(jd) = .true.
-c                                 redundant?
-            imout(jd) = .true.
+         if (skip) cycle
+c                                  penalty is wextra * mass_fraction^2
+         if (.not.used(i)) then
 
             mextra = mextra + 1
-            idextr(mextra) = jd
-c                                 residual is wextra * mass_fraction^2
+            idextr(mextra) = i
             extra = extra + wextra * 
-     *                   (props(17,jd)*props(16,jd)/psys(17))**2
-c                                 volume fraction would be:
-c                        (props(1,jd)*props(16,jd)/psys(1)*1d2)**2
-         end do
+     *                             (props(17,i)*props(16,i)/psys(17))**2
+
+         end if
 
       end do
 c                                 missing phase residual
@@ -3806,6 +4078,7 @@ c                                 accumulate scores
       if (nomiss.and.miss.gt.0d0) then
 
          missng = .true.
+         fit = .false.
 
       else
 
@@ -3813,133 +4086,188 @@ c                                 accumulate scores
 
       end if
 
+      if (fit) then
+c                                 output any model that "fits" all data withing
+c                                 error to the *.fit file. 
+         if (invprt) then
+c                                 set symbol flag to indicate perturbed
+c                                 or central models
+            i = 2
+         else
+            i = 1
+         end if
+c                                 output any model that fits within error to *.fit
+         write (n12,1140) i, (x(k), k = 1, nparm), 
+     *                    (cblk(k), k = 1, kbulk),
+     *                    miss, extra, comp, xptscr
+
+      end if
+
       if (.not.invxpt.and.fprint) then
 
-      lu = 6
+         lu = 6
 
-      do l = 1, 2
+         do l = 1, 2
 
-      if (l.eq.2) lu = n6
+            if (l.eq.2) lu = n6
 c                                 if no_miss is set reject incomplete predictions
-         if (missng)  then 
+            if (missng)  then 
 
-            write (lu,1130)
+               write (lu,1130)
 
-1130  format (/,'Converged but because the predicted assemblage was in',
-     *          'complete the model will not',/,'be counted. To includ',
-     *          'e incomplete predictions set no_miss to miss_ok',//,
-     *          80('-'))
+               cycle
 
-            cycle
-
-         end if
+            end if
 c                                 output optimal P-T and compositions
 c                                 for inverse thermo-barometry
 c                                 ------------------------------------
-         write (lu,1100) comp, extra, miss
+            if (fit) write (lu,1150)
+            write (lu,1100) comp, extra, miss
 
-         if (mpred.gt.0) then 
+            if (mpred.gt.0) then 
 c                                 phases observed and predicted
-            write (lu,1000)
-            write (lu,1020) (cname(k), k = 1, kbulk)
+               write (lu,1000)
+               write (lu,1020) (cname(k), k = 1, kbulk)
 
-            do j = 1, mpred
+               do j = 1, mpred
 c                                 kmin points to the predicted assemblage
-               jd = kmin(j)
+                  jd = kmin(j)
 c                                 jmin points to the observed assemblage
-               kd = xptptr(1,jmin(j))
+                  kd = xptptr(1,jmin(j))
 
-               mode = props(1,jd)*props(16,jd)/psys(1)*1d2
+                  mode = props(1,jd)*props(16,jd)/psys(1)*1d2
 
-               write (lu,'(a)') pname(jd)
+                  write (lu,'(a)') pname(jd)
 
-               if (jd.le.np) then 
+                  if (jd.le.np) then 
 c                                 a solution
+                     tot = 0d0
+
+                     do k = 1, kbulk
+                        tot = tot + pcomp(k,jd)
+                     end do
+
+                    do k = 1, kbulk
+c                                 calculate individual component residuals
+                        sres(k) = (xptc(kd+k) - pcomp(k,jd)/tot) 
+                     end do
+
+                     write (lu,1030) 'predicted*', mode, 
+     *                               (pcomp(k,jd)/tot, k = 1, kbulk)
+                     write (lu,1035) 'observed* ', (xptc(kd+k), 
+     *                                                    k = 1, kbulk)
+                     write (lu,1035) 'residual  ', 
+     *                               (sres(k), k = 1, kbulk)
+                     write (lu,1025) 'composition score:', cscor(j), 
+     *                               'low is good' 
+
+                  else
+c                                 a compound
+                     write (lu,1030) 'predicted', mode
+                     write (lu,1025) 
+     *                        'composition score perfect by definition'
+
+                  end if
+c                                 end of mpred loop
+               end do
+
+            end if
+
+            if (isat.gt.0) then
+
+               write (lu,1160)
+               write (lu,1020) (cname(k), k = 1, kbulk)
+c                                 take care of composants with amt > 0
+               do j = 1, istsat
+
+                  jd = jds(j)
+                  mode = props(1,jd)*props(16,jd)/psys(1)*1d2
+
                   tot = 0d0
 
                   do k = 1, kbulk
                      tot = tot + pcomp(k,jd)
                   end do
 
-                 do k = 1, kbulk
-c                                 calculate individual component residuals
-                     sres(k) = (xptc(kd+k) - pcomp(k,jd)/tot) 
+                  write (lu,1050) pname(jd), mode, 
+     *                            (pcomp(k,jd)/tot, k = 1, kbulk)
+
+               end do
+c                                 next composants with amt < 0
+               do j = 1, isat
+
+                  if (xskp(j).le.0d0) then
+
+                     jd = -skp(j)
+                     tot = 0d0
+
+                     do k = 1, kbulk
+                        tot = tot + cp(k,jd)
+                     end do
+
+                     write (lu,1050) names(jd)(1:nblen(names(jd)))//'*',
+     *                            nopt(7), (cp(k,jd)/tot, k = 1, kbulk)
+                  end if
+
+               end do
+
+               if (isat.gt.istsat) write (lu,1170)
+
+            end if
+
+            if (mextra.gt.0) then 
+c                                 phases predicted but not observed
+               write (lu,1040)
+               write (lu,1020) (cname(k), k = 1, kbulk)
+
+               do j = 1, mextra
+
+                  jd = idextr(j)
+
+                  mode = props(1,jd)*props(16,jd)/psys(1)*1d2
+
+                  tot = 0d0
+
+                  do k = 1, kbulk
+                     tot = tot + pcomp(k,jd)
                   end do
 
-                  write (lu,1030) 'predicted*', mode, 
+                  write (lu,1050) pname(jd), mode, 
      *                            (pcomp(k,jd)/tot, k = 1, kbulk)
-                  write (lu,1035) 'observed* ', (xptc(kd+k), 
-     *                                                    k = 1, kbulk)
-                  write (lu,1045) 'residual  ', (sres(k), k = 1, kbulk)
-                  write (lu,1025) 'composition score:', cscor(j), 
-     *                            'low is good' 
+c                                 end of miss loop
+               end do
 
-               else
-c                                 a compound
-                  write (lu,1030) 'predicted', mode
-                  write (lu,1025) 
-     *                        'composition score perfect by definition'
+             end if
+c                                 phases observed but not predicted
+             nmiss = 0
 
+             do j = 1, xptnph(id)
+
+               if (jmiss(j)) then
+                  nmiss = nmiss + 1
+                  call getnam(bdname(nmiss),xptids(1,j))
                end if
 
             end do
 
-         end if
+            if (nmiss.gt.0) write (lu,1060) (bdname(j), j = 1, nmiss)
 
-         if (mextra.gt.0) then 
-c                                 phases predicted but not observed
-            write (lu,1040)
-            write (lu,1020) (cname(k), k = 1, kbulk)
+            write (lu,1080)
 
-            do j = 1, mextra
-
-               jd = idextr(j)
-
-               mode = props(1,jd)*props(16,jd)/psys(1)*1d2
-
-               tot = 0d0
-
-               do k = 1, kbulk
-                  tot = tot + pcomp(k,jd)
-               end do
-
-               write (lu,1050) pname(jd), mode, 
-     *                            (pcomp(k,jd)/tot, k = 1, kbulk)
-
+            do j = 1, kbulk
+               write (lu,1090) cname(j), cblk(j)*1d3, mu(j)
             end do
 
-         end if
-c                                 phases observed but not predicted
-         mextra = 0
+            write (lu,1010)
 
-         do j = 1, xptnph(id)
+            write (lu,1110) x(1:nparm)
 
-            if (jmiss(j)) then
-               mextra = mextra + 1
-               call getnam(bdname(mextra),xptids(1,j))
-            end if
-
+            write (lu,'(/,80(''-''))')
+c                                 end double unit print loop
          end do
-
-         if (mextra.gt.0) write (lu,1060) (bdname(j), j = 1, mextra)
-
-         write (lu,1080)
-
-         do j = 1, kbulk
-            write (lu,1090) cname(j), cblk(j)*1d3, mu(j)
-         end do
-
-         write (lu,1010)
-
-         write (lu,1110) x(1:nparm)
-
-         write (lu,'(/,80(''-''))')
-
-      end do
 
       end if
 
-         
       if (.not.fprint)  write (*,'(a,g16.10,1x,i6,a,$)')
      *                  'Score: ', miss + extra + comp, optct, char(13)
 
@@ -3951,11 +4279,10 @@ c                                 phases observed but not predicted
 1035  format (2x,a,13x,20(f7.4,1x))
 1040  format (/,'The following predicted phases are not observed:',/)
 1045  format (2x,a,13x,20(f7.3,1x))
-1050  format (a,1x,f7.3,3x,20(f7.4,1x))
+1050  format (a,t15,f7.3,3x,20(f7.4,1x))
 1060  format (/,'The following observed phases are not predicted:',//,
      *           10(2x,a))
 1080  format (/,5x,'       Effective Bulk*      ',
-c                12345678901234567890123456789
      *            '  Chemical Potentials (J/mol)')
 1090  format (a5,10x,f8.3,20x,g13.6)
 1100  format (/,'Components of the Likelihood Score',//,5x,
@@ -3965,6 +4292,19 @@ c                12345678901234567890123456789
 1110  format (/,'Inversion coordinates for uncertainty analysis:',//,
      *        6(2x,g12.6))
 1120  format (29x,a8,' = ',g12.6)
+1130  format (/,'Converged but because the predicted assemblage was in',
+     *          'complete the model will not',/,'be counted. To includ',
+     *          'e incomplete predictions set no_miss to miss_ok',//,
+     *          80('-'))
+1140  format (i2,1x,25(g14.8,1x))
+1150  format (/,'This model fits all data within observational',
+     *          ' uncertainty',/)
+1160  format (/,'The following phases are in equilibrium with the obse',
+     *          'rved assemblage as determined',/,'by the component sa',
+     *          'turation constraints:',/)
+1170  format (/,'*The indicated phase is stable but undersaturated wit',
+     *          'h respect to the effective bulk composition.')
+
       end
 
       subroutine savbst (x,objf,bstlik,bstlx,bay,ssp,x0,bstlx0,bstbx0,
@@ -4029,7 +4369,7 @@ c----------------------------------------------------------------------
       integer i, n, j, k, igood, ibest, jbest, lu, nblen, jcount, icount
 
       double precision objf, x(*), bstlik, ssp,x0(*), sx(*),
-     *                 bay, bstbx(*), bstbay, bstlx(*)
+     *                 bay, bstbx(*), bstbay, bstlx(*), xxx
 
       external nblen
 c----------------------------------------------------------------------
@@ -4075,20 +4415,20 @@ c                                 loop to write to console, *.lik, *.bay
                if (lu.eq.n7.or.lu.eq.n9) then
 
                   if (lu.eq.n7) then
+c                                 *.lik file
                      x(1:n) = bstlx(1:n)
-                     objf = bstlik
-                     bay = bstbay
+                     xxx = bstlik
                      call mcsetb (x)
-                  else if (lu.eq.n9) then 
-                     lu = n9
+                  else if (lu.eq.n9) then
+c                                 *.bay file
                      x(1:n) = bstbx(1:n)
-                     objf = bstbay
+                     xxx = bstbay
                      call mcsetb (x)
                   end if
 
                  write (lu,1000) 
      *                'parameters and objective function value:',
-     *                (x(k), k = 1, n), objf
+     *                (x(k), k = 1, n), xxx
                  write (lu,1000) 'effective molar bulk composition:',
      *                (cblk(k), k = 1, kbulk)
 

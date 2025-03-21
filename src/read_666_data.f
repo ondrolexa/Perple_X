@@ -1,6 +1,8 @@
 c----------------------------------------------------------------------
-c   ctransf is a program to read a vertex thermo-data file and
-c   rewrite the data in a new file with transformed components.  
+c   read_666_data is a program to read a vertex thermo-data file and
+c   rewrite the data with customized modifications. specifically, this
+c   version adds the diagonal elements of the hp covariance matrix
+c   read from "hp622ver.dia"
 c----------------------------------------------------------------------
       implicit none
  
@@ -8,9 +10,11 @@ c----------------------------------------------------------------------
  
       integer i 
 
-      character*8 name
+      character*8 name, nname
 
-      logical eof
+      logical eof, ok
+
+      double precision delh, dh
 
       character specie*4
       integer ins, isp
@@ -43,7 +47,13 @@ c                                 version info
 
       write (*,1000)
 c                                 assign data files
-      call sopen 
+      call sopen
+
+      write (*,'(a)') 'enter the dia file name'
+      read (*,'(a)') prject
+c                                 open the extra info file
+      call mertxt (n2name,prject,'.dia',0)
+      open (n0,file=n2name,status='old')
 
       write (*,1030)
 c                                 Read THERMODYNAMIC DATA file (N2):
@@ -81,13 +91,34 @@ c                                  7.1.8 archaic trap
          if (ieos.eq.12.or.ieos.eq.14.or.ieos.eq.17) then 
             write (*,1010) name
             cycle
-         end if 
+         end if
+c                                 find the elements of the covariance
+         rewind (n0)
+
+         ok = .false.
+         delh = 0d0
+
+         do
+            read (n0,*,end=666) nname, dh, i
+            if (nname.eq.name) then
+               delh = dh
+               ok = .true.
+               exit
+            end if
+         end do
 c                                 output new data
-         call outdat (n8,k10,0,0d0)
+666      call outdat (n8,k10,3,delh)
+
+         if (.not.ok) then 
+c           write (n8,'(a,a)') 'NO ERROR FOR: ',name
+            write (*,'(a,a)') 'NO ERROR FOR: ',name
+         end if
 
       end do 
 
       write (*,1020)
+
+      close (n0)
 
 1000  format (//,'NO is the default answer to all Y/N prompts',/)
 1010  format (//,'**warning ver000** ctransf cannot reformat CALPHAD ',
